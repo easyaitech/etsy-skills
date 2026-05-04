@@ -10,3 +10,6 @@
 # Local-only notes / drafts
 /scratch/
 /.local/
+
+# Claude Code local session state
+.claude/

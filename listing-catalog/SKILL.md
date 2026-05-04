@@ -53,13 +53,14 @@ description: 维护 Etsy 商品目录（飞书 Base 商品库）+ 撰写 Etsy li
 - 用户要写新 listing 文案 / 上新 / 重写某条 listing 的 title 或 description / 调整 tags
 
 **执行步骤**：
-1. 先确认目标 SKU（如果是新品，先在 Base 里建一行记录基础信息；如果是改既有 listing，用 lark-base 查现有行）
-2. 读 BRAND.md（语调 / 定位 / 视觉关键词作为 SEO 词库的源头）+ SHOP.md（政策段）
-3. 读 `references/etsy-seo.md`：理解 Etsy 标题 / 标签 / 描述 / materials / category 的 SEO 规则
-4. 读 `assets/listing-template.md`：标准 listing 文案结构
-5. 输出草稿：title + description（含分段）+ tags（13 个槽）+ materials（13 个槽）+ category 建议
-6. **整篇展示**给用户，等用户确认或调整
-7. 用户确认后：
+1. 按 `references/input-checklist.md` 盘点用户已给的输入；**缺必填项一次性问全**，不要边写边追问
+2. 确认目标 SKU（如果是新品，先在 Base 里建一行记录基础信息；如果是改既有 listing，用 lark-base 查现有行）
+3. 读 BRAND.md（语调 / 定位 / 视觉关键词作为 SEO 词库的源头）+ SHOP.md（政策段）
+4. 读 `references/etsy-seo.md`：理解 Etsy 标题 / 标签 / 描述 / materials / category 的 SEO 规则
+5. 读 `assets/listing-template.md`：标准 listing 文案结构
+6. 输出草稿：title + description（含分段）+ tags（13 个槽）+ materials（13 个槽）+ category 建议
+7. **整篇展示**给用户，等用户确认或调整
+8. 用户确认后：
    - 把文案写入 Base 该 SKU 对应行（通过 lark-base 更新）
    - 提醒用户去 Etsy 后台贴上线
    - 不要替用户上 Etsy（Etsy 后台操作不在本 skill 范围）
