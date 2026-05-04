@@ -1,6 +1,6 @@
 ---
 name: listing-catalog
-description: 维护 Etsy 商品目录（飞书 Base 商品库）+ 撰写 Etsy listing 文案（标题 / 描述 / tags / materials）。三种触发：(1) 建库：用户提到"建商品库 / 商品目录 / listing 表 / SKU 表 / 上新表 / 商品 Base"等首次建立请求时——按推荐 schema 建飞书 Base；(2) 写 listing：用户提到"写 listing / 写 Etsy 文案 / 写产品描述 / 写商品标题 / 上新一条 / 上新文案 / Etsy SEO / tags 怎么写"等创作需求时——按 BRAND.md 语调 + Etsy SEO 规则输出 title / description / tags / materials；(3) 查/改：用户提到"改某 SKU / 看某 listing / 调价 / 调库存 / 改 listing 状态"等读写商品 Base 请求时——通过 lark-base skill 操作。所有文案输出严格遵守 BRAND.md 文案语调原则与 SHOP.md 政策口径（如存在）。
+description: 维护 Etsy 商品目录（飞书 Base）+ 撰写 listing 文案。三种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——建 Base；(2) "写 listing / 上新文案 / Etsy SEO / 产品描述"——按 BRAND.md 语调 + Etsy SEO 写文案；(3) "改 SKU / 调价 / 调库存"——读写 Base。
 ---
 
 # 商品目录 (Listing Catalog)
@@ -80,25 +80,24 @@ description: 维护 Etsy 商品目录（飞书 Base 商品库）+ 撰写 Etsy li
 
 ## 写入前的硬性约束
 
-1. **写文案**：整篇展示 → 等确认 → 写入 Base → 一句话汇报
-2. **改 Base**：用 lark-base 的 diff 风格预览 → 等确认 → 落盘
-3. **不替用户上 Etsy**：本 skill 只产出文案 + 维护 Base；上 Etsy 是用户在 Etsy 后台手动复制的动作（涉及登录态、平台合规检查，由用户人工把关）
-4. **新增 SKU 时不要自动估价**：成本 / 售价让用户确认；可以基于 Base 历史给"参考区间"，但不要替用户拍板
+通用协议见 shop-foundation §写入前的硬性约束。本 skill 特有禁区：
+
+- **不替用户上 Etsy**：只产文案 + 维护 Base；上 Etsy 是用户在后台手动复制（涉及登录态、平台合规）
+- **新增 SKU 不要自动估价**：成本 / 售价让用户确认；可基于 Base 历史给"参考区间"，但不替用户拍板
+- **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘
 
 ---
 
 ## 与 shop-foundation 的回流关系
 
-写 listing 过程中如果用户**纠正**了文案，且纠正反映品牌偏好（"这文案太冷了"），不要自己改——按 shop-foundation 的"沉淀模式"提示用户：
+写 listing 过程中如果用户**纠正**了文案，且纠正反映品牌偏好（"这文案太冷了"），不要自己改——按 shop-foundation 的沉淀流程（`references/distillation-brand.md`）提示用户：
 
 > 「这次的纠正背后好像是一条文案语调原则。你想沉淀进 BRAND.md 吗？沉淀完我用新原则重写这条 listing。」
 
-让纠正流回 BRAND.md，下次所有 listing 都受益。这是 stack 协作的核心模式——每次纠正都是品牌底座生长的机会。
+让纠正流回 BRAND.md，下次所有 listing 都受益。
 
 ---
 
 ## 工作语言
 
-- 与用户对话：中文
-- listing 文案输出（title / description / tags / materials / category）：**英文**（Etsy 海外平台）
-- Base 字段标签：中文 + 英文混用，便于 Agent 识别（schema 文件里给具体规范）
+通用规则见 shop-foundation §工作语言。本 skill 特有：listing 文案输出（title / description / tags / materials / category）为**英文**（Etsy 海外平台）；Base 字段标签中英混用（schema 文件里给规范）。

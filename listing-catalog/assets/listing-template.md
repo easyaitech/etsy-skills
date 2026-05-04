@@ -82,17 +82,9 @@ listing 文案标准模板。Agent 写新 listing 时按此结构产出，整篇
 
 ---
 
-## SEO 自检（写完核对一遍）
+## SEO 自检
 
-- [ ] Title 第一个词是品类核心词
-- [ ] Title 含 ≥1 长尾关键词
-- [ ] 13 tags 满槽，无重复词
-- [ ] 13 materials 满槽，是真材质
-- [ ] Category 到叶子节点
-- [ ] Description 段 1-2 故事感、不堆砌参数
-- [ ] 政策段引用 SHOP.md（不是自编）
-- [ ] 文案语调符合 BRAND.md
-- [ ] 无 SEO 禁忌词（"premium"、"100% authentic"、品牌仿写）
+写完按 `references/etsy-seo.md` 末尾的"SEO 自检清单"逐条核对。
 
 ---
 
