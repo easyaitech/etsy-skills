@@ -54,8 +54,11 @@ fi
 MANIFEST="$INSTALL_DIR/etsy-stack.json"
 [[ -f "$MANIFEST" ]] || fail "manifest 缺失：$MANIFEST"
 
-mapfile -t SKILLS < <(python3 -c "
-import json, sys
+SKILLS=()
+while IFS= read -r line; do
+  [[ -n "$line" ]] && SKILLS+=("$line")
+done < <(python3 -c "
+import json
 m = json.load(open('$MANIFEST'))
 for s in m['skills']:
     print(s)
