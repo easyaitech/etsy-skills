@@ -22,8 +22,15 @@ emit_if_behind() {
   git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1 || return 0
   local current
   current=$(git -C "$INSTALL_DIR" describe --tags --always 2>/dev/null || echo "unknown")
-  if [[ "$latest" != "$current" ]]; then
-    echo "💡 Etsy stack 有新版本：$current → $latest（运行 \`etsy-stack update\` 升级）"
+  # 只在 current 和 latest 都是 vX.Y.Z 形态且 latest 真的更新时提示。
+  # 避免 main / dev 状态（v0.1.1-1-gabc）误报"反向降级"
+  local re='^v[0-9]+\.[0-9]+\.[0-9]+$'
+  if [[ "$current" =~ $re && "$latest" =~ $re ]]; then
+    local newest
+    newest=$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -n1)
+    if [[ "$newest" == "$latest" && "$newest" != "$current" ]]; then
+      echo "💡 Etsy stack 有新版本：$current → $latest（运行 \`etsy-stack update\` 升级）"
+    fi
   fi
 }
 

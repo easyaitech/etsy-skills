@@ -2,6 +2,28 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.2] - 2026-05-05
+
+`/simplify` 收掉冗余状态 + 热路径精简。
+
+### 重构
+- 删 `.installed-version` 文件：current 直接从 `git describe --tags --always` 推导，少一份会和 git 飘的状态
+- `check-update.sh` 热路径重排：缓存命中且无更新时只跑 stat / date / cat，git 调用推迟到 emit 内部 lazy 求值；首装当日（无 latest 缓存）少 2-3 个 spawn
+- `check-update.sh`：`awk -F/` → `sed`，少一个进程
+- `install.sh`：去章节装饰注释，保留 WHY 注释；symlink 分支只对"非软链的真实文件 / 目录"备份
+
+### 修
+- `check-update.sh` emit_if_behind：加 semver guard，避免 main 用户（current = `v0.1.1-N-gabc`）看到误报"反向降级"提示
+- `install.sh`：`merge --ff-only` 失败不再静默吞，warn 提示用户人工介入
+
+### 优化
+- `README`：去掉每发版必过期的 SHA256 行（HTTPS 已经是真正的保护）
+
+### 安装入口（钉死 v0.1.2）
+```
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.2/install.sh | bash
+```
+
 ## [0.1.1] - 2026-05-05
 
 代码审查后的稳健性补丁。
