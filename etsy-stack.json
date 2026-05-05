@@ -1,0 +1,13 @@
+{
+  "name": "etsy-stack",
+  "version": "0.1.0",
+  "description": "Etsy 店铺运营 skill bundle（Hermes runtime）",
+  "homepage": "https://github.com/easyaitech/etsy-skills",
+  "skills": [
+    "shop-foundation",
+    "listing-catalog",
+    "orders-customers",
+    "assets-library",
+    "pinterest-autopin"
+  ]
+}

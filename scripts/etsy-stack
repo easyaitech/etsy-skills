@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# etsy-stack — 管理 Etsy skill bundle 的 CLI
+set -uo pipefail
+
+INSTALL_DIR="${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
+HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-$HOME/.hermes/skills}"
+
+usage() {
+  cat <<EOF
+etsy-stack — Etsy skill bundle 管理工具
+
+用法：
+  etsy-stack version            当前安装版本
+  etsy-stack check              立即检查更新（绕过 24h 缓存）
+  etsy-stack update             拉最新版本并刷新软链
+  etsy-stack list               列出 manifest 中的 skill 及链接状态
+  etsy-stack where              打印源码安装目录
+  etsy-stack help               查看本帮助
+EOF
+}
+
+require_install() {
+  git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1 || {
+    echo "❌ 找不到 etsy-stack 源码（$INSTALL_DIR）" >&2
+    echo "   请重新跑安装脚本：" >&2
+    echo "   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash" >&2
+    exit 1
+  }
+}
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+  version|-v|--version)
+    require_install
+    cat "$INSTALL_DIR/.installed-version" 2>/dev/null \
+      || git -C "$INSTALL_DIR" describe --tags --always 2>/dev/null \
+      || echo "unknown"
+    ;;
+
+  check)
+    require_install
+    rm -f "$CACHE_DIR/last-check" "$CACHE_DIR/latest-version"
+    out=$(bash "$INSTALL_DIR/scripts/check-update.sh")
+    current=$(cat "$INSTALL_DIR/.installed-version" 2>/dev/null || echo "unknown")
+    if [[ -z "$out" ]]; then
+      echo "✓ 已是最新（当前：$current）"
+    else
+      echo "$out"
+    fi
+    ;;
+
+  update|upgrade)
+    require_install
+    exec bash "$INSTALL_DIR/install.sh"
+    ;;
+
+  list|ls)
+    require_install
+    python3 -c "
+import json, os, sys
+m = json.load(open('$INSTALL_DIR/etsy-stack.json'))
+hermes_dir = '$HERMES_SKILLS_DIR'
+for s in m['skills']:
+    link = os.path.join(hermes_dir, s)
+    if os.path.islink(link):
+        target = os.readlink(link)
+        status = '✓' if os.path.exists(link) else '⚠️ 链接断了'
+    elif os.path.exists(link):
+        status = '⚠️ 非软链'
+    else:
+        status = '✗ 未安装'
+    print(f'  {status}  {s}')
+"
+    ;;
+
+  where)
+    echo "$INSTALL_DIR"
+    ;;
+
+  help|-h|--help|"")
+    usage
+    ;;
+
+  *)
+    echo "未知命令：$cmd" >&2
+    echo "" >&2
+    usage >&2
+    exit 1
+    ;;
+esac
