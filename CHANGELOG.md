@@ -2,6 +2,26 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.1] - 2026-05-05
+
+代码审查后的稳健性补丁。
+
+### 修
+- `install.sh`：当 `ETSY_SKILLS_REF` 指 tag 升级时不再撞 detached HEAD（之前会报 "no tracking information"）
+- `check-update.sh` / `etsy-stack`：`.installed-version` 为空文件时不再产生 ` → vX.Y.Z` 这种掉了"current"段的假提示
+- `shop-foundation` 启动检查段落和其他 4 个 skill 对齐文案
+
+### 优化
+- `install.sh` / `etsy-stack`：Python 路径走环境变量传值，不再把 bash 变量当字符串字面量插进 Python 源码
+- `etsy-stack.json`：删掉没人读的 `version` 字段（版本来源是 git tag）
+- `etsy-stack list`：清死代码（unused `import sys` / `target = readlink`）
+
+### 安装入口（钉死 v0.1.1）
+```
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.1/install.sh | bash
+```
+SHA256：`cbbb1b34a93c1903b9e2a2c2a4378c0ac825d2c13ef1ff6c39a88ec4c5a8132b`
+
 ## [0.1.0] - 2026-05-05
 
 首发版本。

@@ -7,7 +7,7 @@
 ## 安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.0/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.1/install.sh | bash
 ```
 
 脚本会：
@@ -18,9 +18,9 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.0/insta
 谨慎模式（先看再跑）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.0/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.1/install.sh -o install.sh
 shasum -a 256 install.sh
-# 应是 5580cf135bc52d2b2648caf2d3f57f31013cee4a6640367521a1684f1112b08a
+# 应是 cbbb1b34a93c1903b9e2a2c2a4378c0ac825d2c13ef1ff6c39a88ec4c5a8132b
 less install.sh
 bash install.sh
 ```
@@ -67,7 +67,7 @@ etsy-stack where    # 打印源码安装目录
 | `HERMES_SKILLS_DIR` | `~/.hermes/skills` |
 | `ETSY_STACK_BIN` | `~/.local/bin` |
 | `ETSY_SKILLS_REPO` | `https://github.com/easyaitech/etsy-skills.git` |
-| `ETSY_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v0.1.0`） |
+| `ETSY_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v0.1.1`） |
 
 ## 仓库布局
 
