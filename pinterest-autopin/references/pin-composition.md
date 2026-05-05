@@ -1,0 +1,138 @@
+# Pin Composition（怎么把 SKU + 素材 + BRAND 写成一条 pin）
+
+模式 B 的核心 reference。读完 BRAND.md / SHOP.md / 商品 Base / 素材索引 Base 之后，按这里的规则产 title / description / altText / link / board 五件套。
+
+---
+
+## 输入清单（缺必填项一次性问全）
+
+| 输入 | 必填 | 来源 / 默认 |
+|---|---|---|
+| 目标 SKU | ✅ | 用户给 |
+| 目标 board | ✅ | 用户给（必须是 Pinterest 后台已建好的 board，且已加进 Pin Queue Base 的 `Board (Pinterest)` 单选选项） |
+| 指定素材 | ❌ | 用户给具体素材 ID；不给就从素材索引 Base 的「Pinterest 候选」视图列出该 SKU 的候选让用户挑 |
+| 创意主题（一句话） | ❌ | 用户给；不给就从 SKU 标题 + 素材文件名推一个，让用户改 |
+
+---
+
+## 五件套规则
+
+### 1. Link
+
+- 默认 = `{etsy_shop_url}/listing/{listing_id}`
+  - `etsy_shop_url`：从 SHOP.md § 店铺基础 § Etsy URL 取
+  - `listing_id`：从商品 Base 该 SKU 行的 `Etsy Listing ID` 取
+- 如商品 Base 的 `状态 ≠ 在售` 或 `Etsy Listing ID` 为空：**中止排队**，提示用户先上线 listing
+- 不允许指向非自家域名（防误发引流到第三方）
+
+### 2. Board
+
+- 严格用 Pin Queue Base `Board (Pinterest)` 单选字段里的现有选项；不允许临时新增（避免拼写漂移让 Pinterest-autopin 找不到）
+- 如用户要的 board 不在选项里：先停下，提示用户去 Pinterest 后台建好 board → 把名字加进 Pin Queue Base 单选选项 → 再来排队
+
+### 3. Title (EN)
+
+**硬性约束**：
+- ≤ 100 字符（Pinterest 上限是 100，超出会被截）
+- 英文
+- 不要 ALL CAPS
+- 不要堆 hashtag（hashtag 在 description 里放）
+- 第一个词承担最强 SEO（Pinterest 搜索权重前置）
+
+**风格约束**：
+- 严格遵守 BRAND.md § 文案语调（"应该说" / "避免说" / "原则"）
+- 优先用 SKU 标题里已经验证过的关键词（商品 Base `SEO 关键词` 字段是源头）
+- Pinterest 用户搜索习惯偏"场景词 + 物品词"（"morning slow tea cup"），不偏"参数词"（"260ml ceramic mug"）——所以即便 listing title 偏参数化，pin title 要往场景化转
+
+**模板**（仅作起点，不要硬套）：
+
+```
+{场景词} {核心物品词} — {一行风格补充}
+```
+
+例：
+```
+Morning Mist Tea Cup — handmade ceramic for slow mornings
+Hand-thrown matcha bowl for quiet rituals
+```
+
+**反例**（违反 BRAND 文案语调时常见）：
+- ❌ `BEST Handmade Ceramic Mug! Buy Now!!! 🔥🔥🔥`（堆叹号、ALL CAPS、堆 emoji——多数 BRAND 都禁）
+- ❌ `260ml Stoneware Mug, Glazed, Microwave Safe`（堆参数，不是 Pinterest 风格）
+
+### 4. Description (EN)
+
+**硬性约束**：
+- 200-500 字符（Pinterest 推荐区间，超过 500 会被截尾）
+- 英文
+- 末尾可以放 2-3 个 hashtag（Pinterest hashtag 弱搜索权重，主要做语义聚类——`#slowliving #handmadeceramics #teaceremony`）
+- **不要重复 SHOP.md 政策**（处理时间 / 退换货 / 运输）——pin 不是 listing 页，政策放在 link 那边的 listing 描述里就够了
+
+**风格约束**：
+- 严格遵守 BRAND.md § 文案语调
+- 一段叙述（不要分点），有节奏，可以用一个具体使用场景做钩子
+- 不要叫卖式 CTA（"Shop now!" "Don't miss out!"）——Pinterest 用户讨厌这个；如要引导可以用更软的（"See more in the linked shop."）
+
+**模板**（仅作起点）：
+
+```
+{一两句场景钩子}. {产品的一两个细节，呼应 BRAND 视觉/工艺原则}. {引导句，可省}.
+
+{hashtag1} {hashtag2} {hashtag3}
+```
+
+例：
+
+```
+A small ceramic cup for the quiet first sip of the day. Wheel-thrown by hand, glazed in a sage I mixed last spring — every cup carries a slightly different shade. See the full collection in the linked shop.
+
+#slowliving #handmadeceramics #teaceremony
+```
+
+### 5. Alt Text (EN)
+
+**硬性约束**：
+- 描述**图里看到了什么**，不复制 title
+- ≤ 500 字符（Pinterest 上限 500）
+- 英文
+- 不要堆 hashtag
+
+**风格约束**：
+- 客观、具体——颜色、材质、构图、光线
+- 服务两类受众：屏幕阅读器用户（无障碍）+ Pinterest 视觉搜索的 ML（SEO）
+
+例：
+
+```
+A pale sage green ceramic teacup on a linen cloth, photographed in soft morning light from above. Steam rises faintly from the rim.
+```
+
+---
+
+## BRAND 一致性自检（出草稿后、给用户看前自做一遍）
+
+逐项过：
+
+- [ ] title / description 用词没踩 BRAND「避免说」清单
+- [ ] 整体语调与 BRAND「文案语调 § 应该说」吻合
+- [ ] 选用的素材不违反 BRAND「视觉原则 § 视觉禁区」
+- [ ] 没有自编 SHOP 没说过的政策事实
+
+不通过 → 不要给用户看草稿，先自己改对再给。
+
+---
+
+## 渠道特有手感（Pinterest 与 listing 文案的差异）
+
+这一段是本 skill 自己的"半沉淀区"——比 BRAND.md 渠道无关原则更细，但还没具体到要每条记录。如果用户在模式 B 的纠正反复指向某个 Pinterest 特有偏好，按 SKILL.md § 与其他 skill 的协作 / 回流 提示用户：
+
+- 如果是 BRAND 普适的 → 走 shop-foundation 的 distillation-brand.md 沉淀进 BRAND.md
+- 如果是 Pinterest 渠道特有的 → 加到这里下面的「渠道沉淀」段
+
+### 渠道沉淀（启动时空，用着用着补）
+
+<!-- 用户纠正反映 Pinterest 渠道特有偏好时追加在这里。每条格式：日期 + 一句原则 + 来源。例：
+- 2026-05-12: pin description 第一句必须是场景钩子，不要先讲产品参数。来源：用户纠正 PIN-20260512-002。
+-->
+
+（暂无）
