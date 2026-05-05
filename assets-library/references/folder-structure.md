@@ -13,32 +13,41 @@
 
 绝不要为这条素材另建 `客户评价图/Pinterest候选/` 之类的目录，也不要把同一文件复制到多处。
 
+### 冷藏 vs 货架（哪些目录进 Base）
+
+| 类型 | 物理位置 | 是否进 Base |
+|---|---|---|
+| **冷藏 / 原片** | `1. 摄影/by-SKU/{SKU}/raw/`、`1. 摄影/shoot-archive/`、`2. 视频/.../raw/`、`7. 受限/客户拍摄/`（未授权 / 未使用阶段） | ❌ 不进 |
+| **货架 / 成品** | `1. 摄影/by-SKU/{SKU}/edited/`、`scene/`、`2. 视频/.../edited/`、`3. 视觉模板/`、`4. 字体/`、`5. Logo/`、`6. 物料/`，以及已 promote 的 `7. 受限/...` | ✅ promote 时进 |
+
+详见 [asset-index-base-schema.md § 设计原则](asset-index-base-schema.md#设计原则) 第 4 条。
+
 ```
 {店铺名}-素材库/
 ├── 1. 摄影/                      ← SKU 摄影主目录，最高频更新
 │   ├── by-SKU/                  ← 按 SKU 归档（主路径，所有 SKU 摄影必须在这里至少有一份）
 │   │   ├── TEACUP-001/
-│   │   │   ├── raw/             ← 原图 / RAW / 高清 JPG（不动 / 不裁切 / 长期保留）
-│   │   │   ├── edited/          ← 调色 / 裁切后准备上 Etsy 的成图
-│   │   │   └── scene/           ← 场景图（手握、桌面、自然光等）
+│   │   │   ├── raw/             ← 原图 / RAW / 高清 JPG（冷藏：不动 / 不裁切 / 长期保留 / **不进 Base**）
+│   │   │   ├── edited/          ← 调色 / 裁切后准备上 Etsy 的成图（货架：promoted 后进 Base）
+│   │   │   └── scene/           ← 场景图，手握 / 桌面 / 自然光等（货架：promoted 后进 Base）
 │   │   ├── TEACUP-002/
 │   │   │   └── ...
 │   │   └── POT-001/
 │   │       └── ...
-│   └── shoot-archive/           ← 按拍摄批次的临时目录，用完整理到 by-SKU/
+│   └── shoot-archive/           ← **B1 dump 默认目的地**：整批 shoot 回来先全塞这里。冷藏，不进 Base
 │       └── 2026-05-05_morning-light/
 │
 ├── 2. 视频/                      ← 视频素材主目录（如果店铺暂不做视频，建库时可跳过）
 │   ├── by-SKU/                  ← 单 SKU 视频（产品演示、特写、上手）
 │   │   └── TEACUP-001/
-│   │       ├── raw/             ← 相机 / 手机原始视频，不动
-│   │       └── edited/          ← 母版（最高画质，未压缩、未加平台字幕）
+│   │       ├── raw/             ← 相机 / 手机原始视频（冷藏：不进 Base）
+│   │       └── edited/          ← 母版，最高画质 / 未压缩 / 未加平台字幕（货架：promoted 后进 Base）
 │   │           └── _assets/     ← 该视频的附属物：BGM、字幕 SRT、封面图
 │   ├── multi-SKU/               ← 跨 SKU 视频（开箱、店铺日常、品牌故事）
 │   │   └── 2026-05-05_morning-shop-tour/
-│   │       ├── raw/
-│   │       └── edited/
-│   └── shoot-archive/           ← 按拍摄批次的临时目录（同摄影逻辑）
+│   │       ├── raw/             ← 冷藏
+│   │       └── edited/          ← 货架
+│   └── shoot-archive/           ← 视频 dump 默认目的地（同摄影逻辑，冷藏）
 │
 ├── 3. 视觉模板/                  ← Etsy listing 配图复用模板（白底加文字、规格图、9 宫格等）
 │   ├── listing-cover/           ← Etsy 主图配图模板
