@@ -35,23 +35,15 @@ shift || true
 case "$cmd" in
   version|-v|--version)
     require_install
-    if [[ -s "$INSTALL_DIR/.installed-version" ]]; then
-      cat "$INSTALL_DIR/.installed-version"
-    else
-      git -C "$INSTALL_DIR" describe --tags --always 2>/dev/null || echo "unknown"
-    fi
+    git -C "$INSTALL_DIR" describe --tags --always 2>/dev/null || echo "unknown"
     ;;
 
   check)
     require_install
     rm -f "$CACHE_DIR/last-check" "$CACHE_DIR/latest-version"
     out=$(bash "$INSTALL_DIR/scripts/check-update.sh")
-    if [[ -s "$INSTALL_DIR/.installed-version" ]]; then
-      current=$(cat "$INSTALL_DIR/.installed-version")
-    else
-      current="unknown"
-    fi
     if [[ -z "$out" ]]; then
+      current=$(git -C "$INSTALL_DIR" describe --tags --always 2>/dev/null || echo "unknown")
       echo "✓ 已是最新（当前：$current）"
     else
       echo "$out"

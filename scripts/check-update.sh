@@ -3,6 +3,7 @@
 # - 24 小时缓存：避免每次 skill 激活都打 GitHub
 # - 只在"有更新可用"时输出一行提示到 stdout，否则 silent
 # - 任何错误（无网 / 仓库异常）都吞掉，不打扰当前任务
+# - 缓存命中且无更新时只跑一个 stat —— 5 个 skill 的启动开销控制在最低
 
 set -uo pipefail
 
@@ -12,37 +13,34 @@ LAST_CHECK="$CACHE_DIR/last-check"
 LATEST_CACHE="$CACHE_DIR/latest-version"
 TTL_SECONDS=86400  # 24h
 
-# 不是 git 安装（zip 解压 / 其他来源）就不检查
-git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1 || exit 0
-
 mkdir -p "$CACHE_DIR" 2>/dev/null || exit 0
-
-if [[ -s "$INSTALL_DIR/.installed-version" ]]; then
-  current=$(cat "$INSTALL_DIR/.installed-version")
-else
-  current="unknown"
-fi
 
 emit_if_behind() {
   local latest="$1"
-  if [[ -n "$latest" && "$latest" != "$current" ]]; then
+  [[ -n "$latest" ]] || return 0
+  # 只有真要 emit 的时候才验 git + 算 current —— 避免污染热路径
+  git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1 || return 0
+  local current
+  current=$(git -C "$INSTALL_DIR" describe --tags --always 2>/dev/null || echo "unknown")
+  if [[ "$latest" != "$current" ]]; then
     echo "💡 Etsy stack 有新版本：$current → $latest（运行 \`etsy-stack update\` 升级）"
   fi
 }
 
-# ── 缓存有效，直接用缓存值 ──────────────────────────────────
+# 缓存有效 → 直接吃缓存。这是 5x/激活的高频路径，处理要尽量短
 if [[ -f "$LAST_CHECK" ]]; then
   last_ts=$(stat -f %m "$LAST_CHECK" 2>/dev/null || stat -c %Y "$LAST_CHECK" 2>/dev/null || echo 0)
-  now=$(date +%s)
-  if (( now - last_ts < TTL_SECONDS )); then
+  if (( $(date +%s) - last_ts < TTL_SECONDS )); then
     [[ -f "$LATEST_CACHE" ]] && emit_if_behind "$(cat "$LATEST_CACHE")"
     exit 0
   fi
 fi
 
-# ── 拉远端最新 tag（优先）或 main commit 数（fallback） ───
+# 缓存过期 / 不存在 → 重新拉。这一支 24h 一次，可以多花点
+git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1 || exit 0
+
 latest=$(git -C "$INSTALL_DIR" ls-remote --tags --refs origin 2>/dev/null \
-  | awk -F/ '{print $NF}' \
+  | sed 's,.*/,,' \
   | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
   | sort -V \
   | tail -n1)
@@ -57,7 +55,7 @@ if [[ -z "$latest" ]]; then
   fi
 fi
 
-# 写缓存（即使没拿到 latest 也写时间戳，避免反复重试）
+# 写缓存（即使 latest 为空也写时间戳，避免反复重试网络）
 touch "$LAST_CHECK"
 echo "$latest" > "$LATEST_CACHE"
 

@@ -39,14 +39,14 @@ fail()  { printf "❌ %s\n" "$*" >&2; exit 1; }
 command -v git >/dev/null || fail "未找到 git，请先安装"
 command -v python3 >/dev/null || fail "未找到 python3，请先安装"
 
-# ── 1. clone or pull ────────────────────────────────────────
 if git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1; then
   log "更新源码：$INSTALL_DIR"
   git -C "$INSTALL_DIR" fetch --tags --quiet origin
   git -C "$INSTALL_DIR" checkout --quiet "$REF"
   # 只在 HEAD 是分支（非 detached）时才 ff-merge —— REF 是 tag 时不能 pull
   if git -C "$INSTALL_DIR" symbolic-ref --quiet HEAD >/dev/null; then
-    git -C "$INSTALL_DIR" merge --ff-only --quiet "@{u}" 2>/dev/null || true
+    git -C "$INSTALL_DIR" merge --ff-only --quiet "@{u}" 2>/dev/null \
+      || warn "本地分支与远端 $REF 已分叉，跳过 ff-merge（请人工 git rebase / reset）"
   fi
 else
   log "Clone 仓库到：$INSTALL_DIR"
@@ -55,7 +55,6 @@ else
   git -C "$INSTALL_DIR" checkout --quiet "$REF"
 fi
 
-# ── 2. read manifest ─────────────────────────────────────────
 MANIFEST="$INSTALL_DIR/etsy-stack.json"
 [[ -f "$MANIFEST" ]] || fail "manifest 缺失：$MANIFEST"
 
@@ -70,7 +69,6 @@ for s in m["skills"]:
 ')
 [[ ${#SKILLS[@]} -gt 0 ]] || fail "manifest.skills 为空"
 
-# ── 3. symlink skills ────────────────────────────────────────
 mkdir -p "$HERMES_SKILLS_DIR"
 log "链接 skill → $HERMES_SKILLS_DIR"
 for skill in "${SKILLS[@]}"; do
@@ -80,32 +78,28 @@ for skill in "${SKILLS[@]}"; do
     warn "$skill 在 manifest 中但目录不存在，跳过"
     continue
   fi
-  if [[ -L "$dst" ]]; then
-    rm "$dst"
-  elif [[ -e "$dst" ]]; then
+  # 非软链的真实文件 / 目录先备份，避免误覆盖用户内容
+  if [[ -e "$dst" && ! -L "$dst" ]]; then
     backup="$dst.bak.$(date +%s)"
     warn "$dst 已存在且不是软链，备份到 $backup"
     mv "$dst" "$backup"
   fi
-  ln -s "$src" "$dst"
+  ln -sfn "$src" "$dst"
   ok "$skill"
 done
 
-# ── 4. install etsy-stack CLI ───────────────────────────────
 mkdir -p "$BIN_DIR"
 chmod +x "$INSTALL_DIR/scripts/etsy-stack" "$INSTALL_DIR/scripts/check-update.sh"
 ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/etsy-stack"
 ok "命令安装到：$BIN_DIR/etsy-stack"
 
-# ── 5. record installed version ─────────────────────────────
-git -C "$INSTALL_DIR" describe --tags --always > "$INSTALL_DIR/.installed-version"
-INSTALLED=$(cat "$INSTALL_DIR/.installed-version")
+INSTALLED=$(git -C "$INSTALL_DIR" describe --tags --always)
 
-# 重置更新检查缓存，避免刚装完还提示有新版本
+# 清掉旧 stack 留下的更新检查缓存：current 现在直接从 git 推导，但缓存里可能还
+# 留着上一次的 latest，不清的话会立刻误报"有新版本"
 ETSY_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
 rm -f "$ETSY_CACHE_DIR/last-check" "$ETSY_CACHE_DIR/latest-version"
 
-# ── 6. final hint ────────────────────────────────────────────
 echo ""
 ok "安装完成（版本：$INSTALLED）"
 echo ""

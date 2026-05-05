@@ -19,9 +19,7 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.1/insta
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.1/install.sh -o install.sh
-shasum -a 256 install.sh
-# 应是 cbbb1b34a93c1903b9e2a2c2a4378c0ac825d2c13ef1ff6c39a88ec4c5a8132b
-less install.sh
+less install.sh    # 自查一遍
 bash install.sh
 ```
 
