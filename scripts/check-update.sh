@@ -17,7 +17,11 @@ git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1 || exit 0
 
 mkdir -p "$CACHE_DIR" 2>/dev/null || exit 0
 
-current=$(cat "$INSTALL_DIR/.installed-version" 2>/dev/null || echo "unknown")
+if [[ -s "$INSTALL_DIR/.installed-version" ]]; then
+  current=$(cat "$INSTALL_DIR/.installed-version")
+else
+  current="unknown"
+fi
 
 emit_if_behind() {
   local latest="$1"

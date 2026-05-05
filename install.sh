@@ -44,7 +44,10 @@ if git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1; then
   log "更新源码：$INSTALL_DIR"
   git -C "$INSTALL_DIR" fetch --tags --quiet origin
   git -C "$INSTALL_DIR" checkout --quiet "$REF"
-  git -C "$INSTALL_DIR" pull --ff-only --quiet
+  # 只在 HEAD 是分支（非 detached）时才 ff-merge —— REF 是 tag 时不能 pull
+  if git -C "$INSTALL_DIR" symbolic-ref --quiet HEAD >/dev/null; then
+    git -C "$INSTALL_DIR" merge --ff-only --quiet "@{u}" 2>/dev/null || true
+  fi
 else
   log "Clone 仓库到：$INSTALL_DIR"
   mkdir -p "$(dirname "$INSTALL_DIR")"
@@ -59,12 +62,12 @@ MANIFEST="$INSTALL_DIR/etsy-stack.json"
 SKILLS=()
 while IFS= read -r line; do
   [[ -n "$line" ]] && SKILLS+=("$line")
-done < <(python3 -c "
-import json
-m = json.load(open('$MANIFEST'))
-for s in m['skills']:
+done < <(MANIFEST="$MANIFEST" python3 -c '
+import json, os
+m = json.load(open(os.environ["MANIFEST"]))
+for s in m["skills"]:
     print(s)
-")
+')
 [[ ${#SKILLS[@]} -gt 0 ]] || fail "manifest.skills 为空"
 
 # ── 3. symlink skills ────────────────────────────────────────
@@ -99,8 +102,8 @@ git -C "$INSTALL_DIR" describe --tags --always > "$INSTALL_DIR/.installed-versio
 INSTALLED=$(cat "$INSTALL_DIR/.installed-version")
 
 # 重置更新检查缓存，避免刚装完还提示有新版本
-rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills/last-check" \
-      "${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills/latest-version"
+ETSY_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
+rm -f "$ETSY_CACHE_DIR/last-check" "$ETSY_CACHE_DIR/latest-version"
 
 # ── 6. final hint ────────────────────────────────────────────
 echo ""
