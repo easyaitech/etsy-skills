@@ -85,6 +85,30 @@ Etsy 类目层级深，认真选最贴切的叶子节点：
 - 用 SHOP.md 之外的政策口径（"我们 24 小时发货"——而 SHOP.md 写的是 3 天）
 - 加买家不该看的词（"代发"、"OEM"、"批发欢迎" —— 这是 toC 平台，不要 toB 词汇）
 
+## Image / Video Alt Text
+
+Etsy 后台支持给每张图和视频写 alt text。**双重收益**：
+
+- **无障碍**：屏幕阅读器读给视障买家
+- **图搜 SEO**：Google 图搜 / Etsy 图索引会读 alt 文本去匹配查询
+
+**写 alt 的规则**：
+
+- 长度 ≤ 125 字符（屏幕阅读器一口气能念完的长度）
+- 描述**画面里看得到的东西** + 1–2 个核心 SEO 词，自然成句，不堆词
+- 不要以 "Image of..." / "Photo of..." 开头——屏幕阅读器已经知道这是图
+- 一条 listing 的多张图，alt 不要全一样——按图差异化（主图、细节图、场景图、规格图各自有侧重）
+
+**例**（一条柴烧茶杯 listing）：
+
+- 主图：`Wood-fired ceramic tea cup with earthy unglazed exterior, held in two hands over a wooden tray`
+- 细节图：`Close-up of natural ash glaze drip on the rim of a handmade yunomi cup`
+- 场景图：`Unglazed pottery tea cup beside a small teapot on a linen mat, morning tea ritual`
+
+视频 alt 同理：一句话描述视频里**主要发生什么**（"Hands rotating a wood-fired tea cup to show the ash glaze pattern around the rim"），不要把整条文案塞进去。
+
+存放位置：Base 的 `图片 Alt (EN)` / `视频 Alt (EN)` 字段（每行一张图 / 一条视频，与图片顺序对齐）。
+
 ## 季节性 / 节日 / 大促
 
 - 圣诞 / 情人节 / 母亲节 / 父亲节前 60 天，可以临时在 title 末尾加 "Christmas Gift"、"Mother's Day Gift" —— 跟 Etsy 的季节流量
@@ -102,3 +126,5 @@ Etsy 类目层级深，认真选最贴切的叶子节点：
 - [ ] Description 末尾政策段引用 SHOP.md
 - [ ] 文案整体符合 BRAND.md 文案语调
 - [ ] 无禁忌词（"premium"、"100% authentic"、"like 某品牌"）
+- [ ] 视频已就位（每条 listing 必有 1 条视频）+ 视频 alt 已写
+- [ ] 每张图都有 alt text，按图差异化、无 "Image of..." 前缀

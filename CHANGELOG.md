@@ -2,6 +2,20 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.3] - 2026-05-05
+
+`listing-catalog`：把"每条 listing 必须有视频"和"图/视频 alt"补进 schema 与流程。
+
+### 新增
+- `listing-catalog/references/base-schema.md`：核心字段加 `视频链接`（标注店铺硬性约束：每条 listing 必须有视频，否则状态停草稿）；辅助字段加 `图片 Alt (EN)` / `视频 Alt (EN)`
+- `listing-catalog/references/input-checklist.md`：必填项加"产品视频（1 条，5–15 秒）"，没视频不进上线流程
+- `listing-catalog/references/etsy-seo.md`：加 Image / Video Alt Text 段（长度、写法、差异化原则、例子、Base 字段对齐）；SEO 自检清单增 2 项（视频就位 + alt 已写）
+
+### 安装入口（钉死 v0.1.3）
+```
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.3/install.sh | bash
+```
+
 ## [0.1.2] - 2026-05-05
 
 `/simplify` 收掉冗余状态 + 热路径精简。
