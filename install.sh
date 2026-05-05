@@ -1,29 +1,31 @@
 #!/usr/bin/env bash
 # Etsy skill stack 安装 / 升级脚本
 #
-# ── 私有库（默认）：通过 gh CLI 引导 ────────────────────────────
-#   gh auth login   # 一次性登录
-#   gh api repos/easyaitech/etsy-skills/contents/install.sh \
-#       -H 'Accept: application/vnd.github.raw' | bash
-#   → 之后 install.sh 用 SSH (git@github.com:…) clone 仓库本体
+# ── 推荐（钉死版本）─────────────────────────────────────────────
+#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.0/install.sh | bash
+#
+# ── 最新主线 ────────────────────────────────────────────────────
+#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash
 #
 # ── 已 clone 后本地升级 ────────────────────────────────────────
-#   bash install.sh
+#   bash install.sh    或    etsy-stack update
 #
-# ── 公网 / 镜像（仓库变 public 时） ────────────────────────────
-#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash
+# ── 谨慎模式（先看再跑） ───────────────────────────────────────
+#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.0/install.sh -o install.sh
+#   less install.sh   # 自查一遍
+#   bash install.sh
 #
 # 环境变量（可选）：
 #   ETSY_SKILLS_HOME    源码安装目录（默认 ~/.local/share/etsy-skills）
 #   HERMES_SKILLS_DIR   Hermes 加载 skill 的目录（默认 ~/.hermes/skills）
 #   ETSY_STACK_BIN      etsy-stack 命令的安装目录（默认 ~/.local/bin）
-#   ETSY_SKILLS_REPO    Git 仓库 URL（默认 SSH: git@github.com:easyaitech/etsy-skills.git）
-#                       如需 HTTPS+token：https://<TOKEN>@github.com/easyaitech/etsy-skills.git
-#   ETSY_SKILLS_REF     要 checkout 的分支 / tag（默认 main）
+#   ETSY_SKILLS_REPO    Git 仓库 URL（默认 HTTPS：https://github.com/easyaitech/etsy-skills.git）
+#                       开发者可改成 SSH：git@github.com:easyaitech/etsy-skills.git
+#   ETSY_SKILLS_REF     要 checkout 的分支 / tag（默认 main；推荐传具体 tag 如 v0.1.0）
 
 set -euo pipefail
 
-REPO_URL="${ETSY_SKILLS_REPO:-git@github.com:easyaitech/etsy-skills.git}"
+REPO_URL="${ETSY_SKILLS_REPO:-https://github.com/easyaitech/etsy-skills.git}"
 REF="${ETSY_SKILLS_REF:-main}"
 INSTALL_DIR="${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}"
 HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-$HOME/.hermes/skills}"
