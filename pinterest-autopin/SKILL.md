@@ -75,8 +75,12 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
    - 取 `listing_id` → 拼 Etsy listing URL（店铺 URL 来自 SHOP.md）
    - 取 SKU 标题 / SEO 关键词作 pin title 的锚
 3. 用 `lark-base` 查素材索引 Base 的「Pinterest 候选」视图：
-   - 如果用户指定了素材：校验该素材的 `公开授权 = 已授权` 且 `用途标签 ⊇ Pinterest`，否则中止
-   - 如果未指定：列出该 SKU 关联的、已授权且标了 Pinterest 用途的候选素材，给用户挑
+   - **如果用户指定了素材**——4 路分流，统一格式 `条件 → 中止，先去解决 X 再回来`：
+     - 在 Base 且 `公开授权 = 已授权` 且 `用途标签 ⊇ Pinterest` → ✅ 走原流程
+     - 在 Base 但缺 Pinterest 用途标签 → 中止，先回 assets-library 加 Pinterest 用途标签再来
+     - 在 Base 但 `公开授权 ≠ 已授权` → 中止，先把授权拿到（公开授权改 `已授权`）再来
+     - **不在 Base**（还在冷藏区） → 中止，先走 assets-library 模式 B2 promote 上货架再来
+   - **如果未指定**：列出该 SKU 关联的、已授权且标了 Pinterest 用途的候选素材让用户挑。视图为空时提示："Pinterest 候选池空——该 SKU 还没 promote 过任何素材到货架，先走 assets-library 模式 B2 promote 几张"
 4. 读 BRAND.md（文案语调 / 视觉原则）+ SHOP.md（店铺事实，描述末尾不要重复政策——Pinterest 不是 listing 页面，政策在 link 那边）
 5. 按 `references/pin-composition.md` § 文案规则输出草稿：title / description / altText / link / board / image 路径
 6. **整篇展示**给用户，等用户确认或调整
@@ -111,7 +115,7 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 
 - **不替用户登录 Pinterest**：登录在 Chrome profile 初始化时由用户人工完成；token / 密码不进任何文件
 - **不替用户建 board**：board 在 Pinterest 后台由用户手建；本 skill 只引用名称
-- **未授权的 UGC 绝不发**：素材索引 Base 的 `公开授权` 不是 `已授权` 的素材一律拒绝排队，无论用户怎么催
+- **未授权的 UGC 绝不发**：素材索引 Base 的 `公开授权` 不是 `已授权` 的素材不进入排队流程——按模式 B 第 3 步指引用户先走授权 / promote 流程，无论用户怎么催
 - **未上线 listing 不出 pin**：商品 Base `状态 ≠ 已上线` 的 SKU 不允许排队（pin 的 link 会 404，损害店铺信用）
 - **Pin Queue 写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘
 - **final 发布前必须经过 test**：除非用户明确豁免
@@ -125,7 +129,7 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
   - **BRAND.md 文案语调**的补充（→ distillation-brand.md 流程）
   - 也可能是 Pinterest 这个**渠道特有**的文案手感——这种暂时记到本 skill 的 `references/pin-composition.md`（用户后续触发"沉淀"再进 BRAND.md），不要硬塞 BRAND.md
 - **listing-catalog**：本 skill 只**读**商品 Base，不改。如果发 pin 后想统计"哪条 listing 由哪些 pin 引流"，未来在商品 Base 加一个反向关联视图（不在本 skill 现版本范围）
-- **assets-library**：本 skill 只**读**素材索引 Base 的「Pinterest 候选」视图，不改。如果某素材发 pin 后表现好想标记，回 assets-library 手动维护
+- **assets-library**：本 skill 只**读**素材索引 Base 的「Pinterest 候选」视图，不改。模式 B 第 3 步若指定素材还在冷藏区，提示用户先回 assets-library 走 B2 promote 再回来排 pin。素材发 pin 后想加标记也回 assets-library 手动维护
 - **orders-customers**：UGC 类素材的「公开授权」由 orders-customers 走客户沟通完成；本 skill 只消费已授权的结果
 
 ---

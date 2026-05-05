@@ -59,6 +59,14 @@
 - 评价记录：未来另一个 Base
 - 长篇 listing 描述的草稿历史：写完确认就覆盖；版本控制不该在 Base 里做
 
+## 反查素材：商品 Base ↔ 素材索引 Base
+
+本商品 Base 没有"照片字段"——素材通过 `assets-library` 的素材索引 Base 反向关联（关联 SKU 字段）。在飞书 Base 里点开某 SKU 行，能看到所有指向它的素材索引行。
+
+**注意范围**：反查到的是该 SKU 的 **promoted 成品**（已经走过 assets-library 模式 B2 上货架的）。**raw 原片不在反查结果里**——找原片直接打开 `素材库/1. 摄影/by-SKU/{SKU}/raw/` 文件夹（详见 [assets-library/references/folder-structure.md § 冷藏 vs 货架](../../assets-library/references/folder-structure.md#冷藏-vs-货架哪些目录进-base)）。
+
+是否在商品 Base 上加"照片链接"快捷字段，由 assets-library 的 [asset-types.md § 与 listing-catalog 的协作](../../assets-library/references/asset-types.md#与-listing-catalog-的协作) 在每次 promote 时反向问用户，本表不预设。
+
 ## 建表后的下一步
 
 1. 让用户给一个示范 SKU（已上线的或一个准备上的），手填一行让你看 schema 是不是合用
