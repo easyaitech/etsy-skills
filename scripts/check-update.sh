@@ -39,10 +39,10 @@ emit_if_behind() {
 
   # 2) main 推进：tag 没动，但用户在跟 main 走，且 origin/main 比当前 HEAD 领先
   #    detached HEAD（用户显式钉了 tag / commit）和别的分支（dev 自己的工作分支）都不打扰
+  [[ -n "$latest_main" ]] || return 0
   local current_branch
   current_branch=$(git -C "$INSTALL_DIR" symbolic-ref --short --quiet HEAD 2>/dev/null) || return 0
   [[ "$current_branch" == "main" ]] || return 0
-  [[ -n "$latest_main" ]] || return 0
   if ! git -C "$INSTALL_DIR" merge-base --is-ancestor "$latest_main" HEAD 2>/dev/null; then
     local ahead short
     ahead=$(git -C "$INSTALL_DIR" rev-list "HEAD..$latest_main" --count 2>/dev/null || echo 0)
