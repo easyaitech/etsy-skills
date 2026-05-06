@@ -71,12 +71,16 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 2. 确认目标 SKU（如果是新品，先在 Base 里建一行记录基础信息；如果是改既有 listing，用 lark-base 查现有行）
 3. 读 BRAND.md（语调 / 定位 / 视觉关键词作为 SEO 词库的源头）+ SHOP.md（政策段）
 4. 读 `references/etsy-seo.md`：理解 Etsy 标题 / 标签 / 描述 / materials / category 的 SEO 规则
-5. 读 `assets/listing-template.md`：标准 listing 文案结构
-6. 输出草稿：title + description（含分段）+ tags（13 个槽）+ materials（13 个槽）+ category 建议
-7. **整篇展示**给用户，等用户确认或调整
-8. 用户确认后：
+5. **(可选) eRank 预调研** — 任一命中即主动提示用户去 eRank 调研：① 用户提到有 eRank 账号；② 新品类首品；③ 主推 SKU；④ 单价 ≥ $50；⑤ 用户主动要求"调研 / 看竞品 / 做 SEO"。命中 → 读 `references/erank-research.md`，按节点 ② 向用户发问。低价值 SKU（重复款 / 变体 / 低价位）或用户跳过 → 直接进 step 6（沿用 step 1 的"可选项缺失不必停下"规则）
+6. 读 `assets/listing-template.md`：标准 listing 文案结构
+7. 输出草稿：title + description（含分段）+ tags（13 个槽）+ materials（13 个槽）+ category 建议
+   - 如果跑了 eRank 节点 ②，13 tag 优先从用户给的关键词词库挑
+   - 如果跑了 eRank 节点 ③，title 词序参考竞品模式
+8. **整篇展示**给用户，等用户确认或调整
+9. 用户确认后：
    - 把文案写入 Base 该 SKU 对应行（通过 lark-base 更新）
    - 提醒用户去 Etsy 后台贴上线
+   - 如果跑了 eRank 节点 ⑤ 之前的环节，顺带提醒用户去 eRank 做定价对标（节点 ⑤）
    - 不要替用户上 Etsy（Etsy 后台操作不在本 skill 范围）
 
 ### 模式 C：查询 / 更新现有商品
