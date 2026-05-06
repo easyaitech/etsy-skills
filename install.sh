@@ -96,9 +96,10 @@ ok "命令安装到：$BIN_DIR/etsy-stack"
 INSTALLED=$(git -C "$INSTALL_DIR" describe --tags --always)
 
 # 清掉旧 stack 留下的更新检查缓存：current 现在直接从 git 推导，但缓存里可能还
-# 留着上一次的 latest，不清的话会立刻误报"有新版本"
+# 留着上一次的 latest，不清的话会立刻误报"有新版本"。glob 顺手清掉历史命名
+# （latest-version → latest-tag / latest-main）
 ETSY_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
-rm -f "$ETSY_CACHE_DIR/last-check" "$ETSY_CACHE_DIR/latest-version"
+rm -f "$ETSY_CACHE_DIR/last-check" "$ETSY_CACHE_DIR"/latest-*
 
 echo ""
 ok "安装完成（版本：$INSTALLED）"
