@@ -9,7 +9,10 @@
 ```
 Pin Queue 草稿
    │
-   ├─[1] 渲染 request.json (runtime/{pin_id}.json)
+   ├─[0] 解析 <workspace> = `etsy-stack workspace`
+   │       runtime 目录 = <workspace>/.cache/pinterest-autopin/runtime/
+   │
+   ├─[1] 渲染 request.json (<runtime>/{pin_id}.json)
    │
    ├─[2] validate ── 校验 JSON 字段（不打开浏览器）
    │     └─ 失败 → 修 JSON / 改 Base 字段，重试
@@ -31,11 +34,13 @@ Pin Queue 草稿
 
 ## request.json 构造
 
-模板见 `assets/request-template.json`。从 Pin Queue Base 一行映射：
+模板见 `assets/request-template.json`。下文 `<runtime>` 代指 `<workspace>/.cache/pinterest-autopin/runtime`，由 `etsy-stack workspace` 解析得到（见 SKILL.md §对外的实操接口）。
+
+从 Pin Queue Base 一行映射：
 
 | Pin Queue 字段 | request.json key | 说明 |
 |---|---|---|
-| `image 路径` | `image` | **绝对路径**（必须以 `/` 开头）。如果 Base 里只有飞书云空间链接，模式 C 必须先用 `lark-drive` 下载到本地（`~/code/etsy-skills/tools/Pinterest-autopin/runtime/{pin_id}.{ext}`） |
+| `image 路径` | `image` | **绝对路径**（必须以 `/` 开头）。如果 Base 里只有飞书云空间链接，模式 C 必须先用 `lark-drive` 下载到本地（`<runtime>/{pin_id}.{ext}`） |
 | `Title (EN)` | `title` | 直接拷 |
 | `Board (Pinterest)` | `board` | 直接拷 |
 | `Link` | `link` | 直接拷；空字符串就省略字段 |
@@ -44,20 +49,21 @@ Pin Queue 草稿
 | —（固定值）| `creationUrl` | 默认省略走 Pinterest-autopin 默认值；日本店可显式传 `https://jp.pinterest.com/pin-creation-tool/` |
 | —（固定值）| `chromeProfile` | 永远是 `~/.config/pinterest-autopin/chrome-profile`（绝对路径，运行时把 `~` 展开） |
 
-写文件路径：`~/code/etsy-skills/tools/Pinterest-autopin/runtime/{pin_id}.json`
+写文件路径：`<runtime>/{pin_id}.json`
 
-`runtime/` 目录如不存在先创建。`runtime/` 应被 Pinterest-autopin 仓的 `.gitignore` 覆盖（如未覆盖，由用户在仓库自己加）。
+`<runtime>` 目录如不存在先 `mkdir -p` 创建。建议用户把 `.cache/` 加进工作区根的 `.gitignore`——runtime 数据是 ephemeral 的，不该进 git。
 
 ---
 
 ## 三阶段约定
 
-工作目录都是 `~/code/etsy-skills/tools/Pinterest-autopin/`。
+`npm run pin:*` 都需要切到 Pinterest-autopin 工具源码目录（`~/code/etsy-skills/tools/Pinterest-autopin/`）跑，但 `--input` 必须给 `<runtime>/{pin_id}.json` 的**绝对路径**——工具 cwd 不在工作区，相对路径会找不到。
 
 ### Stage 1: validate
 
 ```bash
-npm run pin:validate -- --input runtime/{pin_id}.json
+cd ~/code/etsy-skills/tools/Pinterest-autopin
+npm run pin:validate -- --input <runtime>/{pin_id}.json
 ```
 
 **期望输出**（成功）：
@@ -71,7 +77,7 @@ npm run pin:validate -- --input runtime/{pin_id}.json
 ### Stage 2: test
 
 ```bash
-npm run pin:test -- --input runtime/{pin_id}.json
+npm run pin:test -- --input <runtime>/{pin_id}.json
 ```
 
 会弹一个 Chrome 窗口，自动跳到 Pinterest pin 创建页，自动上传图、填 title / description / altText / link / 选 board。**不会点发布**。
@@ -93,7 +99,7 @@ npm run pin:test -- --input runtime/{pin_id}.json
 **前置**：用户在对话里明确说"发 / publish / 真发 / final"。test 没过的不要进 final。
 
 ```bash
-npm run pin:publish -- --input runtime/{pin_id}.json
+npm run pin:publish -- --input <runtime>/{pin_id}.json
 ```
 
 **期望输出**（成功）：
@@ -171,5 +177,5 @@ Pin Queue 里的 board 名和 Pinterest 后台不一致。
 - **不要绕过 test 直接 final**（除非用户明确豁免——首次发某 board / 首次用某素材尺寸时尤其不要绕）
 - **不要并发跑多个 final**（同一 Chrome profile 不能多开；多发会让 Pinterest-autopin 抢 profile 锁失败）
 - **不要替用户解 Pinterest 的人机验证 / 二次验证**（违反 user_privacy 中"never bypass CAPTCHA"原则）
-- **不要在失败后把 request.json 删掉**——保留在 `runtime/{pin_id}.json` 便于复盘
+- **不要在失败后把 request.json 删掉**——保留在 `<runtime>/{pin_id}.json` 便于复盘
 - **不要把任何 stdout / stderr 里出现的疑似登录态字符串（cookie 片段、token）写进 Base 或对话**——哪怕用户问"什么错"，也只回错误**类型**和最关键的一句原文

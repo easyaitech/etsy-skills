@@ -10,9 +10,14 @@
 |---|---|---|
 | Pinterest-autopin 工具源码 | `~/code/etsy-skills/tools/Pinterest-autopin/` | 否（在 etsy-skills 仓库的 `.gitignore` 加 `tools/`） |
 | Chrome profile（含 Pinterest 登录态） | `~/.config/pinterest-autopin/chrome-profile/` | 否（在用户家目录，独立于仓库） |
-| 运行时 request.json | `~/code/etsy-skills/tools/Pinterest-autopin/runtime/{pin_id}.json` | 否 |
+| 运行时 request.json | `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` | 否（`.cache/` 应进工作区 `.gitignore`） |
 
-理由：源码与登录态分离——工具可以随时删了重 clone，不丢登录态；登录态在家目录便于跨 worktree 复用。
+> `<workspace>` = `etsy-stack workspace` 解析出的根目录（`$ETSY_WORKSPACE` 或向上找到的 `.etsy-workspace` 标记所在目录）。SKILL.md §对外的实操接口已说明契约。
+
+三层分离的理由：
+- **工具源码**——可随时删了重 clone，不丢数据。`$HOME` 路径在 Hermes profile 隔离下落到 profile HOME 是预期行为
+- **登录态**——独立于工具与工作区，跨工作区复用同一个 Pinterest 账号登录
+- **runtime 数据**——按工作区隔离。多店铺切换时，每个店铺的 pin 历史互不污染；工作区被打包/迁移时 runtime 跟着走
 
 ---
 

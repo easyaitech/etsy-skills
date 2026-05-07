@@ -7,7 +7,7 @@
 ## 安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.6/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.7/install.sh | bash
 ```
 
 脚本会：
@@ -18,7 +18,7 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.6/insta
 谨慎模式（先看再跑）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.6/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.7/install.sh -o install.sh
 less install.sh    # 自查一遍
 bash install.sh
 ```
@@ -33,6 +33,29 @@ bash install.sh
 | [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：文件夹物理层 + 索引 Base 语义层） |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin) 工具发 pin |
 
+## 工作区初始化（首次使用必读）
+
+5 个 skill 都会把 BRAND.md / SHOP.md / Pinterest runtime 等数据落到统一的「工作区」。Hermes profile 隔离环境下 `$HOME` 不是系统用户 HOME，靠 `~/` 推路径会让数据落到 profile sandbox。**必须**显式声明工作区位置：
+
+```bash
+# 进到希望放数据的目录
+cd /path/to/your/etsy-shop-workspace
+
+# 写一个标记文件（也可加可选的 ETSY_WORKSPACE 环境变量）
+etsy-stack init
+
+# 验证：从任何子目录都能解析到工作区根
+etsy-stack workspace
+```
+
+解析顺序（不变契约）：
+
+1. 优先 `$ETSY_WORKSPACE` 环境变量
+2. 否则从 cwd 向上找 `.etsy-workspace` 标记文件
+3. 都没有 → 命令退出非零，skill 会停下问用户而不是猜路径
+
+工作区是 git 仓库时记得在 `.gitignore` 加 `.cache/`（用来放 Pinterest-autopin runtime 等临时数据）。
+
 ## 升级
 
 5 个 skill 启动时都会静默检查更新（24h 缓存）。有新版本会在 agent 回复末尾追加一行：
@@ -42,11 +65,13 @@ bash install.sh
 主动操作：
 
 ```bash
-etsy-stack check    # 立即检查（绕过缓存）
-etsy-stack update   # 拉最新版本并刷新软链
-etsy-stack version  # 当前版本
-etsy-stack list     # 看 5 个 skill 的链接状态
-etsy-stack where    # 打印源码安装目录
+etsy-stack check       # 立即检查（绕过缓存）
+etsy-stack update      # 拉最新版本并刷新软链
+etsy-stack version     # 当前版本
+etsy-stack list        # 看 5 个 skill 的链接状态
+etsy-stack where       # 打印源码安装目录
+etsy-stack workspace   # 解析当前 Etsy 工作区根
+etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 ```
 
 ## 运行环境
@@ -65,7 +90,7 @@ etsy-stack where    # 打印源码安装目录
 | `HERMES_SKILLS_DIR` | `~/.hermes/skills` |
 | `ETSY_STACK_BIN` | `~/.local/bin` |
 | `ETSY_SKILLS_REPO` | `https://github.com/easyaitech/etsy-skills.git` |
-| `ETSY_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v0.1.6`） |
+| `ETSY_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v0.1.7`） |
 
 ## 仓库布局
 

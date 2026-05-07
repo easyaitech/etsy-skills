@@ -16,8 +16,40 @@ etsy-stack — Etsy skill bundle 管理工具
   etsy-stack update             拉最新版本并刷新软链
   etsy-stack list               列出 manifest 中的 skill 及链接状态
   etsy-stack where              打印源码安装目录
+  etsy-stack workspace          解析当前 Etsy 工作区根目录
+  etsy-stack init [DIR]         在 DIR（默认 cwd）创建 .etsy-workspace 标记
   etsy-stack help               查看本帮助
 EOF
+}
+
+# 解析 Etsy 工作区根目录。顺序：
+#   1. $ETSY_WORKSPACE 环境变量（指向不存在目录视为错误）
+#   2. 从 cwd 向上找 .etsy-workspace 标记文件
+# 成功 → echo 路径，return 0
+# $ETSY_WORKSPACE 设了但目录不存在 → return 2
+# 完全找不到 → return 1
+# 不打印任何内容；调用方决定怎么报错
+resolve_workspace() {
+  if [[ -n "${ETSY_WORKSPACE:-}" ]]; then
+    if [[ -d "$ETSY_WORKSPACE" ]]; then
+      ( cd "$ETSY_WORKSPACE" && pwd )
+      return 0
+    else
+      return 2
+    fi
+  fi
+
+  local dir
+  dir="$(pwd)"
+  while [[ "$dir" != "/" ]]; do
+    if [[ -f "$dir/.etsy-workspace" ]]; then
+      echo "$dir"
+      return 0
+    fi
+    dir="$(dirname "$dir")"
+  done
+
+  return 1
 }
 
 require_install() {
@@ -77,6 +109,73 @@ for skill in manifest["skills"]:
 
   where)
     echo "$INSTALL_DIR"
+    ;;
+
+  workspace|ws)
+    out="$(resolve_workspace)"
+    rc=$?
+    case $rc in
+      0)
+        echo "$out"
+        exit 0
+        ;;
+      2)
+        echo "❌ \$ETSY_WORKSPACE 指向的目录不存在：${ETSY_WORKSPACE:-}" >&2
+        echo "   请把它指向实际存在的工作区根目录。" >&2
+        exit 1
+        ;;
+      *)
+        cat >&2 <<'EOF'
+❌ 找不到 Etsy 工作区。
+
+按以下任一方式声明：
+
+  1. 设置环境变量（推荐写进 shell 配置）：
+       export ETSY_WORKSPACE=/path/to/your/etsy-workspace
+
+  2. 在工作区根目录跑一次 `etsy-stack init`，会写一个 .etsy-workspace 标记文件，
+     之后从工作区子目录调用本命令会自动向上找到根。
+
+不要让 skill 把文件写到当前目录或 $HOME 下——Hermes profile 的 $HOME 不是
+系统用户 HOME，会落到 profile sandbox 里。
+EOF
+        exit 1
+        ;;
+    esac
+    ;;
+
+  init)
+    target="${1:-$(pwd)}"
+    if [[ ! -d "$target" ]]; then
+      echo "❌ 目录不存在：$target" >&2
+      exit 1
+    fi
+    target="$( cd "$target" && pwd )"
+    marker="$target/.etsy-workspace"
+    if [[ -f "$marker" ]]; then
+      echo "✓ 已是 Etsy 工作区：$target"
+      echo "  （$marker 已存在，未覆盖）"
+      exit 0
+    fi
+    cat > "$marker" <<EOF
+# Etsy workspace marker
+# 由 etsy-stack init 创建。skill 会向上找这个文件来定位工作区根目录。
+name=$(basename "$target")
+created=$(date +%Y-%m-%d)
+EOF
+    echo "✓ 已初始化 Etsy 工作区：$target"
+    echo ""
+    echo "建议把下面这行加到 shell 配置（~/.zshrc 或 ~/.bashrc），跨目录也能定位："
+    echo ""
+    echo "  export ETSY_WORKSPACE=\"$target\""
+    echo ""
+    if [[ -d "$target/.git" ]] || git -C "$target" rev-parse --git-dir >/dev/null 2>&1; then
+      echo "工作区是 git 仓库——记得把以下两行加进 .gitignore："
+      echo "  .cache/             # Pinterest-autopin runtime 等临时数据"
+      echo "  # .etsy-workspace   # 标记文件本身建议提交，便于团队成员从 cwd 自动定位"
+      echo ""
+    fi
+    echo "下一步：用 shop-foundation 建 BRAND.md / SHOP.md"
     ;;
 
   help|-h|--help|"")
