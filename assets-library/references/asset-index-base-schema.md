@@ -26,7 +26,7 @@
 | 关联 SKU | 关联（商品 Base） | △ | `TEACUP-001`, `TEACUP-007` | — |
 | 关联订单 | 关联（订单 Base） | △ | `ORDER-2026-001` | — |
 | 关联客户 | 关联（客户 Base） | △ | (客户 open_id) | — |
-| 用途标签 | 多选 | △ | `Etsy listing 主图 / Etsy listing 详情 / Etsy 店铺 banner / Pinterest / Instagram Posts / Instagram Reels / Instagram Stories / 小红书 / 评价素材 / 内部参考` | 一份素材投多渠道全勾上；先空着也行，发布到某渠道时再补 |
+| 用途标签 | 多选 | △ | **Etsy 槽位**：`hero / variation / scale / size-chart / detail / lifestyle / packaging / brand-story / context / comparison`（与 [etsy-listing-photo-slots.md](etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐) 对齐）<br>**渠道**：`Pinterest / Instagram Posts / Instagram Reels / Instagram Stories / 小红书 / 评价素材 / 内部参考`<br>**Etsy 店铺**：`Etsy 店铺 banner`<br>**legacy（仅旧数据兼容）**：`Etsy listing 主图（→ 等同 hero）/ Etsy listing 详情（→ 等同 detail）` | 一份素材投多槽位 + 多渠道全勾上；先空着也行，发布到某渠道时再补。模式 D 部分跑反查 SKU 已覆盖槽位时按这套词汇表推断；遇到 legacy 标签按对应映射 |
 | 比例 / 尺寸 | 多选 | △ | `1x1 / 4x5 / 9x16 / 16x9 / 自由` | 视频和成图建议填，便于按渠道筛 |
 | 公开授权 | 单选 | ✓ | `已授权 / 仅内部 / 待沟通 / 不可公开` | 客户拍摄类的关键合规位；非客户类默认"已授权" |
 | BRAND 合规 | checkbox | ✓ | `true` / `false` | 对照 BRAND.md `§ 视觉原则` 的自检结果；不通过时把理由写进"备注" |
@@ -77,7 +77,7 @@
    - 摄影成图 / 场景图 / 视频母版 / 视觉模板 → 关联 SKU 必填（跨 SKU 的 vlog / 品牌片可空）
    - 客户拍摄 / 客户定制参考 → 关联订单 + 关联客户必填，且 `公开授权 = 已授权` 才能 promote 进可投渠道状态
    - **摄影原图 / 视频原料**（仍在 raw 区的）→ 不应该 promote。如用户尝试，提示：原片需先在外部工具编辑导出到 `edited/`，再 promote
-4. 用途标签可以先空着——发布到某渠道时再勾上（避免"Pinterest 候选"视图被未投的素材污染）
+4. 用途标签可以先空着——发布到某渠道时再勾上（避免"Pinterest 候选"视图被未投的素材污染）。**Etsy listing 用图建议在 promote 时就勾对应槽位 ID**（hero / detail / lifestyle 等，词汇表见 [etsy-listing-photo-slots.md § 3](etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐)）——这是模式 D 部分跑反查"该 SKU 已覆盖槽位"的依据；不勾不阻塞但部分跑会降级为问用户
 5. BRAND 合规不通过时仍然录入，checkbox 留空 + 在"备注"写理由——保留可追溯，不假装没发生
 
 ## 与文件夹的边界

@@ -2,6 +2,26 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.8] - 2026-05-07
+
+`assets-library`：加模式 D plan（拍前出 shoot brief）。现状是模式 A 建库 / B1 dump / B2 promote / C 查找 — 接到原料前的"决定拍什么"是空白。摄影没 brief 上手就拍 = 50 张里只有 5-10 张能用，关键 Etsy 槽位（hero / scale / packaging / size chart）经常忘拍要补拍。模式 D 在拍前给 SKU 出一份 markdown shoot brief，落 `1. 摄影/by-SKU/{SKU}/shoot-brief.md`，按 stack 同构范式「输入 → 词库 → 文案」组装：输入 = SKU 行 + BRAND.md + listing-catalog 礼物词库；词库 = Etsy 10 槽位社区 SOP（独立 reference）；文案 = 三段式 brief（A 槽位映射 / B Mood / C 镜头清单）。
+
+### 新增
+- `assets-library/PLAN-MODE.md`：模式 D 设计 doc（Approved，前置 office-hours 会话 2026-05-07，reviewer x2 = 6/10 → 8/10 PASS）
+- `assets-library/references/etsy-listing-photo-slots.md`：Etsy 10 槽位社区 SOP；首段警示"平台只规定 10 张图，槽位无平台语义"；P0/P1/P2/P3 优先级定义；与素材索引 Base "用途标签"字段对齐的槽位 ID 词汇表（hero / variation / scale / size-chart / detail / lifestyle / packaging / brand-story / context / comparison）；PR1 仅做通用 SOP，按品类细化留 v2
+- `assets-library/references/shoot-brief-template.md`：三段式 brief 模板骨架 + 填写指引（A/B/C/D/E + References 段；BRAND 缺失降级为 ⚠️ 占位；老 SKU 部分跑只填缺位行）
+
+### 修
+- `assets-library/SKILL.md`：description "三种触发 → 四种触发"加模式 D；"对外接口"段补"商品 Base"；"依赖关系"表补 BRAND.md 视觉禁区段、SHOP.md § 物料、商品 Base SKU 行字段、listing-catalog 礼物词库；"三种执行模式 → 四种执行模式"；加模式 D 章节（10 步执行 + 部分跑分支 + 9a 逐层建目录 + 输入降级表 + 关键约束）；"与其他 skill 的协作"补 listing-catalog 礼物词库消费路径
+- `assets-library/references/asset-index-base-schema.md`：用途标签字段词汇表加 Etsy 槽位 ID 段（与 etsy-listing-photo-slots.md 对齐）+ legacy 段（"Etsy listing 主图 → 等同 hero"等映射）；录入约定 §4 加"Etsy listing 用图建议 promote 时就勾槽位 ID（模式 D 部分跑反查依赖）"
+- `assets-library/references/folder-structure.md`：`by-SKU/{SKU}/` 子目录列表加 `shoot-brief.md` 一行
+- `README.md` skill 表 assets-library 描述补"+ 拍前 shoot brief 生成（模式 D）"
+
+### 安装入口（钉死 v0.1.8）
+```
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.8/install.sh | bash
+```
+
 ## [0.1.7] - 2026-05-07
 
 `stack 级`：加 Etsy 工作区路径解析契约。原本 5 个 skill 都用「项目根目录」隐式假设 cwd 就是工作区根——在 Hermes profile 隔离场景下 `$HOME` 是 profile sandbox HOME，靠 `~/` 推路径会让 BRAND.md 落到错误位置。新方案：`$ETSY_WORKSPACE` 环境变量 → `.etsy-workspace` 标记向上查找 → 都没有就停下问用户，绝不猜。

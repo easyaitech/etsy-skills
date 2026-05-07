@@ -30,7 +30,7 @@ bash install.sh
 | [`shop-foundation`](shop-foundation/SKILL.md) | 维护 BRAND.md（品牌原则）+ SHOP.md（店铺事实），整个 stack 的元基础 |
 | [`listing-catalog`](listing-catalog/SKILL.md) | 飞书 Base 商品目录 + 撰写 Etsy listing 文案 |
 | [`orders-customers`](orders-customers/SKILL.md) | 飞书 Base × 2（订单 + 客户）+ 客服 SOP + 客户标签 |
-| [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：文件夹物理层 + 索引 Base 语义层） |
+| [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：文件夹物理层 + 索引 Base 语义层）+ 拍前 shoot brief 生成（模式 D） |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin) 工具发 pin |
 
 ## 工作区初始化（首次使用必读）
