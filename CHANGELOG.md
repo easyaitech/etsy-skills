@@ -2,7 +2,7 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [0.1.8] - 2026-05-07
+## [0.2.0] - 2026-05-07
 
 `assets-library`：加模式 D plan（拍前出 shoot brief）。现状是模式 A 建库 / B1 dump / B2 promote / C 查找 — 接到原料前的"决定拍什么"是空白。摄影没 brief 上手就拍 = 50 张里只有 5-10 张能用，关键 Etsy 槽位（hero / scale / packaging / size chart）经常忘拍要补拍。模式 D 在拍前给 SKU 出一份 markdown shoot brief，落 `1. 摄影/by-SKU/{SKU}/shoot-brief.md`，按 stack 同构范式「输入 → 词库 → 文案」组装：输入 = SKU 行 + BRAND.md + listing-catalog 礼物词库；词库 = Etsy 10 槽位社区 SOP（独立 reference）；文案 = 三段式 brief（A 槽位映射 / B Mood / C 镜头清单）。
 
@@ -18,9 +18,9 @@
 - `listing-catalog/SKILL.md` 模式 B 加 step 10：listing 文案写入 Base 后追问"要不要顺手出 shoot brief"——用户同意时 invoke assets-library 模式 D，**调用方现传** 4 类礼物词库 + description 段 3 in-memory（避免走 Base 反推路径，词库新鲜可用）；用户跳过不阻塞
 - `README.md` skill 表 assets-library 描述补"+ 拍前 shoot brief 生成（模式 D）"
 
-### 安装入口（钉死 v0.1.8）
+### 安装入口（钉死 v0.2.0）
 ```
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.8/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.2.0/install.sh | bash
 ```
 
 ## [0.1.7] - 2026-05-07
