@@ -91,6 +91,11 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
    - 提醒用户去 Etsy 后台贴上线
    - 如果跑了 eRank 节点 ⑤ 之前的环节，顺带提醒用户去 eRank 做定价对标（节点 ⑤）
    - 不要替用户上 Etsy（Etsy 后台操作不在本 skill 范围）
+10. **(可选) 反向触发 shoot brief** — listing 文案写入 Base 后，如果该 SKU 还没有 `1. 摄影/by-SKU/{SKU}/shoot-brief.md`：
+    - 提示用户："文案定了，刚生成的 4 类礼物词库 + Mood 新鲜可用。要不要顺手让 assets-library 模式 D 出一份 shoot brief？这样下次集中 shoot 直接按单拍。"
+    - 用户同意 → invoke `assets-library` 进入模式 D，**调用方现传** 4 类礼物词库（受众 / 场景 / 节日 / 包装）+ description 段 3 in-memory，让 mode D 直接用，不走 Base 反推
+    - 用户跳过 → 静默跳过（不阻塞）；用户后续主动 invoke assets-library 时也能正常出 brief（走 Base description 反推路径）
+    - 节奏：本步是 step 9 完成后**同一 turn 内** agent 主动追问的可选环节，不是 step 9 的子步骤；用户回应后才 invoke 下一个 skill
 
 ### 模式 C：查询 / 更新现有商品
 
