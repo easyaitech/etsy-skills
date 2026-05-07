@@ -15,6 +15,7 @@
 - `assets-library/SKILL.md`：description "三种触发 → 四种触发"加模式 D；"对外接口"段补"商品 Base"；"依赖关系"表补 BRAND.md 视觉禁区段、SHOP.md § 物料、商品 Base SKU 行字段、listing-catalog 礼物词库；"三种执行模式 → 四种执行模式"；加模式 D 章节（10 步执行 + 部分跑分支 + 9a 逐层建目录 + 输入降级表 + 关键约束）；"与其他 skill 的协作"补 listing-catalog 礼物词库消费路径
 - `assets-library/references/asset-index-base-schema.md`：用途标签字段词汇表加 Etsy 槽位 ID 段（与 etsy-listing-photo-slots.md 对齐）+ legacy 段（"Etsy listing 主图 → 等同 hero"等映射）；录入约定 §4 加"Etsy listing 用图建议 promote 时就勾槽位 ID（模式 D 部分跑反查依赖）"
 - `assets-library/references/folder-structure.md`：`by-SKU/{SKU}/` 子目录列表加 `shoot-brief.md` 一行
+- `listing-catalog/SKILL.md` 模式 B 加 step 10：listing 文案写入 Base 后追问"要不要顺手出 shoot brief"——用户同意时 invoke assets-library 模式 D，**调用方现传** 4 类礼物词库 + description 段 3 in-memory（避免走 Base 反推路径，词库新鲜可用）；用户跳过不阻塞
 - `README.md` skill 表 assets-library 描述补"+ 拍前 shoot brief 生成（模式 D）"
 
 ### 安装入口（钉死 v0.1.8）
