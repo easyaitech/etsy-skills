@@ -67,16 +67,23 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 - 用户要写新 listing 文案 / 上新 / 重写某条 listing 的 title 或 description / 调整 tags
 
 **执行步骤**：
-1. 按 `references/input-checklist.md` 盘点用户已给的输入；**缺必填项一次性问全**，不要边写边追问
+1. 按 `references/input-checklist.md` 盘点用户已给的输入；**缺必填项一次性问全**，不要边写边追问。**预期售价**与**礼物倾向**是必填——前者决定 step 5.5 客单价档，后者决定 step 5.5 是走完整问还是 Q2-Q5 全跳过
 2. 确认目标 SKU（如果是新品，先在 Base 里建一行记录基础信息；如果是改既有 listing，用 lark-base 查现有行）
-3. 读 BRAND.md（语调 / 定位 / 视觉关键词作为 SEO 词库的源头）+ SHOP.md（政策段）
+3. 读 BRAND.md（语调 / 定位 / 视觉关键词作为 SEO 词库的源头）+ SHOP.md（政策段 + 礼盒服务字段）
 4. 读 `references/etsy-seo.md`：理解 Etsy 标题 / 标签 / 描述 / materials / category 的 SEO 规则
-5. **(可选) eRank 预调研** — 任一命中即主动提示用户去 eRank 调研：① 用户提到有 eRank 账号；② 新品类首品；③ 主推 SKU；④ 单价 ≥ $50；⑤ 用户主动要求"调研 / 看竞品 / 做 SEO"。命中 → 读 `references/erank-research.md`，按节点 ② 向用户发问。低价值 SKU（重复款 / 变体 / 低价位）或用户跳过 → 直接进 step 6（沿用 step 1 的"可选项缺失不必停下"规则）
+5. **(可选) eRank 预调研** — 任一命中即主动提示用户去 eRank 调研：① 用户提到有 eRank 账号；② 新品类首品；③ 主推 SKU；④ 单价 ≥ $50；⑤ 用户主动要求"调研 / 看竞品 / 做 SEO"。命中 → 读 `references/erank-research.md`，按节点 ② 向用户发问。低价值 SKU（重复款 / 变体 / 低价位）或用户跳过 → 直接进 step 5.5（沿用 step 1 的"可选项缺失不必停下"规则）
+5.5. **(强制) 礼物场景调研** — 读 `references/gift-scenario.md`，按客单价档运行：
+   - **< $20**：走轻问法，只问 Q1（礼物倾向）；其余自动从 holiday-calendar.md 命中节日生成 3 个纯节日词
+   - **$20-$50**：完整 5 问（Q1 礼物倾向 / Q2 受众类型 / Q3 场景 / Q4 节日时机 / Q5 受众画像）；Q1=自购为主时 Q2-Q5 跳过
+   - **≥ $50**：完整 5 问 + 生成长尾语义短语（仅供 title / description 段 3，不进 tag）
+   - 跑完后产出 4 类礼物词库（受众词 / 场景词 / 节日词 / 包装服务词）+ BRAND.md 三条硬过滤后的「过滤掉的候选词」清单
 6. 读 `assets/listing-template.md`：标准 listing 文案结构
-7. 输出草稿：title + description（含分段）+ tags（13 个槽）+ materials（13 个槽）+ category 建议
-   - 如果跑了 eRank 节点 ②，13 tag 优先从用户给的关键词词库挑
+7. 输出草稿：title + description（含分段）+ tags（13 个槽，按客单价档礼物槽数 3/4/3）+ materials（13 个槽）+ category 建议
+   - 13 tag 严格守恒，礼物槽数与客单价档对应；其余非礼物槽如有 eRank 词库优先用，否则按 etsy-seo.md 规则 LLM 填
+   - title 公式 `[核心品类词] + [核心修饰词] + [礼物维度] + [次要属性] + [情感词]`，礼物维度槽优先级：节日词 > 受众词 > 场景词；自购为主 SKU 留空
+   - description 段 3 双小段（使用语境 + 礼物语境，按 etsy-seo.md § Description）
    - 如果跑了 eRank 节点 ③，title 词序参考竞品模式
-8. **整篇展示**给用户，等用户确认或调整
+8. **整篇展示**给用户，等用户确认或调整。同时展示「过滤掉的候选词」清单，方便用户判断是否要纠正 BRAND.md
 9. 用户确认后：
    - 把文案写入 Base 该 SKU 对应行（通过 lark-base 更新）
    - 提醒用户去 Etsy 后台贴上线
