@@ -7,7 +7,9 @@ description: 维护 Etsy 商品目录（飞书 Base）+ 撰写 listing 文案。
 
 这个 skill 维护 Etsy 商品目录（结构化数据 → 飞书 Base）+ 撰写 Etsy listing 文案。
 
-**对外的实操接口**：飞书 Base（用 `lark-base` skill 操作）+ 项目根目录的 BRAND.md / SHOP.md（用 `shop-foundation` skill 维护）。
+**对外的实操接口**：飞书 Base（用 `lark-base` skill 操作）+ 工作区根目录的 BRAND.md / SHOP.md（用 `shop-foundation` skill 维护）。
+
+> 「工作区根」指 `etsy-stack workspace` 解析出的绝对路径——见 shop-foundation §工作区路径解析。本 skill 读写 BRAND.md / SHOP.md 之前必须先调一次该命令；解析失败按 shop-foundation 的指引停下问用户，不要猜路径。
 
 ---
 
@@ -31,8 +33,8 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 
 | 来源 | 提供什么 | 怎么用 |
 |---|---|---|
-| `./BRAND.md` | 文案语调 / 视觉原则 / 品牌定位 | 标题、描述、标签的语气与措辞——"应该说"、"避免说"、"原则"段都要遵守 |
-| `./SHOP.md` | 处理时间 / 运输方式 / 退换货 / 定制政策 | 描述末尾的政策段引用 SHOP.md 原文，不要自行编造 |
+| `<workspace>/BRAND.md` | 文案语调 / 视觉原则 / 品牌定位 | 标题、描述、标签的语气与措辞——"应该说"、"避免说"、"原则"段都要遵守 |
+| `<workspace>/SHOP.md` | 处理时间 / 运输方式 / 退换货 / 定制政策 | 描述末尾的政策段引用 SHOP.md 原文，不要自行编造 |
 | 飞书 Base 商品行 | 成本、变体、库存、SEO 关键词 | 写 listing 时先查 SKU 行；写完后回写 listing_id、状态、上线日 |
 
 **写 listing 之前**永远先：

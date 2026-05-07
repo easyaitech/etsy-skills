@@ -58,7 +58,7 @@
 ## 字段命名约定
 
 - 与商品 Base / 素材索引 Base 一致：中文标签优先；英文内容字段（`Title (EN)` / `Description (EN)` / `Alt Text (EN)`）保留英文标签
-- `pin_id` 主键用全英文小写下划线，便于在 `request.json` 文件名 (`runtime/{pin_id}.json`) 直接引用
+- `pin_id` 主键用全英文小写下划线，便于在 `request.json` 文件名 (`<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json`) 直接引用
 - `Board (Pinterest)` 用单选不用文本——避免拼写漂移导致 Pinterest-autopin 找不到 board
 
 ---

@@ -2,6 +2,28 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.7] - 2026-05-07
+
+`stack 级`：加 Etsy 工作区路径解析契约。原本 5 个 skill 都用「项目根目录」隐式假设 cwd 就是工作区根——在 Hermes profile 隔离场景下 `$HOME` 是 profile sandbox HOME，靠 `~/` 推路径会让 BRAND.md 落到错误位置。新方案：`$ETSY_WORKSPACE` 环境变量 → `.etsy-workspace` 标记向上查找 → 都没有就停下问用户，绝不猜。
+
+### 新增
+- `etsy-stack workspace` 子命令：按解析顺序定位工作区根（环境变量 → 向上找标记），失败时给出明确错误信息并退出非零
+- `etsy-stack init [DIR]`：在 DIR（默认 cwd）写 `.etsy-workspace` 标记文件；检测目标是 git 仓库时自动提示加 `.cache/` 到 `.gitignore`
+- `shop-foundation/SKILL.md` §工作区路径解析：stack 级契约段，规定解析顺序、失败行为、不允许的写法（写死绝对路径 / `~/workspaces/etsy` 兜底 / 候选路径探测），下游 skill 引用
+
+### 修
+- `listing-catalog` / `orders-customers` / `assets-library` / `pinterest-autopin` SKILL.md：把「项目根目录的 BRAND.md / SHOP.md」统一改成「工作区根目录的 BRAND.md / SHOP.md」，并指向 shop-foundation 的契约段；引用表里的 `./BRAND.md` / `./SHOP.md` 改成 `<workspace>/BRAND.md` / `<workspace>/SHOP.md`
+- `pinterest-autopin` runtime 路径迁移：`~/code/etsy-skills/tools/Pinterest-autopin/runtime/{pin_id}.json` → `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json`。runtime 数据按工作区隔离（多店铺切换不互相污染、跟工作区一起迁移）；工具源码本体仍在 `~/code/etsy-skills/tools/`（开发者机器约定，与 stack 安装路径同性质）。`npm run pin:*` 改为传 runtime 文件的**绝对路径**，因工具 cwd 不在工作区
+- `pinterest-autopin/references/runtime-setup.md` § 路径约定：runtime 改写到工作区，配 `<workspace>` 占位符 + 三层分离（工具源码 / 登录态 / runtime 数据）的理由
+- `pinterest-autopin/references/publishing-flow.md`：流程图加 step 0（解析工作区），三阶段命令统一用 `<runtime>` 占位符替代旧的 `runtime/...` 相对路径
+- `pinterest-autopin/references/pin-queue-base-schema.md`：runtime 路径示例同步
+- `README.md` 加「工作区初始化（首次使用必读）」节，etsy-stack 命令清单补 `workspace` / `init`
+
+### 安装入口（钉死 v0.1.7）
+```
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.7/install.sh | bash
+```
+
 ## [0.1.6] - 2026-05-07
 
 `listing-catalog`：把礼物 / 节日维度从「文末点缀」提升到「输入级模块」。现状 listing 写作过度聚焦物的维度（材质 / 工艺 / 形态），缺关系的维度（送给谁 / 什么节日）——而 Etsy 流量大头是礼物搜索意图，这块漏吃。新加 step 5.5 强制环节，按客单价档（< $20 / $20-$50 / ≥ $50）分流问法 + 词库结构，跟现有 BRAND/SHOP/eRank 的「输入 → 词库 → 文案」范式同构。
