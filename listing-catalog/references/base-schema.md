@@ -63,7 +63,7 @@
 
 本商品 Base 没有"照片字段"——素材通过 `assets-library` 的素材索引 Base 反向关联（关联 SKU 字段）。在飞书 Base 里点开某 SKU 行，能看到所有指向它的素材索引行。
 
-**注意范围**：反查到的是该 SKU 的 **promoted 成品**（已经走过 assets-library 模式 B2 上货架的）。**raw 原片不在反查结果里**——找原片直接打开 `素材库/1. 摄影/by-SKU/{SKU}/raw/` 文件夹（详见 [assets-library/references/folder-structure.md § 冷藏 vs 货架](../../assets-library/references/folder-structure.md#冷藏-vs-货架哪些目录进-base)）。
+**注意范围**：反查到的是该 SKU 的 **promoted 成品**（已经走过 assets-library 模式 B2 的）。**未录入 Base 的素材不在反查结果里**——找未分类素材浏览 `素材库/待处理/` 文件夹（详见 [assets-library/references/folder-structure.md](../../assets-library/references/folder-structure.md)）。
 
 是否在商品 Base 上加"照片链接"快捷字段，由 assets-library 的 [asset-types.md § 与 listing-catalog 的协作](../../assets-library/references/asset-types.md#与-listing-catalog-的协作) 在每次 promote 时反向问用户，本表不预设。
 

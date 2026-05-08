@@ -71,7 +71,7 @@ QA 一次性通过时不存 attempt 文件，直接落正式名。用户从 atte
 
   "input": {
     "brief_source": "shoot-brief-md | reverse-trigger-in-memory | user-verbal",
-    "brief_path": "<workspace>/素材库/1. 摄影/by-SKU/TEACUP-001/shoot-brief.md",
+    "brief_path": "<workspace>/素材库/商品/TEACUP-001_shoot-brief.md",
     "reference_images": ["/path/to/raw/IMG_1234.JPG"]
   },
 
@@ -97,7 +97,7 @@ QA 一次性通过时不存 attempt 文件，直接落正式名。用户从 atte
   },
 
   "user_decision": "promoted | kept-in-cache | discarded",
-  "promoted_to": "https://飞书云空间/.../1. 摄影/by-SKU/TEACUP-001/edited/2026-05-08_TEACUP-001_AI-hero_001.png",
+  "promoted_to": "https://飞书云空间/.../商品/TEACUP-001_AI-hero_001.png",
   "promoted_at": "2026-05-08T14:35:12+08:00"
 }
 ```
@@ -120,7 +120,7 @@ QA 一次性通过时不存 attempt 文件，直接落正式名。用户从 atte
 | `label_id` | 素材索引 Base **用途标签**字段值——直接对应（hero / Pinterest / 等，源自 schema 词汇表）|
 | `sku` | **关联 SKU** 字段 |
 | `final_prompt`（截前 200 字符）| 素材索引 Base **备注**字段以 `[AI 合成] {prompt 摘要}` 前缀写入 |
-| `mode` + `label_id` | 决定上传到 `1. 摄影/by-SKU/{SKU}/` 哪个子目录：模式 A `hero` / `detail` / `scale` / `size-chart` → `edited/`；模式 A `lifestyle` / `brand-story` / `packaging` / 模式 B 全部 → `scene/` |
+| `mode` + `label_id` | 上传到 `商品/` 文件夹，按 assets-library 命名公式命名（`{SKU}_{usage}_{seq}.{ext}`） |
 
 ---
 
