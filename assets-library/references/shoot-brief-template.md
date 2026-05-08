@@ -1,6 +1,6 @@
 # Shoot Brief 模板（模式 D 输出骨架）
 
-> 本文档是模式 D（plan）生成的 `shoot-brief.md` 文件的**模板骨架**。模式 D 执行 step 7 时，按本骨架结构填具体内容；step 9c 上传到 `1. 摄影/by-SKU/{SKU}/shoot-brief.md`。
+> 本文档是模式 D（plan）生成的 shoot-brief 文件的**模板骨架**。模式 D 执行 step 7 时，按本骨架结构填具体内容；step 9c 上传到 `商品/{SKU}_shoot-brief.md`。
 
 ## 模板骨架
 

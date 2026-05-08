@@ -1,5 +1,7 @@
 # assets-library 增设计：模式 D — plan（拍前出 brief）
 
+> **⚠️ 路径已过时**：本文档中的文件夹路径（`1. 摄影/by-SKU/{SKU}/shoot-brief.md` 等）已在 2026-05-08 扁平化重构中废弃。当前 brief 存储路径为 `商品/{SKU}_shoot-brief.md`。详见 [references/folder-structure.md](references/folder-structure.md)。本文档保留作为模式 D 设计决策的历史记录。
+
 状态：APPROVED — 可进 PR1 起草
 Reviewer：2 轮（round 1 = 6/10 → round 2 = 8/10 PASS）
 前置讨论：/office-hours 会话（用户：johnz / 日期：2026-05-07）

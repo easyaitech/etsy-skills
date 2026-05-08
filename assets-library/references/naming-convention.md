@@ -1,7 +1,6 @@
 # 文件命名约定
 
-> 一致命名是资产库的根本秩序。**成品**层（edited / scene / 模板等）每次归档都按这套规则走。
-> **冷藏**层有松绑——见下面 §"两阶段命名"。
+> 文件夹扁平化后（5 个一级文件夹，无子目录），文件名是在文件夹视图里快速识别素材的**唯一线索**。成品层每次归档都按这套规则走。
 
 ## 两阶段命名（重要）
 
@@ -9,9 +8,8 @@ dump（模式 B1）和 promote（模式 B2）对命名的严格度不同：
 
 | 阶段 | 物理位置 | 命名要求 |
 |---|---|---|
-| **dump 入冷藏** | `1. 摄影/shoot-archive/`、`2. 视频/.../shoot-archive/` | **接受保留相机原始名**（`IMG_3847.JPG` / `DSCF0123.RAF`），不强制改名 |
-| **dump 入 SKU 冷藏** | `1. 摄影/by-SKU/{SKU}/raw/` | 建议改名（不阻塞）|
-| **promote 上货架** | `edited/` / `scene/` / `视觉模板/` 等 | **强制按公式命名**——成品命名进 Base，影响后续 SEO / 可追溯性 |
+| **dump（B1）** | `待处理/` | **接受保留相机原始名**（`IMG_3847.JPG` / `DSCF0123.RAF`），不强制改名 |
+| **promote（B2）** | `商品/` / `品牌/` / `客户/` / `工作室/` | **强制按公式命名**——成品命名进 Base，影响后续检索与可追溯性 |
 
 ## 总原则
 
@@ -19,12 +17,13 @@ dump（模式 B1）和 promote（模式 B2）对命名的严格度不同：
 2. **日期开头**用 `YYYY-MM-DD` 格式（不要 `2026.5.5` 或 `20260505`）——按字母排序自然按时间排
 3. **小写为主**，专有名词（SKU 编号、品牌缩写）保持其惯例（SKU 全大写）
 4. **不要空格**——用 `-` 连接词
+5. **商品类素材必须包含 SKU 编号**——没有子目录提供上下文后，SKU 是最重要的识别线索
 
 ## 各类素材命名公式
 
-### 摄影原图（by-SKU/{SKU}/raw/）
+### 商品摄影原图（商品/，raw 阶段）
 
-> 这是已经知道 SKU 的零散补拍场景（b 节奏快路径）。集中 shoot 的整批原片走 `shoot-archive/`，**不需要按这个公式**——保留相机原始名即可。
+> 已知 SKU 的零散补拍。集中 shoot 的整批原片先进 `待处理/`，保留相机原始名即可。
 
 ```
 {YYYY-MM-DD}_{SKU}_{shot-context}_{seq}.{ext}
@@ -34,16 +33,9 @@ dump（模式 B1）和 promote（模式 B2）对命名的严格度不同：
 ```
 2026-05-05_TEACUP-001_morning-light_001.jpg
 2026-05-05_TEACUP-001_morning-light_002.jpg
-2026-05-05_POT-007_studio_001.jpg
 ```
 
-字段含义：
-- `YYYY-MM-DD`：拍摄日期
-- `SKU`：商品编号（与商品 Base 主键一致）
-- `shot-context`：拍摄情境短语（`morning-light` / `studio` / `outdoor` / `top-down` 等）—— 让你扫一眼文件名就知道是什么类型的图
-- `seq`：序号 `001` `002` `003`...（同一拍摄情境下的连号）
-
-### 摄影成图（edited/）
+### 商品摄影成图（商品/，edited 阶段）
 
 ```
 {SKU}_{usage}_{seq}.{ext}
@@ -53,15 +45,10 @@ dump（模式 B1）和 promote（模式 B2）对命名的严格度不同：
 ```
 TEACUP-001_listing-cover_01.jpg     ← Etsy 主图
 TEACUP-001_listing-detail_01.jpg    ← Etsy 详情图
-TEACUP-001_listing-detail_02.jpg
 TEACUP-001_social-square_01.jpg     ← 社媒方图
 ```
 
-字段含义：
-- `usage`：用途（`listing-cover` / `listing-detail` / `social-square` / `social-portrait` / `banner` 等）
-- 不带日期——成图是"当前最新版"；如果重做，旧版进 `edited/_archive/` 保留可追溯性
-
-### 场景图（scene/）
+### 商品场景图（商品/）
 
 ```
 {SKU}_scene_{location}_{seq}.{ext}
@@ -73,17 +60,15 @@ TEACUP-001_scene_kitchen-window_01.jpg
 TEACUP-001_scene_handheld_01.jpg
 ```
 
-### 视频（视频/）
+### 视频（商品/）
 
-视频文件命名加两个特有字段：**比例**（9x16 / 1x1 / 16x9）+ **时长**（秒）。
-
-母版（`edited/`，未压缩、最高画质）：
+母版（最高画质 / 未压缩 / 未加平台字幕）：
 
 ```
 {YYYY-MM-DD}_{SKU-or-batch}_{purpose}_master.{ext}
 ```
 
-派生平台版本（如归档到 `8. 发布物/{平台}/`）：
+派生平台版本：
 
 ```
 {YYYY-MM-DD}_{SKU-or-batch}_{purpose}_{platform}_{aspect}_{duration}s_v{NN}.{ext}
@@ -91,74 +76,74 @@ TEACUP-001_scene_handheld_01.jpg
 
 例：
 ```
-2026-05-05_TEACUP-001_unboxing_master.mp4              ← 母版
-2026-05-05_TEACUP-001_unboxing_reels_9x16_30s_v01.mp4  ← Instagram Reels 版
-2026-05-05_TEACUP-001_unboxing_pinterest_1x1_15s_v01.mp4
+2026-05-05_TEACUP-001_unboxing_master.mp4
+2026-05-05_TEACUP-001_unboxing_reels_9x16_30s_v01.mp4
 ```
 
-附属物（BGM、字幕 SRT、封面图）放视频同目录的 `_assets/` 子文件夹，命名锚定主视频文件名。
+### 品牌素材（品牌/）
 
-### 视觉模板（视觉模板/）
+Logo：
+```
+logo_{variant}_{format}.{ext}
+```
 
+模板：
 ```
 {template-purpose}_{variant}.{ext}
 ```
 
 例：
 ```
+logo_primary_transparent.png
+logo_monochrome_black.svg
 listing-cover_minimal-white.psd
-listing-cover_natural-textured.psd
 shop-banner_2026-spring.psd
-social_square_quote-frame.psd
 ```
 
-模板文件名重点是**用途 + 变体**——日期不重要，因为模板是长期复用的。
-
-### Logo & 品牌标识
+### 客户素材（客户/）
 
 ```
-logo_{variant}_{format}.{ext}
+customer-{ORDER}_{type}_{seq}.{ext}
 ```
 
 例：
 ```
-logo_primary_transparent.png
-logo_primary_white.png
-logo_monochrome_black.svg
-logo_horizontal_color.svg
-```
-
-### 受限 / 定制素材
-
-按订单号归档，命名同摄影原图但加 `customer-` 前缀：
-
-```
 customer-ORDER-2026-001_reference_01.jpg
-customer-ORDER-2026-001_reference_02.jpg
+customer-ORDER-2026-001_ugc_01.jpg
 ```
 
-> ⚠️ 客户提供的素材有版权 / 隐私问题，**只在受限目录使用**，不要复制到公开摄影目录。
+> 客户素材有版权/隐私问题，归入 `客户/` 文件夹，不要复制到其他文件夹。
 
-## 不该出现的命名（**指成品层**，shoot-archive 不受此约束）
+### 工作室素材（工作室/）
 
-- ❌ `IMG_3847.JPG`（相机原始名——成品层禁，但 `shoot-archive/` 里**接受**）
-- ❌ `茶杯-成图-最终版-真的最终版.jpg`（中文 + "最终版" 这种不可信形容词）
+```
+studio_{subject}_{seq}.{ext}
+```
+
+例：
+```
+studio_workshop-overview_01.jpg
+studio_making-process_01.jpg
+studio_raw-material_01.jpg
+```
+
+## 不该出现的命名（指 promote 后的成品，待处理/ 不受此约束）
+
+- ❌ `IMG_3847.JPG`（相机原始名——成品禁用，但 `待处理/` 里接受）
+- ❌ `茶杯-成图-最终版-真的最终版.jpg`（中文 + "最终版"不可信形容词）
 - ❌ `tea cup nice photo.jpg`（空格 + 主观词）
-- ❌ `final-v3.psd`（没有 SKU / 用途上下文，找不回来）
+- ❌ `final-v3.psd`（没有 SKU / 用途上下文）
 - ❌ 全大写文件名（除 SKU 外）
 
 ## 改名时机
 
-- **dump 到 shoot-archive**：不改名，保留相机原始名。批量改名收益太低
-- **dump 到 by-SKU/{SKU}/raw/**：建议改名（已知 SKU），但不阻塞用户
-- **promote 到 edited / scene 等成品目录**：**必须按公式改名**——成品命名进 Base，影响后续可追溯性。如果原片是相机原始名，让 Agent 给改名建议，**用户确认后**用 lark-drive 在导出阶段改
+- **dump 到 待处理/**：不改名，保留相机原始名。批量改名收益太低
+- **promote 到对应文件夹**：**必须按公式改名**——成品命名进 Base，影响后续可追溯性。如果原片是相机原始名，让 Agent 给改名建议，**用户确认后**用 lark-drive 改名 + 移动
 
 ## 多变体处理
 
-同一 SKU 拍多组不同情境（早晨 / 棚拍 / 手持），用 `shot-context` 字段区分。**不要建一堆子目录**（`raw/morning-light/` `raw/studio/`...）——子目录爆炸比文件名爆炸难维护。
+同一 SKU 拍多组不同情境（早晨 / 棚拍 / 手持），用 `shot-context` 字段区分。全部放在同一个 `商品/` 文件夹中。
 
 ## 与素材索引 Base 的关联
 
-文件名是物理层的"短标识"，[素材索引 Base](asset-index-base-schema.md) 是语义层。**dump（B1）不录 Base，promote（B2）才录**：promote 时把成品文件按公式命名 + 录入 Base 一行（"文件名" + "文件链接" + 素材类型 / 关联 SKU / 用途等），原片留在冷藏区不录。
-
-商品 Base 与素材的关联走 Base 关联字段（详见 [asset-types.md § 与 listing-catalog 的协作](asset-types.md#与-listing-catalog-的协作)），不在文件层维护。
+文件名是物理层的"短标识"，[素材索引 Base](asset-index-base-schema.md) 是语义层。**dump（B1）不录 Base，promote（B2）才录**：promote 时把成品文件按公式命名 + 移入对应文件夹 + 录入 Base 一行（"文件名" + "文件链接" + 素材类型 / 关联 SKU / 用途等）。

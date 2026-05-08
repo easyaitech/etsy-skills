@@ -81,7 +81,7 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
      - 在 Base 且 `公开授权 = 已授权` 且 `用途标签 ⊇ Pinterest` → ✅ 走原流程
      - 在 Base 但缺 Pinterest 用途标签 → 中止，先回 assets-library 加 Pinterest 用途标签再来
      - 在 Base 但 `公开授权 ≠ 已授权` → 中止，先把授权拿到（公开授权改 `已授权`）再来
-     - **不在 Base**（还在冷藏区） → 中止，先走 assets-library 模式 B2 promote 上货架再来
+     - **不在 Base**（还在待处理区） → 中止，先走 assets-library 模式 B2 promote 再来
    - **如果未指定**：列出该 SKU 关联的、已授权且标了 Pinterest 用途的候选素材让用户挑。视图为空时进入下面 step 3.5 的三选一
 3.5. **(条件触发) 候选池空时三选一** — Pinterest 候选视图为空时给用户挑：
    - ① 先回 assets-library 模式 B2 promote 几张已有原片 → 中止本次组 pin，用户走完 promote 后回来
@@ -137,7 +137,7 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
   - **BRAND.md 文案语调**的补充（→ distillation-brand.md 流程）
   - 也可能是 Pinterest 这个**渠道特有**的文案手感——这种暂时记到本 skill 的 `references/pin-composition.md`（用户后续触发"沉淀"再进 BRAND.md），不要硬塞 BRAND.md
 - **listing-catalog**：本 skill 只**读**商品 Base，不改。如果发 pin 后想统计"哪条 listing 由哪些 pin 引流"，未来在商品 Base 加一个反向关联视图（不在本 skill 现版本范围）
-- **assets-library**：本 skill 只**读**素材索引 Base 的「Pinterest 候选」视图，不改。模式 B 第 3 步若指定素材还在冷藏区，提示用户先回 assets-library 走 B2 promote 再回来排 pin。素材发 pin 后想加标记也回 assets-library 手动维护
+- **assets-library**：本 skill 只**读**素材索引 Base 的「Pinterest 候选」视图，不改。模式 B 第 3 步若指定素材还未录入 Base，提示用户先回 assets-library 走 B2 promote 再回来排 pin。素材发 pin 后想加标记也回 assets-library 手动维护
 - **orders-customers**：UGC 类素材的「公开授权」由 orders-customers 走客户沟通完成；本 skill 只消费已授权的结果
 - **image-synth**：模式 B step 3 候选池空时反向触发 image-synth 模式 B；现传 SKU + 目标 board + 已草拟的 pin 文案 in-memory，目标平台 Pinterest 1000×1500；image-synth 出图 + QA + 入库（走 assets-library 模式 B2 promote）后回到本 skill step 3 选这张作 pin 素材
 
