@@ -1,23 +1,29 @@
 ---
 name: shop-foundation
-description: 建立和维护 Etsy 店铺的 BRAND.md（品牌原则）+ SHOP.md（店铺事实），是 stack 的元基础。三种触发：(1) "建立品牌底座 / 品牌定位 / 店铺信息 / 店铺政策 / About / Shop announcement"等打底请求；(2) 用户纠正 Agent 输出反映品牌偏好（→ BRAND.md 沉淀）或店铺事实变更（→ SHOP.md 更新，不是单点错误），主动提示。
+description: 建立和维护 Etsy 店铺的四份元基础设施文件：BRAND.md（品牌原则）+ SHOP.md（店铺事实）+ BRAND_MARKETING.md（品牌营销策略）+ MARKETING_PLATFORM.md（各平台内容策略）。触发条件：(1) "建立品牌底座 / 品牌定位 / 店铺信息 / 营销策略 / 平台策略 / 内容策略"等打底请求；(2) 用户纠正 Agent 输出反映品牌偏好（→ BRAND.md 沉淀）、店铺事实变更（→ SHOP.md 更新）、营销方向调整（→ BRAND_MARKETING.md 沉淀）或平台规范变更（→ MARKETING_PLATFORM.md 更新），主动提示。
 ---
 
 # Shop Foundation（店铺底座）
 
-这个 skill 维护 Etsy 店铺的两份**元基础设施**文件：
+这个 skill 维护 Etsy 店铺的四份**元基础设施**文件：
 
 | 文件 | 性质 | 内容 | 维护节奏 |
 |---|---|---|---|
 | `BRAND.md` | 主观、原则级 | 品牌定位 / 价值主张 / 视觉原则 / 文案语调 | 月级，靠"沉淀"长出来 |
 | `SHOP.md` | 客观、事实级 | 店铺名 / 政策 / 处理时间 / About / Announcement / 节假日 | 季度级，事实变更直接更新 |
+| `BRAND_MARKETING.md` | 主观、策略级 | 营销定位锚点 / 目标人群 / 情感触点 / 场景矩阵 / 形象铁律 / 红线 | 季度级，靠"沉淀"长出来 |
+| `MARKETING_PLATFORM.md` | 半客观、执行级 | 各平台（Pinterest / TikTok / Instagram …）的用户心理 / 内容规范 / 配比 / 投入节奏 | 月级，平台策略变更直接更新 |
 
-两份文件互为补充：
-- 写 listing / 客服回复 / 营销文案时，**两份都要读**
-- BRAND.md 决定"怎么说"（语调、风格、边界）
-- SHOP.md 决定"说什么事实"（处理时间、退换货、运输方式）
+四份文件的层次关系：
 
-下游所有具体行动都应从这两份文件推导——错一条会污染所有下游。
+```
+BRAND.md（我们是谁）
+  └── BRAND_MARKETING.md（我们对谁说、说什么、怎么说）
+        └── MARKETING_PLATFORM.md（在哪个平台、用什么形式说）
+SHOP.md（店铺事实）
+```
+
+下游所有具体行动都应从这四份文件推导——错一条会污染所有下游。读取契约详见 §被下游 skill 引用的契约。
 
 ---
 
@@ -39,15 +45,23 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 
 开始任务前先识别：
 
-1. **目标文件**：BRAND.md 还是 SHOP.md？（看用户用词、看是主观偏好还是客观事实）
+1. **目标文件**：BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md？
+   - 品牌身份、定位、视觉、语调 → BRAND.md
+   - 店铺事实、政策、运营 → SHOP.md
+   - 营销策略、人群、触点、场景、红线 → BRAND_MARKETING.md
+   - 某平台的具体规范、配比、投入节奏 → MARKETING_PLATFORM.md
 2. **执行模式**：访谈（冷启动 / 完善）还是沉淀更新？
 
 用一句话告诉用户你识别到了什么场景、接下来打算怎么做（不要直接抛问题）。例如：
 
 - 「我看到你想建立品牌底座。我会按四个维度（定位、价值主张、视觉、文案）逐个聊。我们从『品牌定位』开始？」
 - 「我看到你想搭建店铺信息档案。SHOP.md 是事实档案——我会按几个块快速过一遍：基础信息、政策、About、节假日。先从基础信息开始？」
+- 「我看到你想建立营销策略。我会按六个维度（定位锚点、人群、触点、场景、形象、红线）逐个聊。我们从『核心定位锚点』开始？」
+- 「我看到你想定义平台内容策略。我会按平台优先级逐个过——每个平台聊：用户心理、内容规范、配比、红线、投入节奏。先从你的主战场开始？」
 - 「我注意到你刚才的纠正背后好像是一条文案语调原则。要不要沉淀进 BRAND.md？我先草拟一条给你看。」
 - 「我注意到你刚才说的处理时间和 SHOP.md 里写的不一致。要把 SHOP.md 更新成你刚才说的吗？」
+- 「我注意到你刚才对营销方向的调整好像影响了人群优先级。要不要同步更新 BRAND_MARKETING.md？」
+- 「我注意到你刚才对 Pinterest 规范的纠正。要把 MARKETING_PLATFORM.md 里 Pinterest 章节更新一下吗？」
 
 ### 模式 A：访谈（冷启动 / 完善）
 
@@ -59,9 +73,11 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 **执行步骤**：
 - 若目标是 **BRAND.md** → 读 `references/interview-brand.md`，按四维度逐个深挖
 - 若目标是 **SHOP.md** → 读 `references/interview-shop.md`，按几个事实块快速过
+- 若目标是 **BRAND_MARKETING.md** → 读 `references/interview-brand-marketing.md`，按六维度逐个深挖（前置条件：BRAND.md 须已存在）
+- 若目标是 **MARKETING_PLATFORM.md** → 读 `references/interview-marketing-platform.md`，按平台优先级逐个过（前置条件：BRAND_MARKETING.md 须已存在）
 
-两者共同要求：
-- 全部访谈完成后，按对应模板（`assets/BRAND_template.md` / `assets/SHOP_template.md`）渲染成完整草稿
+四者共同要求：
+- 全部访谈完成后，按对应模板（`assets/BRAND_template.md` / `assets/SHOP_template.md` / `assets/BRAND_MARKETING_template.md` / `assets/MARKETING_PLATFORM_template.md`）渲染成完整草稿
 - **整篇展示**给用户，等待确认后再落盘
 - 落盘时初始化"修订日志"第一条：`{date}: 初始建立（来源：完整访谈）`
 
@@ -73,16 +89,16 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 - 用户对 Agent 之前的输出（设计稿、文案、客服回复、listing、规划等）做出纠正、否定或调整
 - 且不只是单点错误（错别字、价格写错），而是反映**品牌偏好**或**店铺事实变更**
 
-**两种分支**：
+**四种分支**：
 
 | 反馈类型 | 目标文件 | 执行流程 |
 |---|---|---|
 | 品牌偏好（"不像我们""我们品牌应该"） | BRAND.md | 读 `references/distillation-brand.md`，三步：识别 → 抽象 → 归位 |
 | 店铺事实变更（"现在处理时间改成 5 天了""退换货改了"） | SHOP.md | 读 `references/update-shop.md`，直接事实更新（无需抽象） |
+| 营销方向调整（"这个人群不对""我们不做这个场景""红线要加一条"） | BRAND_MARKETING.md | 参照 `references/distillation-brand.md` 同样的三步流程，归位到营销策略对应章节 |
+| 平台规范变更（"Pinterest 配比改一下""TikTok 不做这个了""加一个新平台"） | MARKETING_PLATFORM.md | 直接定位到对应平台章节更新（规范级变更无需抽象） |
 
-**主动开口问，永远先问、不要静默写入**：
-- BRAND："这次的纠正背后好像是一条品牌层面的原则。要不要沉淀进 BRAND.md？"
-- SHOP："你刚才说的事实和 SHOP.md 里写的不一致。要把 SHOP.md 更新过来吗？"
+**主动开口问，永远先问、不要静默写入**——示例话术见上方 §模式识别。
 
 ---
 
@@ -127,28 +143,60 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 5. **节假日工作日历**（停发日期、促销活动参与情况）
 6. **合规边界**（不卖什么品类、IP 红线、税务设置）
 
-两份文件末尾均追加 **修订日志**，每次更新追加一行：日期 / 改动摘要 / 来源。
+### BRAND_MARKETING.md 骨架（六段）
+完整模板见 `assets/BRAND_MARKETING_template.md`。
+
+1. **核心定位锚点**——买家视角的根本价值 + 关键人生时刻
+2. **我们对谁说话**——P1/P2/P3 目标人群 + 反向排除 + 主理人背书定位
+3. **我们说话是为了什么**——情感触点矩阵 + 触点间区分 + 留痕原则
+4. **我们说话的"场景"在哪里**——场景表（场景 × 人群 × Listing × 关键词）+ 特殊场景要求
+5. **我们呈现什么样的形象**——视觉调性铁律 + 视觉资产圣经 + 文字调性铁律
+6. **什么内容我们坚决不做**——违反即销毁的红线清单
+
+> **与 BRAND.md 的边界**：BRAND.md 定义"我们是谁"（身份、价值观、视觉、语调），BRAND_MARKETING.md 定义"我们怎么做营销"（对谁说、说什么、用什么场景、什么绝不做）。两者有交叉（如视觉和调性），但 BRAND_MARKETING.md 是营销执行层面的具体化，不替代 BRAND.md 的品牌原则。
+
+### MARKETING_PLATFORM.md 骨架（按平台分章）
+完整模板见 `assets/MARKETING_PLATFORM_template.md`。
+
+每个平台一章，章节结构固定：
+1. **用户心理模式**——她在做什么 / 想要什么 / 相信什么 / 警惕什么
+2. **内容规范**——视觉/视频规范 + 核心矛盾解答 + 文字规范
+3. **内容方向与配比**——类型 × 占比
+4. **平台专属红线**
+5. **投入节奏**——频率 / 投流策略 / 启动时机
+6. **脚本模板**（仅视频平台）——标准视频时间线结构
+
+> **与 BRAND_MARKETING.md 的边界**：BRAND_MARKETING.md 定义跨平台通用原则（人群、触点、场景、红线），MARKETING_PLATFORM.md 定义各平台特有的执行规范。如果某条规范在所有平台都一样，它属于 BRAND_MARKETING.md，不属于这里。
+
+四份文件末尾均追加 **修订日志**，每次更新追加一行：日期 / 改动摘要 / 来源。
 
 ---
 
 ## 被下游 skill 引用的契约
 
-`listing-catalog` / `orders-customers` / `assets-library` 等下游 skill 写文案、客服、归档前都应读这两份文件。各 skill 用法不同，但通用契约是：
+`listing-catalog` / `orders-customers` / `assets-library` / `pinterest-autopin` 等下游 skill 写文案、客服、做内容前都应读相关基座文件。各 skill 用法不同，但通用契约是：
 
 - **BRAND.md**：决定**怎么说**（语调 / 风格 / 视觉 / 客服姿态 / 边界）。下游严格遵守"应该说"、"避免说"、"原则"段；不替品牌补充原则
 - **SHOP.md**：决定**说什么事实**（处理时间 / 运输 / 退换货 / 定制政策 / 节假日 / 合规）。下游引用原文，**绝不自编**事实
+- **BRAND_MARKETING.md**：决定**对谁说、说什么**（人群优先级 / 情感触点 / 场景 / 营销红线）。下游做内容时必须能归属到本文件的场景和触点；不发无归属的内容
+- **MARKETING_PLATFORM.md**：决定**在各平台怎么做**（规范 / 配比 / 红线 / 节奏）。下游在特定平台创作内容时遵守对应章节的规范
 
-下游 skill 在自己的"依赖关系"里只需说明"本 skill 怎么用这两份文件"，不必复述上面这条。
+读取范围建议：
+- 写 listing / 客服 → BRAND.md + SHOP.md
+- 做营销内容（Pin / 视频 / 帖子）→ 四份全读
+- 做某平台的具体内容 → BRAND_MARKETING.md + MARKETING_PLATFORM.md 对应章节
+
+下游 skill 在自己的"依赖关系"里只需说明"本 skill 怎么用这几份文件"，不必复述上面这条。
 
 ---
 
 ## 工作区路径解析（stack 级契约，所有 skill 共享）
 
-BRAND.md / SHOP.md 以及下游 skill 涉及的本机文件，**必须落到统一的「工作区根目录」**——不是当前 cwd、不是 `$HOME`、不是任何猜测路径。在 Hermes profile 隔离环境下 `$HOME` 是 profile sandbox HOME（不是系统用户 HOME），靠 `~/` 推路径会让文件落到错误位置。
+BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md 以及下游 skill 涉及的本机文件，**必须落到统一的「工作区根目录」**——不是当前 cwd、不是 `$HOME`、不是任何猜测路径。在 Hermes profile 隔离环境下 `$HOME` 是 profile sandbox HOME（不是系统用户 HOME），靠 `~/` 推路径会让文件落到错误位置。
 
 ### 解析顺序
 
-每次本 skill 准备读 / 写 BRAND.md 或 SHOP.md 之前，**先**调用：
+每次本 skill 准备读 / 写四份基座文件（BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md）之前，**先**调用：
 
 ```
 etsy-stack workspace
@@ -172,7 +220,7 @@ etsy-stack workspace
 
 ### 解析成功后的行为
 
-把返回的绝对路径作为本次任务所有 BRAND.md / SHOP.md 操作的根。后续提到「项目根目录」「根目录」「`./BRAND.md`」一律指这个解析结果，不要混用 cwd。
+把返回的绝对路径作为本次任务所有四份基座文件操作的根。后续提到「项目根目录」「根目录」「`./BRAND.md`」一律指这个解析结果，不要混用 cwd。
 
 ### 不允许的写法
 
@@ -184,7 +232,7 @@ etsy-stack workspace
 
 ---
 
-## 写入前的硬性约束（两文件共用）
+## 写入前的硬性约束（四文件共用）
 
 无论哪种模式、哪个文件，写入或修改前必须：
 
