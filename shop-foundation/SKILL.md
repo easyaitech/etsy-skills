@@ -39,6 +39,24 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 
 如果脚本不存在（用户没装 stack 或自己挪了位置），跳过这一步，不要报错。
 
+### 基座文件完整性检查
+
+版本检查之后，再做一次**基座文件完整性检查**：
+
+1. 先解析工作区根（`etsy-stack workspace`）；如果解析失败则跳过本检查（等用户触发任务时再处理）
+2. 检查工作区根下是否存在以下 4 份文件：`BRAND.md`、`SHOP.md`、`BRAND_MARKETING.md`、`MARKETING_PLATFORM.md`
+3. 如果全部存在 → 静默通过
+4. 如果有缺失 → **主动提醒用户**，措辞示例：
+
+> 「发现你的工作区缺少以下基座文件：BRAND_MARKETING.md、MARKETING_PLATFORM.md。
+> 这两份是最新版 shop-foundation 新增的营销基座——BRAND_MARKETING.md 定义营销策略（对谁说、说什么），MARKETING_PLATFORM.md 定义各平台执行规范。
+> 要现在建立吗？我会按访谈模式逐步引导你。」
+
+注意：
+- 只提醒缺失的文件，已存在的不重复提及
+- BRAND_MARKETING.md 的前置条件是 BRAND.md 已存在；MARKETING_PLATFORM.md 的前置条件是 BRAND_MARKETING.md 已存在。如果前置文件也缺失，按依赖顺序建议（先建前置文件）
+- 提醒一次即可；如果用户说「以后再说」，不要在后续对话中反复催促
+
 ---
 
 ## 模式识别
