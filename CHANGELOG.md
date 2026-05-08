@@ -2,6 +2,34 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.0] - 2026-05-08
+
+`image-synth`：加全新 skill — 用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张电商图或社媒图。卖家拍不起场景、拍不齐 lifestyle 槽是真痛点；上游 assets-library 模式 D 已经把"决定拍什么"压稳，下游需要一个出口让 AI 直接出图——专攻电商图（Etsy listing 槽位）+ 社媒图（Pinterest / Instagram / Story / 节日营销 banner）。架构按 stack 同构范式「输入 → 词库 → 文案」组装：输入 = brief + 实拍图 + BRAND.md；词库 = 5 类（mood / shot-spec / anchor / negative / format）；文案 = 英文 prompt + negative prompt。差异化 QA 闸门（电商图严格比对商品形态，社媒图仅检文字可读性 + 视觉禁区）+ 自动重试 ≤ 2 次 + 失败用户三选一。生成图先落 `<workspace>/.cache/image-synth/ai_raw/`，由用户选「入库（走 assets-library promote）/ 留 ai_raw / 丢弃」。
+
+### 新增
+- `image-synth/SKILL.md`：主入口；2 模式 + 3 反向触发条件；共享 11 步执行流 + 模式差异表
+- `image-synth/references/prompt-vocabulary.md`：5 类词库映射规则 + 最终 prompt 拼装；用户口述 brief 时 ≤ 3 轮对齐流程
+- `image-synth/references/qa-gates.md`：模式 A 5 项 / 模式 B 2 项 QA；批量 vision 调用约定（每 attempt 1 次 vision，避免 5x 放大）；自动重试 ≤ 2 次 + 第 3 轮失败用户三选一；QA 失败的图禁止入库
+- `image-synth/references/output-layout.md`：`.cache/image-synth/ai_raw/` 落盘 + 同名 sidecar `.json` schema；入库走 `promoted/` / 丢弃走 `retired/`，各 7 天回滚窗口；promote 时透传字段表
+- `image-synth/references/social-platform-specs.md`：Pinterest / Instagram (post / Story) / Twitter / Facebook 平台规范 + 自定义尺寸默认 shot-spec
+- `image-synth/references/etsy-listing-image-specs.md`：Etsy 平台硬规则（文件大小 / 尺寸 / 格式 / 政策禁区）+ hero 主图特殊硬规则 + 与 hero QA 对接
+
+### 修
+- `assets-library/SKILL.md` 模式 D：加 step 11 反向触发 image-synth（用户选"不拍直接合成"），含 guard——若来自 listing-catalog 反向触发则跳过本步避免重复追问；与其他 skill 协作段加 image-synth；关键约束更新 `image-design` → `image-synth`
+- `assets-library/PLAN-MODE.md`：frozen design doc 的命名同步（image-design → image-synth）
+- `listing-catalog/SKILL.md` 模式 B step 10：从「shoot brief 二选一」改成「shoot brief / 直接 AI 合成 / 跳过」三选一；选 ② 时 invoke image-synth 现传 4 类礼物词库 + description 段 3 + 商品 Base 该 SKU 行 in-memory
+- `pinterest-autopin/SKILL.md` 模式 B：候选池空时拆出 step 3.5 三选一（assets-library promote / 反向触发 image-synth / 跳过），结构对齐 sibling 反向触发块；与其他 skill 协作段加 image-synth
+- `etsy-stack.json`：skills 列表加 image-synth
+- `README.md`：skill 表加 image-synth 一行；硬编码"X 个 skill"字眼改成"每个 / 所有 / stack 中"模板措辞，未来加 skill 不再 churn 计数；钉死 v0.3.0 安装入口
+
+### 跨 skill 协议（vocabulary 收敛）
+- 渠道值与 Etsy 槽位 ID 的取值集统一引用 [`assets-library/references/asset-index-base-schema.md` § 用途标签](assets-library/references/asset-index-base-schema.md) 与 [`etsy-listing-photo-slots.md § 3`](assets-library/references/etsy-listing-photo-slots.md)（contract source）；image-synth filename / sidecar / promote 透传 一律用 canonical 词汇，避免 promote 时词汇表分裂
+
+### 安装入口（钉死 v0.3.0）
+```
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.3.0/install.sh | bash
+```
+
 ## [0.2.0] - 2026-05-07
 
 `assets-library`：加模式 D plan（拍前出 shoot brief）。现状是模式 A 建库 / B1 dump / B2 promote / C 查找 — 接到原料前的"决定拍什么"是空白。摄影没 brief 上手就拍 = 50 张里只有 5-10 张能用，关键 Etsy 槽位（hero / scale / packaging / size chart）经常忘拍要补拍。模式 D 在拍前给 SKU 出一份 markdown shoot brief，落 `1. 摄影/by-SKU/{SKU}/shoot-brief.md`，按 stack 同构范式「输入 → 词库 → 文案」组装：输入 = SKU 行 + BRAND.md + listing-catalog 礼物词库；词库 = Etsy 10 槽位社区 SOP（独立 reference）；文案 = 三段式 brief（A 槽位映射 / B Mood / C 镜头清单）。
