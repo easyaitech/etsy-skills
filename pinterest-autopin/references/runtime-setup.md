@@ -11,6 +11,7 @@
 | Pinterest-autopin 工具源码 | `~/code/etsy-skills/tools/Pinterest-autopin/` | 否（在 etsy-skills 仓库的 `.gitignore` 加 `tools/`） |
 | Chrome profile（含 Pinterest 登录态） | `~/.config/pinterest-autopin/chrome-profile/` | 否（在用户家目录，独立于仓库） |
 | 运行时 request.json | `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` | 否（`.cache/` 应进工作区 `.gitignore`） |
+| 处理后图片 | `<workspace>/.cache/pinterest-autopin/processed/{原始文件名}` | 否（同在 `.cache/` 下） |
 
 > `<workspace>` = `etsy-stack workspace` 解析出的根目录（`$ETSY_WORKSPACE` 或向上找到的 `.etsy-workspace` 标记所在目录）。SKILL.md §对外的实操接口已说明契约。
 
@@ -30,12 +31,17 @@
 执行命令检查（`terminal` 工具）：
 
 ```bash
-node --version    # 期望 ≥ 18
-npm --version     # 期望 ≥ 9
-python3 --version # 期望 ≥ 3.10
+node --version      # 期望 ≥ 18
+npm --version       # 期望 ≥ 9
+python3 --version   # 期望 ≥ 3.10
+exiftool -ver       # 图片元数据清理
+jpegoptim --version # JPEG 无损压缩
+optipng --version   # PNG 无损压缩
 ```
 
-任一缺失：告诉用户去装（`brew install node python@3.12`），不替用户装系统级依赖。
+前三个任一缺失：告诉用户去装（`brew install node python@3.12`）。
+后三个任一缺失：告诉用户 `brew install exiftool jpegoptim optipng`（图片处理流程必需——见 `image-processing.md`）。
+不替用户装系统级依赖。
 
 ### 2. clone Pinterest-autopin
 

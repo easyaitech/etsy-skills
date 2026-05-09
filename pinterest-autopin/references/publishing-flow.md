@@ -12,6 +12,10 @@ Pin Queue 草稿
    ├─[0] 解析 <workspace> = `etsy-stack workspace`
    │       runtime 目录 = <workspace>/.cache/pinterest-autopin/runtime/
    │
+   ├─[0.5] 图片处理守卫
+   │     └─ image 路径已在 processed/ 且文件存在 → 跳过
+   │     └─ 否则 → 复制/下载 → exiftool 清元数据 → 无损压缩 → 用 processed 路径
+   │
    ├─[1] 渲染 request.json (<runtime>/{pin_id}.json)
    │
    ├─[2] validate ── 校验 JSON 字段（不打开浏览器）
@@ -29,6 +33,16 @@ Pin Queue 草稿
 ```
 
 每一步的输出都是 stdout 一行 JSON（Pinterest-autopin 的契约），解析 `ok` / `pinUrl` / `result`。
+
+---
+
+## [0.5] 图片处理守卫
+
+模式 B 的 step 3.8 已经对图片做过处理，`image 路径` 应指向 `<workspace>/.cache/pinterest-autopin/processed/` 下的文件。模式 C 在构造 request.json 前做一次守卫检查：
+
+1. 读 Pin Queue Base 该行的 `image 路径`
+2. 如果路径以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在 → 跳过，直接进 [1]
+3. 否则按 `image-processing.md` 的三步流程处理，后续 request.json 构造使用 processed 路径
 
 ---
 
