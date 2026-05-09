@@ -33,6 +33,24 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 
 ---
 
+## 前置就绪检查（Mode B / C 入口守卫）
+
+用户触发 Mode B 或 Mode C 时，在执行任何业务逻辑之前，**静默**按编号顺序逐项检查，任何一项失败即停止后续检查，直接按该项的失败话术回复并提议进入 Mode A。
+
+| # | 检查项 | 怎么检查 | 失败时怎么说 |
+|---|--------|----------|-------------|
+| 1 | Pinterest-autopin 工具已安装 | 检查 `references/runtime-setup.md` §路径约定 中的工具目录是否存在 | 「Pinterest-autopin 工具还没装。要现在装吗？我会按 Mode A 的步骤引导你。」 |
+| 2 | Chrome profile 目录已存在 | 检查 `references/runtime-setup.md` §路径约定 中的 Chrome profile 目录是否存在 | 「Pinterest 的 Chrome 登录档还没建。要现在初始化吗？」 |
+| 3 | Pin Queue Base 已存在 | 用 `lark-base` 搜索名称含 `Pin Queue` 的 Base | 「Pin Queue 飞书多维表格还没建。要现在建吗？我会按 schema 引导你。」 |
+
+> BRAND.md / SHOP.md 的缺失检查不在此处——由下方 §依赖关系 在组 pin 前处理，属于内容锚点而非基础设施。
+
+**路由规则**：
+- 任何一项失败 → 提议进入 Mode A；用户同意后直接开始 Mode A 流程，不需要用户重新说"接入 Pinterest"
+- 用户说"以后再说" → 尊重，不在同一对话中反复催促；告知用户「好的，需要接入 Pinterest 时随时说」，结束当前任务路由回到待命状态
+
+---
+
 ## 依赖关系（每次组 pin / 发 pin 前必读）
 
 | 来源 | 提供什么 | 怎么用 |
@@ -69,6 +87,7 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 **进入条件**：
 - 用户要给某个 SKU 出 pin / 写 pin 文案 / 排队下一条 pin
 - 用户给了某张素材问"这张能发 Pinterest 吗、配什么文案"
+- **前置就绪检查全部通过**（见上方 §前置就绪检查）；未通过则停下引导，不继续
 
 **执行步骤**：
 1. 按 `references/pin-composition.md` § 输入清单盘点用户已给的输入；**缺必填项一次性问全**（目标 SKU、目标 board、是否指定素材），不要边写边追问
@@ -99,6 +118,7 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 
 **进入条件**：
 - 用户要发 pin / 跑 autopin / 测试某条 pin / 跑 validate / publish
+- **前置就绪检查全部通过**（见上方 §前置就绪检查）；未通过则停下引导，不继续
 
 **执行步骤**：
 1. 用 `lark-base` 从 Pin Queue Base 取目标行（用户指定 ID，或筛 `状态 = 草稿` 让用户挑一条）
