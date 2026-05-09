@@ -88,6 +88,19 @@ for skill in "${SKILLS[@]}"; do
   ok "$skill"
 done
 
+# 共享文件（非 skill 但各 skill 引用）
+_shared_src="$INSTALL_DIR/shared"
+_shared_dst="$HERMES_SKILLS_DIR/shared"
+if [[ -d "$_shared_src" ]]; then
+  if [[ -e "$_shared_dst" && ! -L "$_shared_dst" ]]; then
+    backup="$_shared_dst.bak.$(date +%s)"
+    warn "$_shared_dst 已存在且不是软链，备份到 $backup"
+    mv "$_shared_dst" "$backup"
+  fi
+  ln -sfn "$_shared_src" "$_shared_dst"
+  ok "shared"
+fi
+
 mkdir -p "$BIN_DIR"
 chmod +x "$INSTALL_DIR/scripts/etsy-stack" "$INSTALL_DIR/scripts/check-update.sh"
 ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/etsy-stack"
