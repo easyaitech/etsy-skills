@@ -1,6 +1,7 @@
 ---
 name: shop-foundation
 description: 建立和维护 Etsy 店铺的四份元基础设施文件：BRAND.md（品牌原则）+ SHOP.md（店铺事实）+ BRAND_MARKETING.md（品牌营销策略）+ MARKETING_PLATFORM.md（各平台内容策略）。触发条件：(1) "建立品牌底座 / 品牌定位 / 店铺信息 / 营销策略 / 平台策略 / 内容策略"等打底请求；(2) 用户纠正 Agent 输出反映品牌偏好（→ BRAND.md 沉淀）、店铺事实变更（→ SHOP.md 更新）、营销方向调整（→ BRAND_MARKETING.md 沉淀）或平台规范变更（→ MARKETING_PLATFORM.md 更新），主动提示。
+layer: foundation
 ---
 
 # Shop Foundation（店铺底座）
@@ -29,15 +30,7 @@ SHOP.md（店铺事实）
 
 ## 启动检查（每次激活）
 
-开始向用户输出之前，**静默**执行一次：
-
-```
-bash ~/.local/share/etsy-skills/scripts/check-update.sh
-```
-
-脚本自带 24h 缓存，重复调用没成本。如果它打印了一行 `💡 …` 提示，把它**原样**附在你最终回复的最后一行；没输出就当无事发生。**不要**解读、不要展开、不要主动建议立刻升级。
-
-如果脚本不存在（用户没装 stack 或自己挪了位置），跳过这一步，不要报错。
+读 [`shared/preamble.md`](../shared/preamble.md)，按其中步骤执行版本检查与工作区解析。
 
 ### 基座文件完整性检查
 
@@ -208,60 +201,15 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 
 ---
 
-## 工作区路径解析（stack 级契约，所有 skill 共享）
-
-BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md 以及下游 skill 涉及的本机文件，**必须落到统一的「工作区根目录」**——不是当前 cwd、不是 `$HOME`、不是任何猜测路径。在 Hermes profile 隔离环境下 `$HOME` 是 profile sandbox HOME（不是系统用户 HOME），靠 `~/` 推路径会让文件落到错误位置。
-
-### 解析顺序
-
-每次本 skill 准备读 / 写四份基座文件（BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md）之前，**先**调用：
-
-```
-etsy-stack workspace
-```
-
-该命令的解析逻辑（不变契约，下游 skill 也按此约定）：
-
-1. 优先读 `$ETSY_WORKSPACE` 环境变量；指向不存在目录则报错退出（不静默 fallback）
-2. 否则从 cwd 向上查找 `.etsy-workspace` 标记文件，找到则取该文件所在目录
-3. 两者都没有 → 退出非零，不做任何猜测
-
-### 解析失败时的行为
-
-如果 `etsy-stack workspace` 退出非零（用户没装 stack、或没声明工作区），**停下问用户**，绝不退而求其次写到 cwd 或 `$HOME`。建议措辞：
-
-> 「我没法确定 Etsy 工作区在哪。可以二选一：
-> ① 告诉我工作区的绝对路径，我用 `ETSY_WORKSPACE` 环境变量指过去；
-> ② 或者你确认当前目录就是工作区根，我跑 `etsy-stack init` 在这里写一个 `.etsy-workspace` 标记。」
-
-只有用户在对话里明确确认后才落盘。
-
-### 解析成功后的行为
-
-把返回的绝对路径作为本次任务所有四份基座文件操作的根。后续提到「项目根目录」「根目录」「`./BRAND.md`」一律指这个解析结果，不要混用 cwd。
-
-### 不允许的写法
-
-- 写死 `/Users/...` 这类机器绝对路径
-- 用 `~/workspaces/etsy` 或任何 `~` 前缀做兜底
-- 候选路径探测（"如果 A 不存在就试 B"）
-
-> stack 的安装路径（`~/.local/share/etsy-skills`、`~/.hermes/skills`）走 `$HOME` 是有意为之——Hermes profile 隔离场景下落到 profile HOME 是预期行为。**只有「工作区数据路径」走严格解析**，两类不要混淆。
-
----
-
 ## 写入前的硬性约束（四文件共用）
 
-无论哪种模式、哪个文件，写入或修改前必须：
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 追加：
 
-1. **先解析工作区根**（见上一节），路径必须来自 `etsy-stack workspace`
-2. 用代码块完整展示拟写入/修改的内容（含目标绝对路径）
-3. 等用户的明确同意（"好"、"可以"、"写吧"、"嗯"等）
-4. 确认后落盘；落盘时**同步**更新顶部 `最后更新：YYYY-MM-DD` 字段为今天日期
-5. 完成后用一句话告诉用户改了哪部分，并确认修订日志已更新
+- 落盘时**同步**更新顶部 `最后更新：YYYY-MM-DD` 字段为今天日期
+- 完成后用一句话告诉用户改了哪部分，并确认修订日志已更新
 
 ---
 
 ## 工作语言
 
-与用户的全部对话、文件内容、修订日志均使用中文。SHOP.md 的「About 页面文本 / Shop Announcement / Greeting Message」例外——这几段是给海外买家看的，原文为英文，按线上保留即可。
+通用规则见 [`shared/preamble.md`](../shared/preamble.md) §工作语言。本 skill 追加：文件内容、修订日志均使用中文。SHOP.md 的「About 页面文本 / Shop Announcement / Greeting Message」例外——这几段是给海外买家看的，原文为英文，按线上保留即可。

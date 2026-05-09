@@ -1,6 +1,8 @@
 ---
 name: image-synth
 description: 用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。三种触发：(1) 模式 A 电商图：用户提到"出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图"等请求时——按 Etsy 槽位语义出图，QA 检查商品形态保持 + 文字可读性 + Etsy 主图规范；(2) 模式 B 社媒图：用户提到"出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / 群发图 / banner"等请求时——按目标平台尺寸出图，QA 仅检查文字可读性；(3) 反向触发：assets-library 模式 D 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，落 `<workspace>/.cache/image-synth/ai_raw/`，QA 不通过自动调 prompt 重试 ≤ 2 次；用户三选一（入库走 assets-library promote / 留 ai_raw / 丢弃）。严格遵守 BRAND.md 视觉禁区（如存在）。
+layer: application
+depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
 
 # Image Synth (AI 图片合成)
@@ -15,21 +17,7 @@ description: 用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合
 - 工作区根目录的 BRAND.md（视觉原则 + 视觉禁区）+ SHOP.md（仅 packaging / brand-story 类用到）
 - `assets-library` 模式 B2 promote 流程（用户选"入库"时调用，本 skill 不重新实现归档）
 
-> 「工作区根」指 `etsy-stack workspace` 解析出的绝对路径——见 shop-foundation §工作区路径解析。本 skill 读 BRAND.md / SHOP.md 或写 `.cache/` 之前必须先调一次该命令；解析失败按 shop-foundation 的指引停下问用户，不要猜路径。
-
----
-
-## 启动检查（每次激活）
-
-开始向用户输出之前，**静默**执行一次：
-
-```
-bash ~/.local/share/etsy-skills/scripts/check-update.sh
-```
-
-脚本自带 24h 缓存，重复调用没成本。如果它打印了一行 `💡 …` 提示，把它**原样**附在你最终回复的最后一行；没输出就当无事发生。**不要**解读、不要展开、不要主动建议立刻升级。
-
-如果脚本不存在（用户没装 stack 或自己挪了位置），跳过这一步，不要报错。
+> 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
 ---
 
@@ -157,7 +145,7 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 
 ## 写入前的硬性约束
 
-通用协议见 shop-foundation §写入前的硬性约束。本 skill 特有：
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有：
 
 - **prompt 展示给用户预览** → 等确认 → 才调生图（生图调用有成本）
 - **入库走 assets-library**：本 skill 不直接写素材索引 Base / 不直接上传飞书云空间——这是 assets-library 的职责边界
@@ -182,7 +170,7 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 
 ## 工作语言
 
-通用规则见 shop-foundation §工作语言。本 skill 特有：
+通用规则见 [`shared/preamble.md`](../shared/preamble.md) §工作语言。本 skill 特有：
 - **prompt 输出为英文**（生图模型对英文 prompt 拟合度更高）；BRAND.md 抽取的中文短语先翻成英文再入 prompt
 - 与用户对话仍中文（按 stack 规则）
 - sidecar `.json` 字段名英文 camelCase；值视情况

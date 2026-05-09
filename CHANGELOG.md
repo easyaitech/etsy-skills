@@ -2,6 +2,30 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.4.0] - 2026-05-10
+
+`stack 级`：把 6 个 skill 里重复的启动引导（版本检查 / 工作区解析 / 写入约束 / 工作语言）抽到 `shared/` 目录，加两层架构声明（Foundation / Application）和三级降级协议。每个 skill 净减 ~12-15 行重复 boilerplate，新增经营原则注入。
+
+### 新增
+- `shared/preamble.md`：stack 共享引导——版本检查 + 工作区路径解析（从 shop-foundation 搬出）+ 写入前通用约束 + 工作语言规则 + 经营原则引用
+- `shared/dependency-protocol.md`：两层架构文档（基座层 4 个平级 + 应用层围绕基座运行）+ 三级降级协议（BLOCK / DEGRADE / SKIP）+ 各 skill 对基座文件的降级等级速查表
+- `shared/ethos.md`：4 条经营原则（品牌一致性 > 效率 / 事实不可自编 / 授权才能发布 / 基座完整性优先）
+
+### 重构
+- 6 个 SKILL.md 启动检查段：从内联 10 行 boilerplate 改为引用 `shared/preamble.md`
+- 6 个 SKILL.md 写入约束 / 工作语言段：从引用 `shop-foundation §...` 改为引用 `shared/preamble.md §...`，各 skill 只保留自身特有规则
+- `shop-foundation/SKILL.md`：工作区路径解析（~40 行）搬到 shared/preamble.md；启动检查精简为引用 + 基座文件完整性检查（shop-foundation 特有）
+- YAML frontmatter：基座层 4 个 skill 加 `layer: foundation`；应用层 2 个 skill 加 `layer: application` + `depends-on` 声明
+
+### 修
+- `install.sh`：skill 软链循环后加 `shared/` 目录的软链（同防御模式：非软链已存在则备份）
+- `README.md`：仓库布局加 `shared/` 目录 + 两层架构标注
+
+### 安装入口（钉死 v0.4.0）
+```
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.4.0/install.sh | bash
+```
+
 ## [0.3.0] - 2026-05-08
 
 `image-synth`：加全新 skill — 用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张电商图或社媒图。卖家拍不起场景、拍不齐 lifestyle 槽是真痛点；上游 assets-library 模式 D 已经把"决定拍什么"压稳，下游需要一个出口让 AI 直接出图——专攻电商图（Etsy listing 槽位）+ 社媒图（Pinterest / Instagram / Story / 节日营销 banner）。架构按 stack 同构范式「输入 → 词库 → 文案」组装：输入 = brief + 实拍图 + BRAND.md；词库 = 5 类（mood / shot-spec / anchor / negative / format）；文案 = 英文 prompt + negative prompt。差异化 QA 闸门（电商图严格比对商品形态，社媒图仅检文字可读性 + 视觉禁区）+ 自动重试 ≤ 2 次 + 失败用户三选一。生成图先落 `<workspace>/.cache/image-synth/ai_raw/`，由用户选「入库（走 assets-library promote）/ 留 ai_raw / 丢弃」。
