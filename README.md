@@ -102,12 +102,16 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 ├── scripts/
 │   ├── etsy-stack             # 管理 CLI
 │   └── check-update.sh        # 24h 缓存的更新检查
+├── shared/                    # 所有 skill 共享的引导 / 协议 / 原则
+│   ├── preamble.md            # 版本检查 / 工作区解析 / 写入约束 / 工作语言
+│   ├── dependency-protocol.md # 两层架构 + 三级降级协议
+│   └── ethos.md               # 经营原则
 ├── shop-foundation/           # ┐
-├── listing-catalog/           # │
-├── orders-customers/          # │ 各 skill 独立目录
-├── assets-library/            # │ （完整列表与编号见 etsy-stack.json）
-├── pinterest-autopin/         # │
-└── image-synth/               # ┘
+├── listing-catalog/           # │ 基座层（Foundation）
+├── orders-customers/          # │ 四个平级，缺一不可
+├── assets-library/            # ┘
+├── pinterest-autopin/         # ┐ 应用层（Application）
+└── image-synth/               # ┘ 围绕基座层运行
 ```
 
 每个 skill 目录里通常有 `SKILL.md`（Hermes 入口）+ `references/` / `templates/` / `assets/` / `scripts/` 四类子目录。
