@@ -56,8 +56,8 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 | 1 | FFmpeg 已安装 | `which ffmpeg` 返回非空 | 「FFmpeg 还没装。要现在装吗？跑 `brew install ffmpeg` 即可。」 |
 | 2 | CJK 字体文件存在 | 检查 `references/config.md` §字体路径 中配置的 fontfile 路径是否存在 | 「CJK 字体文件找不到。要下载 NotoSansCJK 吗？我来引导你设置。」 |
 | 3 | 音乐文件夹非空 | 扫描 `<workspace>/assets/music/` 目录，至少有一个 .mp3/.m4a/.wav 文件 | 「音乐文件夹是空的。请在 `<workspace>/assets/music/` 放入至少一个免版权音乐文件。」 |
-| 4 | clips 表已存在 | 用 `lark-base` 搜索名称含 `Clips` 的 Base 表 | 「clips 表还没建。要现在建吗？我会按 schema 引导你。」 |
-| 5 | video_jobs 表已存在（仅 Mode B） | 用 `lark-base` 搜索名称含 `Video Jobs` 的 Base 表 | 「video_jobs 表还没建。要现在建吗？」 |
+| 4 | clips 表已存在 | 用 `lark-base` 搜索名称含 `{店铺名}-Clips` 的 Base 表（店铺名取自 SHOP.md） | 「clips 表还没建。要现在建吗？我会按 schema 引导你。」 |
+| 5 | video_jobs 表已存在（仅 Mode B） | 用 `lark-base` 搜索名称含 `{店铺名}-Video Jobs` 的 Base 表 | 「video_jobs 表还没建。要现在建吗？」 |
 | 6 | `BRAND_MARKETING.md` 存在 | 检查 `<workspace>/BRAND_MARKETING.md` 是否存在 | 「营销策略底座还没建。要用 shop-foundation 建立吗？我会引导你完成营销策略访谈。」 |
 | 7 | `MARKETING_PLATFORM.md` 存在 | 检查 `<workspace>/MARKETING_PLATFORM.md` 是否存在 | 「平台内容策略还没建。要用 shop-foundation 建立吗？我会引导你定义各平台的内容规范。」 |
 
@@ -117,8 +117,8 @@ clips 表的 `file_path` 存储**工作区相对路径**（相对于 workspace r
 
 **执行步骤**：
 1. 解析工作区根（`etsy-stack workspace`），得到 `$WS`
-2. 如 clips 表不存在，按 `references/clips-table-schema.md` 用 `lark-base` 建表
-3. 如 video_jobs 表不存在，按 `references/video-jobs-table-schema.md` 建表
+2. 如 clips 表不存在，按 `references/clips-table-schema.md` 用 `lark-base` 建 `{店铺名}-Clips` 表（店铺名取自 SHOP.md）
+3. 如 video_jobs 表不存在，按 `references/video-jobs-table-schema.md` 建 `{店铺名}-Video Jobs` 表
 4. 用户提供片段文件夹路径（相对于 workspace root）
 5. 扫描片段元数据：
    ```bash
