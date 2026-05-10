@@ -59,6 +59,22 @@ etsy-stack workspace
 
 ---
 
+## 飞书 Base 命名约定
+
+所有 skill 创建或搜索飞书 Base 表时，统一使用 **`{店铺名}-{表名}`** 格式。`{店铺名}` 取自 `<workspace>/SHOP.md` 的「店铺名」字段（§店铺基础）。
+
+| skill | 表名 |
+|---|---|
+| listing-catalog | `{店铺名}-商品` |
+| orders-customers | `{店铺名}-订单库`、`{店铺名}-客户库` |
+| assets-library | `{店铺名}-素材索引` |
+| pinterest-autopin | `{店铺名}-Pin Queue` |
+| video-assembly | `{店铺名}-Clips`、`{店铺名}-Video Jobs` |
+
+搜索表时用 `{店铺名}-` 前缀做过滤，避免多店铺在同一飞书空间时撞名。
+
+---
+
 ## 写入前的通用约束
 
 无论哪个 skill、哪种模式，写入或修改工作区文件前必须：

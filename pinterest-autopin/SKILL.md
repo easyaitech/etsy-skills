@@ -30,7 +30,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 |---|--------|----------|-------------|
 | 1 | Pinterest-autopin 工具已安装 | 检查 `references/runtime-setup.md` §路径约定 中的工具目录是否存在 | 「Pinterest-autopin 工具还没装。要现在装吗？我会按 Mode A 的步骤引导你。」 |
 | 2 | Chrome profile 目录已存在 | 检查 `references/runtime-setup.md` §路径约定 中的 Chrome profile 目录是否存在 | 「Pinterest 的 Chrome 登录档还没建。要现在初始化吗？」 |
-| 3 | Pin Queue Base 已存在 | 用 `lark-base` 搜索名称含 `Pin Queue` 的 Base | 「Pin Queue 飞书多维表格还没建。要现在建吗？我会按 schema 引导你。」 |
+| 3 | Pin Queue Base 已存在 | 用 `lark-base` 搜索名称含 `{店铺名}-Pin Queue` 的 Base（店铺名取自 SHOP.md） | 「Pin Queue 飞书多维表格还没建。要现在建吗？我会按 schema 引导你。」 |
 | 4 | `BRAND_MARKETING.md` 存在 | 检查 `<workspace>/BRAND_MARKETING.md` 是否存在 | 「营销策略底座还没建。要用 shop-foundation 建立吗？我会引导你完成营销策略访谈。」 |
 | 5 | `MARKETING_PLATFORM.md` 存在 | 检查 `<workspace>/MARKETING_PLATFORM.md` 是否存在 | 「平台内容策略还没建。要用 shop-foundation 建立吗？我会引导你定义各平台的内容规范。」 |
 

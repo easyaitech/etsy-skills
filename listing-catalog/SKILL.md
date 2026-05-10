@@ -44,7 +44,7 @@ layer: foundation
 
 **执行步骤**：
 1. 读 `references/base-schema.md`，了解推荐字段集
-2. 用 lark-base skill 创建 Base 和"商品" 表
+2. 用 lark-base skill 创建 `{店铺名}-商品` Base（店铺名取自 SHOP.md）
 3. 按 schema 逐字段配置（核心字段必建，辅助字段视用户需要）
 4. 落盘后告诉用户 Base 链接 + 字段清单 + 可选的下一步（"导入第一条 SKU 试试")
 
