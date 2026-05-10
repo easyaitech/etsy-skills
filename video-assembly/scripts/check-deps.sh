@@ -68,15 +68,21 @@ else
   fi
 fi
 
-# 输出 JSON
+# 输出 JSON（用 python3 保证转义正确）
+export _FONTFILE="${FONTFILE:-}" _WS="$WORKSPACE"
 if [[ ${#MISSING[@]} -eq 0 ]]; then
-  echo '{"ok":true,"missing":[],"fontfile":"'"$FONTFILE"'","workspace":"'"$WORKSPACE"'"}'
+  python3 -c "
+import json, os
+print(json.dumps({'ok': True, 'missing': [], 'fontfile': os.environ['_FONTFILE'], 'workspace': os.environ['_WS']}))
+" 2>/dev/null
 else
-  # 构造 JSON 数组
-  MISSING_JSON=$(printf '"%s",' "${MISSING[@]}")
-  MISSING_JSON="[${MISSING_JSON%,}]"
-  DETAIL_JSON=$(printf '"%s",' "${DETAILS[@]}")
-  DETAIL_JSON="[${DETAIL_JSON%,}]"
-  echo '{"ok":false,"missing":'"$MISSING_JSON"',"details":'"$DETAIL_JSON"'}'
+  _M=$(printf '%s\n' "${MISSING[@]}")
+  _D=$(printf '%s\n' "${DETAILS[@]}")
+  _M="$_M" _D="$_D" python3 -c "
+import json, os
+missing = [x for x in os.environ['_M'].split('\n') if x]
+details = [x for x in os.environ['_D'].split('\n') if x]
+print(json.dumps({'ok': False, 'missing': missing, 'details': details}))
+" 2>/dev/null
   exit 1
 fi

@@ -26,18 +26,16 @@ done
 
 # 校验必填参数
 for var_name in HOOK BODY CLOSE MUSIC OUTPUT FONTFILE; do
-  eval "val=\$$var_name"
-  if [[ -z "$val" ]]; then
-    echo "错误: --$(echo $var_name | tr '[:upper:]' '[:lower:]') 必填" >&2
+  if [[ -z "${!var_name}" ]]; then
+    echo "错误: --$(echo "$var_name" | tr '[:upper:]' '[:lower:]') 必填" >&2
     exit 1
   fi
 done
 
 # 校验文件存在
 for file_var in HOOK BODY CLOSE MUSIC FONTFILE; do
-  eval "val=\$$file_var"
-  if [[ ! -f "$val" ]]; then
-    echo "错误: 文件不存在: $val (--$(echo $file_var | tr '[:upper:]' '[:lower:]'))" >&2
+  if [[ ! -f "${!file_var}" ]]; then
+    echo "错误: 文件不存在: ${!file_var} (--$(echo "$file_var" | tr '[:upper:]' '[:lower:]'))" >&2
     exit 1
   fi
 done
@@ -97,7 +95,6 @@ else
   MAP_VIDEO="[vout]"
 fi
 
-# 执行 FFmpeg（参数化，非字符串拼接）
 ffmpeg \
   -i "$HOOK" \
   -i "$BODY" \
