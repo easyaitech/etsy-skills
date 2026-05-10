@@ -31,8 +31,10 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 | 1 | Pinterest-autopin 工具已安装 | 检查 `references/runtime-setup.md` §路径约定 中的工具目录是否存在 | 「Pinterest-autopin 工具还没装。要现在装吗？我会按 Mode A 的步骤引导你。」 |
 | 2 | Chrome profile 目录已存在 | 检查 `references/runtime-setup.md` §路径约定 中的 Chrome profile 目录是否存在 | 「Pinterest 的 Chrome 登录档还没建。要现在初始化吗？」 |
 | 3 | Pin Queue Base 已存在 | 用 `lark-base` 搜索名称含 `Pin Queue` 的 Base | 「Pin Queue 飞书多维表格还没建。要现在建吗？我会按 schema 引导你。」 |
+| 4 | `BRAND_MARKETING.md` 存在 | 检查 `<workspace>/BRAND_MARKETING.md` 是否存在 | 「营销策略底座还没建。要用 shop-foundation 建立吗？我会引导你完成营销策略访谈。」 |
+| 5 | `MARKETING_PLATFORM.md` 存在 | 检查 `<workspace>/MARKETING_PLATFORM.md` 是否存在 | 「平台内容策略还没建。要用 shop-foundation 建立吗？我会引导你定义各平台的内容规范。」 |
 
-> BRAND.md / SHOP.md 的缺失检查不在此处——由下方 §依赖关系 在组 pin 前处理，属于内容锚点而非基础设施。
+> BRAND.md / SHOP.md 的缺失检查不在此处——由下方 §依赖关系 在组 pin 前处理，属于内容锚点而非基础设施。BRAND_MARKETING.md / MARKETING_PLATFORM.md 属于策略基座，缺失时无法正确决定内容方向，因此列入前置检查。
 
 **路由规则**：
 - 任何一项失败 → 提议进入 Mode A；用户同意后直接开始 Mode A 流程，不需要用户重新说"接入 Pinterest"
@@ -46,6 +48,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 |---|---|---|
 | `<workspace>/BRAND.md` | 文案语调 / 视觉原则 / 边界 | pin 的 title / description / altText 严格遵守"应该说"、"避免说"、"原则"段；选图时用视觉禁区做合规自检 |
 | `<workspace>/SHOP.md` | Etsy 店铺 URL / 主营品类 | pin 的 `link` 默认指向 listing URL（由商品 Base 提供）；店铺 URL 作 fallback；主营品类辅助 board 命名 |
+| `<workspace>/BRAND_MARKETING.md` | 营销定位 / 人群 / 情感触点 / 场景矩阵 / 红线 | pin 文案的情感锚点与场景归属；选题优先级；红线过滤 |
+| `<workspace>/MARKETING_PLATFORM.md` | Pinterest 章节：内容规范 / 配比 / 红线 | pin 视觉规范、文字规范、内容配比按 Pinterest 章节执行 |
 | 商品 Base（listing-catalog）| `listing_id` / 标题 / SEO 关键词 / 上线状态 | 拼 Etsy listing URL = `{etsy_shop_url}/listing/{listing_id}`；标题与 SEO 词做 pin title 的锚；**未上线的 SKU 不允许排队** |
 | 素材索引 Base（assets-library）| 「Pinterest 候选」视图 | 用筛选 `用途标签 ⊇ Pinterest AND 公开授权 = 已授权` 的素材；客户 UGC 没拿到授权的**绝不发** |
 | Pin Queue Base（本 skill）| 待发 / 已发 / 失败状态 + pin URL | 模式 B 写入草稿；模式 C 取草稿发布并回写结果 |

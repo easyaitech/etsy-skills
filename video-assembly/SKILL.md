@@ -58,6 +58,8 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 | 3 | 音乐文件夹非空 | 扫描 `<workspace>/assets/music/` 目录，至少有一个 .mp3/.m4a/.wav 文件 | 「音乐文件夹是空的。请在 `<workspace>/assets/music/` 放入至少一个免版权音乐文件。」 |
 | 4 | clips 表已存在 | 用 `lark-base` 搜索名称含 `Clips` 的 Base 表 | 「clips 表还没建。要现在建吗？我会按 schema 引导你。」 |
 | 5 | video_jobs 表已存在（仅 Mode B） | 用 `lark-base` 搜索名称含 `Video Jobs` 的 Base 表 | 「video_jobs 表还没建。要现在建吗？」 |
+| 6 | `BRAND_MARKETING.md` 存在 | 检查 `<workspace>/BRAND_MARKETING.md` 是否存在 | 「营销策略底座还没建。要用 shop-foundation 建立吗？我会引导你完成营销策略访谈。」 |
+| 7 | `MARKETING_PLATFORM.md` 存在 | 检查 `<workspace>/MARKETING_PLATFORM.md` 是否存在 | 「平台内容策略还没建。要用 shop-foundation 建立吗？我会引导你定义各平台的内容规范。」 |
 
 **路由规则**：
 - 任何一项失败 → 提议进入 Mode A；用户同意后直接开始 Mode A 流程
@@ -70,6 +72,8 @@ bash ~/.local/share/etsy-skills/scripts/check-update.sh
 | 来源 | 提供什么 | 怎么用 |
 |---|---|---|
 | `<workspace>/BRAND.md` | 文案语调 / 品牌关键词 | overlay 文案遵守品牌调性；CTA 用品牌话术 |
+| `<workspace>/BRAND_MARKETING.md` | 营销定位 / 人群 / 情感触点 / 场景矩阵 / 红线 | overlay 文案的情感锚点；视频选题归属场景矩阵；红线过滤 |
+| `<workspace>/MARKETING_PLATFORM.md` | 目标平台的内容规范 / 配比 / 视频脚本模板 | 视频时长、结构、视觉规范按目标平台章节执行；配比指导选题优先级 |
 | 商品 Base（listing-catalog）| `product_id` / 标题 / 核心卖点 | 筛选片段 + 生成 overlay 文案 |
 | clips 表（本 skill）| 片段元数据 + 兼容性规则 | Mode B 组合源 |
 | video_jobs 表（本 skill）| 生成记录 + 状态 | 去重 + 审核 |
