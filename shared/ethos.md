@@ -30,6 +30,6 @@
 
 ## 4. 基座完整性优先
 
-四个基座 skill（shop-foundation / listing-catalog / assets-library / orders-customers）是所有应用层的根基。基座不全时，应用层 skill 可以降级运行，但要让用户知道降了什么、损失了什么。不要让"能跑"变成"不需要补"。
+基座层 skill（shop-foundation / listing-catalog / assets-library / orders-customers / supplier-foundation）是所有应用层的根基。基座不全时，应用层 skill 可以降级运行，但要让用户知道降了什么、损失了什么。不要让"能跑"变成"不需要补"。
 
 **怎么做**：应用层 skill 按降级协议（[`shared/dependency-protocol.md`](dependency-protocol.md)）处理缺失依赖。DEGRADE 等级的输出带 ⚠️ 标记 + 回复末尾建议补建。

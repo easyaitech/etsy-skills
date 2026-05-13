@@ -2,6 +2,14 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+- `supplier-foundation`：新增供应商管理基座，维护 `{店铺名}-供应商管理` Base 与 `采购来源` 表，覆盖物料名称、店铺名称、商品链接、状态、选择理由、合适参数、淘汰原因，以及主用/备用/测试中/淘汰视图。
+
+### 修
+- `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把供应商管理纳入 Foundation 层和安装 manifest。
+
 ## [0.4.0] - 2026-05-10
 
 `stack 级`：把 6 个 skill 里重复的启动引导（版本检查 / 工作区解析 / 写入约束 / 工作语言）抽到 `shared/` 目录，加两层架构声明（Foundation / Application）和三级降级协议。每个 skill 净减 ~12-15 行重复 boilerplate，新增经营原则注入。

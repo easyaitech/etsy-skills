@@ -67,6 +67,7 @@ etsy-stack workspace
 |---|---|
 | listing-catalog | `{店铺名}-商品` |
 | orders-customers | `{店铺名}-订单库`、`{店铺名}-客户库` |
+| supplier-foundation | `{店铺名}-供应商管理` |
 | assets-library | `{店铺名}-素材索引` |
 | pinterest-autopin | `{店铺名}-Pin Queue` |
 | video-assembly | `{店铺名}-Clips`、`{店铺名}-Video Jobs` |

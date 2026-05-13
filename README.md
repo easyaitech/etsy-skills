@@ -2,7 +2,7 @@
 
 跨境 Etsy 店铺运营 skill bundle，跑在 [Hermes Agent](https://hermes-agent.nousresearch.com/) 上（Mac mini 本地），用 [larksuite/cli](https://github.com/larksuite/cli) 操作飞书 Base / 文档 / 云空间。
 
-每个 skill 各管一摊：品牌底座、商品目录、订单客服、素材库、Pinterest 自动 pin、AI 图片合成（完整列表见下面 §Skills）。下游都引用 `BRAND.md` / `SHOP.md`，从 `shop-foundation` 开始建是推荐顺序。
+每个 skill 各管一摊：品牌底座、商品目录、订单客服、供应商管理、素材库、Pinterest 自动 pin、AI 图片合成（完整列表见下面 §Skills）。下游都引用 `BRAND.md` / `SHOP.md`，从 `shop-foundation` 开始建是推荐顺序。
 
 ## 安装
 
@@ -30,6 +30,7 @@ bash install.sh
 | [`shop-foundation`](shop-foundation/SKILL.md) | 维护 BRAND.md（品牌原则）+ SHOP.md（店铺事实），整个 stack 的元基础 |
 | [`listing-catalog`](listing-catalog/SKILL.md) | 飞书 Base 商品目录 + 撰写 Etsy listing 文案 |
 | [`orders-customers`](orders-customers/SKILL.md) | 飞书 Base × 2（订单 + 客户）+ 客服 SOP + 客户标签 |
+| [`supplier-foundation`](supplier-foundation/SKILL.md) | 飞书 Base 供应商管理 + 采购来源筛选、主用/备用/淘汰记录 |
 | [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：文件夹物理层 + 索引 Base 语义层）+ 拍前 shoot brief 生成（模式 D） |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin) 工具发 pin |
 | [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
@@ -108,7 +109,8 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 │   └── ethos.md               # 经营原则
 ├── shop-foundation/           # ┐
 ├── listing-catalog/           # │ 基座层（Foundation）
-├── orders-customers/          # │ 四个平级，缺一不可
+├── orders-customers/          # │ 五个平级，按需建立
+├── supplier-foundation/       # │
 ├── assets-library/            # ┘
 ├── pinterest-autopin/         # ┐ 应用层（Application）
 └── image-synth/               # ┘ 围绕基座层运行
