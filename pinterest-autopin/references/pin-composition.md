@@ -1,6 +1,6 @@
 # Pin Composition（怎么把 SKU + 素材 + BRAND 写成一条 pin）
 
-模式 B 的核心 reference。读完 BRAND.md / SHOP.md / 商品 Base / 素材索引 Base 之后，按这里的规则产 title / description / altText / link / board 五件套。
+模式 B 的核心 reference。读完 BRAND.md / SHOP.md / 商品 Base / 素材索引 Base 之后，按这里的规则产出 pin 内容。支持单图 pin 和轮播 pin（carousel，2-5 张图）。
 
 ---
 
@@ -10,12 +10,20 @@
 |---|---|---|
 | 目标 SKU | ✅ | 用户给 |
 | 目标 board | ✅ | 用户给（必须是 Pinterest 后台已建好的 board，且已加进 Pin Queue Base 的 `Board (Pinterest)` 单选选项） |
-| 指定素材 | ❌ | 用户给具体素材 ID；不给就从素材索引 Base 的「Pinterest 候选」视图列出该 SKU 的候选让用户挑 |
+| 指定素材 | ❌ | 用户给具体素材 ID；可给 1 张（单图 pin）或 2-5 张（轮播 pin）。不给就从素材索引 Base 的「Pinterest 候选」视图列出该 SKU 的候选让用户挑 |
 | 创意主题（一句话） | ❌ | 用户给；不给就从 SKU 标题 + 素材文件名推一个，让用户改 |
+
+### 多图选择要点
+
+- 用户给了多张素材（或从候选里挑了多张）→ 自动设为轮播 pin
+- 用户只给 1 张 → 单图 pin
+- **轮播 pin 限制 2-5 张**（Pinterest 上限）。用户选超过 5 张时提示拆分为多条 pin
+- **顺序由用户决定**：列出用户选择的素材，让用户确认或调整展示顺序。第一张是封面图（Pinterest feed 里默认展示第一张）
+- 每张素材都必须通过授权校验（同单图流程）
 
 ---
 
-## 五件套规则
+## 内容产出规则
 
 ### 1. Link
 
@@ -24,6 +32,7 @@
   - `listing_id`：从商品 Base 该 SKU 行的 `Etsy Listing ID` 取
 - 如商品 Base 的 `状态 ≠ 在售` 或 `Etsy Listing ID` 为空：**中止排队**，提示用户先上线 listing
 - 不允许指向非自家域名（防误发引流到第三方）
+- 轮播 pin 共用同一个 link（所有图片指向同一 listing）
 
 ### 2. Board
 
@@ -60,6 +69,8 @@ Hand-thrown matcha bowl for quiet rituals
 - ❌ `BEST Handmade Ceramic Mug! Buy Now!!! 🔥🔥🔥`（堆叹号、ALL CAPS、堆 emoji——多数 BRAND 都禁）
 - ❌ `260ml Stoneware Mug, Glazed, Microwave Safe`（堆参数，不是 Pinterest 风格）
 
+轮播 pin 的 title 描述整组图片的主题，不要只描述第一张。
+
 ### 4. Description (EN)
 
 **硬性约束**：
@@ -89,11 +100,13 @@ A small ceramic cup for the quiet first sip of the day. Wheel-thrown by hand, gl
 #slowliving #handmadeceramics #teaceremony
 ```
 
-### 5. Alt Text (EN)
+轮播 pin 的 description 可以提及"swipe to see more"或"see the details up close"来引导用户左右滑动，但不要太生硬。
+
+### 5. Alt Text (EN)——每图独立
 
 **硬性约束**：
-- 描述**图里看到了什么**，不复制 title
-- ≤ 500 字符（Pinterest 上限 500）
+- 描述**该张图里看到了什么**，不复制 title
+- 每张 ≤ 500 字符（Pinterest 上限 500）
 - 英文
 - 不要堆 hashtag
 
@@ -101,11 +114,26 @@ A small ceramic cup for the quiet first sip of the day. Wheel-thrown by hand, gl
 - 客观、具体——颜色、材质、构图、光线
 - 服务两类受众：屏幕阅读器用户（无障碍）+ Pinterest 视觉搜索的 ML（SEO）
 
-例：
+**单图 pin 示例**：
 
 ```
 A pale sage green ceramic teacup on a linen cloth, photographed in soft morning light from above. Steam rises faintly from the rim.
 ```
+
+**轮播 pin 示例**（3 张图，写入 Pin Queue Base 时用 `---` 分隔）：
+
+```
+A pale sage green ceramic teacup on a linen cloth, photographed in soft morning light from above. Steam rises faintly from the rim.
+---
+Close-up of the cup's glazed rim showing the sage green gradient and fine crackle pattern under natural side light.
+---
+Three cups arranged on a wooden shelf, each showing a slightly different shade of sage green. Warm afternoon light from a window on the left.
+```
+
+**轮播 alt text 写作要点**：
+- 每张图的 alt text 独立描述该张图，不假设用户看过其他图
+- 不要写"第 1 张"、"第 2 张"这样的序号——屏幕阅读器用户知道自己在哪张
+- 如果多张图拍的是同一个产品的不同角度，alt text 应强调每张的**差异**（角度、细节、场景），不要复制粘贴改几个词
 
 ---
 
@@ -117,6 +145,7 @@ A pale sage green ceramic teacup on a linen cloth, photographed in soft morning 
 - [ ] 整体语调与 BRAND「文案语调 § 应该说」吻合
 - [ ] 选用的素材不违反 BRAND「视觉原则 § 视觉禁区」
 - [ ] 没有自编 SHOP 没说过的政策事实
+- [ ] （轮播 pin）每张图的 alt text 都独立且不互相抄
 
 不通过 → 不要给用户看草稿，先自己改对再给。
 

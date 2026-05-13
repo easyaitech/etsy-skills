@@ -12,9 +12,9 @@ Pin Queue 草稿
    ├─[0] 解析 <workspace> = `etsy-stack workspace`
    │       runtime 目录 = <workspace>/.cache/pinterest-autopin/runtime/
    │
-   ├─[0.5] 图片处理守卫
-   │     └─ image 路径已在 processed/ 且文件存在 → 跳过
-   │     └─ 否则 → 复制/下载 → exiftool 清元数据 → 无损压缩 → 用 processed 路径
+   ├─[0.5] 图片处理守卫（支持单图 / 多图）
+   │     └─ 所有 image 路径已在 processed/ 且文件存在 → 跳过
+   │     └─ 否则 → 逐张：复制/下载 → exiftool 清元数据 → 无损压缩 → 用 processed 路径
    │
    ├─[1] 渲染 request.json (<runtime>/{pin_id}.json)
    │
@@ -23,7 +23,7 @@ Pin Queue 草稿
    │
    ├─[3] test ──── 弹 Chrome 填表，不点发布
    │     └─ 用户目视确认 → 通过
-   │     └─ 用户说"裁切错了 / 文案截断了" → 改 Base 字段，回 [1]
+   │     └─ 用户说"裁切错了 / 文案截断了 / 顺序不对" → 改 Base 字段，回 [1]
    │
    ├─[4] 用户在对话里说"发吧 / publish"
    │
@@ -40,9 +40,10 @@ Pin Queue 草稿
 
 模式 B 的 step 3.8 已经对图片做过处理，`image 路径` 应指向 `<workspace>/.cache/pinterest-autopin/processed/` 下的文件。模式 C 在构造 request.json 前做一次守卫检查：
 
-1. 读 Pin Queue Base 该行的 `image 路径`
-2. 如果路径以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在 → 跳过，直接进 [1]
-3. 否则按 `image-processing.md` 的三步流程处理，后续 request.json 构造使用 processed 路径
+1. 读 Pin Queue Base 该行的 `image 路径`（多图时按行拆分）
+2. **逐张检查**：如果路径以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在 → 该张跳过
+3. 未通过检查的图片按 `image-processing.md` 的三步流程处理，处理完后用 processed 路径替换
+4. **全部图片通过后**才进 [1]；任何一张处理失败 → 中止，提示用户具体哪张图有问题
 
 ---
 
@@ -54,14 +55,37 @@ Pin Queue 草稿
 
 | Pin Queue 字段 | request.json key | 说明 |
 |---|---|---|
-| `image 路径` | `image` | **绝对路径**（必须以 `/` 开头）。如果 Base 里只有飞书云空间链接，模式 C 必须先用 `lark-drive` 下载到本地（`<runtime>/{pin_id}.{ext}`） |
+| `image 路径` + `Alt Text (EN)` | `images` | 数组，每个元素 `{ "path": "...", "altText": "..." }`。见下方 § images 数组构造 |
 | `Title (EN)` | `title` | 直接拷 |
 | `Board (Pinterest)` | `board` | 直接拷 |
 | `Link` | `link` | 直接拷；空字符串就省略字段 |
 | `Description (EN)` | `description` | 直接拷 |
-| `Alt Text (EN)` | `altText` | 直接拷 |
 | —（固定值）| `creationUrl` | 默认省略走 Pinterest-autopin 默认值；日本店可显式传 `https://jp.pinterest.com/pin-creation-tool/` |
 | —（固定值）| `chromeProfile` | 永远是 `~/.config/pinterest-autopin/chrome-profile`（绝对路径，运行时把 `~` 展开） |
+
+### images 数组构造
+
+1. 把 `image 路径` 按换行拆分为路径列表
+2. 把 `Alt Text (EN)` 按 `---` 独占行拆分为 alt text 列表
+3. 校验：路径数 = alt text 数，不等时中止并提示用户修正 Base 字段
+4. 按位置一一配对，生成 `images` 数组：
+
+```json
+{
+  "images": [
+    { "path": "/abs/path/to/processed/cup-front.jpg", "altText": "A pale sage green ceramic teacup..." },
+    { "path": "/abs/path/to/processed/cup-detail.jpg", "altText": "Close-up of the cup's glazed rim..." },
+    { "path": "/abs/path/to/processed/cup-lifestyle.jpg", "altText": "Three cups arranged on a wooden shelf..." }
+  ],
+  "title": "Morning Mist Tea Cup — handmade ceramic for slow mornings",
+  "board": "Handmade Ceramics",
+  "link": "https://www.etsy.com/shop/.../listing/...",
+  "description": "A small ceramic cup for the quiet first sip of the day...",
+  "chromeProfile": "/Users/john/.config/pinterest-autopin/chrome-profile"
+}
+```
+
+单图 pin 时 `images` 数组只有 1 个元素，格式完全一致——工具端不需要区分单图/多图逻辑。
 
 写文件路径：`<runtime>/{pin_id}.json`
 
@@ -88,6 +112,12 @@ npm run pin:validate -- --input <runtime>/{pin_id}.json
 
 **失败处理**：解析错误信息 → 通常是 JSON 字段缺失 / 路径错 / link 不是 absolute http(s) → 改 request.json 或回 Pin Queue Base 改字段，再来。validate 阶段失败不算入 Pin Queue 的「重试次数」（没真跑浏览器）。
 
+**多图额外校验**：
+- `images` 数组不为空
+- 每个元素的 `path` 是绝对路径且文件存在
+- 每个元素的 `altText` 非空且 ≤ 500 字符
+- 轮播 pin 时 `images` 长度在 2-5 之间
+
 ### Stage 2: test
 
 ```bash
@@ -100,6 +130,7 @@ npm run pin:test -- --input <runtime>/{pin_id}.json
 - 图片有没有被 Pinterest 自动裁切丢掉关键内容（特别是横版图，Pinterest 默认 2:3 显示）
 - 文案有没有截断
 - board 选对没有
+- **（轮播 pin 额外）** 图片顺序是否正确、每张图的 alt text 是否匹配
 
 让用户在对话里回 OK / 不 OK 配理由。
 
@@ -168,6 +199,8 @@ Pin Queue 里的 board 名和 Pinterest 后台不一致。
 
 通常是 image 不是绝对路径 / link 不是 absolute http(s) / image 文件不存在。
 
+多图时额外注意：`images` 数组元素数和 alt text 数不一致 / 某张图路径不存在。
+
 直接看错误信息 → 改 request.json（改根源在 Pin Queue Base 字段）→ 重跑 validate。
 
 ### 网络 / Pinterest 临时错误（5xx / timeout）
@@ -193,3 +226,4 @@ Pin Queue 里的 board 名和 Pinterest 后台不一致。
 - **不要替用户解 Pinterest 的人机验证 / 二次验证**（违反 user_privacy 中"never bypass CAPTCHA"原则）
 - **不要在失败后把 request.json 删掉**——保留在 `<runtime>/{pin_id}.json` 便于复盘
 - **不要把任何 stdout / stderr 里出现的疑似登录态字符串（cookie 片段、token）写进 Base 或对话**——哪怕用户问"什么错"，也只回错误**类型**和最关键的一句原文
+- **不要手动拆分轮播 pin 为多个单图 pin 发布**——轮播是一个 pin 对象，必须一次性发布
