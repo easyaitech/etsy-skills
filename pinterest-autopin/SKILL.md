@@ -89,7 +89,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **执行步骤**：
 1. 按 `references/pin-composition.md` § 输入清单盘点用户已给的输入；**缺必填项一次性问全**（目标 SKU、目标 board、是否指定素材），不要边写边追问。如用户给了多张素材，确认是否要做轮播 pin
 2. 用 `lark-base` 查商品 Base 取 SKU 行：
-   - 校验 `状态 = 已上线`，否则中止并提示用户先上线 listing
+   - 校验 `状态 = 在售`，否则中止并提示用户先上线 listing
    - 取 `listing_id` → 拼 Etsy listing URL（店铺 URL 来自 SHOP.md）
    - 取 SKU 标题 / SEO 关键词作 pin title 的锚
 3. 用 `lark-base` 查素材索引 Base 的「Pinterest 候选」视图：
@@ -157,7 +157,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **不替用户登录 Pinterest**：登录在 Chrome profile 初始化时由用户人工完成；token / 密码不进任何文件
 - **不替用户建 board**：board 在 Pinterest 后台由用户手建；本 skill 只引用名称
 - **未授权的 UGC 绝不发**：素材索引 Base 的 `公开授权` 不是 `已授权` 的素材不进入排队流程——按模式 B 第 3 步指引用户先走授权 / promote 流程，无论用户怎么催
-- **未上线 listing 不出 pin**：商品 Base `状态 ≠ 已上线` 的 SKU 不允许排队（pin 的 link 会 404，损害店铺信用）
+- **未上线 listing 不出 pin**：商品 Base `状态 ≠ 在售` 的 SKU 不允许排队（pin 的 link 会 404，损害店铺信用）
 - **Pin Queue 写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘
 - **final 发布前必须经过 test**：除非用户明确豁免
 - **Pinterest-autopin 跑挂了不重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入（盲目重试可能被 Pinterest 风控）
