@@ -138,5 +138,5 @@ Pin Queue Base：{Base 链接}
 登录状态：已登录（Pinterest 账号 {email/username}）
 
 下一步可以：
-- "给 SKU TEACUP-001 出一条 pin 试试"（进入模式 B）
+- "给 SKU TEACUP-001 出一条 pin 试试"（进入模式 B，单图或轮播都可以）
 ```

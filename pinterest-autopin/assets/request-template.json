@@ -1,9 +1,17 @@
 {
-  "image": "/absolute/path/to/image.jpg",
+  "images": [
+    {
+      "path": "/absolute/path/to/image1.jpg",
+      "altText": "Objective description of image 1 (English, ≤ 500 chars). Color, material, composition, light."
+    },
+    {
+      "path": "/absolute/path/to/image2.jpg",
+      "altText": "Objective description of image 2 (English, ≤ 500 chars)."
+    }
+  ],
   "title": "Pin title (English, ≤ 100 chars)",
   "board": "Exact Pinterest Board Name",
   "link": "https://www.etsy.com/shop/{shop}/listing/{listing_id}",
   "description": "Pin description (English, 200-500 chars). Last line can carry 2-3 hashtags. #slowliving #handmadeceramics #teaceremony",
-  "altText": "Objective description of what's in the image (English, ≤ 500 chars). Color, material, composition, light.",
   "chromeProfile": "/Users/{username}/.config/pinterest-autopin/chrome-profile"
 }

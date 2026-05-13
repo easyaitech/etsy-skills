@@ -1,6 +1,6 @@
 ---
 name: pinterest-autopin
-description: 把 Etsy 商品 + 素材库 + 品牌底座 组装成 Pinterest pin，用 Pinterest-autopin 工具发布。三种触发：(1) "接 Pinterest / 配置自动 pin / 建 pin 流水线"——装工具 + 建 Pin Queue Base；(2) "给 SKU 出 pin / 写 pin 文案 / 排队下一条 pin"——读 BRAND + 商品 Base + 素材 Base 组装一条 Pin Queue；(3) "发 pin / 跑 autopin / 测试 pin / validate / publish"——按 validate→test→final 三阶段执行并回写状态。每次只发一条。
+description: 把 Etsy 商品 + 素材库 + 品牌底座 组装成 Pinterest pin，用 Pinterest-autopin 工具发布。支持单图 pin 和轮播 pin（carousel，2-5 张图）。三种触发：(1) "接 Pinterest / 配置自动 pin / 建 pin 流水线"——装工具 + 建 Pin Queue Base；(2) "给 SKU 出 pin / 写 pin 文案 / 排队下一条 pin"——读 BRAND + 商品 Base + 素材 Base 组装一条 Pin Queue；(3) "发 pin / 跑 autopin / 测试 pin / validate / publish"——按 validate→test→final 三阶段执行并回写状态。每次只发一条。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
@@ -8,6 +8,10 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 # Pinterest AutoPin
 
 这个 skill 把 Etsy 店铺的「商品 + 素材 + 品牌」组装成 Pinterest pin，并用外部工具 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin)（Playwright + Chrome profile，非 Pinterest 官方 API）发布。
+
+支持两种 pin 类型：
+- **单图 pin**：1 张图片，经典 Pinterest pin
+- **轮播 pin**（carousel）：2-5 张图片，用户左右滑动浏览。适合展示产品多角度、使用场景组合、系列产品对比
 
 **架构**：本 skill 维护**语义层**（Pin Queue Base：写什么、发到哪、是否发成功），物理发布动作下沉到 Pinterest-autopin 这个外部 CLI 工具。两层之间通过一个 `request.json` 文件交接。
 
@@ -70,8 +74,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **执行步骤**：
 1. 读 `references/runtime-setup.md` —— 按里面的步骤 clone Pinterest-autopin 到 `~/code/etsy-skills/tools/`、`npm install`、初始化 Chrome profile（Chrome profile 路径建议 `~/.config/pinterest-autopin/chrome-profile/`，不进 git）。runtime/ 目录按工作区隔离，模式 C 时再创建——不在装机阶段建
 2. 跑一次 `npm run pin:check-login`，让用户在弹出的 Chrome 里手动完成 Pinterest 登录；登录态持久化到 Chrome profile
-3. 读 `references/pin-queue-base-schema.md`，用 `lark-base` 在与商品 / 素材 Base 同一个云空间目录下创建 `{店铺名}-Pin Queue` Base，按 schema 建字段（关联字段必须指向已有的商品 Base + 素材索引 Base）和推荐视图
-4. 落盘后告诉用户：工具路径 + Chrome profile 路径 + Base 链接 + 字段清单 + 一句"下一步可以用 Pin 模式 B 出第一条 pin 试试"
+3. 读 `references/pin-queue-base-schema.md`，用 `lark-base` 在与商品 / 素材 Base 同一个云空间目录下创建 `{店铺名}-Pin Queue` Base，按 schema 建字段（关联字段必须指向已有的商品 Base + 素材索引 Base；`关联素材` 设为允许多值以支持轮播 pin）和推荐视图
+4. 落盘后告诉用户：工具路径 + Chrome profile 路径 + Base 链接 + 字段清单 + 一句"下一步可以用 Pin 模式 B 出第一条 pin 试试——单图或轮播都可以"
 
 > **不要替用户在 Pinterest 上建 board**——board 是用户在 Pinterest 后台手动建好（涉及账号操作）。本 skill 在模式 B 取 board 名时假设用户已建好。
 
@@ -79,32 +83,44 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 **进入条件**：
 - 用户要给某个 SKU 出 pin / 写 pin 文案 / 排队下一条 pin
-- 用户给了某张素材问"这张能发 Pinterest 吗、配什么文案"
+- 用户给了某张（或多张）素材问"这几张能发 Pinterest 吗、配什么文案"
 - **前置就绪检查全部通过**（见上方 §前置就绪检查）；未通过则停下引导，不继续
 
 **执行步骤**：
-1. 按 `references/pin-composition.md` § 输入清单盘点用户已给的输入；**缺必填项一次性问全**（目标 SKU、目标 board、是否指定素材），不要边写边追问
+1. 按 `references/pin-composition.md` § 输入清单盘点用户已给的输入；**缺必填项一次性问全**（目标 SKU、目标 board、是否指定素材），不要边写边追问。如用户给了多张素材，确认是否要做轮播 pin
 2. 用 `lark-base` 查商品 Base 取 SKU 行：
    - 校验 `状态 = 已上线`，否则中止并提示用户先上线 listing
    - 取 `listing_id` → 拼 Etsy listing URL（店铺 URL 来自 SHOP.md）
    - 取 SKU 标题 / SEO 关键词作 pin title 的锚
 3. 用 `lark-base` 查素材索引 Base 的「Pinterest 候选」视图：
-   - **如果用户指定了素材**——4 路分流，统一格式 `条件 → 中止，先去解决 X 再回来`：
-     - 在 Base 且 `公开授权 = 已授权` 且 `用途标签 ⊇ Pinterest` → ✅ 走原流程
+   - **如果用户指定了素材**（1 张或多张）——逐张做 4 路分流，统一格式 `条件 → 中止，先去解决 X 再回来`：
+     - 在 Base 且 `公开授权 = 已授权` 且 `用途标签 ⊇ Pinterest` → ✅ 该张通过
      - 在 Base 但缺 Pinterest 用途标签 → 中止，先回 assets-library 加 Pinterest 用途标签再来
      - 在 Base 但 `公开授权 ≠ 已授权` → 中止，先把授权拿到（公开授权改 `已授权`）再来
      - **不在 Base**（还在待处理区） → 中止，先走 assets-library 模式 B2 promote 再来
-   - **如果未指定**：列出该 SKU 关联的、已授权且标了 Pinterest 用途的候选素材让用户挑。视图为空时进入下面 step 3.5 的三选一
+   - **多图时所有图都通过后才继续**；任何一张未通过则整条 pin 中止
+   - **如果未指定**：列出该 SKU 关联的、已授权且标了 Pinterest 用途的候选素材让用户挑（可选 1 张做单图 pin，或 2-5 张做轮播 pin）。视图为空时进入下面 step 3.5 的三选一
 3.5. **(条件触发) 候选池空时三选一** — Pinterest 候选视图为空时给用户挑：
    - ① 先回 assets-library 模式 B2 promote 几张已有原片 → 中止本次组 pin，用户走完 promote 后回来
    - ② 反向触发 image-synth 模式 B AI 合成一张：**调用方现传** SKU + 目标 board + 已草拟的 pin 文案 + 目标平台 = Pinterest 1000×1500 in-memory；image-synth 出图 + QA + 用户选"入库"（走 assets-library B2）后回到本 step 3 继续选这张
    - ③ 跳过本次发 pin
    - 节奏：本步是 step 3 候选池空时**同一 turn 内** agent 主动追问；用户选后才 invoke 下一个 skill
-3.8. **图片处理**（素材选定后、写文案前）——按 `references/image-processing.md` 的三步流程（复制 → 清元数据 → 无损压缩）处理到 `<workspace>/.cache/pinterest-autopin/processed/`；后续步骤统一使用 processed 路径
+3.7. **(轮播 pin) 确认图片顺序** — 多图时列出已选素材的编号和缩略描述，让用户确认或调整展示顺序。第一张是封面图（Pinterest feed 里默认展示的那张），选择上优先挑最抓眼球的
+3.8. **图片处理**（素材选定后、写文案前）——按 `references/image-processing.md` 的流程处理到 `<workspace>/.cache/pinterest-autopin/processed/`：
+   - 单图：三步流程（复制 → 清元数据 → 无损压缩）
+   - 多图：逐张走三步流程（见 image-processing.md § 多图处理）
+   - 后续步骤统一使用 processed 路径
 4. 读 BRAND.md（文案语调 / 视觉原则）+ SHOP.md（店铺事实，描述末尾不要重复政策——Pinterest 不是 listing 页面，政策在 link 那边）
-5. 按 `references/pin-composition.md` § 文案规则输出草稿：title / description / altText / link / board / image 路径
-6. **整篇展示**给用户，等用户确认或调整
-7. 用户确认后，按 `references/pin-queue-base-schema.md` § 录入约定 用 `lark-base` 在 Pin Queue Base 写一行（状态 = `草稿`），关联到商品行 + 素材行
+5. 按 `references/pin-composition.md` 输出草稿：
+   - **共用内容**：title / description / link / board
+   - **每图独立**：alt text（每张图各写一段）
+   - **辅助信息**：pin 类型（单图/轮播）、image 路径列表
+6. **整篇展示**给用户，等用户确认或调整。轮播 pin 时按顺序编号展示每张图及其 alt text，便于用户逐张检查
+7. 用户确认后，按 `references/pin-queue-base-schema.md` § 录入约定 用 `lark-base` 在 Pin Queue Base 写一行（状态 = `草稿`），关联到商品行 + 素材行。写入时：
+   - `pin 类型` = 单图（1 张）或 轮播（2-5 张）
+   - `关联素材` 关联所有选中的素材记录（多图时保持顺序）
+   - `image 路径` = 每张 processed 路径各占一行（单图时一行）
+   - `Alt Text (EN)` = 每张 alt text 用 `---` 独占行分隔（单图时无分隔符）
 
 > **一次只组一条 pin**——不批量。批量需求让用户重复触发，或交给 `loop` skill 编排（不在本 skill 范围）。
 
@@ -117,18 +133,20 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **执行步骤**：
 1. 用 `lark-base` 从 Pin Queue Base 取目标行（用户指定 ID，或筛 `状态 = 草稿` 让用户挑一条）
 2. 解析工作区根（`etsy-stack workspace`），得到 `<workspace>`；runtime 目录是 `<workspace>/.cache/pinterest-autopin/runtime/`，不存在就 `mkdir -p` 创建（一次即可）
-2.5. **图片处理守卫**：检查 `image 路径` 是否以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在——是则跳过；否则按 `references/image-processing.md` 处理，用 processed 路径覆盖后续构造
-3. 按 `references/publishing-flow.md` § request.json 构造 把行字段渲染成 `request.json`（用 `assets/request-template.json` 作模板），写到 `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json`
+2.5. **图片处理守卫**：读 `image 路径` 按行拆分，逐张检查是否以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在——全部通过则跳过；未通过的按 `references/image-processing.md` 处理，用 processed 路径覆盖
+3. 按 `references/publishing-flow.md` § request.json 构造 把行字段渲染成 `request.json`（用 `assets/request-template.json` 作模板）：
+   - `image 路径` 按行拆分 + `Alt Text (EN)` 按 `---` 拆分 → 配对为 `images` 数组
+   - 写到 `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json`
 4. **三阶段执行**（`references/publishing-flow.md` § 三阶段约定）。所有 `npm run pin:*` 命令都需要传 `--input <workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` 的**绝对路径**（工具源码在 `~/code/etsy-skills/tools/Pinterest-autopin/`，cwd 不在工作区）：
-   - **validate**：`npm run pin:validate -- --input <绝对路径>`，校验 JSON
-   - **test**：`npm run pin:test -- --input <绝对路径>`，弹出 Chrome 填表但不点发布；让用户**目视确认**预览效果
+   - **validate**：`npm run pin:validate -- --input <绝对路径>`，校验 JSON（多图时额外校验 `images` 数组长度和每个元素的完整性）
+   - **test**：`npm run pin:test -- --input <绝对路径>`，弹出 Chrome 填表但不点发布；让用户**目视确认**预览效果（轮播 pin 让用户确认图片顺序和每张图的展示效果）
    - **final**：用户在对话里说"发吧 / publish / 真发"后，跑 `npm run pin:publish -- --input <绝对路径>`
 5. 解析 stdout 的 JSON 输出：
    - 成功：取 `pinUrl`，回写 Pin Queue Base 该行（`状态 = 已发` / `pin_url = ...` / `发布时间 = 现在`）
    - 失败：按 `references/publishing-flow.md` § 错误恢复 分类（登录失效 / board 找不到 / 网络），回写（`状态 = 失败` / `失败原因 = ...` / `重试次数 += 1`）并告诉用户对应处置
 6. 告诉用户最终结果（pin URL 或失败原因）
 
-> **不替用户跳过 test 阶段**——首次发某 board / 首次用某素材尺寸时，test 阶段的目视检查能拦下大量翻车（裁切错位、文案截断）。用户明确说"已经测过了，直接 final"才能跳。
+> **不替用户跳过 test 阶段**——首次发某 board / 首次用某素材尺寸 / 首次发轮播 pin 时，test 阶段的目视检查能拦下大量翻车（裁切错位、文案截断、轮播顺序错误）。用户明确说"已经测过了，直接 final"才能跳。
 
 ---
 
@@ -143,6 +161,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **Pin Queue 写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘
 - **final 发布前必须经过 test**：除非用户明确豁免
 - **Pinterest-autopin 跑挂了不重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入（盲目重试可能被 Pinterest 风控）
+- **轮播 pin 不要拆成多个单图 pin 发**：轮播是一个 pin 对象，必须整体发布
 
 ---
 
