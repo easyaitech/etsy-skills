@@ -10,6 +10,7 @@
 # Local-only notes / drafts
 /scratch/
 /.local/
+/tools/
 
 # Claude Code local session state
 .claude/

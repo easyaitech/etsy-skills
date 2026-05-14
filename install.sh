@@ -106,6 +106,18 @@ chmod +x "$INSTALL_DIR/scripts/etsy-stack" "$INSTALL_DIR/scripts/check-update.sh
 ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/etsy-stack"
 ok "命令安装到：$BIN_DIR/etsy-stack"
 
+PINTEREST_AUTOPIN_DIR="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
+if [[ -d "$PINTEREST_AUTOPIN_DIR/.git" ]]; then
+  log "同步 Pinterest-autopin 发布工具：$PINTEREST_AUTOPIN_DIR"
+  if bash "$INSTALL_DIR/scripts/etsy-stack" pinterest-tool update; then
+    ok "Pinterest-autopin 工具已同步"
+  else
+    warn "Pinterest-autopin 工具同步失败；需要发布 pin 时请手动运行：etsy-stack pinterest-tool update"
+  fi
+else
+  log "Pinterest-autopin 工具未安装；需要发布 pin 时运行：etsy-stack pinterest-tool update"
+fi
+
 INSTALLED=$(git -C "$INSTALL_DIR" describe --tags --always)
 
 # 清掉旧 stack 留下的更新检查缓存：current 现在直接从 git 推导，但缓存里可能还

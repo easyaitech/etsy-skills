@@ -32,7 +32,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 | # | 检查项 | 怎么检查 | 失败时怎么说 |
 |---|--------|----------|-------------|
-| 1 | Pinterest-autopin 工具已安装 | 检查 `references/runtime-setup.md` §路径约定 中的工具目录是否存在 | 「Pinterest-autopin 工具还没装。要现在装吗？我会按 Mode A 的步骤引导你。」 |
+| 1 | Pinterest-autopin 工具已安装且版本支持轮播 | 跑 `etsy-stack pinterest-tool status`，要求工具目录存在且版本 `>= 1.4.0` | 「Pinterest-autopin 发布工具还没装，或版本低于 1.4.0，当前发布器还不能可靠发轮播 pin。要现在运行 `etsy-stack pinterest-tool update` 升级吗？」 |
 | 2 | Chrome profile 目录已存在 | 检查 `references/runtime-setup.md` §路径约定 中的 Chrome profile 目录是否存在 | 「Pinterest 的 Chrome 登录档还没建。要现在初始化吗？」 |
 | 3 | Pin Queue Base 已存在 | 用 `lark-base` 搜索名称含 `{店铺名}-Pin Queue` 的 Base（店铺名取自 SHOP.md） | 「Pin Queue 飞书多维表格还没建。要现在建吗？我会按 schema 引导你。」 |
 | 4 | `BRAND_MARKETING.md` 存在 | 检查 `<workspace>/BRAND_MARKETING.md` 是否存在 | 「营销策略底座还没建。要用 shop-foundation 建立吗？我会引导你完成营销策略访谈。」 |
@@ -73,6 +73,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 **执行步骤**：
 1. 读 `references/runtime-setup.md` —— 按里面的步骤 clone Pinterest-autopin 到 `~/code/etsy-skills/tools/`、`npm install`、初始化 Chrome profile（Chrome profile 路径建议 `~/.config/pinterest-autopin/chrome-profile/`，不进 git）。runtime/ 目录按工作区隔离，模式 C 时再创建——不在装机阶段建
+   - 如果工具目录已存在，先跑 `etsy-stack pinterest-tool update`，确保发布工具版本 `>= 1.4.0`；旧版 `v1.3.x` 只可靠支持单图 pin
 2. 跑一次 `npm run pin:check-login`，让用户在弹出的 Chrome 里手动完成 Pinterest 登录；登录态持久化到 Chrome profile
 3. 读 `references/pin-queue-base-schema.md`，用 `lark-base` 在与商品 / 素材 Base 同一个云空间目录下创建 `{店铺名}-Pin Queue` Base，按 schema 建字段（关联字段必须指向已有的商品 Base + 素材索引 Base；`关联素材` 设为允许多值以支持轮播 pin）和推荐视图
 4. 落盘后告诉用户：工具路径 + Chrome profile 路径 + Base 链接 + 字段清单 + 一句"下一步可以用 Pin 模式 B 出第一条 pin 试试——单图或轮播都可以"

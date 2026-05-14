@@ -46,11 +46,20 @@ optipng --version   # PNG 无损压缩
 ### 2. clone Pinterest-autopin
 
 ```bash
-mkdir -p ~/code/etsy-skills/tools
-cd ~/code/etsy-skills/tools && git clone https://github.com/easyaitech/Pinterest-autopin.git
+etsy-stack pinterest-tool update
 ```
 
-如果目标目录已存在：先 `git status` 看是否有本地改动；干净就 `git pull`，有改动就停下问用户。
+这条命令会 clone / 更新 `~/code/etsy-skills/tools/Pinterest-autopin/`，并刷新 npm 依赖。轮播 pin 发布要求 `Pinterest-autopin >= 1.4.0`；如果目标目录已有本地改动，命令会停下，先处理本地改动再继续。
+
+手动等价流程：
+
+```bash
+mkdir -p ~/code/etsy-skills/tools
+cd ~/code/etsy-skills/tools && git clone https://github.com/easyaitech/Pinterest-autopin.git
+cd ~/code/etsy-skills/tools/Pinterest-autopin
+git checkout main
+git pull --ff-only
+```
 
 ### 3. 装依赖
 

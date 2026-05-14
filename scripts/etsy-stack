@@ -5,6 +5,9 @@ set -uo pipefail
 INSTALL_DIR="${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
 HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-$HOME/.hermes/skills}"
+PINTEREST_AUTOPIN_REPO="${PINTEREST_AUTOPIN_REPO:-https://github.com/easyaitech/Pinterest-autopin.git}"
+PINTEREST_AUTOPIN_DIR="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
+PINTEREST_AUTOPIN_MIN_VERSION="1.4.0"
 
 usage() {
   cat <<EOF
@@ -15,11 +18,97 @@ etsy-stack — Etsy skill bundle 管理工具
   etsy-stack check              立即检查更新（绕过 24h 缓存）
   etsy-stack update             拉最新版本并刷新软链
   etsy-stack list               列出 manifest 中的 skill 及链接状态
+  etsy-stack pinterest-tool     查看 / 更新 Pinterest-autopin 发布工具
   etsy-stack where              打印源码安装目录
   etsy-stack workspace          解析当前 Etsy 工作区根目录
   etsy-stack init [DIR]         在 DIR（默认 cwd）创建 .etsy-workspace 标记
   etsy-stack help               查看本帮助
 EOF
+}
+
+pinterest_tool_version() {
+  [[ -f "$PINTEREST_AUTOPIN_DIR/package.json" ]] || return 1
+  PINTEREST_AUTOPIN_DIR="$PINTEREST_AUTOPIN_DIR" python3 - <<'PY'
+import json, os
+path = os.path.join(os.environ["PINTEREST_AUTOPIN_DIR"], "package.json")
+with open(path, encoding="utf-8") as f:
+    print(json.load(f).get("version", "unknown"))
+PY
+}
+
+version_at_least() {
+  python3 - "$1" "$2" <<'PY'
+import sys
+
+def parts(v):
+    out = []
+    for item in v.split("."):
+        digits = "".join(ch for ch in item if ch.isdigit())
+        out.append(int(digits or 0))
+    return (out + [0, 0, 0])[:3]
+
+sys.exit(0 if parts(sys.argv[1]) >= parts(sys.argv[2]) else 1)
+PY
+}
+
+pinterest_tool_status() {
+  echo "Pinterest-autopin 工具路径：$PINTEREST_AUTOPIN_DIR"
+  if [[ ! -d "$PINTEREST_AUTOPIN_DIR" ]]; then
+    echo "状态：未安装"
+    echo "安装 / 更新：etsy-stack pinterest-tool update"
+    return 1
+  fi
+
+  local version
+  version="$(pinterest_tool_version 2>/dev/null || echo unknown)"
+  echo "版本：$version"
+  if [[ "$version" != "unknown" ]] && version_at_least "$version" "$PINTEREST_AUTOPIN_MIN_VERSION"; then
+    echo "轮播发布：可用（需要 Pinterest 企业账号，工具会走 Ads Manager Pin builder）"
+  else
+    echo "轮播发布：不可用（需要 Pinterest-autopin >= $PINTEREST_AUTOPIN_MIN_VERSION）"
+    echo "升级：etsy-stack pinterest-tool update"
+    return 1
+  fi
+
+  if git -C "$PINTEREST_AUTOPIN_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+    local branch commit
+    branch="$(git -C "$PINTEREST_AUTOPIN_DIR" branch --show-current 2>/dev/null || echo detached)"
+    commit="$(git -C "$PINTEREST_AUTOPIN_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    echo "Git：$branch@$commit"
+  fi
+}
+
+pinterest_tool_update() {
+  mkdir -p "$(dirname "$PINTEREST_AUTOPIN_DIR")"
+
+  if [[ -e "$PINTEREST_AUTOPIN_DIR" && ! -d "$PINTEREST_AUTOPIN_DIR/.git" ]]; then
+    echo "❌ $PINTEREST_AUTOPIN_DIR 已存在但不是 git 仓库，无法自动更新" >&2
+    return 1
+  fi
+
+  if [[ ! -d "$PINTEREST_AUTOPIN_DIR/.git" ]]; then
+    echo "Clone Pinterest-autopin → $PINTEREST_AUTOPIN_DIR"
+    git clone --quiet "$PINTEREST_AUTOPIN_REPO" "$PINTEREST_AUTOPIN_DIR" || return 1
+  fi
+
+  if [[ -n "$(git -C "$PINTEREST_AUTOPIN_DIR" status --porcelain)" ]]; then
+    echo "❌ Pinterest-autopin 工具有本地未提交改动，先处理后再更新：$PINTEREST_AUTOPIN_DIR" >&2
+    return 1
+  fi
+
+  echo "更新 Pinterest-autopin 工具源码"
+  git -C "$PINTEREST_AUTOPIN_DIR" fetch --quiet --prune origin || return 1
+  git -C "$PINTEREST_AUTOPIN_DIR" checkout --quiet main || return 1
+  git -C "$PINTEREST_AUTOPIN_DIR" merge --ff-only --quiet origin/main || return 1
+
+  if command -v npm >/dev/null; then
+    echo "安装 / 刷新 npm 依赖"
+    npm --prefix "$PINTEREST_AUTOPIN_DIR" install --silent || return 1
+  else
+    echo "⚠️  未找到 npm；工具源码已更新，但依赖还没安装" >&2
+  fi
+
+  pinterest_tool_status
 }
 
 # 解析 Etsy 工作区根目录。顺序：
@@ -85,6 +174,26 @@ case "$cmd" in
   update|upgrade)
     require_install
     exec bash "$INSTALL_DIR/install.sh"
+    ;;
+
+  pinterest-tool|pinterest-autopin-tool)
+    subcmd="${1:-status}"
+    case "$subcmd" in
+      status|"")
+        pinterest_tool_status
+        ;;
+      update|upgrade|install)
+        pinterest_tool_update
+        ;;
+      path)
+        echo "$PINTEREST_AUTOPIN_DIR"
+        ;;
+      *)
+        echo "未知 pinterest-tool 子命令：$subcmd" >&2
+        echo "可用：status / update / path" >&2
+        exit 1
+        ;;
+    esac
     ;;
 
   list|ls)
