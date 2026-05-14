@@ -55,7 +55,7 @@ Pin Queue 草稿
 
 | Pin Queue 字段 | request.json key | 说明 |
 |---|---|---|
-| `image 路径` + `Alt Text (EN)` | `images` | 数组，每个元素 `{ "path": "...", "altText": "..." }`。见下方 § images 数组构造 |
+| `image 路径` + `Alt Text (EN)` | `images` | 数组，每个元素 `{ "path": "...", "altText": "..." }`。单图和轮播都用这个字段；见下方 § images 数组构造 |
 | `Title (EN)` | `title` | 直接拷 |
 | `Board (Pinterest)` | `board` | 直接拷 |
 | `Link` | `link` | 直接拷；空字符串就省略字段 |
@@ -65,10 +65,11 @@ Pin Queue 草稿
 
 ### images 数组构造
 
-1. 把 `image 路径` 按换行拆分为路径列表
-2. 把 `Alt Text (EN)` 按 `---` 独占行拆分为 alt text 列表
+1. 把 `image 路径` 按换行拆分为路径列表，去掉空行和首尾空白；这个顺序就是上传顺序
+2. 把 `Alt Text (EN)` 按独占一行的 `---` 拆分为 alt text 列表，去掉每段首尾空白
 3. 校验：路径数 = alt text 数，不等时中止并提示用户修正 Base 字段
-4. 按位置一一配对，生成 `images` 数组：
+4. 校验 `pin 类型`：单图必须 1 张；轮播必须 2-5 张
+5. 按位置一一配对，生成 `images` 数组：
 
 ```json
 {
@@ -86,6 +87,8 @@ Pin Queue 草稿
 ```
 
 单图 pin 时 `images` 数组只有 1 个元素，格式完全一致——工具端不需要区分单图/多图逻辑。
+
+不要从 `关联素材` 字段推导顺序。飞书关联字段只用于追溯素材记录，真正发布顺序永远来自 `image 路径` 的行顺序。
 
 写文件路径：`<runtime>/{pin_id}.json`
 

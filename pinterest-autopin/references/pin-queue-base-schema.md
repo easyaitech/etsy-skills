@@ -2,6 +2,16 @@
 
 > 用 `lark-base` 在飞书云空间创建 `{店铺名}-Pin Queue` Base，建在与商品 / 素材 Base 同一目录下。建表后删除飞书自动生成的「文本」「日期」「附件」三个默认列——它们在本流程中没有用途。
 
+## 数据模型
+
+一条 Pin Queue 记录就是一个 Pinterest Pin。单图 pin 和轮播 pin 共用同一张表：
+
+- 单图：`images` 数组长度 = 1
+- 轮播：`images` 数组长度 = 2-5
+- 多张图不要拆成多条记录；它们属于同一行里的有序图片列表
+- 发布成功后只回写这一行的一个 `pin_url`
+- 发布顺序以 `image 路径` 字段的行顺序为准，`关联素材` 只做素材来源追溯
+
 ---
 
 ## 已有 Base 升级（从单图升级到多图支持）
@@ -11,13 +21,15 @@
 1. 新增 `pin 类型` 字段（单选：单图 / 轮播）
 2. 把 `关联素材` 改为**允许多值**（飞书 Base 关联字段设置里勾选「允许关联多条记录」）
 3. 把 `image 路径` 字段类型从「单行文本」改为「多行文本」
-4. 新增「轮播」视图（pin 类型 = 轮播）
+4. 确认 `Alt Text (EN)` 是「多行文本」
+5. 可选新增 `图片数量`、`封面图` 辅助字段
+6. 新增「轮播」视图（pin 类型 = 轮播）
 
 已有的单图草稿/已发记录不受影响——单图 pin 的 `pin 类型` 留空或手动补填「单图」均可。
 
 ---
 
-## 核心字段（必建，12 个）
+## 核心字段（必建，13 个）
 
 | 字段名 | 飞书字段类型 | 说明 |
 |---|---|---|
@@ -25,8 +37,9 @@
 | `状态` | 单选 | 草稿 / 待发 / 已发 / 失败 |
 | `pin 类型` | 单选 | 单图 / 轮播。单图 = 1 张，轮播 = 2-5 张（Pinterest carousel pin） |
 | `关联 SKU` | 关联（→ 商品 Base） | 必填；通过它拿 `Etsy Listing ID` 拼 link |
-| `关联素材` | 关联（→ 素材索引 Base，**允许多值**） | 必填；单图关联 1 条，轮播关联 2-5 条。关联顺序 = 轮播展示顺序 |
+| `关联素材` | 关联（→ 素材索引 Base，**允许多值**） | 必填；单图关联 1 条，轮播关联 2-5 条。用于追溯素材来源；发布顺序以 `image 路径` 行顺序为准 |
 | `Board (Pinterest)` | 单选 | Pinterest 后台已建好的 board 名；用单选避免拼写漂移 |
+| `image 路径` | 多行文本 | 每张图的绝对本地路径各占一行，顺序就是 carousel 展示顺序（见下方 § 多图路径格式） |
 | `Title (EN)` | 多行文本 | ≤ 100 字符 |
 | `Description (EN)` | 多行文本 | 建议 200-500 字符 |
 | `Alt Text (EN)` | 多行文本 | 每张图的 alt text 用 `---` 独占一行分隔（见下方 § 多图 alt text 格式）；单图时无分隔符 |
@@ -47,15 +60,18 @@
 
 | 字段名 | 飞书字段类型 | 说明 |
 |---|---|---|
-| `image 路径` | 多行文本 | 每张图的绝对本地路径各占一行，顺序与 `关联素材` 对应（见下方 § 多图路径格式） |
+| `图片数量` | 数字 / 公式 | 图片行数。手填时由 agent 写入；如用公式，等于 `image 路径` 非空行数量 |
+| `封面图` | 单行文本 / URL / 附件 | 第一张图路径或预览链接，方便人工检查 carousel 首图 |
 | `创意主题` | 单行文本 | 一句话描述本条 pin 想表达什么 |
 | `备注` | 多行文本 | 节日联动、授权细节等特殊情况 |
+
+> 暂不把「同步 Board」列为发布必需字段。当前发布器一次只创建一个 Pinterest Pin，并回写一个 `pin_url`；如果未来要同一内容同步多个 board，需要给每个发布目标单独记录结果。
 
 ---
 
 ## 多图路径格式
 
-`image 路径` 字段存放所有图片的绝对路径，每行一个，顺序与 `关联素材` 关联记录一一对应：
+`image 路径` 字段存放所有图片的绝对路径，每行一个，顺序就是 Pinterest carousel 展示顺序：
 
 ```
 /Users/john/.cache/pinterest-autopin/processed/cup-sage-01.jpg
@@ -67,7 +83,7 @@
 
 ## 多图 alt text 格式
 
-`Alt Text (EN)` 字段存放每张图的独立 alt text，用 `---` 独占一行分隔。顺序与 `image 路径` 一一对应：
+`Alt Text (EN)` 字段存放每张图的独立 alt text，用 `---` 独占一行分隔。段落顺序与 `image 路径` 行顺序一一对应：
 
 ```
 A pale sage green ceramic teacup on a linen cloth, photographed in soft morning light from above.
@@ -80,6 +96,43 @@ Three cups arranged on a wooden shelf, each showing a slightly different shade o
 单图 pin 时没有 `---` 分隔符，和原来一样是纯文本。
 
 构造 `request.json` 时按分隔符拆分，第 N 段 alt text 对应 `images` 数组第 N 个元素的 `altText`。
+
+---
+
+## request.json 目标结构
+
+发布器从一行 Pin Queue 记录构造统一的 `images[]`，单图和轮播都走同一格式：
+
+```json
+{
+  "images": [
+    {
+      "path": "/abs/path/01.jpg",
+      "altText": "Alt text for image 1"
+    },
+    {
+      "path": "/abs/path/02.jpg",
+      "altText": "Alt text for image 2"
+    }
+  ],
+  "title": "The Story Inside the Chinese Character Fu",
+  "description": "...",
+  "board": "The Calligrapher's Studio · Behind the Brush",
+  "link": "https://fublessings.com"
+}
+```
+
+校验伪代码：
+
+```js
+const paths = imagePaths.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+const alts = splitAltTextBySeparator(altText, "---");
+
+assert(paths.length === alts.length);
+assert(pinType === "单图" ? paths.length === 1 : paths.length >= 2 && paths.length <= 5);
+
+const images = paths.map((path, index) => ({ path, altText: alts[index] }));
+```
 
 ---
 
@@ -99,6 +152,7 @@ Three cups arranged on a wooden shelf, each showing a slightly different shade o
 
 多图 pin 时额外展示：
 - 图片数量和顺序（编号列表）
+- 封面图（第一张）
 - 每张图的 alt text 对照
 - `pin 类型 = 轮播` 自动设置
 
@@ -113,5 +167,6 @@ Three cups arranged on a wooden shelf, each showing a slightly different shade o
 | `image 路径` 每行都是绝对路径且文件存在 | 中止，提示素材未同步 |
 | `image 路径` 行数 = `关联素材` 记录数 | 中止，路径和素材不一致 |
 | `Alt Text (EN)` 按 `---` 拆分后段数 = 图片数 | 中止，alt text 数量和图片不一致 |
+| `pin 类型 = 单图` 时图片数 = 1 | 中止，单图记录只能有一张图 |
 | 轮播 pin 图片数 2-5 张 | 中止，Pinterest carousel 限制 2-5 张 |
 | 同一 SKU + 同一素材组合未发布过 | 警告（重复发同图容易被限流） |

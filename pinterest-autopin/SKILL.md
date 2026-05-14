@@ -13,6 +13,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **单图 pin**：1 张图片，经典 Pinterest pin
 - **轮播 pin**（carousel）：2-5 张图片，用户左右滑动浏览。适合展示产品多角度、使用场景组合、系列产品对比
 
+**Pin Queue 核心模型**：一条 Base 记录 = 一个 Pinterest Pin。多图轮播不要拆成多条记录，而是在同一行里用有序 `image 路径` 列表 + 有序 `Alt Text (EN)` 段落表示。发布成功后这一行只回写一个 `pin_url`。
+
 **架构**：本 skill 维护**语义层**（Pin Queue Base：写什么、发到哪、是否发成功），物理发布动作下沉到 Pinterest-autopin 这个外部 CLI 工具。两层之间通过一个 `request.json` 文件交接。
 
 **对外的实操接口**：
@@ -75,7 +77,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 1. 读 `references/runtime-setup.md` —— 按里面的步骤 clone Pinterest-autopin 到 `~/code/etsy-skills/tools/`、`npm install`、初始化 Chrome profile（Chrome profile 路径建议 `~/.config/pinterest-autopin/chrome-profile/`，不进 git）。runtime/ 目录按工作区隔离，模式 C 时再创建——不在装机阶段建
    - 如果工具目录已存在，先跑 `etsy-stack pinterest-tool update`，确保发布工具版本 `>= 1.4.0`；旧版 `v1.3.x` 只可靠支持单图 pin
 2. 跑一次 `npm run pin:check-login`，让用户在弹出的 Chrome 里手动完成 Pinterest 登录；登录态持久化到 Chrome profile
-3. 读 `references/pin-queue-base-schema.md`，用 `lark-base` 在与商品 / 素材 Base 同一个云空间目录下创建 `{店铺名}-Pin Queue` Base，按 schema 建字段（关联字段必须指向已有的商品 Base + 素材索引 Base；`关联素材` 设为允许多值以支持轮播 pin）和推荐视图
+3. 读 `references/pin-queue-base-schema.md`，用 `lark-base` 在与商品 / 素材 Base 同一个云空间目录下创建 `{店铺名}-Pin Queue` Base，按 schema 建字段（关联字段必须指向已有的商品 Base + 素材索引 Base；`关联素材` 设为允许多值以支持轮播 pin；`image 路径` 与 `Alt Text (EN)` 必须支持多行）和推荐视图
 4. 落盘后告诉用户：工具路径 + Chrome profile 路径 + Base 链接 + 字段清单 + 一句"下一步可以用 Pin 模式 B 出第一条 pin 试试——单图或轮播都可以"
 
 > **不要替用户在 Pinterest 上建 board**——board 是用户在 Pinterest 后台手动建好（涉及账号操作）。本 skill 在模式 B 取 board 名时假设用户已建好。
@@ -119,9 +121,10 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 6. **整篇展示**给用户，等用户确认或调整。轮播 pin 时按顺序编号展示每张图及其 alt text，便于用户逐张检查
 7. 用户确认后，按 `references/pin-queue-base-schema.md` § 录入约定 用 `lark-base` 在 Pin Queue Base 写一行（状态 = `草稿`），关联到商品行 + 素材行。写入时：
    - `pin 类型` = 单图（1 张）或 轮播（2-5 张）
-   - `关联素材` 关联所有选中的素材记录（多图时保持顺序）
-   - `image 路径` = 每张 processed 路径各占一行（单图时一行）
+   - `关联素材` 关联所有选中的素材记录（用于追溯来源；发布顺序以 `image 路径` 行顺序为准）
+   - `image 路径` = 每张 processed 路径各占一行（单图时一行；多图时顺序就是 carousel 展示顺序）
    - `Alt Text (EN)` = 每张 alt text 用 `---` 独占行分隔（单图时无分隔符）
+   - `图片数量` = 图片行数；`封面图` = 第一张 processed 路径（如字段已建）
 
 > **一次只组一条 pin**——不批量。批量需求让用户重复触发，或交给 `loop` skill 编排（不在本 skill 范围）。
 
@@ -137,6 +140,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 2.5. **图片处理守卫**：读 `image 路径` 按行拆分，逐张检查是否以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在——全部通过则跳过；未通过的按 `references/image-processing.md` 处理，用 processed 路径覆盖
 3. 按 `references/publishing-flow.md` § request.json 构造 把行字段渲染成 `request.json`（用 `assets/request-template.json` 作模板）：
    - `image 路径` 按行拆分 + `Alt Text (EN)` 按 `---` 拆分 → 配对为 `images` 数组
+   - 任何 pin 都生成 `images` 数组；单图只是长度为 1，轮播长度为 2-5
    - 写到 `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json`
 4. **三阶段执行**（`references/publishing-flow.md` § 三阶段约定）。所有 `npm run pin:*` 命令都需要传 `--input <workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` 的**绝对路径**（工具源码在 `~/code/etsy-skills/tools/Pinterest-autopin/`，cwd 不在工作区）：
    - **validate**：`npm run pin:validate -- --input <绝对路径>`，校验 JSON（多图时额外校验 `images` 数组长度和每个元素的完整性）
@@ -163,6 +167,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **final 发布前必须经过 test**：除非用户明确豁免
 - **Pinterest-autopin 跑挂了不重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入（盲目重试可能被 Pinterest 风控）
 - **轮播 pin 不要拆成多个单图 pin 发**：轮播是一个 pin 对象，必须整体发布
+- **不要用 `关联素材` 的返回顺序作为发布顺序**：飞书关联字段只做追溯，真正顺序永远来自 `image 路径` 的行顺序
 
 ---
 
