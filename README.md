@@ -34,6 +34,8 @@ bash install.sh
 | [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：文件夹物理层 + 索引 Base 语义层）+ 拍前 shoot brief 生成（模式 D） |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin) 工具发 pin |
 | [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
+| [`video-assembly`](video-assembly/SKILL.md) | 从已标记的视频片段库批量装配短视频，输出 Hook / Body / Close 结构的社媒视频 |
+| [`trend-radar`](trend-radar/SKILL.md) | 用唯一关键词 `Chinese` 追踪 Google Trends + Exolyt 的美国市场升温信号，输出趋势报告和 JSON，支持 Hermes 每周 cron |
 
 ## 工作区初始化（首次使用必读）
 
@@ -74,6 +76,7 @@ etsy-stack list        # 列出已安装 skill 的链接状态
 etsy-stack where       # 打印源码安装目录
 etsy-stack workspace   # 解析当前 Etsy 工作区根
 etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
+scripts/trend-radar-run # 手动跑一次 Chinese/US 趋势雷达
 ```
 
 ## 运行环境
@@ -113,7 +116,9 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 ├── supplier-foundation/       # │
 ├── assets-library/            # ┘
 ├── pinterest-autopin/         # ┐ 应用层（Application）
-└── image-synth/               # ┘ 围绕基座层运行
+├── image-synth/               # │ 围绕基座层运行
+├── video-assembly/            # │
+└── trend-radar/               # ┘ 趋势雷达（只发现信号，不生产内容）
 ```
 
 每个 skill 目录里通常有 `SKILL.md`（Hermes 入口）+ `references/` / `templates/` / `assets/` / `scripts/` 四类子目录。
