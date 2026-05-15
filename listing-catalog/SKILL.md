@@ -66,15 +66,23 @@ layer: foundation
    - **$20-$50**：完整 5 问（Q1 礼物倾向 / Q2 受众类型 / Q3 场景 / Q4 节日时机 / Q5 受众画像）；Q1=自购为主时 Q2-Q5 跳过
    - **≥ $50**：完整 5 问 + 生成长尾语义短语（仅供 title / description 段 3，不进 tag）
    - 跑完后产出 4 类礼物词库（受众词 / 场景词 / 节日词 / 包装服务词）+ BRAND.md 三条硬过滤后的「过滤掉的候选词」清单
+5.6. **(可选) Knowledge Cards 检索** — 读 [`references/business-knowledge-lookup.md`](references/business-knowledge-lookup.md) 和 [`../business-knowledge/references/knowledge-card-lookup.md`](../business-knowledge/references/knowledge-card-lookup.md)，按 `scenario: listing` 检索 `{店铺名}-知识卡片`：
+   - 输入只使用已知事实：SKU、品类、材质、价格档、step 5.5 生成的礼物词库、SEO 关键词、目标受众、节日 / 场景；不要为了检索补编 SKU 信息
+   - `max_cards: 3`
+   - Base 不存在、为空、不可读或无命中 → **静默 SKIP**，继续原 listing 流程；只有用户问“有没有查知识库”时才说明跳过原因
+   - 有命中 → 在草稿前展示「可参考知识卡片」小节，逐条标明来源、记录日期、可用处、本次采用 yes/no/partial、原因和边界；不得静默采用
+   - 只有选中的少量卡片需要读 `知识页链接`；不要为了检索把所有 wiki 都读一遍
 6. 读 `assets/listing-template.md`：标准 listing 文案结构
 7. 输出草稿：title + description（含分段）+ tags（13 个槽，按客单价档礼物槽数 3/4/3）+ materials（13 个槽）+ category 建议
    - 13 tag 严格守恒，礼物槽数与客单价档对应；其余非礼物槽如有 eRank 词库优先用，否则按 etsy-seo.md 规则 LLM 填
    - title 公式 `[核心品类词] + [核心修饰词] + [礼物维度] + [次要属性] + [情感词]`，礼物维度槽优先级：节日词 > 受众词 > 场景词；自购为主 SKU 留空
    - description 段 3 双小段（使用语境 + 礼物语境，按 etsy-seo.md § Description）
    - 如果跑了 eRank 节点 ③，title 词序参考竞品模式
+   - 如果 step 5.6 命中卡片，先展示「可参考知识卡片」小节，再展示 listing 草稿；listing 正文只采用标为 yes / partial 的卡片，不采用 no 的卡片
 8. **整篇展示**给用户，等用户确认或调整。同时展示「过滤掉的候选词」清单，方便用户判断是否要纠正 BRAND.md
 9. 用户确认后：
    - 把文案写入 Base 该 SKU 对应行（通过 lark-base 更新）
+   - 如果 step 5.6 有采用 yes / partial 的 Knowledge Cards，best-effort 回写 `引用次数 += 1` / `最后引用日期 = today`；失败不阻塞 listing 写入，但要简短告诉用户统计字段未能更新
    - 提醒用户去 Etsy 后台贴上线
    - 如果跑了 eRank 节点 ⑤ 之前的环节，顺带提醒用户去 eRank 做定价对标（节点 ⑤）
    - 不要替用户上 Etsy（Etsy 后台操作不在本 skill 范围）
