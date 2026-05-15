@@ -6,9 +6,11 @@
 
 ### 新增
 - `supplier-foundation`：新增供应商管理基座，维护 `{店铺名}-供应商管理` Base 与 `采购来源` 表，覆盖物料名称、店铺名称、商品链接、状态、选择理由、合适参数、淘汰原因，以及主用/备用/测试中/淘汰视图。
+- `business-knowledge`：新增 optional memory foundation，维护 `<workspace>/knowledge/raw|weekly|wiki|briefs` markdown、`{店铺名}-知识卡片` Base、Knowledge Card lookup contract 和 Marketing Brief 持久化流程。
 
 ### 修
 - `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把供应商管理纳入 Foundation 层和安装 manifest。
+- `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把 `business-knowledge` 纳入 Foundation 层、Base 命名约定和安装 manifest；下游引用 Knowledge Cards 时默认 `SKIP`，不阻塞原流程。
 - `shared/preamble.md`：补充 Hermes cron 输出型报告的窄例外。用户在配置定时任务时确认固定输出目录后，cron 可追加新的时间戳报告 / JSON / raw evidence 文件；仍禁止覆盖旧报告或修改业务文件。
 
 ### 移除

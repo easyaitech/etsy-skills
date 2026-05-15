@@ -13,9 +13,9 @@
 │                                                   │
 │  shop-foundation     listing-catalog              │
 │  assets-library      orders-customers             │
-│  supplier-foundation                             │
+│  supplier-foundation business-knowledge           │
 │                                                   │
-│  五个平级，按业务需要建立。不分先后顺序。             │
+│  基座平级，按业务需要建立。不分先后顺序。             │
 │  所有应用层 skill 围绕这些基座运行。                 │
 └───────────────────────────────────────────────────┘
 ```
@@ -29,14 +29,18 @@
 | assets-library | 视觉与素材资产（飞书云空间 + 素材索引 Base） |
 | orders-customers | 订单 + 客户（飞书 Base × 2）+ 客服 SOP |
 | supplier-foundation | 供应商与采购来源（飞书 Base） |
+| business-knowledge | 业务知识库（raw / weekly / wiki / briefs markdown + Knowledge Cards Base），optional memory foundation |
 
-五个基座 skill 之间有协作（如 assets-library 读商品 Base、orders-customers 读 BRAND.md、supplier-foundation 服务物料采购），但**不存在启动先后顺序**——哪个先建视用户业务需求而定。
+基座 skill 之间有协作（如 assets-library 读商品 Base、orders-customers 读 BRAND.md、supplier-foundation 服务物料采购、business-knowledge 提供可选业务记忆），但**不存在启动先后顺序**——哪个先建视用户业务需求而定。
+
+`business-knowledge` 是 optional memory foundation：下游引用它时默认 `SKIP`，缺失不阻塞原流程。
 
 ### 应用层
 
 围绕基座层运行，从基座取数据、用基座的规则约束输出。当前：
 - `pinterest-autopin`：取商品 + 素材 + 品牌 → 组 pin 发布
 - `image-synth`：取品牌视觉 + 商品信息 → AI 合成图
+- `video-assembly`：取商品 + clips + 营销策略 → 装配短视频
 
 未来的推广、CRM 等 skill 同样围绕基座层运行。
 
@@ -65,15 +69,16 @@
 
 下表列出各 skill 对基座文件的依赖等级（按模式区分）。具体用法见各 skill 的「依赖关系」节。
 
-| 依赖 \ Skill | listing-catalog | orders-customers | supplier-foundation | assets-library | pinterest-autopin | image-synth |
-|---|---|---|---|---|---|---|
-| BRAND.md | 写文案=**BLOCK**；查改=SKIP | 客服=**BLOCK**；录入=SKIP | SKIP | B2=**DEGRADE**；D=**DEGRADE** | 组 pin=**BLOCK** | **DEGRADE** |
-| SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | D=SKIP | 组 pin=**BLOCK** | SKIP |
-| BRAND_MARKETING.md | — | — | — | — | 组 pin=SKIP | — |
-| MARKETING_PLATFORM.md | — | — | — | — | 组 pin=SKIP | — |
-| 商品 Base | 写文案=**BLOCK** | 录入=SKIP | 有 SKU 上下文时=SKIP | D=**BLOCK** | 组 pin=**BLOCK** | SKIP |
-| 供应商管理 Base | — | — | 录入/选型=**BLOCK** | SKIP | — | — |
-| 素材索引 Base | — | — | — | B2=**BLOCK**；C=SKIP | 组 pin=**DEGRADE** | SKIP |
-| 订单 Base | — | 录入=**BLOCK** | — | SKIP | — | — |
-| 客户 Base | — | 客服=**BLOCK** | — | SKIP | — | — |
-| Pin Queue Base | — | — | — | — | 发 pin=**BLOCK** | — |
+| 依赖 \ Skill | listing-catalog | orders-customers | supplier-foundation | business-knowledge | assets-library | pinterest-autopin | image-synth | video-assembly |
+|---|---|---|---|---|---|---|---|---|
+| BRAND.md | 写文案=**BLOCK**；查改=SKIP | 客服=**BLOCK**；录入=SKIP | SKIP | brief=**DEGRADE** | B2=**DEGRADE**；D=**DEGRADE** | 组 pin=**BLOCK** | **DEGRADE** | **DEGRADE** |
+| SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | 建卡片 Base=**BLOCK**；brief=**DEGRADE** | D=SKIP | 组 pin=**BLOCK** | SKIP | SKIP |
+| BRAND_MARKETING.md | — | — | — | brief=**DEGRADE** | — | 组 pin=SKIP | — | Mode B=**BLOCK** |
+| MARKETING_PLATFORM.md | — | — | — | brief=**DEGRADE** | — | 组 pin=SKIP | — | Mode B=**BLOCK** |
+| Knowledge Cards Base | SKIP | SKIP | SKIP | 写卡片=**BLOCK**；读卡片=SKIP | SKIP | SKIP | SKIP | SKIP |
+| 商品 Base | 写文案=**BLOCK** | 录入=SKIP | 有 SKU 上下文时=SKIP | brief=SKIP | D=**BLOCK** | 组 pin=**BLOCK** | SKIP | Mode B=**BLOCK** |
+| 供应商管理 Base | — | — | 录入/选型=**BLOCK** | SKIP | SKIP | — | — | — |
+| 素材索引 Base | — | — | — | SKIP | B2=**BLOCK**；C=SKIP | 组 pin=**DEGRADE** | SKIP | SKIP |
+| 订单 Base | — | 录入=**BLOCK** | — | SKIP | SKIP | — | — | — |
+| 客户 Base | — | 客服=**BLOCK** | — | SKIP | SKIP | — | — | — |
+| Pin Queue Base | — | — | — | SKIP | — | 发 pin=**BLOCK** | — | — |
