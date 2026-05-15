@@ -6,12 +6,13 @@
 
 ### 新增
 - `supplier-foundation`：新增供应商管理基座，维护 `{店铺名}-供应商管理` Base 与 `采购来源` 表，覆盖物料名称、店铺名称、商品链接、状态、选择理由、合适参数、淘汰原因，以及主用/备用/测试中/淘汰视图。
-- `trend-radar`：新增轻量趋势雷达 skill。v0 固定唯一关键词 `Chinese`、观察市场 `US`，主源为 Google Trends 浏览器自动化与 Exolyt 已登录页面，SerpApi 仅作 Google Trends fallback。输出落到 Etsy 工作区的 `trend-radar/reports/` 与 `trend-radar/data/`，支持手动触发和 Hermes 每周 cron；职责边界刻意收窄为"发现升温信号"，不做商品判断、内容生产或发布。新增 `browser-google-trends.mjs` 与 `browser-exolyt.mjs` 两个 Playwright 采集脚本，保存 raw evidence、截图和 normalized JSON；新增统一入口 `scripts/trend-radar-run`，供 AutoCLI / Hermes cron / 手动调试一条命令调用。
-- `trend-radar`：趋势报告新增语义解读字段。每个候选热词现在会输出词组含义、用户需求、与中国书法字周边的结合点、推荐汉字/短语和下一步动作，避免报告只列关键词但看不懂。
 
 ### 修
 - `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把供应商管理纳入 Foundation 层和安装 manifest。
 - `shared/preamble.md`：补充 Hermes cron 输出型报告的窄例外。用户在配置定时任务时确认固定输出目录后，cron 可追加新的时间戳报告 / JSON / raw evidence 文件；仍禁止覆盖旧报告或修改业务文件。
+
+### 移除
+- `trend-radar`：删除趋势雷达 skill、浏览器采集脚本、SerpApi fallback、报告 schema 和 `scripts/trend-radar-run`。趋势分析质量要求更高，未来统一通过 Claude CoWork 完成，不再在 Hermes skill 集合里维护低质量替代路径。
 
 ## [0.4.0] - 2026-05-10
 

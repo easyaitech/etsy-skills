@@ -70,6 +70,25 @@ for s in m["skills"]:
 [[ ${#SKILLS[@]} -gt 0 ]] || fail "manifest.skills 为空"
 
 mkdir -p "$HERMES_SKILLS_DIR"
+INSTALL_DIR="$INSTALL_DIR" HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" MANIFEST="$MANIFEST" python3 - <<'PY'
+import json
+import os
+
+install_dir = os.path.realpath(os.environ["INSTALL_DIR"])
+hermes_dir = os.environ["HERMES_SKILLS_DIR"]
+with open(os.environ["MANIFEST"], encoding="utf-8") as f:
+    active = set(json.load(f)["skills"])
+
+if os.path.isdir(hermes_dir):
+    for name in os.listdir(hermes_dir):
+        path = os.path.join(hermes_dir, name)
+        if name == "shared" or name in active or not os.path.islink(path):
+            continue
+        target = os.path.realpath(path)
+        if target == install_dir or target.startswith(install_dir + os.sep):
+            os.unlink(path)
+            print(f"✓ 移除已废弃 skill 链接：{name}")
+PY
 log "链接 skill → $HERMES_SKILLS_DIR"
 for skill in "${SKILLS[@]}"; do
   src="$INSTALL_DIR/$skill"
