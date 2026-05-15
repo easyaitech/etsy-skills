@@ -78,11 +78,12 @@ install_dir = os.path.realpath(os.environ["INSTALL_DIR"])
 hermes_dir = os.environ["HERMES_SKILLS_DIR"]
 with open(os.environ["MANIFEST"], encoding="utf-8") as f:
     active = set(json.load(f)["skills"])
+retired = {"trend-radar"}
 
 if os.path.isdir(hermes_dir):
     for name in os.listdir(hermes_dir):
         path = os.path.join(hermes_dir, name)
-        if name == "shared" or name in active or not os.path.islink(path):
+        if name == "shared" or name in active or name not in retired or not os.path.islink(path):
             continue
         target = os.path.realpath(path)
         if target == install_dir or target.startswith(install_dir + os.sep):
