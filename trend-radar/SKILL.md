@@ -68,6 +68,12 @@ scripts/trend-radar-run
 4. 聚合 raw evidence，生成：
    - `<workspace>/trend-radar/reports/YYYY-MM-DD.md`
    - `<workspace>/trend-radar/data/YYYY-MM-DD.json`
+5. 为每个候选信号补充：
+   - 这个词组是什么意思
+   - 用户搜索它背后的需求
+   - 和中国书法字周边的结合点
+   - 可考虑的汉字/短语
+   - 下一步验证动作
 
 需要首次登录 Exolyt 时：
 
@@ -164,6 +170,8 @@ scripts/trend-radar-run --workspace /absolute/path/to/etsy-workspace
 - IP、影视、游戏、明星、商标相关趋势只记录为 `risk_hint`，不判断可用性。
 - 输出必须保留英文原始热词；中文解释只能作为备注。
 - 每条 `Rising` 或 `Watch` 至少写一句 `why_it_matters`，说明为什么值得下次复查。
+- 每条候选都必须有 `meaning_zh`、`user_intent_zh`、`calligraphy_fit_zh`。不确定时要明确写"需要二次搜索确认"，不能编造语境。
+- `suggested_chinese_text` 只能给公共文化表达或通用汉字，不给商业 IP 名称、明星名、歌词或商标。
 
 ---
 

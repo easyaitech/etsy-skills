@@ -43,7 +43,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "label", "bucket", "verification_status", "sources", "signals", "related_terms", "why_it_matters"],
+        "required": ["id", "label", "bucket", "verification_status", "sources", "signals", "related_terms", "why_it_matters", "meaning_zh", "user_intent_zh", "calligraphy_fit_zh", "fit_level", "suggested_chinese_text", "next_step_zh"],
         "properties": {
           "id": { "type": "string" },
           "label": { "type": "string" },
@@ -77,6 +77,17 @@
             "items": { "type": "string" }
           },
           "why_it_matters": { "type": "string" },
+          "meaning_zh": { "type": "string" },
+          "user_intent_zh": { "type": "string" },
+          "calligraphy_fit_zh": { "type": "string" },
+          "fit_level": {
+            "enum": ["high", "medium", "low", "unknown"]
+          },
+          "suggested_chinese_text": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "next_step_zh": { "type": "string" },
           "risk_hint": { "type": "string" },
           "notes": { "type": "string" }
         },

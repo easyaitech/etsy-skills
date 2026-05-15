@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -41,6 +40,133 @@ def canonical(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", value.lower().lstrip("#"))
 
 
+def enrich_label(label: str) -> dict[str, Any]:
+    """Add buyer-readable interpretation for a raw trend phrase.
+
+    This is intentionally heuristic. It should make the weekly report readable
+    without pretending to know things the data source did not prove.
+    """
+
+    normalized = label.lower().lstrip("#")
+    compact = canonical(label)
+
+    def result(
+        meaning: str,
+        intent: str,
+        fit: str,
+        fit_level: str,
+        suggested: list[str],
+        next_step: str,
+    ) -> dict[str, Any]:
+        return {
+            "meaning_zh": meaning,
+            "user_intent_zh": intent,
+            "calligraphy_fit_zh": fit,
+            "fit_level": fit_level,
+            "suggested_chinese_text": suggested,
+            "next_step_zh": next_step,
+        }
+
+    if any(term in normalized for term in ["near me", "restaurant", "buffet", "takeout", "delivery", "menu", "food"]):
+        return result(
+            "和中餐、附近餐馆、外卖或菜单相关的搜索需求。",
+            "用户大概率是在找吃饭地点、外卖、菜单或附近服务，需求偏即时消费。",
+            "和书法周边的直接转化弱。可作为内容噪音处理；如果要蹭，只适合做餐厅/厨房/宴请场景的礼物语境，不适合主推。",
+            "low",
+            ["福", "味", "家宴", "有福"],
+            "除非它连续多周升温，或和节日/家庭聚会一起出现，否则放入 Ignore 或低优先 Watch。",
+        )
+
+    if any(term in normalized for term in ["translate", "translation", "english to chinese", "chinese to english", "dictionary"]):
+        return result(
+            "和中文翻译、英文转中文、中文转英文或词义查询相关。",
+            "用户想理解中文、翻译短语，或确认某个中文字/句子的含义，常见于纹身、礼物刻字、名字翻译、社媒文案。",
+            "结合度高。它说明海外用户需要“看懂中文含义”，可以做解释型内容：每个汉字的含义、适合送谁、能不能用于定制。",
+            "high",
+            ["福", "爱", "和", "静", "勇", "安"],
+            "优先把这类词交给内容层做“Chinese character meaning”解释页或短视频，不急着做新 SKU。",
+        )
+
+    if any(term in normalized for term in ["zodiac", "horoscope", "calendar", "new year", "lunar", "animal"]):
+        return result(
+            "和中国生肖、农历、中国新年或节庆时间相关。",
+            "用户想知道自己的生肖、年份寓意、节日日期，或找节庆礼物和祝福语。",
+            "结合度高。适合做生肖字、春节祝福、年份礼物、出生年定制。书法媒介天然适合把生肖和祝福浓缩成几个字。",
+            "high",
+            ["福", "春", "吉", "生肖", "龙", "马", "蛇"],
+            "优先进入下一步评估。需要按当年生肖和目标节日拆内容，不要泛泛讲中国文化。",
+        )
+
+    if any(term in normalized for term in ["dragon", "loong"]):
+        return result(
+            "和中国龙、龙年、力量/好运象征相关。",
+            "用户可能在找龙的文化含义、龙年礼物、纹身灵感，或东方神话审美。",
+            "结合度高。适合做单字“龙”、成语“龙腾”、祝福“瑞龙”。要避开具体影视/游戏 IP，只走公共文化象征。",
+            "high",
+            ["龙", "龙腾", "瑞龙", "腾", "勇"],
+            "进入下一步评估。重点检查是否来自公共文化搜索，还是某个商业 IP 带动。",
+        )
+
+    if any(term in normalized for term in ["tea", "matcha", "wellness", "meditation", "zen", "feng shui"]):
+        return result(
+            "和中式茶、养生、禅意、风水或慢生活审美相关。",
+            "用户在找一种东方生活方式：安静、养生、空间氛围、仪式感，而不只是买一个具体物品。",
+            "结合度中高。适合书签、桌面小卷轴、吊坠等“安静提醒物”。文案要克制，不要做玄学承诺。",
+            "medium",
+            ["茶", "静", "和", "安", "禅"],
+            "适合进入 Watch。若同时在 TikTok/Exolyt 出现，可以升级为 lifestyle 内容方向。",
+        )
+
+    if any(term in normalized for term in ["tattoo", "symbol", "character", "word", "meaning", "name"]):
+        return result(
+            "和中文字、符号含义、名字或纹身灵感相关。",
+            "用户想找一个“看起来美、含义对、能代表自己”的中文字或短语。",
+            "结合度很高。这几乎就是书法定制的需求原型：选择一个字，解释含义，用手写艺术承载身份和祝福。",
+            "high",
+            ["福", "爱", "勇", "静", "自由", "平安"],
+            "优先进入下一步评估。需要做含义解释、误用提醒和定制入口。",
+        )
+
+    if any(term in normalized for term in ["wukong", "monkey king", "journey to the west", "nezha", "mulan"]):
+        return result(
+            "和中国神话、古典故事或海外熟悉的中国角色相关。",
+            "用户可能在找故事背景、角色含义、东方神话审美或相关礼物灵感。",
+            "结合度高但要小心 IP。不要用商业作品名做商品标题；可以转到公共领域文化字词和寓意。",
+            "medium",
+            ["悟", "空", "道", "命", "勇", "自在"],
+            "进入下一步评估时必须做 IP 风险检查，只保留公共领域表达。",
+        )
+
+    if any(term in normalized for term in ["dress", "hanfu", "qipao", "cheongsam", "makeup", "aesthetic", "baddie"]):
+        return result(
+            "和中式穿搭、妆容、审美身份或社媒风格相关。",
+            "用户在找可展示的身份符号：穿搭、配饰、头像、拍照道具、社媒标签。",
+            "结合度中高。更适合吊坠、小挂件、拍照道具和短内容，不一定适合传统书签。",
+            "medium",
+            ["美", "静", "和", "福", "自在"],
+            "适合交叉验证 TikTok。若 Exolyt 也出现，优先做社媒内容而不是直接上新。",
+        )
+
+    if compact in {"china", "chinese"}:
+        return result(
+            "过于宽泛的中国/中文相关搜索。",
+            "用户需求不明确，可能是新闻、语言、文化、旅行、餐饮等混合需求。",
+            "不能直接转成产品。它只能作为母关键词，不应进入商品或内容选题。",
+            "low",
+            [],
+            "继续观察其 related queries，不直接使用这个词做行动。",
+        )
+
+    return result(
+        "暂时只能确认它是 Google Trends 或 Exolyt 返回的 Chinese 相关原始信号，具体语义需要二次搜索确认。",
+        "用户需求未知。可能是搜索、社媒梗、人物/地点/品牌名，不能只凭词面判断。",
+        "暂不直接结合书法周边。先查这个词在搜索结果、TikTok 视频或新闻里的真实语境，再决定是否进入机会评估。",
+        "unknown",
+        [],
+        "下一步用这个原始词做人工/自动二次搜索，补充语境后再判断。",
+    )
+
+
 def add_signal(candidates: dict[str, dict[str, Any]], label: str, signal: dict[str, Any], *, bucket: str, why: str) -> None:
     key = canonical(label)
     if not key:
@@ -56,6 +182,7 @@ def add_signal(candidates: dict[str, dict[str, Any]], label: str, signal: dict[s
             "signals": [],
             "related_terms": [],
             "why_it_matters": why,
+            **enrich_label(label),
             "risk_hint": "",
             "notes": "",
         }
@@ -198,6 +325,8 @@ def finalize_candidates(candidates: dict[str, dict[str, Any]], run_id: str) -> l
         else:
             item["verification_status"] = "weak"
         item["id"] = f"{run_id}-{slugify(item['label'])}"
+        if item.get("fit_level") == "low" and item["bucket"] == "rising":
+            item["notes"] = (item.get("notes", "") + " Low product fit despite trend signal.").strip()
         finalized.append(item)
 
     order = {"rising": 0, "watch": 1, "ignore": 2}
@@ -217,7 +346,11 @@ def render_items(items: list[dict[str, Any]]) -> str:
             f"{index}. {item['label']}\n"
             f"   - Bucket: {item['bucket']} / {item['verification_status']}\n"
             f"   - Signals: {'; '.join(signal_bits) or 'n/a'}\n"
-            f"   - Why: {item['why_it_matters']}"
+            f"   - Meaning: {item.get('meaning_zh', '')}\n"
+            f"   - User need: {item.get('user_intent_zh', '')}\n"
+            f"   - Calligraphy fit: {item.get('calligraphy_fit_zh', '')}\n"
+            f"   - Suggested text: {', '.join(item.get('suggested_chinese_text', [])) or 'None'}\n"
+            f"   - Next: {item.get('next_step_zh', '')}"
         )
     return "\n".join(lines)
 
