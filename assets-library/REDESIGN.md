@@ -1,6 +1,6 @@
 # assets-library 重设计：dump-then-promote
 
-> **⚠️ 路径已过时**：本文档中的文件夹路径（`1. 摄影/by-SKU/`、`shoot-archive/`、`7. 受限/` 等）已在 2026-05-08 扁平化重构中废弃。当前结构为 5 个一级文件夹（商品 / 品牌 / 客户 / 工作室 / 待处理），无任何子目录。详见 [references/folder-structure.md](references/folder-structure.md)。本文档保留作为"dump-then-promote"设计决策的历史记录，核心原则不变。
+> **⚠️ 路径已过时**：本文档中的文件夹路径（`1. 摄影/by-SKU/`、`shoot-archive/`、`7. 受限/` 等）已在 2026-05-08 扁平化重构中废弃。当前结构为 6 个一级文件夹（商品 / 品牌 / 客户 / 工作室 / 营销 / 待处理），无任何子目录。详见 [references/folder-structure.md](references/folder-structure.md)。本文档保留作为"dump-then-promote"设计决策的历史记录，核心原则不变。
 
 状态：APPROVED — 可进 PR1 起草
 前置讨论：/office-hours 会话（用户：john / 日期：2026-05-05）
