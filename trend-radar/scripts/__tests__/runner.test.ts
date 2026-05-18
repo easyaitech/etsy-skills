@@ -18,6 +18,11 @@ describe("parseArgs", () => {
     expect(result).toEqual({ source: "google-trends", geo: "GB" });
   });
 
+  it("parses pinterest source", () => {
+    const result = parseArgs(["node", "runner.ts", "pinterest-chinese"]);
+    expect(result).toEqual({ source: "pinterest-chinese", geo: "US" });
+  });
+
   it("uppercases geo", () => {
     const result = parseArgs([
       "node",

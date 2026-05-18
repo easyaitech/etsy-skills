@@ -39,10 +39,17 @@ const EXIT_USAGE = 1;
 const EXIT_CONFIG = 2;
 const EXIT_PARSE = 4;
 
-const KNOWN_SOURCES = ["google-trends", "google-trends-chinese"] as const;
+const KNOWN_SOURCES = [
+  "google-trends",
+  "google-trends-chinese",
+  "pinterest-trends",
+  "pinterest-chinese",
+] as const;
 const GEO_ALLOWLIST: Record<string, string[]> = {
   "google-trends": ["US", "GB", "AU", "CA", "DE", "FR", "JP", "BR", "IN"],
   "google-trends-chinese": ["US", "GB", "AU", "CA", "DE", "FR", "JP", "BR", "IN"],
+  "pinterest-trends": ["US", "GB", "CA", "AU", "DE", "FR", "IT", "ES", "BR", "MX"],
+  "pinterest-chinese": ["US", "GB", "CA", "AU", "DE", "FR", "IT", "ES", "BR", "MX"],
 };
 
 function resolveWorkspace(): string | null {
@@ -71,6 +78,9 @@ function printUsage(): void {
 
 示例:
   trend-fetch google-trends
+  trend-fetch google-trends-chinese
+  trend-fetch pinterest-trends
+  trend-fetch pinterest-chinese
   trend-fetch google-trends --geo GB
 `
   );

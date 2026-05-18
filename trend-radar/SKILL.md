@@ -35,9 +35,17 @@ trend-fetch google-trends
 # 获取与 Chinese 相关的 Google Trends rising/top queries（默认 US）
 trend-fetch google-trends-chinese
 
+# 获取 Pinterest Trends 月度通用热词（默认 US）
+trend-fetch pinterest-trends
+
+# 获取 Pinterest Trends 月度 Chinese 过滤热词（默认 US）
+trend-fetch pinterest-chinese
+
 # 指定地区
 trend-fetch google-trends --geo GB
 ```
+
+Pinterest 未登录公开页可能只返回预览条目；如果要采集完整列表，可把已登录浏览器 profile 路径放到 `PINTEREST_TRENDS_PROFILE`，runner 会用该 profile 打开 Trends 页面。
 
 ## 输出
 
@@ -55,7 +63,7 @@ trend-fetch google-trends --geo GB
 |--------|------|------|
 | google-trends | v0.1 ✅ | Google Trends trending now（过去 7 天上升最快，Top 50） |
 | google-trends-chinese | v0.2 ✅ | Google Trends 中与 Chinese 相关的 rising/top queries + topics（过去 7 天，Top 50，需 SERPAPI_KEY） |
-| pinterest-trends | 计划 v0.3 | Pinterest Trends 通用 |
-| pinterest-chinese | 计划 v0.4 | Pinterest Trends 中文 |
+| pinterest-trends | v0.3 ✅ | Pinterest Trends 月度通用关键词（`trendsPreset=1`，Top 50，未登录时可能只有预览条目） |
+| pinterest-chinese | v0.4 ✅ | Pinterest Trends 月度 Chinese 过滤关键词（`keywordsToInclude=chinese`，Top 50，未登录时可能只有预览条目） |
 
 添加新数据源：见 [`references/source-guide.md`](references/source-guide.md)。
