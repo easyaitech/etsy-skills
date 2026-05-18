@@ -120,7 +120,7 @@ QA 一次性通过时不存 attempt 文件，直接落正式名。用户从 atte
 | `label_id` | 素材索引 Base **用途标签**字段值——直接对应（hero / Pinterest / 等，源自 schema 词汇表）|
 | `sku` | **关联 SKU** 字段 |
 | `final_prompt`（截前 200 字符）| 素材索引 Base **备注**字段以 `[AI 合成] {prompt 摘要}` 前缀写入 |
-| `mode` + `label_id` | 上传到 `商品/` 文件夹，按 assets-library 命名公式命名（`{SKU}_{usage}_{seq}.{ext}`） |
+| `mode` + `label_id` | 模式 A 电商 / listing 图上传到 `商品/`；模式 B 社媒 / 营销图上传到 `营销/`。按 assets-library 命名公式命名 |
 
 ---
 

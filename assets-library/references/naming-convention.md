@@ -1,6 +1,6 @@
 # 文件命名约定
 
-> 文件夹扁平化后（5 个一级文件夹，无子目录），文件名是在文件夹视图里快速识别素材的**唯一线索**。成品层每次归档都按这套规则走。
+> 文件夹扁平化后（6 个一级文件夹，无子目录），文件名是在文件夹视图里快速识别素材的**唯一线索**。成品层每次归档都按这套规则走。
 
 ## 两阶段命名（重要）
 
@@ -9,7 +9,7 @@ dump（模式 B1）和 promote（模式 B2）对命名的严格度不同：
 | 阶段 | 物理位置 | 命名要求 |
 |---|---|---|
 | **dump（B1）** | `待处理/` | **接受保留相机原始名**（`IMG_3847.JPG` / `DSCF0123.RAF`），不强制改名 |
-| **promote（B2）** | `商品/` / `品牌/` / `客户/` / `工作室/` | **强制按公式命名**——成品命名进 Base，影响后续检索与可追溯性 |
+| **promote（B2）** | `商品/` / `品牌/` / `客户/` / `工作室/` / `营销/` | **强制按公式命名**——成品命名进 Base，影响后续检索与可追溯性 |
 
 ## 总原则
 
@@ -45,7 +45,7 @@ dump（模式 B1）和 promote（模式 B2）对命名的严格度不同：
 ```
 TEACUP-001_listing-cover_01.jpg     ← Etsy 主图
 TEACUP-001_listing-detail_01.jpg    ← Etsy 详情图
-TEACUP-001_social-square_01.jpg     ← 社媒方图
+TEACUP-001_listing-lifestyle_01.jpg ← Etsy 场景图
 ```
 
 ### 商品场景图（商品/）
@@ -68,17 +68,30 @@ TEACUP-001_scene_handheld_01.jpg
 {YYYY-MM-DD}_{SKU-or-batch}_{purpose}_master.{ext}
 ```
 
-派生平台版本：
+例：
+```
+2026-05-05_TEACUP-001_unboxing_master.mp4
+```
+
+> 面向 Reels / TikTok / Shorts / Pinterest video pin / 广告投放的派生平台版本，走下方 `营销/` 命名公式。
+
+### 营销素材（营销/）
+
+社媒、广告、邮件、活动页等发布路径版本：
 
 ```
-{YYYY-MM-DD}_{SKU-or-batch}_{purpose}_{platform}_{aspect}_{duration}s_v{NN}.{ext}
+{YYYY-MM-DD}_{SKU-or-campaign}_{channel}_{asset-purpose}_{aspect}_v{NN}.{ext}
 ```
 
 例：
 ```
-2026-05-05_TEACUP-001_unboxing_master.mp4
-2026-05-05_TEACUP-001_unboxing_reels_9x16_30s_v01.mp4
+2026-05-05_TEACUP-001_pinterest_pin_2x3_v01.jpg
+2026-05-05_TEACUP-001_instagram-post_gift-guide_4x5_v01.jpg
+2026-05-05_summer-sale_email-banner_16x9_v01.png
+2026-05-05_TEACUP-001_reels_process_9x16_30s_v01.mp4
 ```
+
+> 如果只是产品原始摄影或 Etsy listing 图，仍放 `商品/`。只有已经按社交媒体、广告、邮件、活动页等营销路径加工过的成品 / 母版，才放 `营销/`。
 
 ### 品牌素材（品牌/）
 

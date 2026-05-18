@@ -1,16 +1,16 @@
 ---
 name: assets-library
-description: 维护 Etsy 店铺的视觉与素材资产库（摄影 / 视频 / 视觉模板 / 字体 / Logo / 包装物料 / 客户 UGC）。五个一级文件夹（商品 / 品牌 / 客户 / 工作室 / 待处理）+ 素材索引 Base 双层架构。四种触发：(1) 建库：用户提到"建素材库 / 建资产库 / 整理素材"等首次建立请求时——建文件夹骨架 + 素材索引 Base；(2) 归档：用户提到"上传新摄影 / 归档某 SKU 的图 / 整理新素材 / 收到客户 UGC"等请求时——新素材先入待处理/，分类后移入对应文件夹 + 录 Base（B1 dump / B2 promote）；(3) 查找：用户提到"找某 SKU 的图 / 查能发 Pinterest 的素材"等检索请求时——走 Base 多维筛选；(4) 拍前规划：用户提到"给某 SKU 出拍摄 brief"等请求时——按 Etsy 10 槽位社区 SOP 出 markdown shoot brief（模式 D plan，落 商品/{SKU}_shoot-brief.md）。归档与 brief 严格遵守 BRAND.md 视觉原则（如存在）。
+description: 维护 Etsy 店铺的视觉与素材资产库（摄影 / 视频 / 视觉模板 / 字体 / Logo / 包装物料 / 客户 UGC / 营销素材）。六个一级文件夹（商品 / 品牌 / 客户 / 工作室 / 营销 / 待处理）+ 素材索引 Base 双层架构。四种触发：(1) 建库：用户提到"建素材库 / 建资产库 / 整理素材"等首次建立请求时——建文件夹骨架 + 素材索引 Base；(2) 归档：用户提到"上传新摄影 / 归档某 SKU 的图 / 整理新素材 / 收到客户 UGC / 整理营销素材"等请求时——新素材先入待处理/，分类后移入对应文件夹 + 录 Base（B1 dump / B2 promote）；(3) 查找：用户提到"找某 SKU 的图 / 查能发 Pinterest 的素材 / 查某次营销活动素材"等检索请求时——走 Base 多维筛选；(4) 拍前规划：用户提到"给某 SKU 出拍摄 brief"等请求时——按 Etsy 10 槽位社区 SOP 出 markdown shoot brief（模式 D plan，落 商品/{SKU}_shoot-brief.md）。归档与 brief 严格遵守 BRAND.md 视觉原则（如存在）。
 layer: foundation
 ---
 
 # 资产库 (Assets Library)
 
 这个 skill 维护 Etsy 店铺的视觉与素材资产，核心是**双层架构——扁平文件夹 + 语义 Base**：
-- **物理层（5 个一级文件夹）**——飞书云空间：`商品/ 品牌/ 客户/ 工作室/ 待处理/`。每个文件唯一存放在一个文件夹中，**无任何子目录**
+- **物理层（6 个一级文件夹）**——飞书云空间：`商品/ 品牌/ 客户/ 工作室/ 营销/ 待处理/`。每个文件唯一存放在一个文件夹中，**无任何子目录**
 - **语义层（素材索引 Base）**——**只收 promoted 的成品**：一行一个，多选标签 + 关联其他 Base，承载所有细粒度分类（SKU / 渠道 / 用途 / 阶段）
 
-**文件夹只管来源归属**（商品相关？品牌相关？客户相关？工作室相关？还没分类？）；**Base 管一切语义分类**（哪个 SKU / 什么用途 / 投哪个渠道 / raw 还是成品）。两者通过"文件链接"字段连接。
+**文件夹只管来源归属 / 发布阶段**（商品相关？品牌相关？客户相关？工作室相关？营销发布版本？还没分类？）；**Base 管一切语义分类**（哪个 SKU / 什么用途 / 投哪个渠道 / raw 还是成品）。两者通过"文件链接"字段连接。
 
 > **Base 是查素材的唯一入口**：用户找素材时走 Base 视图筛选 → 点文件链接跳转。不应该在文件夹里翻找——文件夹只是存储后端。
 
@@ -42,7 +42,7 @@ layer: foundation
 **执行步骤**：
 1. 先按 [asset-index-base-schema.md § 何时不需要建这张 Base](references/asset-index-base-schema.md#何时不需要建这张-base) 与用户确认是否真的需要 Base——若否，本模式只做物理层
 2. 读 `references/folder-structure.md` 与 `references/asset-index-base-schema.md`，对齐双层结构
-3. **物理层**：用 `lark-drive` 在飞书云空间创建根文件夹 `{店铺名}-素材库`，下建 5 个一级文件夹：`商品/`、`品牌/`、`客户/`、`工作室/`、`待处理/`。**不建任何子目录**
+3. **物理层**：用 `lark-drive` 在飞书云空间创建根文件夹 `{店铺名}-素材库`，下建 6 个一级文件夹：`商品/`、`品牌/`、`客户/`、`工作室/`、`营销/`、`待处理/`。**不建任何子目录**
 4. **语义层**（如需要）：用 `lark-base` 在与商品/订单/客户 Base 同一个空间创建 `{店铺名}-素材索引` Base，按 schema 建字段（关联字段必须指向已有的三张 Base）和推荐视图
 5. 落盘后告诉用户：根目录链接 + Base 链接（如建了） + 简要使用约定
 
@@ -70,7 +70,7 @@ layer: foundation
 - 不问 BRAND 合规
 - 不问用途标签
 - 不问关联 SKU
-- 不问分类归属（商品/品牌/客户/工作室的分类延后到 B2）
+- 不问分类归属（商品/品牌/客户/工作室/营销的分类延后到 B2）
 - **不录素材索引 Base**
 
 #### 模式 B2：promote（分类 + 移入对应文件夹 + 录 Base）
@@ -83,7 +83,7 @@ layer: foundation
 **执行步骤**：
 1. 读 [naming-convention.md](references/naming-convention.md)：成品文件命名规则
 2. 读 [asset-types.md](references/asset-types.md)：识别素材该归到哪个一级文件夹
-3. **分类**：判断素材归属——商品 / 品牌 / 客户 / 工作室。判断依据见 [asset-types.md](references/asset-types.md) 的类型→文件夹映射表
+3. **分类**：判断素材归属——商品 / 品牌 / 客户 / 工作室 / 营销。判断依据见 [asset-types.md](references/asset-types.md) 的类型→文件夹映射表
 4. **物理动作**：
    - 如素材需编辑（**用户在外部工具完成**——本 skill 不做图像编辑）：裁切 / 调色 / 加水印 → 按规范命名
    - 用 `lark-drive` 将文件从 `待处理/` 移入对应一级文件夹。例：
@@ -198,7 +198,7 @@ layer: foundation
 - **image-synth**：
   - 本 skill 模式 D 出的 shoot-brief.md 是 image-synth 的**主输入源**——image-synth 解析 brief 的 §B Mood 段填 mood 词库 / §C 镜头清单填 shot-spec 词库
   - 模式 D step 11 反向触发 image-synth：用户选"不拍直接合成"时现传 brief 词库 in-memory，避免重新读文件
-  - image-synth 出的 AI 合成图最终通过本 skill 模式 B2 promote 入索引 Base：素材索引 Base 的"备注"字段以 `[AI 合成] {prompt 摘要}` 前缀写入；上传到 `商品/` 文件夹，按命名规则命名
+  - image-synth 出的 AI 合成图最终通过本 skill 模式 B2 promote 入索引 Base：素材索引 Base 的"备注"字段以 `[AI 合成] {prompt 摘要}` 前缀写入；电商 / listing 图上传到 `商品/` 文件夹，社媒 / 营销图上传到 `营销/` 文件夹，按命名规则命名
   - **v0 不动 schema**：素材索引 Base 不新增"AI 合成"词汇，仅在"备注"字段标前缀。v1 观察后再决定是否升级
 
 ---
