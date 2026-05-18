@@ -12,5 +12,8 @@
 /.local/
 /tools/
 
+# Node.js (trend-radar scripts)
+node_modules/
+
 # Claude Code local session state
 .claude/
