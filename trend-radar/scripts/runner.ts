@@ -39,9 +39,10 @@ const EXIT_USAGE = 1;
 const EXIT_CONFIG = 2;
 const EXIT_PARSE = 4;
 
-const KNOWN_SOURCES = ["google-trends"] as const;
+const KNOWN_SOURCES = ["google-trends", "google-trends-chinese"] as const;
 const GEO_ALLOWLIST: Record<string, string[]> = {
   "google-trends": ["US", "GB", "AU", "CA", "DE", "FR", "JP", "BR", "IN"],
+  "google-trends-chinese": ["US", "GB", "AU", "CA", "DE", "FR", "JP", "BR", "IN"],
 };
 
 function resolveWorkspace(): string | null {

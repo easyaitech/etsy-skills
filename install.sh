@@ -28,7 +28,7 @@ set -euo pipefail
 REPO_URL="${ETSY_SKILLS_REPO:-https://github.com/easyaitech/etsy-skills.git}"
 REF="${ETSY_SKILLS_REF:-main}"
 INSTALL_DIR="${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}"
-HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-$HOME/.hermes/skills}"
+HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-${HERMES_HOME:-$HOME/.hermes}/skills}"
 BIN_DIR="${ETSY_STACK_BIN:-$HOME/.local/bin}"
 
 log()   { printf "  %s\n" "$*"; }
@@ -162,7 +162,7 @@ ETSY_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
 rm -f "$ETSY_CACHE_DIR/last-check" "$ETSY_CACHE_DIR"/latest-*
 
 echo ""
-ok "安装完成（版本：$INSTALLED）"
+ok "安装完成（版本：${INSTALLED}）"
 echo ""
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;

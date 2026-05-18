@@ -4,7 +4,7 @@ set -uo pipefail
 
 INSTALL_DIR="${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
-HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-$HOME/.hermes/skills}"
+HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-${HERMES_HOME:-$HOME/.hermes}/skills}"
 PINTEREST_AUTOPIN_REPO="${PINTEREST_AUTOPIN_REPO:-https://github.com/easyaitech/Pinterest-autopin.git}"
 PINTEREST_AUTOPIN_DIR="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
 PINTEREST_AUTOPIN_MIN_VERSION="1.4.0"
@@ -165,7 +165,7 @@ case "$cmd" in
     out=$(bash "$INSTALL_DIR/scripts/check-update.sh")
     if [[ -z "$out" ]]; then
       current=$(git -C "$INSTALL_DIR" describe --tags --always 2>/dev/null || echo "unknown")
-      echo "✓ 已是最新（当前：$current）"
+      echo "✓ 已是最新（当前：${current}）"
     else
       echo "$out"
     fi

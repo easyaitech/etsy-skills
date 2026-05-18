@@ -29,8 +29,11 @@ layer: utility-input
 ## 使用方式
 
 ```bash
-# 获取 Google Trends 通用热词（默认 US）
+# 获取 Google Trends 通用热词 Top 50（默认 US）
 trend-fetch google-trends
+
+# 获取与 Chinese 相关的 Google Trends rising/top queries（默认 US）
+trend-fetch google-trends-chinese
 
 # 指定地区
 trend-fetch google-trends --geo GB
@@ -50,8 +53,8 @@ trend-fetch google-trends --geo GB
 
 | Source | 状态 | 说明 |
 |--------|------|------|
-| google-trends | v0.1 ✅ | Google Trends trending now（过去 7 天上升最快） |
-| google-trends-chinese | 计划 v0.2 | Google Trends 中文聚焦 |
+| google-trends | v0.1 ✅ | Google Trends trending now（过去 7 天上升最快，Top 50） |
+| google-trends-chinese | v0.2 ✅ | Google Trends 中与 Chinese 相关的 rising/top queries + topics（过去 7 天，Top 50，需 SERPAPI_KEY） |
 | pinterest-trends | 计划 v0.3 | Pinterest Trends 通用 |
 | pinterest-chinese | 计划 v0.4 | Pinterest Trends 中文 |
 

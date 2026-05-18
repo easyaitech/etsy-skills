@@ -32,7 +32,7 @@ emit_if_behind() {
     local newest
     newest=$(printf '%s\n%s\n' "$current" "$latest_tag" | sort -V | tail -n1)
     if [[ "$newest" == "$latest_tag" && "$newest" != "$current" ]]; then
-      echo "💡 Etsy stack 有新版本：$current → $latest_tag（运行 \`etsy-stack update\` 升级）"
+      echo "💡 Etsy stack 有新版本：${current} → ${latest_tag}（运行 \`etsy-stack update\` 升级）"
       return 0
     fi
   fi
@@ -48,7 +48,7 @@ emit_if_behind() {
     ahead=$(git -C "$INSTALL_DIR" rev-list "HEAD..$latest_main" --count 2>/dev/null || echo 0)
     short=$(git -C "$INSTALL_DIR" rev-parse --short "$latest_main" 2>/dev/null || echo "")
     if [[ "$ahead" -gt 0 ]]; then
-      echo "💡 Etsy stack main 比当前快 $ahead 个 commit（$current → main@$short，运行 \`etsy-stack update\` 拉取）"
+      echo "💡 Etsy stack main 比当前快 ${ahead} 个 commit（${current} → main@${short}，运行 \`etsy-stack update\` 拉取）"
     fi
   fi
 }

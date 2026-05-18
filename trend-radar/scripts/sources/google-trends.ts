@@ -28,6 +28,7 @@ export class TrendFetchError extends Error {
 
 const EXIT_NETWORK = 3;
 const EXIT_PARSE = 4;
+const TARGET_TREND_COUNT = 50;
 
 export function parseTrendingPage(html: string): ParsedTrend[] {
   const results: ParsedTrend[] = [];
@@ -84,6 +85,47 @@ export function parseTrendingPage(html: string): ParsedTrend[] {
   return results;
 }
 
+export function parseTrendingText(text: string): ParsedTrend[] {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const results: ParsedTrend[] = [];
+  const seen = new Set<string>();
+  const skip = new Set([
+    "Trends",
+    "Home",
+    "Explore",
+    "Trending now",
+    "Sign in",
+    "Trending Now - Google Trends",
+    "Search volume",
+    "Started",
+    "Trend breakdown",
+    "Past 7 days",
+    "Active",
+    "trending_up",
+    "arrow_upward",
+  ]);
+
+  for (let i = 0; i < lines.length - 3; i++) {
+    const keyword = lines[i];
+    const volume = lines[i + 1];
+    const arrow = lines[i + 2];
+    const growth = lines[i + 3];
+    if (skip.has(keyword)) continue;
+    if (!/^[\d,.]+[KM]\+?$/.test(volume)) continue;
+    if (arrow !== "arrow_upward") continue;
+    if (!/^[\d,.]+%$/.test(growth)) continue;
+    const key = keyword.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    results.push({ keyword, growth_label: growth, category: "All" });
+  }
+
+  return results;
+}
+
 export function buildExploreUrl(keyword: string, geo: string): string {
   return `https://trends.google.com/trends/explore?q=${encodeURIComponent(keyword)}&geo=${encodeURIComponent(geo)}`;
 }
@@ -104,7 +146,11 @@ const googleTrends = {
       process.env.TREND_RADAR_OUT_DIR ||
       join(process.cwd(), ".trend-radar-tmp");
 
-    const browser = await chromium.launch({ headless: true }).catch((err) => {
+    const launchOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+      ? { headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+      : { headless: true };
+
+    const browser = await chromium.launch(launchOptions).catch((err) => {
       throw new TrendFetchError(
         `无法启动浏览器 — ${err.message}`,
         EXIT_NETWORK
@@ -119,7 +165,7 @@ const googleTrends = {
       });
       const page = await context.newPage();
 
-      await page.goto(url, { waitUntil: "networkidle", timeout: 30000 }).catch((err) => {
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 }).catch((err) => {
         throw new TrendFetchError(
           `无法加载页面 — ${err.message}`,
           EXIT_NETWORK
@@ -128,26 +174,75 @@ const googleTrends = {
 
       // Dismiss Google consent overlay if present
       try {
-        const consentBtn = page.locator(
-          'button:has-text("Accept all"), button:has-text("I agree"), button:has-text("Accept")'
-        );
-        if (await consentBtn.first().isVisible({ timeout: 3000 })) {
-          await consentBtn.first().click();
-          await page.waitForTimeout(1000);
+        for (const label of ["Got it", "Accept all", "I agree", "Accept"]) {
+          const button = page.getByRole("button", { name: label });
+          if ((await button.count()) > 0 && await button.first().isVisible({ timeout: 1000 })) {
+            await button.first().click();
+            await page.waitForTimeout(2000);
+            break;
+          }
         }
       } catch {
         // No consent overlay — continue
       }
 
-      // Wait for content to load
-      await page.waitForTimeout(3000);
+      const parsed: ParsedTrend[] = [];
+      const seen = new Set<string>();
 
-      // Scroll to trigger lazy-loaded content
-      for (let i = 0; i < 3; i++) {
-        await page.evaluate(() =>
-          window.scrollBy(0, window.innerHeight * 2)
-        );
-        await page.waitForTimeout(1500);
+      const mergeParsed = (items: ParsedTrend[]) => {
+        for (const item of items) {
+          const key = item.keyword.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          parsed.push(item);
+          if (parsed.length >= TARGET_TREND_COUNT) break;
+        }
+      };
+
+      const collectCurrentPage = async () => {
+        // Wait for content to load
+        await page.waitForFunction(
+          () => document.body.innerText.includes("arrow_upward") ||
+            document.body.innerText.toLowerCase().includes("unusual traffic"),
+          { timeout: 15000 }
+        ).catch(() => undefined);
+        await page.waitForTimeout(2000);
+
+        // Scroll to trigger lazy-loaded content and expose the paginator.
+        for (let i = 0; i < 3; i++) {
+          await page.evaluate(() =>
+            window.scrollBy(0, window.innerHeight * 2)
+          );
+          await page.waitForTimeout(1000);
+        }
+
+        const htmlContent = await page.content();
+        const renderedText = await page.locator("body").innerText().catch(() => "");
+
+        if (
+          renderedText.toLowerCase().includes("unusual traffic") ||
+          renderedText.toLowerCase().includes("our systems have detected unusual traffic")
+        ) {
+          throw new TrendFetchError(
+            "检测到 CAPTCHA / 反自动化拦截",
+            EXIT_PARSE
+          );
+        }
+
+        const textParsed = parseTrendingText(renderedText);
+        if (textParsed.length > 0) {
+          mergeParsed(textParsed);
+        } else {
+          mergeParsed(parseTrendingPage(htmlContent));
+        }
+      };
+
+      await collectCurrentPage();
+      while (parsed.length < TARGET_TREND_COUNT) {
+        const nextButton = page.getByRole("button", { name: "Go to next page" });
+        if ((await nextButton.count()) === 0 || await nextButton.first().isDisabled()) break;
+        await nextButton.first().click();
+        await collectCurrentPage();
       }
 
       // Scroll back to top for screenshot
@@ -161,31 +256,17 @@ const googleTrends = {
       const snapshotPath = join(tempDir, `google-trends-${geo}-snapshot.html`);
       writeFileSync(snapshotPath, htmlContent);
 
-      if (
-        htmlContent.includes("unusual traffic") ||
-        htmlContent.includes("captcha") ||
-        htmlContent.includes("recaptcha")
-      ) {
-        throw new TrendFetchError(
-          "检测到 CAPTCHA / 反自动化拦截",
-          EXIT_PARSE
-        );
-      }
-
-      // Parse trending keywords
-      const parsed = parseTrendingPage(htmlContent);
-
       if (parsed.length === 0) {
         process.stderr.write(
-          `警告: 从 HTML 中解析到 0 条趋势关键词\n`
+          `警告: 从页面中解析到 0 条趋势关键词\n`
         );
-      } else if (parsed.length < 20) {
+      } else if (parsed.length < TARGET_TREND_COUNT) {
         process.stderr.write(
-          `警告: 只解析到 ${parsed.length} 条（期望 ≥20），可能需要更新 selector\n`
+          `警告: 只解析到 ${parsed.length} 条（期望 ${TARGET_TREND_COUNT}），可能需要更新 selector\n`
         );
       }
 
-      const items: TrendItem[] = parsed.map((p, i) => ({
+      const items: TrendItem[] = parsed.slice(0, TARGET_TREND_COUNT).map((p, i) => ({
         keyword: p.keyword,
         source: "google-trends",
         geo,
