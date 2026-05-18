@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync, copyFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
+import { FitReportError, generateFitReport } from "./fit-report.js";
 
 interface TrendItem {
   keyword: string;
@@ -45,6 +46,7 @@ const KNOWN_SOURCES = [
   "pinterest-trends",
   "pinterest-chinese",
 ] as const;
+const FIT_REPORT_COMMAND = "fit-report";
 const GEO_ALLOWLIST: Record<string, string[]> = {
   "google-trends": ["US", "GB", "AU", "CA", "DE", "FR", "JP", "BR", "IN"],
   "google-trends-chinese": ["US", "GB", "AU", "CA", "DE", "FR", "JP", "BR", "IN"],
@@ -70,11 +72,14 @@ function resolveWorkspace(): string | null {
 function printUsage(): void {
   process.stderr.write(
     `用法: trend-fetch <source> [--geo GEO]
+      trend-fetch fit-report [--date YYYY-MM-DD] [--geo GEO] [--max-items N]
 
 数据源: ${KNOWN_SOURCES.join(", ")}
 
 选项:
-  --geo GEO    地区代码 (默认: US)
+  --geo GEO       地区代码 (默认: US)
+  --date DATE     fit-report 使用的输出日期 (默认: today)
+  --max-items N   fit-report 最多分析的趋势词数量 (默认: 200)
 
 示例:
   trend-fetch google-trends
@@ -82,14 +87,26 @@ function printUsage(): void {
   trend-fetch pinterest-trends
   trend-fetch pinterest-chinese
   trend-fetch google-trends --geo GB
+  trend-fetch fit-report --date 2026-05-18
 `
   );
 }
 
-export function parseArgs(argv: string[]): {
-  source: string;
-  geo: string;
-} | null {
+export type ParsedArgs =
+  | {
+      command: "fetch";
+      source: string;
+      geo: string;
+    }
+  | {
+      command: "fit-report";
+      source: typeof FIT_REPORT_COMMAND;
+      geo: string;
+      date: string;
+      maxItems: number;
+    };
+
+export function parseArgs(argv: string[]): ParsedArgs | null {
   const args = argv.slice(2);
   if (args.length === 0) return null;
 
@@ -97,14 +114,35 @@ export function parseArgs(argv: string[]): {
   if (!source || source.startsWith("-")) return null;
 
   let geo = "US";
+  let date = new Date().toISOString().slice(0, 10);
+  let maxItems = 200;
   for (let i = 1; i < args.length; i++) {
     if (args[i] === "--geo" && args[i + 1]) {
       geo = args[i + 1].toUpperCase();
       i++;
+    } else if (source === FIT_REPORT_COMMAND && args[i] === "--date" && args[i + 1]) {
+      date = args[i + 1];
+      i++;
+    } else if (
+      source === FIT_REPORT_COMMAND &&
+      args[i] === "--max-items" &&
+      args[i + 1]
+    ) {
+      const parsedMax = Number(args[i + 1]);
+      if (!Number.isInteger(parsedMax) || parsedMax <= 0) return null;
+      maxItems = parsedMax;
+      i++;
+    } else {
+      return null;
     }
   }
 
-  return { source, geo };
+  if (source === FIT_REPORT_COMMAND) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+    return { command: "fit-report", source, geo, date, maxItems };
+  }
+
+  return { command: "fetch", source, geo };
 }
 
 async function loadSource(name: string): Promise<TrendSource> {
@@ -120,6 +158,33 @@ async function main(): Promise<void> {
   }
 
   const { source, geo } = parsed;
+
+  if (parsed.command === "fit-report") {
+    const workspace = resolveWorkspace();
+    if (!workspace) {
+      process.stderr.write(
+        `错误: 找不到工作区\n设置 $ETSY_WORKSPACE 或在工作区根目录运行 etsy-stack init\n`
+      );
+      process.exit(EXIT_CONFIG);
+    }
+
+    try {
+      const result = generateFitReport({
+        workspace,
+        date: parsed.date,
+        geo,
+        maxItems: parsed.maxItems,
+      });
+      process.stdout.write(result.markdownPath + "\n");
+      return;
+    } catch (err: unknown) {
+      if (err instanceof FitReportError) {
+        process.stderr.write(`错误: ${err.message}\n`);
+        process.exit(err.exitCode);
+      }
+      throw err;
+    }
+  }
 
   if (!KNOWN_SOURCES.includes(source as (typeof KNOWN_SOURCES)[number])) {
     process.stderr.write(`错误: 未知数据源 "${source}"\n可用: ${KNOWN_SOURCES.join(", ")}\n`);
