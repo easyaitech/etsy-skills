@@ -2,7 +2,7 @@
 
 跨境 Etsy 店铺运营 skill bundle，跑在 [Hermes Agent](https://hermes-agent.nousresearch.com/) 上（Mac mini 本地），用 [larksuite/cli](https://github.com/larksuite/cli) 操作飞书 Base / 文档 / 云空间。
 
-每个 skill 各管一摊：品牌底座、商品目录、订单客服、供应商管理、业务知识库、素材库、Pinterest 自动 pin、AI 图片合成（完整列表见下面 §Skills）。下游都引用 `BRAND.md` / `SHOP.md`，从 `shop-foundation` 开始建是推荐顺序。趋势分析不再由本仓 skill 承担，统一交给 Claude CoWork。
+每个 skill 各管一摊：品牌底座、商品目录、订单客服、供应商管理、业务知识库、素材库、Pinterest 自动 pin、AI 图片合成、趋势热词采集（完整列表见下面 §Skills）。下游都引用 `BRAND.md` / `SHOP.md`，从 `shop-foundation` 开始建是推荐顺序。
 
 ## 安装
 
@@ -36,6 +36,7 @@ bash install.sh
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin) 工具发 pin |
 | [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
 | [`video-assembly`](video-assembly/SKILL.md) | 从已标记的视频片段库批量装配短视频，输出 Hook / Body / Close 结构的社媒视频 |
+| [`trend-radar`](trend-radar/SKILL.md) | 每周自动采集 Google Trends / Pinterest Trends 热词，输出结构化 JSON 供 business-knowledge 消费 |
 
 ## 工作区初始化（首次使用必读）
 
@@ -84,6 +85,7 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 - [Hermes Agent](https://hermes-agent.nousresearch.com/)（runtime；本仓 SKILL.md 是给 Hermes 写的，**不是** Claude Code）
 - [larksuite/cli](https://github.com/larksuite/cli) + 已登录的飞书账号
 - `git` / `python3`（macOS 自带）
+- `node` / `npm`（trend-radar 需要，用于 Playwright 浏览器自动化）
 - 可选：[Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin)（用到 `pinterest-autopin` skill 时才装）
 
 ## 自定义安装路径
@@ -117,7 +119,8 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 ├── assets-library/            # ┘
 ├── pinterest-autopin/         # ┐ 应用层（Application）
 ├── image-synth/               # │ 围绕基座层运行
-└── video-assembly/            # ┘ 围绕基座层运行
+├── video-assembly/            # ┘ 围绕基座层运行
+└── trend-radar/               #   Utility / Input 层（为基座层提供自动化数据输入）
 ```
 
 每个 skill 目录里通常有 `SKILL.md`（Hermes 入口）+ `references/` / `templates/` / `assets/` / `scripts/` 四类子目录。
