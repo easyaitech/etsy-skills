@@ -54,15 +54,25 @@ function isNoiseLine(value: string): boolean {
   return (
     value.length < 2 ||
     value === "Keywords" ||
+    value === "关键词" ||
+    value === "搜索量" ||
     value === "Weekly change" ||
+    value === "每周变化" ||
     value === "Monthly change" ||
+    value === "每月变化" ||
     value === "Yearly change" ||
+    value === "每年变化" ||
     value === "Preview table of keyword search trends" ||
     value === "View the full list" ||
+    value === "查看全部趋势" ||
     value === "Search trends" ||
+    value === "搜索趋势" ||
     value === "Trends in the spotlight" ||
+    value === "热门趋势" ||
     value === "Shopping trends" ||
+    value === "购物趋势" ||
     value === "Editors' Picks" ||
+    value === "主编精选" ||
     value.startsWith("; Opens")
   );
 }
@@ -81,7 +91,8 @@ function uniqueAppend(
 }
 
 function parseSearchTrendTable(lines: string[]): ParsedPinterestTrend[] {
-  const start = lines.findIndex((line) => line === "Keywords");
+  let start = lines.findIndex((line) => line === "Keywords");
+  if (start === -1) start = lines.findIndex((line) => line === "关键词");
   if (start === -1) return [];
 
   const results: ParsedPinterestTrend[] = [];
@@ -89,14 +100,16 @@ function parseSearchTrendTable(lines: string[]): ParsedPinterestTrend[] {
 
   for (let i = start + 1; i < lines.length; i++) {
     const line = lines[i];
-    if (line === "View the full list" || line === "Editors' Picks") break;
+    if (line === "View the full list" || line === "查看全部趋势" ||
+        line === "Editors' Picks" || line === "主编精选") break;
     if (isNoiseLine(line) || isPercentLine(line)) continue;
 
     const changes: string[] = [];
     let cursor = i + 1;
-    while (cursor < lines.length && changes.length < 3) {
-      const next = lines[cursor];
-      if (next === "View the full list" || next === "Editors' Picks") break;
+      while (cursor < lines.length && changes.length < 3) {
+        const next = lines[cursor];
+        if (next === "View the full list" || next === "查看全部趋势" ||
+            next === "Editors' Picks" || next === "主编精选") break;
       if (isPercentLine(next)) changes.push(next);
       cursor++;
     }
@@ -115,14 +128,16 @@ function parseSearchTrendTable(lines: string[]): ParsedPinterestTrend[] {
 }
 
 function parseSpotlight(lines: string[]): ParsedPinterestTrend[] {
-  const start = lines.findIndex((line) => line === "Trends in the spotlight");
+  let start = lines.findIndex((line) => line === "Trends in the spotlight");
+  if (start === -1) start = lines.findIndex((line) => line === "热门趋势");
   if (start === -1) return [];
 
   const results: ParsedPinterestTrend[] = [];
   const seen = new Set<string>();
 
   for (let i = start + 1; i < lines.length; i++) {
-    if (lines[i] === "Shopping trends" || lines[i] === "Search trends") break;
+    if (lines[i] === "Shopping trends" || lines[i] === "购物趋势" ||
+        lines[i] === "Search trends" || lines[i] === "搜索趋势") break;
     if (!/^\d+$/.test(lines[i])) continue;
 
     const keyword = lines[i + 1];
@@ -191,6 +206,22 @@ async function openPinterestContext(): Promise<{
   const launchOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
     ? { headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
     : { headless: true };
+
+  const cdpPort = process.env.PINTEREST_TRENDS_CDP_PORT;
+  if (cdpPort) {
+    const versionResponse = await fetch(`http://127.0.0.1:${cdpPort}/json/version`);
+    const versionPayload = await versionResponse.json() as { webSocketDebuggerUrl?: string };
+    if (!versionPayload.webSocketDebuggerUrl) {
+      throw new Error(`CDP ${cdpPort} did not return webSocketDebuggerUrl`);
+    }
+    const browser = await chromium.connectOverCDP(versionPayload.webSocketDebuggerUrl);
+    const context = browser.contexts()[0];
+    if (!context) {
+      await browser.close().catch(() => undefined);
+      throw new Error(`CDP ${cdpPort} did not return a browser context`);
+    }
+    return { context };
+  }
 
   const profileDir = process.env.PINTEREST_TRENDS_PROFILE;
   if (profileDir) {

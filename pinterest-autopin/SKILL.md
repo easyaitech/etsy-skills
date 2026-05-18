@@ -144,8 +144,9 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
    - 写到 `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json`
 4. **三阶段执行**（`references/publishing-flow.md` § 三阶段约定）。所有 `npm run pin:*` 命令都需要传 `--input <workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` 的**绝对路径**（工具源码在 `~/code/etsy-skills/tools/Pinterest-autopin/`，cwd 不在工作区）：
    - **validate**：`npm run pin:validate -- --input <绝对路径>`，校验 JSON（多图时额外校验 `images` 数组长度和每个元素的完整性）
-   - **test**：`npm run pin:test -- --input <绝对路径>`，弹出 Chrome 填表但不点发布；让用户**目视确认**预览效果（轮播 pin 让用户确认图片顺序和每张图的展示效果）
-   - **final**：用户在对话里说"发吧 / publish / 真发"后，跑 `npm run pin:publish -- --input <绝对路径>`
+   - **test**：`npm run pin:test -- --input <绝对路径>`，工具会先自动跑 `check-login` preflight；登录可用才弹出 Chrome 填表但不点发布；让用户**目视确认**预览效果（轮播 pin 让用户确认图片顺序和每张图的展示效果）
+   - **final**：用户在对话里说"发吧 / publish / 真发"后，跑 `npm run pin:publish -- --input <绝对路径>`；工具会先自动跑 `check-login` preflight，登录不可用时会在发布前中止
+   - CDP：工具默认探测 live Chrome CDP `9225 → 9222`，也可用 `PINTEREST_AUTOPIN_CDP_PORT` / `PINTEREST_CDP_PORT` 强制指定；如果 Chrome profile 已打开但 live CDP 可达，工具会自动切到 CDP 避免 `SingletonLock`
 5. 解析 stdout 的 JSON 输出：
    - 成功：取 `pinUrl`，回写 Pin Queue Base 该行（`状态 = 已发` / `pin_url = ...` / `发布时间 = 现在`）
    - 失败：按 `references/publishing-flow.md` § 错误恢复 分类（登录失效 / board 找不到 / 网络），回写（`状态 = 失败` / `失败原因 = ...` / `重试次数 += 1`）并告诉用户对应处置
