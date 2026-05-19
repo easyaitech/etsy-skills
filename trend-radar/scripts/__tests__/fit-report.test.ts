@@ -254,6 +254,8 @@ describe("fit report helpers", () => {
 
     expect(report.items[0]).toMatchObject({
       keyword: "Chinese name meaning",
+      chinese_meaning: "中国 / 中文 / 中式 + 名字 + 含义 / 寓意",
+      search_intent: "礼物/寓意/文化灵感型搜索：用户大概率在找有含义的礼物、文化解释、装饰灵感或可购买对象。",
       decision: "可做",
       confidence: "high",
       human_decision: null,
@@ -326,6 +328,8 @@ describe("fit report helpers", () => {
     expect(markdown).toContain("# Weekly Trend Fit Report");
     expect(markdown).toContain("- 可做: 1");
     expect(markdown).toContain("- [ ] adopt");
+    expect(markdown).toContain("- 中文含义: 中国 / 中文 / 中式 + 名字 + 含义 / 寓意");
+    expect(markdown).toContain("- 搜索意图: 礼物/寓意/文化灵感型搜索");
     expect(markdown).toContain("BM-001");
   });
 

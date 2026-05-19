@@ -87,6 +87,8 @@ interface CandidateProduct {
 export interface FitReportItem {
   keyword: string;
   normalized_keyword: string;
+  chinese_meaning: string;
+  search_intent: string;
   decision: Decision;
   confidence: Confidence;
   human_decision: null;
@@ -374,6 +376,77 @@ const GENERIC_PRODUCT_TERMS = new Set([
   "personalized",
 ]);
 
+const TERM_MEANINGS: Record<string, string> = {
+  aaron: "亚伦",
+  agent: "特工 / 代理人",
+  ancient: "古代的",
+  art: "艺术",
+  birthday: "生日",
+  brandon: "布兰登",
+  california: "加州",
+  chicken: "鸡肉",
+  chinese: "中国 / 中文 / 中式",
+  clarke: "克拉克",
+  decor: "装饰",
+  dragon: "龙",
+  drama: "短剧 / 剧集",
+  food: "食物 / 美食",
+  gift: "礼物",
+  gifts: "礼物",
+  hairstyles: "发型",
+  mayor: "市长",
+  meaning: "含义 / 寓意",
+  makeup: "妆容",
+  name: "名字",
+  nails: "美甲",
+  off: "离开 / 非校内",
+  oil: "石油 / 油",
+  recipes: "食谱",
+  reserve: "储备",
+  salad: "沙拉",
+  shadow: "影子",
+  shirilla: "希里拉",
+  spy: "间谍",
+  spring: "春季",
+  tattoo: "纹身",
+  zodiac: "生肖",
+};
+
+function chineseMeaning(keyword: string): string {
+  if (/[\u4e00-\u9fff]/.test(keyword)) return keyword;
+  const terms = keywordTerms(keyword);
+  const translated = terms.map((term) => TERM_MEANINGS[term] ?? term).join(" + ");
+  return translated || keyword;
+}
+
+function searchIntent(keyword: string): string {
+  const normalized = normalizeKeyword(keyword);
+  const has = (pattern: RegExp) => pattern.test(normalized);
+
+  if (has(/recipe|food|chicken|salad|oil/)) {
+    return "食谱/饮食灵感型搜索：用户大概率在找做法、菜单灵感、食材搭配或相关生活方式内容。";
+  }
+  if (has(/nail|hairstyle|makeup|tattoo/)) {
+    return "造型审美型搜索：用户大概率在找图片灵感、风格参考、教程或可收藏的视觉方案。";
+  }
+  if (has(/gift|birthday|meaning|name|zodiac|dragon|art|decor/)) {
+    return "礼物/寓意/文化灵感型搜索：用户大概率在找有含义的礼物、文化解释、装饰灵感或可购买对象。";
+  }
+  if (has(/spy|mayor|agent|arrest|california/)) {
+    return "新闻事件型搜索：用户大概率在追踪近期新闻、人物争议或事件背景，不一定适合直接商业化承接。";
+  }
+  if (has(/drama|shadow|celebrity|brandon|clarke|shirilla|aaron/)) {
+    return "人物/娱乐事件型搜索：用户大概率在查人物、剧集、比赛或社交媒体热点信息。";
+  }
+  if (has(/off campus|student|school|college|university/)) {
+    return "教育/生活决策型搜索：用户大概率在找校园外住宿、学生生活安排或相关服务信息。";
+  }
+  if (has(/chinese/)) {
+    return "泛中国文化兴趣型搜索：用户可能在找中式风格、中文含义、文化解释、食物、艺术或礼物灵感，需要结合具体词再判断。";
+  }
+  return `泛信息探索型搜索：用户大概率在了解「${keyword}」是什么、相关图片/新闻/灵感或下一步行动。`;
+}
+
 function matchedTerms(text: string, terms: string[]): string[] {
   const normalized = normalizeKeyword(text);
   return terms.filter((term) => normalized.includes(term));
@@ -474,6 +547,8 @@ function deterministicFit(
   return {
     keyword: trend.keyword,
     normalized_keyword: trend.normalized_keyword,
+    chinese_meaning: chineseMeaning(trend.keyword),
+    search_intent: searchIntent(trend.keyword),
     decision,
     confidence,
     human_decision: null,
@@ -566,6 +641,8 @@ export function renderMarkdown(report: FitReport): string {
 
 - Decision: ${item.decision}
 - Confidence: ${item.confidence}
+- 中文含义: ${item.chinese_meaning}
+- 搜索意图: ${item.search_intent}
 - Human decision:
   - [ ] adopt
   - [ ] watch

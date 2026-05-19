@@ -150,6 +150,8 @@ v1 使用规则解释，不调用 LLM。未来如接入 LLM，它也只能补理
 
 ## 输出
 
+每个趋势条目会包含：原始关键词、中文含义、粗略搜索意图、业务 fit 判断、证据、候选商品、建议角度和边界。`中文含义` 与 `搜索意图` 是规则型辅助解释，供人工快速理解趋势，不作为自动采纳依据。
+
 ```text
 <workspace>/outputs/trend-radar/YYYY-MM-DD/fit-report.md
 <workspace>/outputs/trend-radar/YYYY-MM-DD/fit-report.json
@@ -170,6 +172,8 @@ JSON 给后续 handoff：
 ```json
 {
   "keyword": "Chinese name meaning",
+  "chinese_meaning": "中国 / 中文 / 中式 + 名字 + 含义 / 寓意",
+  "search_intent": "礼物/寓意/文化灵感型搜索：用户大概率在找有含义的礼物、文化解释、装饰灵感或可购买对象。",
   "decision": "可做",
   "confidence": "high",
   "human_decision": null,
