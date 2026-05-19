@@ -93,6 +93,7 @@ export interface FitReportItem {
   confidence: Confidence;
   human_decision: null;
   human_decision_at: null;
+  source_summary: string;
   evidence: TrendEvidence[];
   candidate_products: CandidateProduct[];
   reasons: {
@@ -447,6 +448,22 @@ function searchIntent(keyword: string): string {
   return `泛信息探索型搜索：用户大概率在了解「${keyword}」是什么、相关图片/新闻/灵感或下一步行动。`;
 }
 
+function sourceDisplayName(source: string): string {
+  const names: Record<string, string> = {
+    "google-trends": "Google Trends 总榜",
+    "google-trends-chinese": "Google Trends Chinese 榜",
+    "pinterest-trends": "Pinterest Trends 总榜",
+    "pinterest-chinese": "Pinterest Trends Chinese 榜",
+  };
+  return names[source] ?? source;
+}
+
+function sourceSummary(evidence: TrendEvidence[]): string {
+  return evidence
+    .map((entry) => `${sourceDisplayName(entry.source)} rank ${entry.rank}${entry.growth_label ? ` (${entry.growth_label})` : ""}`)
+    .join("；");
+}
+
 function matchedTerms(text: string, terms: string[]): string[] {
   const normalized = normalizeKeyword(text);
   return terms.filter((term) => normalized.includes(term));
@@ -553,6 +570,7 @@ function deterministicFit(
     confidence,
     human_decision: null,
     human_decision_at: null,
+    source_summary: sourceSummary(trend.evidence),
     evidence: trend.evidence,
     candidate_products: products,
     reasons: {
@@ -641,6 +659,7 @@ export function renderMarkdown(report: FitReport): string {
 
 - Decision: ${item.decision}
 - Confidence: ${item.confidence}
+- 关键词来源: ${item.source_summary}
 - 中文含义: ${item.chinese_meaning}
 - 搜索意图: ${item.search_intent}
 - Human decision:
