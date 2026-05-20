@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- `orders-customers`：新增订单履约 SOP，覆盖新订单到发货、签收跟进的阶段检查、证据要求、Base 推荐字段和卡住视图；明确只处理订单之后的履约流程，不加入 listing 创建 SOP。
 - `shared`：新增 AI 发布图清理协议 `ai-image-sanitization.md`，只在最终 listing 图片和社媒待发布图片的发布副本上使用 `remove-ai-watermarks` 清 AI metadata / AI visible watermark；明确素材库 `待处理/`、`image-synth` 的 `ai_raw/` 和内部参考图不处理，`invisible` / `all` 因会重写像素需用户显式 opt-in。
 - `etsy-stack`：新增 `ai-cleaner` 子命令，用于检查 / 安装 [wiltodelta/remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)。
 - `assets-library`：素材库物理层新增 `营销/` 一级文件夹，专门存放社交媒体、广告、邮件、活动页等营销路径的发布素材和派生版本；同步更新目录结构、素材类型映射、命名公式、schema 边界，以及 `image-synth` 社媒图入库目标。

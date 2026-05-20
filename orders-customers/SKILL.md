@@ -21,10 +21,12 @@ layer: foundation
 | `<workspace>/BRAND.md` | 文案语调 / 客服姿态 / 边界 | 写客服回复时严格遵守"应该说"、"避免说"、"原则"段（特别是处理差评的姿态原则） |
 | `<workspace>/SHOP.md` | 处理时间 / 退换货 / 运输 / 定制政策 | 客服回复涉及承诺时引用 SHOP.md 原文，**绝不自编**（避免承诺与店铺政策冲突） |
 | 商品 Base | 该订单包含的 SKU 详情 | 处理订单时按订单关联到 SKU（用 lark-base 跨表关联） |
+| `references/order-fulfillment-sop.md` | 新订单到发货、签收跟进的阶段清单 | 新订单 / 待发货订单必须用它判断下一步、缺失证据和要写回的字段 |
+| `references/order-handling.md` | 客服回复场景 SOP | 只用于买家消息、差评、退换货、感谢信等话术，不替代履约 SOP |
 
 ---
 
-## 三种执行模式
+## 四种执行模式
 
 ### 模式 A：建库（首次建立两个 Base）
 
@@ -46,6 +48,7 @@ layer: foundation
 
 **执行步骤**：
 - 读 `references/base-schema.md` 确认字段语义
+- 如果是新订单或订单状态进入 `待发货`，同时读 `references/order-fulfillment-sop.md`，输出当前 SOP 阶段、下一步、缺失证据和拟写回字段
 - 用 lark-base 写入或更新对应行
 - 涉及客户首次出现：先在客户 Base 建行，再在订单 Base 关联
 - 涉及客户标签：参考 `references/customer-tags.md`，按统一标签体系打标，**不要随手发明新标签**（标签膨胀会让分群失效）
@@ -66,6 +69,25 @@ layer: foundation
 6. 落地：
    - 把回复要点 + 用户最终发出的版本回写到订单 Base 的"客服记录"字段
    - 如果该次互动反映客户特征（VIP、定制粉、投诉户），更新客户 Base 标签
+
+### 模式 D：订单履约 SOP 检查
+
+**进入条件**：
+- 用户问某订单下一步 / 有没有漏 / 能不能发货
+- 新订单需要从确认内容推进到制作、出货确认、打包、发货、签收跟进
+- 订单 Base 的 `SOP 阶段`、确认照片、打包视频、跟踪号或评价跟进状态缺失
+
+**执行步骤**：
+1. 先查订单 Base、客户 Base、商品 Base，拿到订单状态、SKU、定制需求、承诺发货日、跟踪号和客户标签
+2. 读 `references/order-fulfillment-sop.md`
+3. 按 SOP 输出：
+   - 当前阶段
+   - 下一步动作
+   - 缺失证据或字段（如确认照片、出货清单、打包视频、跟踪号、签收跟进日期）
+   - 是否需要用户或买家确认
+   - 拟写回订单 Base 的字段预览
+4. 如果需要给买家发消息，再读 `references/order-handling.md` 和 BRAND.md / SHOP.md 起草英文消息
+5. 等用户确认后才写 Base；不要替用户在 Etsy 后台发消息
 
 ---
 

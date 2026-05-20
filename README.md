@@ -29,7 +29,7 @@ bash install.sh
 |---|---|
 | [`shop-foundation`](shop-foundation/SKILL.md) | 维护 BRAND.md（品牌原则）+ SHOP.md（店铺事实），整个 stack 的元基础 |
 | [`listing-catalog`](listing-catalog/SKILL.md) | 飞书 Base 商品目录 + 撰写 Etsy listing 文案 |
-| [`orders-customers`](orders-customers/SKILL.md) | 飞书 Base × 2（订单 + 客户）+ 客服 SOP + 客户标签 |
+| [`orders-customers`](orders-customers/SKILL.md) | 飞书 Base × 2（订单 + 客户）+ 客服/履约 SOP + 客户标签 |
 | [`supplier-foundation`](supplier-foundation/SKILL.md) | 飞书 Base 供应商管理 + 采购来源筛选、主用/备用/淘汰记录 |
 | [`business-knowledge`](business-knowledge/SKILL.md) | 轻量业务知识库：每周材料 → raw / weekly / wiki markdown + Knowledge Cards Base + Marketing Brief |
 | [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：六文件夹物理层 + 索引 Base 语义层，含 `营销/`）+ 拍前 shoot brief 生成（模式 D） |
