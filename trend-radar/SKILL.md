@@ -48,6 +48,9 @@ trend-fetch pinterest-trends
 # 获取 Pinterest Trends 月度 Chinese 过滤热词（默认 US）
 trend-fetch pinterest-chinese
 
+# 获取 eRank Trend Buzz 上 Etsy / US / Last 30 Days 关键词（默认 US）
+trend-fetch erank-trend-buzz
+
 # 指定地区
 trend-fetch google-trends --geo GB
 
@@ -59,6 +62,8 @@ trend-fetch fit-report --date 2026-05-18 --geo US --max-items 50
 ```
 
 Pinterest 未登录公开页可能只返回预览条目；如果要采集完整列表，可把已登录浏览器 profile 路径放到 `PINTEREST_TRENDS_PROFILE`，runner 会用该 profile 打开 Trends 页面。
+
+eRank Trend Buzz 来自会员域名；未登录/免费态可能只返回有限预览，完整列表依赖账号权限。如果要复用已登录状态，把 eRank 的 Playwright profile 路径放到 `ERANK_TREND_BUZZ_PROFILE`，或用 `ERANK_TREND_BUZZ_CDP_PORT` 连接一枚已登录的本机浏览器。
 
 ## 输出
 
@@ -88,5 +93,6 @@ fit report 生成：
 | google-trends-chinese | v0.2 ✅ | Google Trends 中与 Chinese 相关的 rising/top queries + topics（过去 7 天，Top 50，需 SERPAPI_KEY） |
 | pinterest-trends | v0.3 ✅ | Pinterest Trends 月度通用关键词（`trendsPreset=1`，Top 50，未登录时可能只有预览条目） |
 | pinterest-chinese | v0.4 ✅ | Pinterest Trends 月度 Chinese 过滤关键词（`keywordsToInclude=chinese`，Top 50，未登录时可能只有预览条目） |
+| erank-trend-buzz | v0.5 ✅ | eRank Trend Buzz 的 Etsy / Last 30 Days 关键词（免费态可能只有预览，完整列表依赖账号权限） |
 
 添加新数据源：见 [`references/source-guide.md`](references/source-guide.md)。
