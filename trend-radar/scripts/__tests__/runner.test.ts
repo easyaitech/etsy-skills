@@ -35,6 +35,15 @@ describe("parseArgs", () => {
     });
   });
 
+  it("parses eRank Trend Buzz source", () => {
+    const result = parseArgs(["node", "runner.ts", "erank-trend-buzz"]);
+    expect(result).toEqual({
+      command: "fetch",
+      source: "erank-trend-buzz",
+      geo: "US",
+    });
+  });
+
   it("uppercases geo", () => {
     const result = parseArgs([
       "node",

@@ -10,6 +10,7 @@
 - `business-knowledge`：新增 optional memory foundation，维护 `<workspace>/knowledge/raw|weekly|wiki|briefs` markdown、`{店铺名}-知识卡片` Base、Knowledge Card lookup contract 和 Marketing Brief 持久化流程。
 - `trend-radar`：重新加入趋势热词采集 skill（v0.1 — Google Trends）。用 Playwright headless chromium 采集 Google Trends trending now 页面的上升关键词，输出结构化 JSON（TrendItem[] + run 元数据包装）到 `<workspace>/outputs/trend-radar/`。AutoCLI 命令 `trend-fetch google-trends [--geo GEO]`。下游 business-knowledge 可消费 `latest.json` 作为 Knowledge Cards evidence。分类 exit codes（1=usage, 2=config, 3=network, 4=parse）。vitest 单元测试覆盖 parser / runner / URL builder。
 - `trend-radar`：新增 Pinterest Trends 月度热词来源 `pinterest-trends` 和 `pinterest-chinese`。两个来源都采集 `trendsPreset=1` 的 monthly keywords，`pinterest-chinese` 额外带 `keywordsToInclude=chinese` 并只保留包含 `chinese` 的关键词，避免未登录通用预览污染结果；沿用现有 JSON 输出合同、截图和 HTML evidence，并新增 parser / URL 单元测试。
+- `trend-radar`：新增 eRank Trend Buzz 数据源 `erank-trend-buzz`，采集 Etsy / Last 30 Days 关键词并写入现有趋势 JSON 合同，供 `fit-report` 自动合并；免费态可能只有预览，完整列表可通过 `ERANK_TREND_BUZZ_PROFILE` / `ERANK_TREND_BUZZ_CDP_PORT` 复用已登录账号权限。
 - `trend-radar`：新增 `trend-fetch fit-report` 第二步，读取当天所有趋势源 JSON、四份基座文件和本地商品上下文缓存，输出按趋势词组织的 `fit-report.md/json`。报告只做人工判断（`可做 / 观察 / 不做`），不自动生成 Marketing Brief，不直连飞书 Base。
 
 ### 修

@@ -454,6 +454,7 @@ function sourceDisplayName(source: string): string {
     "google-trends-chinese": "Google Trends Chinese 榜",
     "pinterest-trends": "Pinterest Trends 总榜",
     "pinterest-chinese": "Pinterest Trends Chinese 榜",
+    "erank-trend-buzz": "eRank Trend Buzz Etsy 30日榜",
   };
   return names[source] ?? source;
 }

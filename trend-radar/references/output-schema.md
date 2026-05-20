@@ -45,6 +45,7 @@
     google-trends-chinese-US.json
     pinterest-trends-US.json
     pinterest-chinese-US.json
+    erank-trend-buzz-US.json
     google-trends-screenshot.png
     google-trends-snapshot.html
     fit-report.md               # 当天趋势结合点人工判断报告

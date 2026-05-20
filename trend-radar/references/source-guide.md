@@ -37,3 +37,4 @@ interface TrendSource {
 | v0.2 | google-trends-chinese | `sources/google-trends-chinese.ts` |
 | v0.3 | pinterest-trends | `sources/pinterest-trends.ts` |
 | v0.4 | pinterest-chinese | `sources/pinterest-chinese.ts` |
+| v0.5 | erank-trend-buzz | `sources/erank-trend-buzz.ts` |

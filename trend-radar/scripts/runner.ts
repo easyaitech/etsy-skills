@@ -45,6 +45,7 @@ const KNOWN_SOURCES = [
   "google-trends-chinese",
   "pinterest-trends",
   "pinterest-chinese",
+  "erank-trend-buzz",
 ] as const;
 const FIT_REPORT_COMMAND = "fit-report";
 const GEO_ALLOWLIST: Record<string, string[]> = {
@@ -52,6 +53,7 @@ const GEO_ALLOWLIST: Record<string, string[]> = {
   "google-trends-chinese": ["US", "GB", "AU", "CA", "DE", "FR", "JP", "BR", "IN"],
   "pinterest-trends": ["US", "GB", "CA", "AU", "DE", "FR", "IT", "ES", "BR", "MX"],
   "pinterest-chinese": ["US", "GB", "CA", "AU", "DE", "FR", "IT", "ES", "BR", "MX"],
+  "erank-trend-buzz": ["US", "GB", "CA", "AU", "DE", "FR", "IN"],
 };
 
 function resolveWorkspace(): string | null {
@@ -86,6 +88,7 @@ function printUsage(): void {
   trend-fetch google-trends-chinese
   trend-fetch pinterest-trends
   trend-fetch pinterest-chinese
+  trend-fetch erank-trend-buzz
   trend-fetch google-trends --geo GB
   trend-fetch fit-report --date 2026-05-18
 `
