@@ -8,6 +8,7 @@ HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-${HERMES_HOME:-$HOME/.hermes}/skills}"
 PINTEREST_AUTOPIN_REPO="${PINTEREST_AUTOPIN_REPO:-https://github.com/easyaitech/Pinterest-autopin.git}"
 PINTEREST_AUTOPIN_DIR="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
 PINTEREST_AUTOPIN_MIN_VERSION="1.4.0"
+AI_CLEANER_REPO="${AI_CLEANER_REPO:-https://github.com/wiltodelta/remove-ai-watermarks.git}"
 
 usage() {
   cat <<EOF
@@ -19,6 +20,7 @@ etsy-stack — Etsy skill bundle 管理工具
   etsy-stack update             拉最新版本并刷新软链
   etsy-stack list               列出 manifest 中的 skill 及链接状态
   etsy-stack pinterest-tool     查看 / 更新 Pinterest-autopin 发布工具
+  etsy-stack ai-cleaner         查看 / 安装 AI 发布图清理工具
   etsy-stack where              打印源码安装目录
   etsy-stack workspace          解析当前 Etsy 工作区根目录
   etsy-stack init [DIR]         在 DIR（默认 cwd）创建 .etsy-workspace 标记
@@ -111,6 +113,40 @@ pinterest_tool_update() {
   pinterest_tool_status
 }
 
+ai_cleaner_status() {
+  if ! command -v remove-ai-watermarks >/dev/null 2>&1; then
+    echo "AI 发布图清理工具：未安装"
+    echo "安装 / 更新：etsy-stack ai-cleaner update"
+    return 1
+  fi
+
+  echo "AI 发布图清理工具：$(command -v remove-ai-watermarks)"
+  remove-ai-watermarks --version 2>/dev/null || true
+  echo "默认用途：只在最终 listing 图片和社媒待发布图片的发布副本上清 AI metadata / AI visible watermark"
+}
+
+ai_cleaner_update() {
+  if command -v uv >/dev/null 2>&1; then
+    if command -v remove-ai-watermarks >/dev/null 2>&1; then
+      uv tool upgrade remove-ai-watermarks || return 1
+    else
+      uv tool install "git+$AI_CLEANER_REPO" || return 1
+    fi
+  elif command -v pipx >/dev/null 2>&1; then
+    if command -v remove-ai-watermarks >/dev/null 2>&1; then
+      pipx upgrade remove-ai-watermarks || return 1
+    else
+      pipx install "git+$AI_CLEANER_REPO" || return 1
+    fi
+  else
+    echo "❌ 未找到 uv 或 pipx，无法安装 remove-ai-watermarks" >&2
+    echo "   建议先安装 uv：https://docs.astral.sh/uv/" >&2
+    return 1
+  fi
+
+  ai_cleaner_status
+}
+
 # 解析 Etsy 工作区根目录。顺序：
 #   1. $ETSY_WORKSPACE 环境变量（指向不存在目录视为错误）
 #   2. 从 cwd 向上找 .etsy-workspace 标记文件
@@ -190,6 +226,26 @@ case "$cmd" in
         ;;
       *)
         echo "未知 pinterest-tool 子命令：$subcmd" >&2
+        echo "可用：status / update / path" >&2
+        exit 1
+        ;;
+    esac
+    ;;
+
+  ai-cleaner|image-cleaner)
+    subcmd="${1:-status}"
+    case "$subcmd" in
+      status|"")
+        ai_cleaner_status
+        ;;
+      update|upgrade|install)
+        ai_cleaner_update
+        ;;
+      path)
+        command -v remove-ai-watermarks || exit 1
+        ;;
+      *)
+        echo "未知 ai-cleaner 子命令：$subcmd" >&2
         echo "可用：status / update / path" >&2
         exit 1
         ;;

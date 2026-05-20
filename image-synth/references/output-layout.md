@@ -23,6 +23,8 @@
 ```
 
 > `promoted/` 和 `retired/` 都不自动清——给用户 7 天回滚窗口；后续清理由用户决策。工作区是 git 仓库时记得 `.cache/` 进 `.gitignore`（README.md 已说）。
+>
+> AI metadata / AI watermark 清理不在 `ai_raw/` 阶段发生。只有用户选择"入库"且用途是最终 listing 图或社媒发布图时，`assets-library` 会按 [`shared/ai-image-sanitization.md`](../../shared/ai-image-sanitization.md) 生成发布副本。
 
 ---
 
@@ -121,6 +123,7 @@ QA 一次性通过时不存 attempt 文件，直接落正式名。用户从 atte
 | `sku` | **关联 SKU** 字段 |
 | `final_prompt`（截前 200 字符）| 素材索引 Base **备注**字段以 `[AI 合成] {prompt 摘要}` 前缀写入 |
 | `mode` + `label_id` | 模式 A 电商 / listing 图上传到 `商品/`；模式 B 社媒 / 营销图上传到 `营销/`。按 assets-library 命名公式命名 |
+| `mode` + `label_id` + `[AI 合成]` 标记 | 若目标是最终 listing 图或社媒发布图，assets-library 在上传前对发布副本执行 AI metadata / AI watermark 清理，并把清理结果追加到 Base 备注 |
 
 ---
 

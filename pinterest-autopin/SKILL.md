@@ -22,7 +22,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - 工作区根目录的 BRAND.md / SHOP.md（用 `shop-foundation` 维护）
 - 外部工具：`~/code/etsy-skills/tools/Pinterest-autopin/`（用 terminal 调用 `npm run pin:*`；工具源码本体走 `$HOME` 是开发者机器约定，**runtime 数据按工作区隔离**——见模式 C）
 - 独立 Chrome profile（用于 Pinterest 登录态持久化）
-- 图片处理工具链：`exiftool` + `jpegoptim` + `optipng`（清除元数据 + 无损压缩——见 `references/image-processing.md`）
+- 图片发布副本处理工具链：`remove-ai-watermarks` + `jpegoptim` + `optipng`（只清 AI metadata / AI watermark + 无损压缩——见 `references/image-processing.md`）
 
 > 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
@@ -110,8 +110,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
    - 节奏：本步是 step 3 候选池空时**同一 turn 内** agent 主动追问；用户选后才 invoke 下一个 skill
 3.7. **(轮播 pin) 确认图片顺序** — 多图时列出已选素材的编号和缩略描述，让用户确认或调整展示顺序。第一张是封面图（Pinterest feed 里默认展示的那张），选择上优先挑最抓眼球的
 3.8. **图片处理**（素材选定后、写文案前）——按 `references/image-processing.md` 的流程处理到 `<workspace>/.cache/pinterest-autopin/processed/`：
-   - 单图：三步流程（复制 → 清元数据 → 无损压缩）
-   - 多图：逐张走三步流程（见 image-processing.md § 多图处理）
+   - 单图：发布副本流程（复制 → AI metadata / AI watermark 清理 → 无损压缩）
+   - 多图：逐张走同一流程（见 image-processing.md § 多图处理）
    - 后续步骤统一使用 processed 路径
 4. 读 BRAND.md（文案语调 / 视觉原则）+ SHOP.md（店铺事实，描述末尾不要重复政策——Pinterest 不是 listing 页面，政策在 link 那边）
 5. 按 `references/pin-composition.md` 输出草稿：
@@ -125,6 +125,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
    - `image 路径` = 每张 processed 路径各占一行（单图时一行；多图时顺序就是 carousel 展示顺序）
    - `Alt Text (EN)` = 每张 alt text 用 `---` 独占行分隔（单图时无分隔符）
    - `图片数量` = 图片行数；`封面图` = 第一张 processed 路径（如字段已建）
+   - `备注` = 追加 `aiSanitization` 处理记录（来自 step 3.8），用于模式 C 判断该发布副本已完成 AI metadata / AI watermark 清理；不要覆盖用户已有节日联动 / 授权备注
 
 > **一次只组一条 pin**——不批量。批量需求让用户重复触发，或交给 `loop` skill 编排（不在本 skill 范围）。
 
@@ -137,7 +138,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **执行步骤**：
 1. 用 `lark-base` 从 Pin Queue Base 取目标行（用户指定 ID，或筛 `状态 = 草稿` 让用户挑一条）
 2. 解析工作区根（`etsy-stack workspace`），得到 `<workspace>`；runtime 目录是 `<workspace>/.cache/pinterest-autopin/runtime/`，不存在就 `mkdir -p` 创建（一次即可）
-2.5. **图片处理守卫**：读 `image 路径` 按行拆分，逐张检查是否以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在——全部通过则跳过；未通过的按 `references/image-processing.md` 处理，用 processed 路径覆盖
+2.5. **图片处理守卫**：读 `image 路径` 按行拆分，逐张检查是否以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在，且处理记录包含 AI 发布图清理结果——全部通过则跳过；未通过的按 `references/image-processing.md` 处理，用 processed 路径覆盖
 3. 按 `references/publishing-flow.md` § request.json 构造 把行字段渲染成 `request.json`（用 `assets/request-template.json` 作模板）：
    - `image 路径` 按行拆分 + `Alt Text (EN)` 按 `---` 拆分 → 配对为 `images` 数组
    - 任何 pin 都生成 `images` 数组；单图只是长度为 1，轮播长度为 2-5
