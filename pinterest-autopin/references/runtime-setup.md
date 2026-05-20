@@ -34,13 +34,14 @@
 node --version      # 期望 ≥ 18
 npm --version       # 期望 ≥ 9
 python3 --version   # 期望 ≥ 3.10
-exiftool -ver       # 图片元数据清理
+remove-ai-watermarks --version # AI metadata / AI watermark 清理
 jpegoptim --version # JPEG 无损压缩
 optipng --version   # PNG 无损压缩
 ```
 
 前三个任一缺失：告诉用户去装（`brew install node python@3.12`）。
-后三个任一缺失：告诉用户 `brew install exiftool jpegoptim optipng`（图片处理流程必需——见 `image-processing.md`）。
+`remove-ai-watermarks` 缺失：告诉用户在 **Hermes Agent 实际运行的机器** 上跑 `etsy-stack ai-cleaner update`（或按 `shared/ai-image-sanitization.md` 手动安装）。IDE / 开发机本地有没有该项目源码不算数。
+`jpegoptim` / `optipng` 缺失：告诉用户 `brew install jpegoptim optipng`（图片处理流程必需——见 `image-processing.md`）。
 不替用户装系统级依赖。
 
 ### 2. clone Pinterest-autopin

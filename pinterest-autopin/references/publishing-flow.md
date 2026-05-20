@@ -13,8 +13,8 @@ Pin Queue 草稿
    │       runtime 目录 = <workspace>/.cache/pinterest-autopin/runtime/
    │
    ├─[0.5] 图片处理守卫（支持单图 / 多图）
-   │     └─ 所有 image 路径已在 processed/ 且文件存在 → 跳过
-   │     └─ 否则 → 逐张：复制/下载 → exiftool 清元数据 → 无损压缩 → 用 processed 路径
+   │     └─ 所有 image 路径已在 processed/、文件存在且有 AI 清理记录 → 跳过
+   │     └─ 否则 → 逐张：复制/下载 → AI metadata / watermark 清理 → 无损压缩 → 用 processed 路径
    │
    ├─[1] 渲染 request.json (<runtime>/{pin_id}.json)
    │
@@ -41,8 +41,8 @@ Pin Queue 草稿
 模式 B 的 step 3.8 已经对图片做过处理，`image 路径` 应指向 `<workspace>/.cache/pinterest-autopin/processed/` 下的文件。模式 C 在构造 request.json 前做一次守卫检查：
 
 1. 读 Pin Queue Base 该行的 `image 路径`（多图时按行拆分）
-2. **逐张检查**：如果路径以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在 → 该张跳过
-3. 未通过检查的图片按 `image-processing.md` 的三步流程处理，处理完后用 processed 路径替换
+2. **逐张检查**：如果路径以 `<workspace>/.cache/pinterest-autopin/processed/` 开头、文件存在，且该行备注 / sidecar / 处理记录中有 `aiSanitization` 结果 → 该张跳过
+3. 未通过检查的图片按 `image-processing.md` 的四步流程处理，处理完后用 processed 路径替换
 4. **全部图片通过后**才进 [1]；任何一张处理失败 → 中止，提示用户具体哪张图有问题
 
 ---

@@ -74,6 +74,7 @@ etsy-stack check       # 立即检查（绕过缓存）
 etsy-stack update      # 拉最新版本并刷新软链
 etsy-stack version     # 当前版本
 etsy-stack list        # 列出已安装 skill 的链接状态
+etsy-stack ai-cleaner  # 查看 / 安装 AI 发布图清理工具
 etsy-stack where       # 打印源码安装目录
 etsy-stack workspace   # 解析当前 Etsy 工作区根
 etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
@@ -87,6 +88,7 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 - `git` / `python3`（macOS 自带）
 - `node` / `npm`（trend-radar 需要，用于 Playwright 浏览器自动化）
 - 可选：[Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin)（用到 `pinterest-autopin` skill 时才装）
+- 可选：[remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)（最终 listing 图片和社媒待发布图片才需要；必须安装在 Hermes Agent 实际运行的机器上，用 `etsy-stack ai-cleaner update` 安装）
 
 ## 自定义安装路径
 
@@ -110,7 +112,8 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 ├── shared/                    # 所有 skill 共享的引导 / 协议 / 原则
 │   ├── preamble.md            # 版本检查 / 工作区解析 / 写入约束 / 工作语言
 │   ├── dependency-protocol.md # 两层架构 + 三级降级协议
-│   └── ethos.md               # 经营原则
+│   ├── ethos.md               # 经营原则
+│   └── ai-image-sanitization.md # 最终 listing / 社媒发布图的 AI metadata / watermark 清理协议
 ├── shop-foundation/           # ┐
 ├── listing-catalog/           # │ 基座层（Foundation）
 ├── orders-customers/          # │ 基座层平级，按需建立

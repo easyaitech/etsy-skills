@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### 新增
+- `shared`：新增 AI 发布图清理协议 `ai-image-sanitization.md`，只在最终 listing 图片和社媒待发布图片的发布副本上使用 `remove-ai-watermarks` 清 AI metadata / AI visible watermark；明确素材库 `待处理/`、`image-synth` 的 `ai_raw/` 和内部参考图不处理，`invisible` / `all` 因会重写像素需用户显式 opt-in。
+- `etsy-stack`：新增 `ai-cleaner` 子命令，用于检查 / 安装 [wiltodelta/remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)。
 - `assets-library`：素材库物理层新增 `营销/` 一级文件夹，专门存放社交媒体、广告、邮件、活动页等营销路径的发布素材和派生版本；同步更新目录结构、素材类型映射、命名公式、schema 边界，以及 `image-synth` 社媒图入库目标。
 - `supplier-foundation`：新增供应商管理基座，维护 `{店铺名}-供应商管理` Base 与 `采购来源` 表，覆盖物料名称、店铺名称、商品链接、状态、选择理由、合适参数、淘汰原因，以及主用/备用/测试中/淘汰视图。
 - `business-knowledge`：新增 optional memory foundation，维护 `<workspace>/knowledge/raw|weekly|wiki|briefs` markdown、`{店铺名}-知识卡片` Base、Knowledge Card lookup contract 和 Marketing Brief 持久化流程。
@@ -14,6 +16,7 @@
 - `trend-radar`：新增 `trend-fetch fit-report` 第二步，读取当天所有趋势源 JSON、四份基座文件和本地商品上下文缓存，输出按趋势词组织的 `fit-report.md/json`。报告只做人工判断（`可做 / 观察 / 不做`），不自动生成 Marketing Brief，不直连飞书 Base。
 
 ### 修
+- `assets-library` / `image-synth` / `pinterest-autopin`：把 AI metadata / AI watermark 清理接到发布出口，而不是素材管理入口；Pinterest processed 图片从“清空所有 metadata”改为“只清 AI metadata + AI visible watermark，并保留标准 metadata”。
 - `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把供应商管理纳入 Foundation 层和安装 manifest。
 - `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把 `business-knowledge` 纳入 Foundation 层、Base 命名约定和安装 manifest；下游引用 Knowledge Cards 时默认 `SKIP`，不阻塞原流程。
 - `listing-catalog`：模式 B 写 listing 时新增 step 5.6，可在礼物场景调研后按 `business-knowledge` canonical contract 检索 Knowledge Cards；无命中静默跳过，有命中先展示采用 / 拒绝 / 边界，再生成文案。

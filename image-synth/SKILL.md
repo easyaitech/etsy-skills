@@ -11,6 +11,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 **架构**：本 skill 维护**提示词层**（输入 → 5 类词库 → 最终 prompt）+ **质量闸门层**（差异化 QA），生图动作下沉到 Hermes runtime 自带能力。生成的图先落本地 `.cache/image-synth/ai_raw/`，由用户三选一决定是否进资产库。
 
+**AI 发布图清理边界**：本 skill 生成后先保留原始输出，不在 `.cache/image-synth/ai_raw/` 阶段清理 AI metadata / AI watermark。只有用户选择"入库"、且该图会成为最终 listing 图片或社媒待发布图时，才由 `assets-library` 模式 B2 按 [`shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md) 处理发布副本。
+
 **对外的实操接口**：
 - Hermes 自带生图能力（不点名具体工具，按 runtime 提供）
 - Hermes 看图能力（看实拍图作 anchor + 看生成图做 QA）
@@ -74,7 +76,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 8. **QA**——按 [qa-gates.md](references/qa-gates.md) 对应段（模式 A / 模式 B）走全部 checks。含自动重试 ≤ 2 次 + 第 3 轮失败用户三选一
 9. **落盘**——按 [output-layout.md](references/output-layout.md) 写到 `<workspace>/.cache/image-synth/ai_raw/{date}/` + 同名 sidecar `.json`。本地写入用 `mkdir -p` 一步建目录（`.cache/` 是本地 fs，不需要 assets-library 模式 D 的逐层检查——那是 `lark-drive` 限制）
 10. **用户三选一**：
-    - **入库** → 调用 `assets-library` 模式 B2 promote；按 [output-layout.md § promote 字段透传](references/output-layout.md#promote-入库时的字段透传) 现传 sidecar 元数据
+    - **入库** → 调用 `assets-library` 模式 B2 promote；按 [output-layout.md § promote 字段透传](references/output-layout.md#promote-入库时的字段透传) 现传 sidecar 元数据；如果用途是最终 listing 图或社媒发布图，由 assets-library 在 promote 时处理 AI metadata / AI watermark 发布副本
     - **留 ai_raw** → 保留 `.cache/`，不入索引
     - **丢弃** → 移到 `retired/`（详见 output-layout.md，给 7 天回滚窗口）
 11. 给用户回执：本地路径 / 入库后的飞书云空间链接 / "已丢弃"
@@ -160,7 +162,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **shop-foundation**：BRAND.md § 视觉禁区是 negative prompt **唯一**来源；用户对生成图的纠正（"这种风格不像我们品牌"）按 shop-foundation 沉淀流程流回 BRAND.md
 - **assets-library**：
   - 模式 D 出 shoot-brief.md 是本 skill 的**主输入源**（brief 路径 / 反向触发 in-memory）
-  - 用户选"入库" → 调 assets-library 模式 B2 promote；现传 sidecar 元数据（含 `[AI 合成]` 标记）
+  - 用户选"入库" → 调 assets-library 模式 B2 promote；现传 sidecar 元数据（含 `[AI 合成]` 标记）。AI metadata / AI watermark 清理只在 promote 的发布副本上发生，不改 ai_raw 原图
   - 入库标签字段值取自 assets-library schema 的 § 用途标签 词汇表——本 skill **不**自定义；v0 不动 schema，AI 合成识别靠 Base "备注"字段前缀
 - **listing-catalog**：商品 Base 该 SKU 行的 title / 品类 / SEO 词作 anchor 选填输入；本 skill 不写商品 Base
 - **pinterest-autopin**：候选池空时被反向触发；本 skill 出图 → 落 .cache → 入库 → 回到 pinterest-autopin step 4

@@ -84,15 +84,20 @@ layer: foundation
 1. 读 [naming-convention.md](references/naming-convention.md)：成品文件命名规则
 2. 读 [asset-types.md](references/asset-types.md)：识别素材该归到哪个一级文件夹
 3. **分类**：判断素材归属——商品 / 品牌 / 客户 / 工作室 / 营销。判断依据见 [asset-types.md](references/asset-types.md) 的类型→文件夹映射表
-4. **物理动作**：
+4. **发布图 AI 清理 gate（仅 final listing / 社媒发布图）**：
+   - 若本次 promote 的用途标签是 Etsy listing 槽位（`hero` / `detail` / `lifestyle` / 等），或包含社媒渠道（`Pinterest` / `Instagram Posts` / `Instagram Stories` / 等），先按 [`shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md) 处理**发布副本**。
+   - 输入仍是用户选中的素材；输出落 `<workspace>/.cache/ai-image-sanitizer/`，后续上传 / 移动使用清理后的副本。
+   - `待处理/` 原图、`image-synth` 的 `.cache/image-synth/ai_raw/` 暂存图、内部参考图不跑本 gate。
+   - 只默认跑 AI metadata + 可检测的 AI visible watermark；`invisible` / `all` 需要用户明确接受会重写像素后才用。
+5. **物理动作**：
    - 如素材需编辑（**用户在外部工具完成**——本 skill 不做图像编辑）：裁切 / 调色 / 加水印 → 按规范命名
    - 用 `lark-drive` 将文件从 `待处理/` 移入对应一级文件夹。例：
      ```
      待处理/IMG_3847.JPG → 商品/TEACUP-001_listing-cover_01.jpg
      ```
-5. 用 `lark-drive` 拿到飞书云空间文件链接
-6. **录入素材索引 Base**——按 [asset-index-base-schema.md § 录入约定](references/asset-index-base-schema.md#录入约定模式-b2-promote-时执行) 执行；用 `lark-base` 新增一行，**录入前列出将写入的字段值清单等用户确认**
-7. 商品 Base 该 SKU 行通过"关联 SKU"反向就能看到本条素材；商品 Base 的"照片链接"跳转字段如需手动维护，参 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)
+6. 用 `lark-drive` 拿到飞书云空间文件链接
+7. **录入素材索引 Base**——按 [asset-index-base-schema.md § 录入约定](references/asset-index-base-schema.md#录入约定模式-b2-promote-时执行) 执行；用 `lark-base` 新增一行，**录入前列出将写入的字段值清单等用户确认**；如第 4 步执行过 AI 清理，在"备注"字段追加 `AI 发布图清理: applied/checked-noop, steps=...`
+8. 商品 Base 该 SKU 行通过"关联 SKU"反向就能看到本条素材；商品 Base 的"照片链接"跳转字段如需手动维护，参 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)
 
 > **视觉合规检查（B2 时）**：对照 BRAND.md 视觉禁区做自检，结论写进 Base 的"BRAND 合规"字段（不通过时理由写"备注"）。详见 [asset-types.md § 视觉合规自检](references/asset-types.md#视觉合规自检b2-promote-时)。
 
@@ -183,7 +188,7 @@ layer: foundation
 - **文件操作前列出动作清单** → 等用户确认 → 执行（lark-drive）
 - **Base 录入前列出字段值清单** → 等用户确认 → 写入（lark-base）
 - **不删除原始素材**：摄影原图（RAW / 高清 JPG）一旦归档，本 skill 不主动删除（容量管理由用户人工决策）
-- **不替用户处理图片内容**：只管目录、命名、归档、索引；裁切 / 调色 / 加水印等由用户人工或其他工具
+- **不替用户做通用图片编辑**：只管目录、命名、归档、索引；裁切 / 调色 / 加水印等由用户人工或其他工具。唯一例外是模式 B2 中 final listing / 社媒发布图的 AI metadata / AI watermark 清理，且只处理发布副本，不碰原始素材
 - **single source of truth**：每个文件在云空间只放一份——多归属靠 Base 多选字段表达，不要靠拷贝。详见 [asset-index-base-schema.md § 设计原则](references/asset-index-base-schema.md#设计原则)
 
 ---
