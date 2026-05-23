@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- `photo-style`：新增真实照片轻量风格化 skill。批量读取 source photos + reference images，用 Sharp 生成 2:3 / 1000×1500 发布副本、平台无关 `manifest.json`、本地审批 `approval.html` 和 Pinterest Queue payload；v0 只调亮度/饱和度和画布适配，不改原图、不 AI 重绘、不替换背景、不加文字。脚本包采用 TypeScript + Vitest，CLI 为 `photo-style`。
 - `orders-customers`：新增订单履约 SOP，覆盖新订单到发货、签收跟进的阶段检查、证据要求、Base 推荐字段和卡住视图；明确只处理订单之后的履约流程，不加入 listing 创建 SOP。
 - `shared`：新增 AI 发布图清理协议 `ai-image-sanitization.md`，只在最终 listing 图片和社媒待发布图片的发布副本上使用 `remove-ai-watermarks` 清 AI metadata / AI visible watermark；明确素材库 `待处理/`、`image-synth` 的 `ai_raw/` 和内部参考图不处理，`invisible` / `all` 因会重写像素需用户显式 opt-in。
 - `etsy-stack`：新增 `ai-cleaner` 子命令，用于检查 / 安装 [wiltodelta/remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)。
@@ -23,6 +24,7 @@
 - `listing-catalog`：模式 B 写 listing 时新增 step 5.6，可在礼物场景调研后按 `business-knowledge` canonical contract 检索 Knowledge Cards；无命中静默跳过，有命中先展示采用 / 拒绝 / 边界，再生成文案。
 - `shared/preamble.md`：补充 Hermes cron 输出型报告的窄例外。用户在配置定时任务时确认固定输出目录后，cron 可追加新的时间戳报告 / JSON / raw evidence 文件；仍禁止覆盖旧报告或修改业务文件。
 - `install.sh`：移除 trend-radar 的 retired 集合；新增 trend-radar npm 依赖安装 + Playwright chromium 安装 + `trend-fetch` CLI 链接。
+- `install.sh` / `etsy-stack.json` / `README.md`：把 `photo-style` 纳入 skill manifest、安装流程和 skill 表，并安装 `photo-style` CLI。
 - `README.md`：skill 表加 trend-radar 一行；仓库布局加 utility/input 层；运行环境加 node/npm；移除"趋势分析交给 CoWork"措辞。
 
 ## [0.4.0] - 2026-05-10
