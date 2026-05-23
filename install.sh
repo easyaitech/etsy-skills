@@ -78,7 +78,7 @@ install_dir = os.path.realpath(os.environ["INSTALL_DIR"])
 hermes_dir = os.environ["HERMES_SKILLS_DIR"]
 with open(os.environ["MANIFEST"], encoding="utf-8") as f:
     active = set(json.load(f)["skills"])
-retired = set()
+retired = {"photo-style"}
 
 if os.path.isdir(hermes_dir):
     for name in os.listdir(hermes_dir):
@@ -126,6 +126,17 @@ chmod +x "$INSTALL_DIR/scripts/etsy-stack" "$INSTALL_DIR/scripts/check-update.sh
 ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/etsy-stack"
 ok "命令安装到：$BIN_DIR/etsy-stack"
 
+_retired_photo_style="$BIN_DIR/photo-style"
+if [[ -L "$_retired_photo_style" ]]; then
+  _retired_target="$(readlink "$_retired_photo_style" || true)"
+  case "$_retired_target" in
+    "$INSTALL_DIR"/photo-style/*)
+      rm -f "$_retired_photo_style"
+      ok "移除已废弃命令：$_retired_photo_style"
+      ;;
+  esac
+fi
+
 # trend-radar: 安装 Node 依赖 + Playwright chromium + CLI 链接
 _TR_SCRIPTS="$INSTALL_DIR/trend-radar/scripts"
 if [[ -f "$_TR_SCRIPTS/package.json" ]]; then
@@ -138,20 +149,6 @@ if [[ -f "$_TR_SCRIPTS/package.json" ]]; then
     ok "trend-fetch 命令安装到：$BIN_DIR/trend-fetch"
   else
     warn "未找到 npm，跳过 trend-radar 安装（trend-fetch 不可用）"
-  fi
-fi
-
-# photo-style: 安装 Node 依赖 + CLI 链接
-_PS_SCRIPTS="$INSTALL_DIR/photo-style/scripts"
-if [[ -f "$_PS_SCRIPTS/package.json" ]]; then
-  log "安装 photo-style 依赖…"
-  if command -v npm >/dev/null; then
-    ( cd "$_PS_SCRIPTS" && npm install --no-fund --no-audit --quiet 2>&1 ) || warn "photo-style npm install 失败"
-    chmod +x "$_PS_SCRIPTS/photo-style"
-    ln -sfn "$_PS_SCRIPTS/photo-style" "$BIN_DIR/photo-style"
-    ok "photo-style 命令安装到：$BIN_DIR/photo-style"
-  else
-    warn "未找到 npm，跳过 photo-style 安装（photo-style 不可用）"
   fi
 fi
 
