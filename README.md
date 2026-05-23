@@ -35,7 +35,7 @@ bash install.sh
 | [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：六文件夹物理层 + 索引 Base 语义层，含 `营销/`）+ 拍前 shoot brief 生成（模式 D） |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin) 工具发 pin |
 | [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
-| [`photo-style`](photo-style/SKILL.md) | 真实照片轻量统一风格化：批量输出 2:3 发布副本 + manifest + 本地审批 contact sheet，批准后生成平台队列 payload |
+| [`photo-style`](photo-style/SKILL.md) | 真实照片摄影风格化：用 Hermes GPT image-2 基于原图生成 3:4 专业摄影副本，人工审批后再入库或生成平台队列 payload；不保留本地修图 fallback |
 | [`video-assembly`](video-assembly/SKILL.md) | 从已标记的视频片段库批量装配短视频，输出 Hook / Body / Close 结构的社媒视频 |
 | [`trend-radar`](trend-radar/SKILL.md) | 每周自动采集 Google Trends / Pinterest Trends / eRank Trend Buzz 热词，并生成趋势 × 店铺/品牌/商品的 fit report 供人工判断 |
 
@@ -87,7 +87,7 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 - [Hermes Agent](https://hermes-agent.nousresearch.com/)（runtime；本仓 SKILL.md 是给 Hermes 写的，**不是** Claude Code）
 - [larksuite/cli](https://github.com/larksuite/cli) + 已登录的飞书账号
 - `git` / `python3`（macOS 自带）
-- `node` / `npm`（trend-radar / photo-style 需要，用于浏览器自动化和本地图像处理脚本）
+- `node` / `npm`（trend-radar 需要；photo-style 的审批 / payload 辅助 CLI 也需要）
 - 可选：[Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin)（用到 `pinterest-autopin` skill 时才装）
 - 可选：[remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)（最终 listing 图片和社媒待发布图片才需要；必须安装在 Hermes Agent 实际运行的机器上，用 `etsy-stack ai-cleaner update` 安装）
 
@@ -123,7 +123,7 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 ├── assets-library/            # ┘
 ├── pinterest-autopin/         # ┐ 应用层（Application）
 ├── image-synth/               # │ 围绕基座层运行
-├── photo-style/               # │ 真实照片轻量风格化 + 平台无关 manifest
+├── photo-style/               # │ 真实照片摄影风格化 + 平台无关 manifest
 ├── video-assembly/            # ┘ 围绕基座层运行
 └── trend-radar/               #   Utility / Input 层（为基座层提供自动化数据输入）
 ```

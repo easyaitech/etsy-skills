@@ -13,16 +13,14 @@
 ```json
 {
   "schemaVersion": "1.0",
-  "batchId": "2026-05-23-soft-natural-light",
+  "batchId": "2026-05-23-xuan-paper-soft-light",
   "createdAt": "2026-05-23T10:00:00.000Z",
   "workspace": "/abs/workspace",
   "style": {
-    "name": "soft-natural-light",
-    "referenceImages": ["/abs/ref-1.jpg"],
-    "stats": {
-      "brightness": 0.82,
-      "saturation": 0.28
-    }
+    "name": "xuan-paper-soft-light",
+    "mode": "hermes-image2",
+    "promptVersion": "hermes-image2-prompt.md",
+    "aspectRatio": "3:4"
   },
   "items": []
 }
@@ -36,7 +34,7 @@
   "sourcePath": "/abs/source/IMG_0001.jpg",
   "sourceSha256": "...",
   "sourceMtimeMs": 1779500000000,
-  "outputPath": "/abs/workspace/.cache/photo-style/batches/.../processed/IMG_0001_2x3.jpg",
+  "outputPath": "/abs/workspace/.cache/photo-style/batches/.../generated/IMG_0001_3x4.jpg",
   "status": "pending",
   "qa": {
     "result": "pass",
@@ -44,11 +42,12 @@
     "errors": []
   },
   "processing": {
-    "fit": "contain",
-    "width": 1000,
-    "height": 1500,
-    "brightnessFactor": 1.04,
-    "saturationFactor": 0.96
+    "mode": "hermes-image2",
+    "model": "gpt-image-2",
+    "aspectRatio": "3:4",
+    "promptVersion": "hermes-image2-prompt.md",
+    "generatedAt": "2026-05-23T10:05:00.000Z",
+    "sidecarPath": "/abs/workspace/.cache/photo-style/batches/.../generated/IMG_0001_3x4.json"
   },
   "metadata": {
     "sku": "SKU-001",
@@ -86,7 +85,7 @@ Hard rules:
 
 ## Metadata input
 
-Optional metadata JSON passed to `photo-style style-batch --metadata`:
+Optional metadata JSON may be used by the Hermes runbook or approval/payload handoff:
 
 ```json
 {
@@ -105,4 +104,4 @@ Optional metadata JSON passed to `photo-style style-batch --metadata`:
 }
 ```
 
-Keys are source basenames. If two source files share one basename, the script still processes both, but metadata by basename will apply to both. Avoid duplicate basenames when possible.
+Keys are source basenames. If two source files share one basename, the same metadata may apply to both. Avoid duplicate basenames when possible.

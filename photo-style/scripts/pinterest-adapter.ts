@@ -55,7 +55,7 @@ export function writePinterestPayload(
 function pinterestBlockReasons(item: ManifestItem): string[] {
   const reasons: string[] = [];
   const target = item.metadata.platformTargets?.pinterest;
-  if (!item.outputPath || !existsSync(item.outputPath)) reasons.push("processed image missing");
+  if (!item.outputPath || !existsSync(item.outputPath)) reasons.push("output image missing");
   if (!item.metadata.sku) reasons.push("sku missing");
   if (!target?.board) reasons.push("Pinterest board missing");
   if (!target?.link) reasons.push("Pinterest link missing");

@@ -11,7 +11,7 @@ The approval contact sheet is a local HTML artifact generated from `manifest.jso
 
 ## Requirements
 
-- Show source and processed images side by side.
+- Show source and output images side by side.
 - Show QA result and warnings.
 - Show SKU and Pinterest board/link if present.
 - Escape filenames, notes, and metadata before rendering.

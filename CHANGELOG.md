@@ -5,7 +5,7 @@
 ## [Unreleased]
 
 ### 新增
-- `photo-style`：新增真实照片轻量风格化 skill。批量读取 source photos + reference images，用 Sharp 生成 2:3 / 1000×1500 发布副本、平台无关 `manifest.json`、本地审批 `approval.html` 和 Pinterest Queue payload；v0 只调亮度/饱和度和画布适配，不改原图、不 AI 重绘、不替换背景、不加文字。脚本包采用 TypeScript + Vitest，CLI 为 `photo-style`。
+- `photo-style`：新增真实照片摄影风格化 skill。主路径用 Hermes Agent 集成的 GPT image-2，基于原照片生成 3:4 专业摄影副本，固定 prompt 强调柔光、米白 / 宣纸白、纸纤维、墨色边缘和真实手写痕迹；人工审批后再入库或生成 Pinterest Queue payload。不保留本地 Sharp 修图 fallback。
 - `orders-customers`：新增订单履约 SOP，覆盖新订单到发货、签收跟进的阶段检查、证据要求、Base 推荐字段和卡住视图；明确只处理订单之后的履约流程，不加入 listing 创建 SOP。
 - `shared`：新增 AI 发布图清理协议 `ai-image-sanitization.md`，只在最终 listing 图片和社媒待发布图片的发布副本上使用 `remove-ai-watermarks` 清 AI metadata / AI visible watermark；明确素材库 `待处理/`、`image-synth` 的 `ai_raw/` 和内部参考图不处理，`invisible` / `all` 因会重写像素需用户显式 opt-in。
 - `etsy-stack`：新增 `ai-cleaner` 子命令，用于检查 / 安装 [wiltodelta/remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)。

@@ -1,24 +1,14 @@
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { mkdirSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { renderApprovalArtifacts, applyApprovalFile } from "./approval.js";
-import { type PhotoStyleMetadata, readManifest } from "./manifest.js";
+import { readManifest } from "./manifest.js";
 import { writePinterestPayload } from "./pinterest-adapter.js";
-import { processBatch } from "./processor.js";
 
 const EXIT_USAGE = 1;
-const EXIT_CONFIG = 2;
 const EXIT_PROCESSING = 3;
 
 export type ParsedArgs =
-  | {
-      command: "style-batch";
-      sources: string;
-      refs: string;
-      styleName: string;
-      metadata?: string;
-      workspace?: string;
-    }
   | {
       command: "render-approval";
       manifest: string;
@@ -41,21 +31,6 @@ export function parseArgs(argv: string[]): ParsedArgs | null {
 
   const flags = parseFlags(args);
   if (!flags) return null;
-
-  if (command === "style-batch") {
-    const sources = flags.get("--sources");
-    const refs = flags.get("--refs");
-    const styleName = flags.get("--style-name");
-    if (!sources || !refs || !styleName) return null;
-    return {
-      command,
-      sources,
-      refs,
-      styleName,
-      metadata: flags.get("--metadata"),
-      workspace: flags.get("--workspace"),
-    };
-  }
 
   if (command === "render-approval") {
     const manifest = flags.get("--manifest");
@@ -93,25 +68,12 @@ function parseFlags(args: string[]): Map<string, string> | null {
   return flags;
 }
 
-function resolveWorkspace(explicit?: string): string | null {
-  if (explicit) return existsSync(explicit) ? resolve(explicit) : null;
-  const envWs = process.env.ETSY_WORKSPACE;
-  if (envWs) return existsSync(envWs) ? resolve(envWs) : null;
-  let dir = process.cwd();
-  while (dir !== dirname(dir)) {
-    if (existsSync(join(dir, ".etsy-workspace"))) return dir;
-    dir = dirname(dir);
-  }
-  return null;
-}
-
 function isHelpRequested(argv: string[]): boolean {
   return argv.slice(2).some((arg) => arg === "--help" || arg === "-h" || arg === "help");
 }
 
 function printUsage(stream: NodeJS.WriteStream): void {
   stream.write(`用法:
-  photo-style style-batch --sources DIR --refs DIR --style-name NAME [--metadata FILE] [--workspace DIR]
   photo-style render-approval --manifest FILE
   photo-style apply-approval --manifest FILE --approval-file FILE
   photo-style pinterest-payload --manifest FILE --out FILE
@@ -128,43 +90,6 @@ async function main(): Promise<void> {
   if (!parsed) {
     printUsage(process.stderr);
     process.exit(EXIT_USAGE);
-  }
-
-  if (parsed.command === "style-batch") {
-    const workspace = resolveWorkspace(parsed.workspace);
-    if (!workspace) {
-      process.stderr.write("错误: 找不到工作区。设置 $ETSY_WORKSPACE、传 --workspace，或运行 etsy-stack init。\n");
-      process.exit(EXIT_CONFIG);
-    }
-    const metadataByBasename = parsed.metadata
-      ? (JSON.parse(readFileSync(parsed.metadata, "utf8")) as Record<string, PhotoStyleMetadata>)
-      : undefined;
-    try {
-      const { manifest, manifestPath } = await processBatch({
-        workspace,
-        sourcesDir: parsed.sources,
-        refsDir: parsed.refs,
-        styleName: parsed.styleName,
-        metadataByBasename,
-      });
-      const artifacts = renderApprovalArtifacts(manifest, manifestPath);
-      process.stdout.write(
-        JSON.stringify(
-          {
-            manifestPath,
-            approvalHtml: artifacts.htmlPath,
-            approvalTemplate: artifacts.templatePath,
-            itemCount: manifest.items.length,
-          },
-          null,
-          2
-        ) + "\n"
-      );
-    } catch (err: unknown) {
-      process.stderr.write(`错误: ${err instanceof Error ? err.message : String(err)}\n`);
-      process.exit(EXIT_PROCESSING);
-    }
-    return;
   }
 
   if (parsed.command === "render-approval") {
