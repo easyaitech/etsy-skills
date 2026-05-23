@@ -73,8 +73,10 @@ layer: foundation
    - 有命中 → 在草稿前展示「可参考知识卡片」小节，逐条标明来源、记录日期、可用处、本次采用 yes/no/partial、原因和边界；不得静默采用
    - 只有选中的少量卡片需要读 `知识页链接`；不要为了检索把所有 wiki 都读一遍
 6. 读 `assets/listing-template.md`：标准 listing 文案结构
-7. 输出草稿：title + description（含分段）+ tags（13 个槽，按客单价档礼物槽数 3/4/3）+ materials（13 个槽）+ category 建议
-   - 13 tag 严格守恒，礼物槽数与客单价档对应；其余非礼物槽如有 eRank 词库优先用，否则按 etsy-seo.md 规则 LLM 填
+7. 输出草稿：title + description（含分段）+ tags（13 个槽，按客单价档礼物槽数 3/4/3）+ materials（13 个槽）+ Sustainability / Occasion / Holiday + category 建议
+   - 13 tag 严格守恒，礼物槽数与客单价档对应；展示与写入 Base 时都用一行英文文本，tag 之间用半角逗号 `,` 分隔，方便复制到 Etsy 后台；其余非礼物槽如有 eRank 词库优先用，否则按 etsy-seo.md 规则 LLM 填
+   - 13 material 严格守恒；展示与写入 Base 时同样用一行英文文本，material 之间用半角逗号 `,` 分隔，方便复制到 Etsy 后台
+   - Sustainability / Occasion / Holiday 必须从 Etsy 后台字段选项中选择；不要自行编写新值。不确定或只是泛泛适合作礼物时留空
    - title 公式 `[核心品类词] + [核心修饰词] + [礼物维度] + [次要属性] + [情感词]`，礼物维度槽优先级：节日词 > 受众词 > 场景词；自购为主 SKU 留空
    - description 段 3 双小段（使用语境 + 礼物语境，按 etsy-seo.md § Description）
    - 如果跑了 eRank 节点 ③，title 词序参考竞品模式

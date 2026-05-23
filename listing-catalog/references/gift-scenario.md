@@ -29,7 +29,7 @@
 - `SHOP.md`（必读）——`offers_gift_wrap` / `offers_greeting_card` 字段（如有）取包装服务词；没有就跳过该类
 - `holiday-calendar.md`（按需读）——Q4 节日时机查询
 
-**客单价档分流**（看 Base 该 SKU 的 `售价 (USD)`）：
+**客单价档分流**（看 Base 该 SKU 的 `售价 (HKD)`；如需按 USD 档位判断，先换算或参考 Etsy 后台展示价）：
 
 | 档位 | 价格 | 流程 |
 |---|---|---|
