@@ -141,6 +141,20 @@ if [[ -f "$_TR_SCRIPTS/package.json" ]]; then
   fi
 fi
 
+# photo-style: 安装 Node 依赖 + CLI 链接
+_PS_SCRIPTS="$INSTALL_DIR/photo-style/scripts"
+if [[ -f "$_PS_SCRIPTS/package.json" ]]; then
+  log "安装 photo-style 依赖…"
+  if command -v npm >/dev/null; then
+    ( cd "$_PS_SCRIPTS" && npm install --no-fund --no-audit --quiet 2>&1 ) || warn "photo-style npm install 失败"
+    chmod +x "$_PS_SCRIPTS/photo-style"
+    ln -sfn "$_PS_SCRIPTS/photo-style" "$BIN_DIR/photo-style"
+    ok "photo-style 命令安装到：$BIN_DIR/photo-style"
+  else
+    warn "未找到 npm，跳过 photo-style 安装（photo-style 不可用）"
+  fi
+fi
+
 PINTEREST_AUTOPIN_DIR="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
 if [[ -d "$PINTEREST_AUTOPIN_DIR/.git" ]]; then
   log "同步 Pinterest-autopin 发布工具：$PINTEREST_AUTOPIN_DIR"
