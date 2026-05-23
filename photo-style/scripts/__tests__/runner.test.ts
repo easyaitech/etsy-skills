@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseArgs } from "../runner.js";
 
 describe("parseArgs", () => {
-  it("parses style-batch", () => {
+  it("rejects removed style-batch command", () => {
     expect(
       parseArgs([
         "node",
@@ -14,21 +14,8 @@ describe("parseArgs", () => {
         "refs",
         "--style-name",
         "soft",
-        "--metadata",
-        "metadata.json",
       ])
-    ).toEqual({
-      command: "style-batch",
-      sources: "sources",
-      refs: "refs",
-      styleName: "soft",
-      metadata: "metadata.json",
-      workspace: undefined,
-    });
-  });
-
-  it("rejects missing style-batch required args", () => {
-    expect(parseArgs(["node", "runner.ts", "style-batch", "--sources", "sources"])).toBeNull();
+    ).toBeNull();
   });
 
   it("parses apply-approval", () => {

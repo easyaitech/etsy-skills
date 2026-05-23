@@ -12,9 +12,10 @@ function manifestFixture(outputPath: string): PhotoStyleManifest {
     createdAt: "2026-05-23T00:00:00.000Z",
     workspace: "/tmp/workspace",
     style: {
-      name: "soft",
-      referenceImages: [],
-      stats: { brightness: 0.5, saturation: 0.5 },
+      name: "xuan-paper-soft-light",
+      mode: "hermes-image2",
+      promptVersion: "hermes-image2-prompt.md",
+      aspectRatio: "3:4",
     },
     items: [
       {
@@ -26,11 +27,11 @@ function manifestFixture(outputPath: string): PhotoStyleManifest {
         status: "approved",
         qa: { result: "pass", warnings: [], errors: [] },
         processing: {
-          fit: "contain",
-          width: 1000,
-          height: 1500,
-          brightnessFactor: 1,
-          saturationFactor: 1,
+          mode: "hermes-image2",
+          model: "gpt-image-2",
+          aspectRatio: "3:4",
+          promptVersion: "hermes-image2-prompt.md",
+          generatedAt: "2026-05-23T00:00:00.000Z",
         },
         metadata: {
           sku: "SKU-001",

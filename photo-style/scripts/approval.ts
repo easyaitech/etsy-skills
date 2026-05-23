@@ -39,14 +39,14 @@ function renderHtml(manifest: PhotoStyleManifest, baseDir: string): string {
   const rows = manifest.items
     .map((item) => {
       const output = item.outputPath
-        ? `<img src="${escapeAttr(relative(baseDir, item.outputPath))}" alt="processed ${escapeAttr(item.id)}">`
+        ? `<img src="${escapeAttr(relative(baseDir, item.outputPath))}" alt="output ${escapeAttr(item.id)}">`
         : `<div class="missing">No output</div>`;
       const source = `<img src="${escapeAttr(item.sourcePath)}" alt="source ${escapeAttr(item.id)}">`;
       return `<section class="item ${escapeAttr(item.qa.result)}">
   <h2>${escapeHtml(item.id)} · ${escapeHtml(item.status)}</h2>
   <div class="grid">
     <figure><figcaption>Source</figcaption>${source}</figure>
-    <figure><figcaption>Processed</figcaption>${output}</figure>
+    <figure><figcaption>Output</figcaption>${output}</figure>
   </div>
   <p><strong>SKU:</strong> ${escapeHtml(item.metadata.sku ?? "(missing)")}</p>
   <p><strong>Pinterest board:</strong> ${escapeHtml(item.metadata.platformTargets?.pinterest?.board ?? "(missing)")}</p>
@@ -77,7 +77,7 @@ function renderHtml(manifest: PhotoStyleManifest, baseDir: string): string {
 <body>
   <h1>Photo Style Approval</h1>
   <p>Batch: ${escapeHtml(manifest.batchId)}</p>
-  <p>Review the processed copy against the source. Only approve images where product shape, material, and text remain correct.</p>
+  <p>Review the output against the source. Only approve images where product shape, material, handwriting, and visible text remain correct.</p>
   ${rows}
 </body>
 </html>

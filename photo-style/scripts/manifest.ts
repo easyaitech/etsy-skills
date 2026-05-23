@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 
 export type ItemStatus =
   | "pending"
@@ -32,11 +32,12 @@ export interface QaResult {
 }
 
 export interface ProcessingInfo {
-  fit: "contain";
-  width: number;
-  height: number;
-  brightnessFactor: number;
-  saturationFactor: number;
+  mode: "hermes-image2";
+  model: string;
+  aspectRatio: "3:4";
+  promptVersion: string;
+  generatedAt: string;
+  sidecarPath?: string;
 }
 
 export interface ApprovalInfo {
@@ -66,11 +67,6 @@ export interface ManifestItem {
   adapterResults: AdapterResult[];
 }
 
-export interface StyleStats {
-  brightness: number;
-  saturation: number;
-}
-
 export interface PhotoStyleManifest {
   schemaVersion: "1.0";
   batchId: string;
@@ -78,8 +74,9 @@ export interface PhotoStyleManifest {
   workspace: string;
   style: {
     name: string;
-    referenceImages: string[];
-    stats: StyleStats;
+    mode: "hermes-image2";
+    promptVersion: string;
+    aspectRatio: "3:4";
   };
   items: ManifestItem[];
 }
@@ -91,14 +88,6 @@ export interface ApprovalInput {
 
 export function sha256File(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
-}
-
-export function sourceTrace(path: string): { sourceSha256: string; sourceMtimeMs: number } {
-  const stat = statSync(path);
-  return {
-    sourceSha256: sha256File(path),
-    sourceMtimeMs: Math.trunc(stat.mtimeMs),
-  };
 }
 
 export function writeManifest(path: string, manifest: PhotoStyleManifest): void {
