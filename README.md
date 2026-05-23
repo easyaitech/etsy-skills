@@ -2,7 +2,7 @@
 
 跨境 Etsy 店铺运营 skill bundle，跑在 [Hermes Agent](https://hermes-agent.nousresearch.com/) 上（Mac mini 本地），用 [larksuite/cli](https://github.com/larksuite/cli) 操作飞书 Base / 文档 / 云空间。
 
-每个 skill 各管一摊：品牌底座、商品目录、订单客服、供应商管理、业务知识库、素材库、Pinterest 自动 pin、AI 图片合成、照片风格化、趋势热词采集（完整列表见下面 §Skills）。下游都引用 `BRAND.md` / `SHOP.md`，从 `shop-foundation` 开始建是推荐顺序。
+每个 skill 各管一摊：品牌底座、商品目录、订单客服、供应商管理、业务知识库、素材库、Pinterest 自动 pin、AI 图片合成、趋势热词采集（完整列表见下面 §Skills）。下游都引用 `BRAND.md` / `SHOP.md`，从 `shop-foundation` 开始建是推荐顺序。
 
 ## 安装
 
@@ -35,7 +35,6 @@ bash install.sh
 | [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：六文件夹物理层 + 索引 Base 语义层，含 `营销/`）+ 拍前 shoot brief 生成（模式 D） |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin) 工具发 pin |
 | [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
-| [`photo-style`](photo-style/SKILL.md) | 真实照片摄影风格化：用 Hermes GPT image-2 基于原图生成 3:4 专业摄影副本，人工审批后再入库或生成平台队列 payload；不保留本地修图 fallback |
 | [`video-assembly`](video-assembly/SKILL.md) | 从已标记的视频片段库批量装配短视频，输出 Hook / Body / Close 结构的社媒视频 |
 | [`trend-radar`](trend-radar/SKILL.md) | 每周自动采集 Google Trends / Pinterest Trends / eRank Trend Buzz 热词，并生成趋势 × 店铺/品牌/商品的 fit report 供人工判断 |
 
@@ -87,7 +86,7 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 - [Hermes Agent](https://hermes-agent.nousresearch.com/)（runtime；本仓 SKILL.md 是给 Hermes 写的，**不是** Claude Code）
 - [larksuite/cli](https://github.com/larksuite/cli) + 已登录的飞书账号
 - `git` / `python3`（macOS 自带）
-- `node` / `npm`（trend-radar 需要；photo-style 的审批 / payload 辅助 CLI 也需要）
+- `node` / `npm`（trend-radar 需要）
 - 可选：[Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin)（用到 `pinterest-autopin` skill 时才装）
 - 可选：[remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)（最终 listing 图片和社媒待发布图片才需要；必须安装在 Hermes Agent 实际运行的机器上，用 `etsy-stack ai-cleaner update` 安装）
 
@@ -123,7 +122,6 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 ├── assets-library/            # ┘
 ├── pinterest-autopin/         # ┐ 应用层（Application）
 ├── image-synth/               # │ 围绕基座层运行
-├── photo-style/               # │ 真实照片摄影风格化 + 平台无关 manifest
 ├── video-assembly/            # ┘ 围绕基座层运行
 └── trend-radar/               #   Utility / Input 层（为基座层提供自动化数据输入）
 ```
