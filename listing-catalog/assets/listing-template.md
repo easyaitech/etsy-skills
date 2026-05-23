@@ -52,28 +52,31 @@ listing 文案标准模板。Agent 写新 listing 时按此结构产出，整篇
 
 ## (2) Tags & Materials
 
-### Tags（13/13）
-1. `{{品类核心 1，例：tea cup}}`
-2. `{{品类核心 2}}`
-3. `{{品类核心 3}}`
-4. `{{工艺/材质 1，例：wood fired}}`
-5. `{{工艺/材质 2}}`
-6. `{{工艺/材质 3}}`
-7. `{{使用场景 1，例：daily tea ritual}}`
-8. `{{使用场景 2}}`
-9. `{{使用场景 3}}`
-10. `{{礼物/受众 1，例：tea lover gift}}`
-11. `{{礼物/受众 2}}`
-12. `{{风格/审美 1，例：wabi sabi}}`
-13. `{{风格/审美 2}}`
+### Tags（13/13，复制用）
+```text
+{{tag 1}},{{tag 2}},{{tag 3}},{{tag 4}},{{tag 5}},{{tag 6}},{{tag 7}},{{tag 8}},{{tag 9}},{{tag 10}},{{tag 11}},{{tag 12}},{{tag 13}}
+```
 
-### Materials（13/13）
-1. `{{物理材质 1}}`
-2. ...
+> 写入 Base 的 `Tags` 字段也使用同样的一行文本格式：不同 tag 之间用半角逗号 `,` 分隔。
+
+### Materials（13/13，复制用）
+```text
+{{material 1}},{{material 2}},{{material 3}},{{material 4}},{{material 5}},{{material 6}},{{material 7}},{{material 8}},{{material 9}},{{material 10}},{{material 11}},{{material 12}},{{material 13}}
+```
+
+> 写入 Base 的 `Materials` 字段也使用同样的一行文本格式：不同 material 之间用半角逗号 `,` 分隔。
 
 ---
 
-## (3) Category & Attributes
+## (3) Etsy 后台属性
+
+- **Sustainability**（最多 3 个；不确定留空）：`{{从 Base 选项中选择，或留空}}`
+- **Occasion**（单选；泛泛适合作礼物时留空）：`{{从 Base 选项中选择，或留空}}`
+- **Holiday**（单选；只有明确节日主题时填写）：`{{从 Base 选项中选择，或留空}}`
+
+---
+
+## (4) Category & Attributes
 
 - **Category**：`{{Etsy 类目层级，到叶子节点}}`
 - **Primary attribute 1**：`{{}}`

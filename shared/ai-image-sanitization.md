@@ -31,7 +31,8 @@
 2. **只移除 AI 相关 metadata**。使用 `metadata --remove --keep-standard`，保留 Author / Copyright / Title 等标准字段。
 3. **可见水印只处理工具明确支持并检测到的 AI logo**。检测不到时不强行擦除。
 4. **不默认跑 `invisible` / `all`**。这两种模式会用 diffusion 重新生成像素，可能改变产品纹理、文字和边缘；只有用户明确要求"处理隐形 AI watermark"并接受画面可能变化时才用。
-5. **失败即阻塞发布，不静默降级**。如果图片要对外发布但清理工具缺失或处理失败，停下告诉用户缺什么；不要拿未处理图继续排队或上传。
+5. **失败即阻塞发布，不静默降级**。如果图片要对外发布但清理失败，停下告诉用户缺什么；不要拿未处理图继续排队或上传。
+6. **metadata 工具缺失时允许安全 fallback**：如果 `remove-ai-watermarks` / `exiftool` 不可用，但仅需要清理 metadata，可用 Pillow 重新打开图片、`ImageOps.exif_transpose`、转换 RGB，并以 JPEG 重新保存且不传 EXIF/XMP/ICC/C2PA。处理后必须用字节/字符串扫描验证无 C2PA/OpenAI/EXIF/XMP/prompt 等标记。该 fallback 只用于 metadata 清理，不等同于 visible / invisible watermark 移除。
 
 ---
 
