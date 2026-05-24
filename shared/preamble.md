@@ -70,6 +70,7 @@ etsy-stack workspace
 | supplier-foundation | `{店铺名}-供应商管理` |
 | business-knowledge | `{店铺名}-知识卡片` |
 | assets-library | `{店铺名}-素材索引` |
+| content-asset-pool | `{店铺名}-素材发布池`、`{店铺名}-发布任务` |
 | pinterest-autopin | `{店铺名}-Pin Queue` |
 | video-assembly | `{店铺名}-Clips`、`{店铺名}-Video Jobs` |
 

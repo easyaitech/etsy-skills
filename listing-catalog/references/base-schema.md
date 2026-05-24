@@ -8,6 +8,7 @@
 |---|---|---|
 | `SKU` | 单行文本（**主键**） | 内部唯一编号，建议格式 `{品类缩写}-{数字}`，如 `TEACUP-001`、`POT-007`。一次建立，永不修改 |
 | `Etsy Listing ID` | 单行文本 | 上 Etsy 后获得的 listing 数字 ID（如 `1234567890`），未上线为空 |
+| `分享链接` | URL / 单行文本 | Etsy 后台或线上 listing 复制出的可分享链接。Pinterest、小红书、Instagram、TikTok 等商品型发布必须优先读取本字段，不临时拼 listing URL |
 | `状态` | 单选 | 草稿 / 待上线 / 在售 / 售罄 / 已下架 |
 | `Title (EN)` | 多行文本 | Etsy 标题英文原文，140 字符以内 |
 | `Description (EN)` | 多行文本 | Etsy 描述英文原文，分段保留换行 |

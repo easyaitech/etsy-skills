@@ -40,10 +40,10 @@
 
 ### 1. Link
 
-- 默认 = `{etsy_shop_url}/listing/{listing_id}`
-  - `etsy_shop_url`：从 SHOP.md § 店铺基础 § Etsy URL 取
-  - `listing_id`：从商品 Base 该 SKU 行的 `Etsy Listing ID` 取
-- 如商品 Base 的 `状态 ≠ 在售` 或 `Etsy Listing ID` 为空：**中止排队**，提示用户先上线 listing
+- 默认 = 商品 Base 该 SKU 行的 `分享链接`
+  - `分享链接`：Etsy 后台或线上 listing 复制出的可分享链接，是商品型 pin 的唯一 link source
+  - `Etsy Listing ID`：只做商品追溯和上线校验，不用于临时拼 URL
+- 如商品 Base 的 `状态 ≠ 在售`、`Etsy Listing ID` 为空或 `分享链接` 为空：**中止排队**，提示用户先上线 listing 并补齐 `分享链接`
 - 不允许指向非自家域名（防误发引流到第三方）
 - 轮播 pin 共用同一个 link（所有图片指向同一 listing）
 
