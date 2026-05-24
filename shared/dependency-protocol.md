@@ -5,7 +5,8 @@
 ```
 ┌──────────────────────────────────────────────────┐
 │              应用层（Application）                 │
-│   pinterest-autopin    image-synth    (未来...)    │
+│ content-asset-pool pinterest-autopin image-synth  │
+│ video-assembly      (未来...)                      │
 └─────────────────────┬────────────────────────────┘
                       │ 依赖
 ┌─────────────────────┴────────────────────────────┐
@@ -38,6 +39,7 @@
 ### 应用层
 
 围绕基座层运行，从基座取数据、用基座的规则约束输出。当前：
+- `content-asset-pool`：取素材 + 商品 + 平台意图 → 维护跨平台发布池与发布任务
 - `pinterest-autopin`：取商品 + 素材 + 品牌 → 组 pin 发布
 - `image-synth`：取品牌视觉 + 商品信息 → AI 合成图
 - `video-assembly`：取商品 + clips + 营销策略 → 装配短视频

@@ -33,6 +33,7 @@ bash install.sh
 | [`supplier-foundation`](supplier-foundation/SKILL.md) | 飞书 Base 供应商管理 + 采购来源筛选、主用/备用/淘汰记录 |
 | [`business-knowledge`](business-knowledge/SKILL.md) | 轻量业务知识库：每周材料 → raw / weekly / wiki markdown + Knowledge Cards Base + Marketing Brief |
 | [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：六文件夹物理层 + 索引 Base 语义层，含 `营销/`）+ 拍前 shoot brief 生成（模式 D） |
+| [`content-asset-pool`](content-asset-pool/SKILL.md) | 跨平台素材发布池：登记待发布图片/视频、生成发布副本、追踪 Pinterest / Instagram / 小红书 / TikTok / Etsy 发布任务 |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin) 工具发 pin |
 | [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
 | [`video-assembly`](video-assembly/SKILL.md) | 从已标记的视频片段库批量装配短视频，输出 Hook / Body / Close 结构的社媒视频 |
@@ -120,7 +121,8 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 ├── supplier-foundation/       # │
 ├── business-knowledge/        # │ 可选业务记忆层
 ├── assets-library/            # ┘
-├── pinterest-autopin/         # ┐ 应用层（Application）
+├── content-asset-pool/        # ┐
+├── pinterest-autopin/         # │ 应用层（Application）
 ├── image-synth/               # │ 围绕基座层运行
 ├── video-assembly/            # ┘ 围绕基座层运行
 └── trend-radar/               #   Utility / Input 层（为基座层提供自动化数据输入）
