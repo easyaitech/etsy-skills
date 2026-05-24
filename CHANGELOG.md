@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- `content-asset-pool`：新增 FuBlessings 跨平台素材发布池 skill，登记待发布图片 / 视频、生成不覆盖原图的发布副本，并用素材池 + 发布任务双表追踪 Pinterest、Instagram、小红书、TikTok、Etsy 等平台的入队和发布状态。
 - `orders-customers`：新增订单履约 SOP，覆盖新订单到发货、签收跟进的阶段检查、证据要求、Base 推荐字段和卡住视图；明确只处理订单之后的履约流程，不加入 listing 创建 SOP。
 - `shared`：新增 AI 发布图清理协议 `ai-image-sanitization.md`，只在最终 listing 图片和社媒待发布图片的发布副本上使用 `remove-ai-watermarks` 清 AI metadata / AI visible watermark；明确素材库 `待处理/`、`image-synth` 的 `ai_raw/` 和内部参考图不处理，`invisible` / `all` 因会重写像素需用户显式 opt-in。
 - `etsy-stack`：新增 `ai-cleaner` 子命令，用于检查 / 安装 [wiltodelta/remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)。
@@ -17,6 +18,7 @@
 - `trend-radar`：新增 `trend-fetch fit-report` 第二步，读取当天所有趋势源 JSON、四份基座文件和本地商品上下文缓存，输出按趋势词组织的 `fit-report.md/json`。报告只做人工判断（`可做 / 观察 / 不做`），不自动生成 Marketing Brief，不直连飞书 Base。
 
 ### 修
+- `listing-catalog` / `pinterest-autopin`：补充商品 Base `分享链接` 字段，并要求商品型 Pinterest 发布使用该字段作为 `Link`，不再临时拼 Etsy listing URL；同步应用层架构图和 Base 命名约定。
 - `photo-style`：从 stack 中移除。Hermes 当前只能调用生图模型，不能把原图作为可控 reference/edit input 传给模型，生成结果和原图差异过大；因此移除 skill、CLI 安装入口、manifest 暴露和后续 TODO。
 - `assets-library` / `image-synth` / `pinterest-autopin`：把 AI metadata / AI watermark 清理接到发布出口，而不是素材管理入口；Pinterest processed 图片从“清空所有 metadata”改为“只清 AI metadata + AI visible watermark，并保留标准 metadata”。
 - `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把供应商管理纳入 Foundation 层和安装 manifest。

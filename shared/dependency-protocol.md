@@ -5,7 +5,8 @@
 ```
 ┌──────────────────────────────────────────────────┐
 │              应用层（Application）                 │
-│   pinterest-autopin    image-synth    (未来...)    │
+│ content-asset-pool pinterest-autopin image-synth  │
+│ video-assembly      (未来...)                      │
 └─────────────────────┬────────────────────────────┘
                       │ 依赖
 ┌─────────────────────┴────────────────────────────┐
