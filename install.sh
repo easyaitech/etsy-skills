@@ -104,6 +104,7 @@ for skill in "${SKILLS[@]}"; do
     warn "$dst 已存在且不是软链，备份到 $backup"
     mv "$dst" "$backup"
   fi
+  mkdir -p "$(dirname "$dst")"
   ln -sfn "$src" "$dst"
   ok "$skill"
 done

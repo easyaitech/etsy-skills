@@ -5,7 +5,7 @@ set -uo pipefail
 INSTALL_DIR="${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
 HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-${HERMES_HOME:-$HOME/.hermes}/skills}"
-PINTEREST_AUTOPIN_REPO="${PINTEREST_AUTOPIN_REPO:-https://github.com/easyaitech/Pinterest-autopin.git}"
+PINTEREST_AUTOPIN_REPO="${PINTEREST_AUTOPIN_REPO:-}"
 PINTEREST_AUTOPIN_DIR="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
 PINTEREST_AUTOPIN_MIN_VERSION="1.4.0"
 AI_CLEANER_REPO="${AI_CLEANER_REPO:-https://github.com/wiltodelta/remove-ai-watermarks.git}"
@@ -89,8 +89,23 @@ pinterest_tool_update() {
   fi
 
   if [[ ! -d "$PINTEREST_AUTOPIN_DIR/.git" ]]; then
+    if [[ -z "$PINTEREST_AUTOPIN_REPO" ]]; then
+      echo "❌ 未配置 Pinterest-autopin 工具仓库。请先设置 PINTEREST_AUTOPIN_REPO，或使用已有工具目录：$PINTEREST_AUTOPIN_DIR" >&2
+      return 1
+    fi
     echo "Clone Pinterest-autopin → $PINTEREST_AUTOPIN_DIR"
     git clone --quiet "$PINTEREST_AUTOPIN_REPO" "$PINTEREST_AUTOPIN_DIR" || return 1
+  fi
+
+  local remote_url
+  remote_url="$(git -C "$PINTEREST_AUTOPIN_DIR" remote get-url origin 2>/dev/null || true)"
+  if [[ -n "$PINTEREST_AUTOPIN_REPO" ]]; then
+    git -C "$PINTEREST_AUTOPIN_DIR" remote set-url origin "$PINTEREST_AUTOPIN_REPO" || return 1
+    remote_url="$PINTEREST_AUTOPIN_REPO"
+  elif [[ "$remote_url" == *"easyaitech/Pinterest-autopin"* ]]; then
+    echo "❌ Pinterest-autopin 工具仍指向旧仓库：$remote_url" >&2
+    echo "   请先核实真实工具来源，并通过 PINTEREST_AUTOPIN_REPO 显式指定后再更新。" >&2
+    return 1
   fi
 
   if [[ -n "$(git -C "$PINTEREST_AUTOPIN_DIR" status --porcelain)" ]]; then
@@ -179,7 +194,7 @@ resolve_workspace() {
 
 require_install() {
   git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1 || {
-    echo "❌ 找不到 etsy-stack 源码（$INSTALL_DIR）" >&2
+    echo "❌ 找不到 etsy-stack 源码（${INSTALL_DIR}）" >&2
     echo "   请重新跑安装脚本：" >&2
     echo "   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash" >&2
     exit 1

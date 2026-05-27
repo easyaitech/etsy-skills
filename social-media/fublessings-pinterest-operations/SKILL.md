@@ -39,8 +39,6 @@ depends-on: [pinterest-autopin]
 
 补充参考：`references/pinterest-publishing-cadence-and-inventory.md` 记录了用户确认的 Pinterest 默认发布节奏：每天 1 条汉字解释（每字 4 图轮播）+ 2 条商品/礼物图；以及 3 天安全库存阈值和 no-agent 库存提醒 cron 的静默检查模式。
 
-## 触发条件rest Pin 的专属分享链接规则：链接从商品 Base `分享链接` 取，并在 Pin Queue `关联 SKU` 中写入 SKU + 商品 record_id + Listing ID 以保证回溯。
-
 ## 触发条件
 
 - 用户直接发送 1 张或多张图片，没有额外说明。
@@ -51,7 +49,7 @@ depends-on: [pinterest-autopin]
   - 若用户明确说“以单图形式 / 不要组合 / 不要轮播 / 每张都发”，按 `references/single-image-vs-carousel.md` 创建一图一 Pin，不要按 SKU 合并成轮播。
   - 若用户明确说“这几张是一组 / 做成轮播 / carousel”，再按组创建轮播任务。
 - 用户要求建立/调整 Pinterest 发布计划、内容配比、Board 路由、排期节奏或“队列库存不足提醒”。此时按 `references/pinterest-publishing-cadence-and-inventory.md`：默认每天 3 条（1 条汉字解释 + 2 条商品/礼物图），并用 3 天安全库存阈值提醒补素材。
-- 用户要求修改 Pinterest/FuBlessings 自动发布相关 skill 或工具代码：代码上游统一使用 `https://github.com/easyaitech/etsy-skills`，不要再使用旧仓库 `easyaitech/Pinterest-autopin`。代码改动必须从 `origin/main` 新建 `codex/hermes-<short-task>` 分支、开 PR，runtime 等 PR 合并后再通过 `install.sh` 从 main/tag 更新。
+- 用户要求修改 Pinterest/FuBlessings 自动发布相关 skill 或工具代码：skill / 运营约定层改动统一使用 `https://github.com/easyaitech/etsy-skills`。如果涉及底层 `Pinterest-autopin` 工具代码，先用 `etsy-stack pinterest-tool status` 和工具目录 `git remote -v` 核实真实来源、版本与分支；不要根据旧文档猜仓库。代码改动必须从 `origin/main` 新建 `codex/hermes-<short-task>` 分支、开 PR，runtime 等 PR 合并后再通过 `install.sh` 从 main/tag 更新。
 
 ## 图片组默认工作流
 
@@ -61,8 +59,6 @@ depends-on: [pinterest-autopin]
 - 2–5 张图 → 默认一条 `轮播` Pin，仅适用于用户表达为同一组图片时。
 - 如果用户明确说“每张都发 / 以单图形式 / 不要组合 / 不要轮播”，即使是同一批上传，也必须拆成一图一 Pin。
 - 同一组图片不要拆成多条任务，除非用户明确要求单图发布。
-- 只有用户明确说“发布 / 发掉 / final publish”时，才执行真实发布。
-
 - 只有用户明确说“发布 / 发掉 / final publish”时，才执行真实发布。
 
 ## 入队步骤

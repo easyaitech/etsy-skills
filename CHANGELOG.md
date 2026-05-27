@@ -16,6 +16,7 @@
 - `trend-radar`：新增 Pinterest Trends 月度热词来源 `pinterest-trends` 和 `pinterest-chinese`。两个来源都采集 `trendsPreset=1` 的 monthly keywords，`pinterest-chinese` 额外带 `keywordsToInclude=chinese` 并只保留包含 `chinese` 的关键词，避免未登录通用预览污染结果；沿用现有 JSON 输出合同、截图和 HTML evidence，并新增 parser / URL 单元测试。
 - `trend-radar`：新增 eRank Trend Buzz 数据源 `erank-trend-buzz`，采集 Etsy / Last 30 Days 关键词并写入现有趋势 JSON 合同，供 `fit-report` 自动合并；免费态可能只有预览，完整列表可通过 `ERANK_TREND_BUZZ_PROFILE` / `ERANK_TREND_BUZZ_CDP_PORT` 复用已登录账号权限。
 - `trend-radar`：新增 `trend-fetch fit-report` 第二步，读取当天所有趋势源 JSON、四份基座文件和本地商品上下文缓存，输出按趋势词组织的 `fit-report.md/json`。报告只做人工判断（`可做 / 观察 / 不做`），不自动生成 Marketing Brief，不直连飞书 Base。
+- `fublessings-pinterest-operations`：新增 FuBlessings Pinterest 运营约定层，并纳入安装 manifest / README。安装后 Hermes 能加载图片组入队、单图/轮播、发布回写、失败重试和库存节奏规则。
 
 ### 修
 - `listing-catalog` / `pinterest-autopin`：补充商品 Base `分享链接` 字段，并要求商品型 Pinterest 发布使用该字段作为 `Link`，不再临时拼 Etsy listing URL；同步应用层架构图和 Base 命名约定。
@@ -27,6 +28,8 @@
 - `shared/preamble.md`：补充 Hermes cron 输出型报告的窄例外。用户在配置定时任务时确认固定输出目录后，cron 可追加新的时间戳报告 / JSON / raw evidence 文件；仍禁止覆盖旧报告或修改业务文件。
 - `install.sh`：移除 trend-radar 的 retired 集合；新增 trend-radar npm 依赖安装 + Playwright chromium 安装 + `trend-fetch` CLI 链接。
 - `README.md`：skill 表加 trend-radar 一行；仓库布局加 utility/input 层；运行环境加 node/npm；移除"趋势分析交给 CoWork"措辞。
+- `install.sh` / `etsy-stack`：支持嵌套 skill 路径软链，并阻止 `pinterest-tool update` 默认拉旧 `easyaitech/Pinterest-autopin` 仓库；必须先核实真实工具来源或显式设置 `PINTEREST_AUTOPIN_REPO`。
+- `fublessings-pinterest-operations`：清理损坏的触发条件标题和重复的 final publish guard，避免 skill prompt 误导发布流程。
 
 ## [0.4.0] - 2026-05-10
 

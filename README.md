@@ -34,7 +34,8 @@ bash install.sh
 | [`business-knowledge`](business-knowledge/SKILL.md) | 轻量业务知识库：每周材料 → raw / weekly / wiki markdown + Knowledge Cards Base + Marketing Brief |
 | [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：六文件夹物理层 + 索引 Base 语义层，含 `营销/`）+ 拍前 shoot brief 生成（模式 D） |
 | [`content-asset-pool`](content-asset-pool/SKILL.md) | 跨平台素材发布池：登记待发布图片/视频、生成发布副本、追踪 Pinterest / Instagram / 小红书 / TikTok / Etsy 发布任务 |
-| [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin) 工具发 pin |
+| [`pinterest-autopin`](pinterest-autopin/SKILL.md) | Pin Queue Base + 调用本地 Pinterest-autopin 工具发 pin（用 `etsy-stack pinterest-tool status/update` 管理） |
+| [`fublessings-pinterest-operations`](social-media/fublessings-pinterest-operations/SKILL.md) | FuBlessings Pinterest 日常运营约定层：图片组入队、单图/轮播规则、发布回写、失败重试和库存节奏 |
 | [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
 | [`video-assembly`](video-assembly/SKILL.md) | 从已标记的视频片段库批量装配短视频，输出 Hook / Body / Close 结构的社媒视频 |
 | [`trend-radar`](trend-radar/SKILL.md) | 每周自动采集 Google Trends / Pinterest Trends / eRank Trend Buzz 热词，并生成趋势 × 店铺/品牌/商品的 fit report 供人工判断 |
@@ -88,7 +89,7 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 - [larksuite/cli](https://github.com/larksuite/cli) + 已登录的飞书账号
 - `git` / `python3`（macOS 自带）
 - `node` / `npm`（trend-radar 需要）
-- 可选：[Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin)（用到 `pinterest-autopin` skill 时才装）
+- 可选：Pinterest-autopin 发布工具（用到 `pinterest-autopin` skill 时才装；更新前用 `etsy-stack pinterest-tool status` 核实真实工具来源）
 - 可选：[remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)（最终 listing 图片和社媒待发布图片才需要；必须安装在 Hermes Agent 实际运行的机器上，用 `etsy-stack ai-cleaner update` 安装）
 
 ## 自定义安装路径
@@ -100,6 +101,8 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 | `ETSY_STACK_BIN` | `~/.local/bin` |
 | `ETSY_SKILLS_REPO` | `https://github.com/easyaitech/etsy-skills.git` |
 | `ETSY_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v0.3.0`） |
+| `PINTEREST_AUTOPIN_HOME` | `~/code/etsy-skills/tools/Pinterest-autopin` |
+| `PINTEREST_AUTOPIN_REPO` | 空；安装或改源底层发布工具时必须显式指定 |
 
 ## 仓库布局
 
@@ -123,6 +126,7 @@ etsy-stack init [DIR]  # 在 DIR（默认 cwd）写 .etsy-workspace 标记
 ├── assets-library/            # ┘
 ├── content-asset-pool/        # ┐
 ├── pinterest-autopin/         # │ 应用层（Application）
+├── social-media/              # │ 垂直运营约定层
 ├── image-synth/               # │ 围绕基座层运行
 ├── video-assembly/            # ┘ 围绕基座层运行
 └── trend-radar/               #   Utility / Input 层（为基座层提供自动化数据输入）
