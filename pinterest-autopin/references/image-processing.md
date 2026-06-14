@@ -16,7 +16,7 @@
 | `jpegoptim` | JPEG 无损压缩（不 strip metadata） | `brew install jpegoptim` |
 | `optipng` | PNG 无损压缩（不 strip metadata） | `brew install optipng` |
 
-模式 A 安装阶段用 `which` 检查；缺 `remove-ai-watermarks` 时优先提示 `etsy-stack ai-cleaner update`。缺 `jpegoptim` / `optipng` 时提示 `brew install jpegoptim optipng`。
+模式 A 安装阶段用 `which` 检查；缺 `remove-ai-watermarks` 时优先提示 `etsy-stack ai-cleaner update`。在 ETSY profile 下，`etsy-stack ai-cleaner update` 可能把可执行文件安装到 `/Users/songchou/.hermes/profiles/etsy-fublessings/home/.local/bin/remove-ai-watermarks`，但该目录不在当前 PATH，导致 `etsy-stack ai-cleaner status` 仍显示未安装；此时可直接用该绝对路径执行 metadata 检查/清理。缺 `jpegoptim` / `optipng` 时提示 `brew install jpegoptim optipng`。
 
 ---
 

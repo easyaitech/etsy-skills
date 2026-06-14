@@ -9,9 +9,9 @@
       "altText": "Objective description of image 2 (English, ≤ 500 chars)."
     }
   ],
-  "title": "Pin title (English, ≤ 100 chars)",
+  "title": "Pin title (English, ≤ 100 chars). Must include a high-intent scene/person/occasion keyword, e.g. Chinese New Year Gift for Parents — 岁岁平安 Calligraphy",
   "board": "Exact Pinterest Board Name",
-  "link": "https://www.etsy.com/shop/{shop}/listing/{listing_id}",
-  "description": "Pin description (English, 200-500 chars). Last line can carry 2-3 hashtags. #slowliving #handmadeceramics #teaceremony",
+  "link": "Product Base 分享链接 for product pins, or https://fublessings.com for brand education pins",
+  "description": "Pin description (English, 200-500 chars, ideally 35-55 words). Start from occasion/person/gift meaning, not a definition. End with 3-5 scene/person/value/product hashtags, e.g. #ChineseNewYearGift #GiftForParents #MeaningfulGift #ChineseCalligraphy",
   "chromeProfile": "/Users/{username}/.config/pinterest-autopin/chrome-profile"
 }

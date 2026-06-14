@@ -81,11 +81,11 @@ weekly sources
 5. 读 [`references/weekly-template.md`](references/weekly-template.md)，生成 `<workspace>/knowledge/weekly/YYYY-WW.md`。
 6. 读 [`references/wiki-style.md`](references/wiki-style.md)，对相关 `<workspace>/knowledge/wiki/*.md` 做 append / merge 草稿；不要整页重写。
 7. 读 [`references/card-extraction-rules.md`](references/card-extraction-rules.md)，抽取 5-10 张候选 Knowledge Cards。
-8. 向用户展示候选卡片，要求用户选择：保留 / 改一下 / 丢弃。
-9. 对 workspace 文件使用 §批量写入预览，一次展示所有拟写入或修改的路径和完整内容，等用户确认后落盘。
-10. 对用户批准的卡片，写入 `{店铺名}-知识卡片` Base。
+8. 对“客观存在的趋势 / 来源事实 / 可审计观察”可自动沉淀：生成候选卡片后，直接写入 workspace knowledge markdown，并写入 `{店铺名}-知识卡片` Base，卡片内必须保留来源、日期、适用场景、禁用场景和证据边界。
+9. 对“需要行动 / 落地执行”的事项必须人工确认：例如修改商品 Base、Pin Queue、Listing、素材生产、发布、SEO 改动、采购或库存动作；这些只写入报告的「建议动作 / 待确认」部分，不自动执行。
+10. 如果来源事实和行动建议混在一起：事实卡自动入库；行动项作为建议输出给用户确认。
 
-默认最多写入 10 张卡片。超过 10 张时先让用户挑，不要自动全收。
+默认最多自动写入 10 张客观趋势 / 洞察卡片。超过 10 张时先生成本周 weekly markdown，并在最终回复中要求用户选择哪些追加入 Base。
 
 ---
 
