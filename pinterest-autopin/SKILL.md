@@ -168,7 +168,10 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **Pin Queue 写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘
 - **final 发布前必须经过 test**：除非用户明确豁免
 - **Pinterest-autopin 跑挂了不重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入（盲目重试可能被 Pinterest 风控）
+- **自动发布 cron 要做过期 backlog 恢复**：每次运行发布脚本前，先检查 `待发` / `草稿`、`pin_url` 为空、`重试次数 < 2` 的记录；如果 Hermes/cron 中断导致多条记录已过期，保留最早一条立即发布，把其余过期记录顺延到现有未来队列之后的北美友好档位，避免恢复后连续发布旧 backlog。当前默认内容配比为每天 1 条汉字解释 + 1 条商品/礼物图片；商品图片按 1 条/天规划，不要再按 2 条/天消耗。不要重启 `失败` 或已发记录。
+- **Pinterest 库存提醒必须分库存独立触发**：文字科普/汉字解释库存、商品图片/礼物场景库存是两个不同库存；各自按 3 天阈值独立提醒，不用“总待发/草稿”合并判断，也不要把两类缺货混成一条泛化库存提醒。
 - **轮播 pin 不要拆成多个单图 pin 发**：轮播是一个 pin 对象，必须整体发布
+- **Ads Manager Board 选中判定只信任 dropdown selected 值**：Board 下拉打开时列表里出现目标 Board 名，不代表已选中；必须看右侧 `[data-test-id="board-dropdown-select-button"]` / `[data-test-id="board-dropdown-item-selected"]` 的文本。若选中后页面仍残留“必须要有图板”旧提示，但发布按钮可用，可视为旧草稿残留，不要因为 body 文本残留而回滚。
 - **不要用 `关联素材` 的返回顺序作为发布顺序**：飞书关联字段只做追溯，真正顺序永远来自 `image 路径` 的行顺序
 
 ---

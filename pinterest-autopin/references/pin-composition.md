@@ -60,60 +60,93 @@
 - 不要 ALL CAPS
 - 不要堆 hashtag（hashtag 在 description 里放）
 - 第一个词承担最强 SEO（Pinterest 搜索权重前置）
+- **必须包含至少 1 个高意图场景 / 人群 / 节日关键词**，不能只客观说明“这是什么”
 
 **风格约束**：
 - 严格遵守 BRAND.md § 文案语调（"应该说" / "避免说" / "原则"）
 - 优先用 SKU 标题里已经验证过的关键词（商品 Base `SEO 关键词` 字段是源头）
-- Pinterest 用户搜索习惯偏"场景词 + 物品词"（"morning slow tea cup"），不偏"参数词"（"260ml ceramic mug"）——所以即便 listing title 偏参数化，pin title 要往场景化转
+- Pinterest 用户搜索习惯偏"场景词 + 物品词" / "对象词 + gift idea"，不偏"参数词"——所以即便 listing title 偏参数化，pin title 要往**礼物搜索意图**转
+- FuBlessings 的 title 默认使用这 4 类高意图词组合：
+  1. **使用场景**：Chinese New Year / birthday / graduation / new job / housewarming / wedding / anniversary / meditation space / reading gift
+  2. **适合对象**：gift for mom / dad / parents / grandparents / mentor / teacher / book lover / friend / coworker / Chinese culture lover
+  3. **礼物价值**：meaningful gift / thoughtful gift / personalized gift / keepsake / blessing gift / cultural gift
+  4. **核心物品或文字**：Chinese calligraphy bookmark / hand-brushed calligraphy / Chinese blessing / character meaning
 
-**模板**（仅作起点，不要硬套）：
+**模板**（必须优先场景化，不要硬套）：
 
 ```
-{场景词} {核心物品词} — {一行风格补充}
+{对象/节日/人生节点} Gift — {核心物品/文字} with {情感含义}
+{使用场景} {核心物品词} for {收礼人/关系}
+{中文词/短语} Meaning — a {场景/对象} Chinese Calligraphy Gift
 ```
 
 例：
 ```
-Morning Mist Tea Cup — handmade ceramic for slow mornings
-Hand-thrown matcha bowl for quiet rituals
+Chinese New Year Gift for Parents — 岁岁平安 Calligraphy
+Book Lover Gift — Personalized Chinese Calligraphy Bookmark
+Graduation Gift with Meaning — 万事如意 Chinese Blessing
 ```
 
-**反例**（违反 BRAND 文案语调时常见）：
-- ❌ `BEST Handmade Ceramic Mug! Buy Now!!! 🔥🔥🔥`（堆叹号、ALL CAPS、堆 emoji——多数 BRAND 都禁）
+**反例**（现在必须避免）：
+- ❌ `The Meaning of 伟 in Chinese Calligraphy`（只说明是什么，缺少搜索场景和收礼人）
+- ❌ `Personalized Chinese Calligraphy Bookmark Gift Set`（太泛，缺少 book lover / teacher / graduation 等场景）
 - ❌ `260ml Stoneware Mug, Glazed, Microwave Safe`（堆参数，不是 Pinterest 风格）
+- ❌ `BEST Handmade Ceramic Mug! Buy Now!!! 🔥🔥🔥`（堆叹号、ALL CAPS、堆 emoji）
 
 轮播 pin 的 title 描述整组图片的主题，不要只描述第一张。
 
 ### 4. Description (EN)
 
 **硬性约束**：
-- 200-500 字符（Pinterest 推荐区间，超过 500 会被截尾）
+- 200-500 字符（Pinterest 推荐区间，超过 500 会被截尾）；如 MARKETING_PLATFORM 要求 ≤50 词，则优先压到 35-55 词
 - 英文
-- 末尾可以放 2-3 个 hashtag（Pinterest hashtag 弱搜索权重，主要做语义聚类——`#slowliving #handmadeceramics #teaceremony`）
+- 末尾可以放 3-5 个 hashtag / 关键词标签，必须覆盖场景、人群、礼物价值，不只放泛词
 - **不要重复 SHOP.md 政策**（处理时间 / 退换货 / 运输）——pin 不是 listing 页，政策放在 link 那边的 listing 描述里就够了
+- **必须通过“三问检查”**：这条 Pin 适合什么节日/人生节点？适合送给谁？作为礼物表达什么含义？三项至少写进 2 项，优先写满 3 项
 
 **风格约束**：
 - 严格遵守 BRAND.md § 文案语调
-- 一段叙述（不要分点），有节奏，可以用一个具体使用场景做钩子
-- 不要叫卖式 CTA（"Shop now!" "Don't miss out!"）——Pinterest 用户讨厌这个；如要引导可以用更软的（"See more in the linked shop."）
+- 一段叙述（不要分点），有节奏；第一句从使用场景或收礼人进入，不要先下定义
+- 不要叫卖式 CTA（"Shop now!" "Don't miss out!"）——Pinterest 用户讨厌这个；如要引导可以用更软的（"Choose a word that holds your wish."）
+- 文字解释要服务送礼含义，不写百科：少讲“它是什么”，多讲“它为什么适合这个人 / 这个时刻”
+
+**关键词组装清单**：写 description 前先在草稿里选词，不要全部堆进正文。
+
+| 类别 | 可选词 |
+|---|---|
+| 节日/节点 | Chinese New Year, birthday, graduation, new job, promotion, retirement, housewarming, wedding, anniversary, Mother’s Day, Father’s Day |
+| 收礼人 | mom, dad, parents, grandparents, mentor, teacher, book lover, friend, coworker, newlyweds, someone starting a new chapter |
+| 礼物含义 | peace year after year, blessing, steady love, courage, gratitude, resilience, harmony, a wish carried by hand-brushed words |
+| 产品/文化 | Chinese calligraphy gift, hand-brushed calligraphy, personalized bookmark, Chinese blessing, meaningful cultural gift, keepsake |
 
 **模板**（仅作起点）：
 
 ```
-{一两句场景钩子}. {产品的一两个细节，呼应 BRAND 视觉/工艺原则}. {引导句，可省}.
+For {收礼人} on {节日/人生节点}, this {物品/文字} carries {含义}. Hand-brushed Chinese calligraphy turns the phrase into a keepsake for {具体场景/关系}.
 
-{hashtag1} {hashtag2} {hashtag3}
+#{场景tag} #{对象tag} #{礼物tag} #{文化tag}
 ```
 
 例：
 
 ```
-A small ceramic cup for the quiet first sip of the day. Wheel-thrown by hand, glazed in a sage I mixed last spring — every cup carries a slightly different shade. See the full collection in the linked shop.
+For parents at Chinese New Year or a milestone birthday, 岁岁平安 carries a wish for peace year after year. Hand-brushed Chinese calligraphy turns that blessing into a quiet keepsake for family, elders, and anyone you want to protect with words.
 
-#slowliving #handmadeceramics #teaceremony
+#ChineseNewYearGift #GiftForParents #ChineseCalligraphy #MeaningfulGift
 ```
 
-轮播 pin 的 description 可以提及"swipe to see more"或"see the details up close"来引导用户左右滑动，但不要太生硬。
+轮播 pin 的 description 可以提及"swipe to see more"或"see the meaning unfold"来引导用户左右滑动，但不要太生硬。
+
+### 4.5 Hashtag / Tag 规则
+
+Pinterest 没有独立 tag 字段时，tag 写入 description 末尾；有独立 tag 字段时同一套关键词也要同步。每条 Pin 至少 4 个，最多 6 个：
+
+1. 场景 tag：`#ChineseNewYearGift` / `#GraduationGift` / `#HousewarmingGift` / `#AnniversaryGift` / `#BookLoverGift`
+2. 对象 tag：`#GiftForMom` / `#GiftForDad` / `#GiftForParents` / `#TeacherGift` / `#MentorGift`
+3. 礼物价值 tag：`#MeaningfulGift` / `#PersonalizedGift` / `#ThoughtfulGift` / `#KeepsakeGift`
+4. 文化/产品 tag：`#ChineseCalligraphy` / `#ChineseBlessing` / `#CalligraphyGift` / `#PersonalizedBookmark`
+
+不要只用 `#chinesecalligraphy #chinesecharacters #meaningfulgift` 这种小词/泛词组合；必须加场景与收礼人。
 
 ### 5. Alt Text (EN)——每图独立
 
