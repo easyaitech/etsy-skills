@@ -1,0 +1,630 @@
+From a5ccaec4ea8b60888cf6281c274aa7075c0871fa Mon Sep 17 00:00:00 2001
+From: song chou <songchou@songdeMac-mini.local>
+Date: Mon, 15 Jun 2026 17:16:05 +0800
+Subject: [PATCH] feat: support Pinterest video pins
+
+---
+ README.md                           |  20 ++++--
+ examples/video-request.json         |  12 ++++
+ pinterest_autopin/worker.py         |  28 +++++++-
+ publish_playwright.js               |  87 ++++++++++++++++--------
+ tests/test_pinterest_publish_pin.py |  53 +++++++++++++++
+ tests/test_worker_publish.py        |  41 +++++++++++
+ tools/pinterest_publish_pin.py      | 101 ++++++++++++++++++++++------
+ 7 files changed, 286 insertions(+), 56 deletions(-)
+ create mode 100644 examples/video-request.json
+
+diff --git a/README.md b/README.md
+index 843c1ef..71ab609 100644
+--- a/README.md
++++ b/README.md
+@@ -214,7 +214,7 @@ python3 tools/feishu_pinterest_worker.py publish \
+ ```
+ 
+ Do not ask for image path, Pin title, Board, link, description, or alt text at this stage.
+-Only collect `images`, `title`, `board`, `link`, and `description` when you are intentionally running a one-off `test` or `final` publish flow. For legacy single-image requests, `image` plus `altText` is still accepted.
++Only collect `images` or `video`, `title`, `board`, `link`, and `description` when you are intentionally running a one-off `test` or `final` publish flow. For legacy single-image requests, `image` plus `altText` is still accepted. For legacy video requests, `video` plus `altText` is accepted.
+ 
+ Publish for real:
+ 
+@@ -247,7 +247,6 @@ npm run pin:publish -- --input examples/request.json
+ ```
+ 
+ The legacy single-image shape is still accepted:
+-
+ ```json
+ {
+   "image": "/absolute/path/to/image.jpg",
+@@ -255,6 +254,18 @@ The legacy single-image shape is still accepted:
+ }
+ ```
+ 
++Video Pins use `mediaType: "video"` and a single `.mp4`, `.mov`, or `.m4v` file:
++```json
++{
++  "mediaType": "video",
++  "video": {"path": "/absolute/path/to/video.mp4", "altText": "Accessible video description"},
++  "title": "Your video pin title",
++  "board": "Board Name",
++  "link": "https://example.com",
++  "description": "Video Pin description"
++}
++```
++
+ Optional custom profile override:
+ 
+ ```json
+@@ -281,6 +292,7 @@ The Python tool prints JSON to stdout. On success, it includes:
+ - `--mode test` opens the Pinterest creation page and fills the form, but does not publish.
+ - `board` is required in `test` and `final` mode. There is no silent default board.
+ - `images` must contain 1-5 absolute image paths. Use 2-5 images for a Pinterest carousel. The legacy `image` field is wrapped into a single-item `images` array.
++- Video Pins use `mediaType: "video"` plus a single `video.path` absolute path ending in `.mp4`, `.mov`, or `.m4v`. Video Pins cannot include `images[]`.
+ - `link`, when present, must be an absolute `http` or `https` URL.
+ - `creationUrl` is optional and defaults to `https://www.pinterest.com/pin-creation-tool/`. Use `https://jp.pinterest.com/pin-creation-tool/` for the localized storyboard creation UI.
+ - Carousel Pins require a Pinterest business account. When `images[]` has 2-5 items, the Playwright publisher automatically uses Ads Manager's Pin builder (`https://ads.pinterest.com/ads/create/`) and creates a carousel Pin there. It publishes the Pin from the builder, but it does not publish the surrounding ad campaign draft.
+@@ -295,7 +307,7 @@ The Python tool prints JSON to stdout. On success, it includes:
+ 
+ ## Example request
+ 
+-See `examples/request.json`.
++See `examples/request.json` for image/carousel Pins and `examples/video-request.json` for video Pins.
+ 
+ ## Hermes Skill
+ 
+@@ -440,7 +452,7 @@ Official `lark-cli` uses:
+ `prepare` and `publish` require either an atomic Feishu compare-update lock or explicit `hermes_singleton` lock modes. If the CLI does not expose atomic compare-update and singleton mode is not configured, the worker refuses to mutate rows instead of using a non-atomic fallback.
+ For official `lark-cli`, use `hermes_singleton` only after the Hermes schedules are configured with max concurrency 1.
+ 
+-`prepare` claims ready rows, requires each Pin to link to a complete Products row, downloads `source_image`, generates higher-intent Pinterest draft fields, uploads `processed_image`, and moves rows to human review. `publish` also reads the linked Products row so the Etsy URL and product facts come from the product source of truth, then downloads the approved `final_image` attachment(s) into the run temp directory before calling the Pinterest publisher. If `final_image` has multiple attachments, publish sends them as a carousel `images[]` request.
++`prepare` claims ready rows, requires each Pin to link to a complete Products row, downloads `source_image`, generates higher-intent Pinterest draft fields, uploads `processed_image`, and moves rows to human review. `publish` also reads the linked Products row so the Etsy URL and product facts come from the product source of truth, then downloads the approved `final_image` attachment(s) into the run temp directory before calling the Pinterest publisher. If `final_image` has multiple attachments, publish sends them as a carousel `images[]` request. For video Pins, set `media_type` to `video` and provide one `final_video` attachment or `final_video_path`; publish sends it as a `mediaType: video` request.
+ 
+ The worker keeps all output in the existing draft fields; no extra Feishu fields are required. Draft generation now does five things:
+ 
+diff --git a/examples/video-request.json b/examples/video-request.json
+new file mode 100644
+index 0000000..f69cfd1
+--- /dev/null
++++ b/examples/video-request.json
+@@ -0,0 +1,12 @@
++{
++  "mediaType": "video",
++  "video": {
++    "path": "/absolute/path/to/video.mp4",
++    "altText": "Example accessible video description."
++  },
++  "title": "Example Video Pin Title",
++  "board": "Example Board",
++  "link": "https://example.com/product",
++  "description": "Example Video Pin description for local validation.",
++  "creationUrl": "https://jp.pinterest.com/pin-creation-tool/"
++}
+diff --git a/pinterest_autopin/worker.py b/pinterest_autopin/worker.py
+index d9f95c5..397a711 100644
+--- a/pinterest_autopin/worker.py
++++ b/pinterest_autopin/worker.py
+@@ -437,6 +437,11 @@ class FeishuPinterestWorker:
+         raise WorkerError("source_image attachment is required before prepare")
+ 
+     def _publisher_request(self, record_id: str, fields: Mapping[str, Any]) -> dict[str, Any]:
++        if _is_video_pin(fields):
++            video_path = self._publish_video(record_id, fields)
++            product_fields = self._linked_product_fields(fields)
++            merged_fields = _merge_pin_product_fields(fields, product_fields)
++            return _publisher_request(merged_fields, [video_path], media_type="video")
+         image_paths = self._publish_images(record_id, fields)
+         product_fields = self._linked_product_fields(fields)
+         merged_fields = _merge_pin_product_fields(fields, product_fields)
+@@ -462,6 +467,15 @@ class FeishuPinterestWorker:
+             return paths
+         raise WorkerError("final_image attachment is required before publish")
+ 
++    def _publish_video(self, record_id: str, fields: Mapping[str, Any]) -> str:
++        ref = _attachment_ref(fields.get("final_video"))
++        if ref:
++            return self._download_attachment(record_id, ref, "final-videos")
++        paths = _path_values(fields.get("final_video_path"))
++        if paths:
++            return paths[0]
++        raise WorkerError("final_video attachment is required before publishing a video Pin")
++
+     def _download_attachment(self, record_id: str, ref: AttachmentRef, subdir: str, *, suffix: str = "") -> str:
+         download = getattr(self.store, "download_attachment", None)
+         if not callable(download):
+@@ -618,19 +632,27 @@ def _merge_pin_product_fields(pin_fields: Mapping[str, Any], product_fields: Map
+     return merged
+ 
+ 
+-def _publisher_request(fields: Mapping[str, Any], image_paths: Sequence[str]) -> dict[str, Any]:
++def _is_video_pin(fields: Mapping[str, Any]) -> bool:
++    media_type = str(fields.get("media_type") or fields.get("mediaType") or "").strip().lower()
++    return media_type == "video" or bool(_attachment_ref(fields.get("final_video")) or _path_values(fields.get("final_video_path")))
++
++
++def _publisher_request(fields: Mapping[str, Any], image_paths: Sequence[str], *, media_type: str = "image") -> dict[str, Any]:
+     description = str(fields.get("final_description") or fields.get("draft_description") or "")
+     tags = str(fields.get("final_tags") or fields.get("draft_tags") or "").strip()
+     if tags:
+         description = f"{description}\n\n{tags}".strip()
+     alt_texts = _alt_text_values(fields.get("final_alt_text") or fields.get("draft_alt_text"), len(image_paths))
+-    request = {
++    request: dict[str, Any] = {
+         "title": str(fields.get("final_title") or fields.get("draft_title") or ""),
+         "board": str(fields.get("final_board") or fields.get("pinterest_board") or ""),
+         "link": str(fields.get("product_link") or ""),
+         "description": description,
+     }
+-    if len(image_paths) == 1:
++    if media_type == "video":
++        request["mediaType"] = "video"
++        request["video"] = {"path": image_paths[0], "altText": alt_texts[0] if alt_texts else ""}
++    elif len(image_paths) == 1:
+         request["image"] = image_paths[0]
+         request["altText"] = alt_texts[0] if alt_texts else ""
+     else:
+diff --git a/publish_playwright.js b/publish_playwright.js
+index f14ba68..7de8c8a 100755
+--- a/publish_playwright.js
++++ b/publish_playwright.js
+@@ -1103,26 +1103,34 @@ async function publishCarouselViaAdsManager(page, context, options) {
+ }
+ 
+ async function publishPin(options) {
+-  const { images = [], title, board, link, description, chromeProfile, creationUrl = DEFAULT_PIN_CREATION_URL } = options;
++  const { images = [], video = null, mediaType = '', title, board, link, description, chromeProfile, creationUrl = DEFAULT_PIN_CREATION_URL } = options;
++  const resolvedVideo = video && video.path ? { path: video.path, altText: video.altText || '' } : null;
++  const isVideo = String(mediaType || '').toLowerCase() === 'video' || Boolean(resolvedVideo);
+   // Backward compat: flat image/altText → images array
+-  const resolvedImages = images.length > 0
+-    ? images
+-    : (options.image ? [{ path: options.image, altText: options.altText || '' }] : []);
++  const resolvedImages = isVideo
++    ? []
++    : (images.length > 0
++      ? images
++      : (options.image ? [{ path: options.image, altText: options.altText || '' }] : []));
+   const isCarousel = resolvedImages.length > 1;
+   const effectiveCreationUrl = creationUrlForMode(creationUrl, isCarousel);
+   let browserSession;
+ 
+   console.log('='.repeat(60));
+-  console.log(`Pinterest AutoPin - Playwright${isCarousel ? ` (Carousel: ${resolvedImages.length} images)` : ''}`);
++  console.log(`Pinterest AutoPin - Playwright${isVideo ? ' (Video)' : isCarousel ? ` (Carousel: ${resolvedImages.length} images)` : ''}`);
+   console.log('='.repeat(60));
+ 
+-  for (const img of resolvedImages) {
+-    if (!fs.existsSync(img.path)) {
+-      throw new Error(`图片不存在: ${img.path}`);
++  if (isVideo && !resolvedVideo) {
++    throw new Error('视频 Pin 缺少 video.path');
++  }
++  const mediaItems = isVideo ? [resolvedVideo] : resolvedImages;
++  for (const item of mediaItems) {
++    if (!fs.existsSync(item.path)) {
++      throw new Error(`${isVideo ? '视频' : '图片'}不存在: ${item.path}`);
+     }
+   }
+ 
+-  logInfo(`图片: ${resolvedImages.map(img => path.basename(img.path)).join(', ')}`);
++  logInfo(`${isVideo ? '视频' : '图片'}: ${mediaItems.map(item => path.basename(item.path)).join(', ')}`);
+   logInfo(`标题: ${title}`);
+   logInfo(`链接: ${link || '(无)'}`);
+ 
+@@ -1131,10 +1139,12 @@ async function publishPin(options) {
+   }
+ 
+   // 压缩图片
+-  const compressedImages = resolvedImages.map(img => ({
+-    ...img,
+-    compressedPath: compressImage(img.path, 2000)
+-  }));
++  const compressedImages = isVideo
++    ? []
++    : resolvedImages.map(img => ({
++      ...img,
++      compressedPath: compressImage(img.path, 2000)
++    }));
+   
+   logInfo(`🔗 打开 Chrome...`);
+   
+@@ -1187,9 +1197,9 @@ async function publishPin(options) {
+       return result;
+     }
+ 
+-    // 步骤 1: 上传图片
+-    const filePaths = compressedImages.map(img => img.compressedPath);
+-    logInfo(`\n📤 步骤 1: 上传图片 (${filePaths.length} 张)...`);
++    // 步骤 1: 上传媒体
++    const filePaths = isVideo ? [resolvedVideo.path] : compressedImages.map(img => img.compressedPath);
++    logInfo(`\n📤 步骤 1: 上传${isVideo ? '视频' : '图片'} (${filePaths.length} 个文件)...`);
+ 
+     // 先尝试清除已上传的图片（如果有）
+     let uploadSuccess = false;
+@@ -1215,14 +1225,16 @@ async function publishPin(options) {
+       if (fileInput) {
+         await fileInput.setInputFiles(filePaths);
+         logInfo(`✅ 文件已选择: ${filePaths.map(f => path.basename(f)).join(', ')}`);
+-        await randomDelay(isCarousel ? 5 : 3);
++        await randomDelay(isVideo ? 8 : isCarousel ? 5 : 3);
+ 
+-        const newImage = await page.$(
+-          'img[src^="blob:"], img[data-test-id="pin-image"], [data-test-id="story-pin-image-block"] img, [data-test-id*="image"] img, img[src*="pinimg.com"]'
++        const newMedia = await page.$(
++          isVideo
++            ? 'video, [data-test-id*="video"], [data-test-id*="story-pin"] video, [data-test-id*="media"] video'
++            : 'img[src^="blob:"], img[data-test-id="pin-image"], [data-test-id="story-pin-image-block"] img, [data-test-id*="image"] img, img[src*="pinimg.com"]'
+         );
+-        if (newImage) {
++        if (newMedia) {
+           uploadSuccess = true;
+-          logInfo(`✅ 图片上传成功${isCarousel ? ` (轮播 ${filePaths.length} 张)` : ''}`);
++          logInfo(`✅ ${isVideo ? '视频' : '图片'}上传成功${isCarousel ? ` (轮播 ${filePaths.length} 张)` : ''}`);
+         }
+       } else {
+         logWarn('⚠️ 未找到文件上传 input，尝试点击上传区域...');
+@@ -1544,7 +1556,7 @@ async function publishPin(options) {
+     }
+ 
+     // 步骤 6: 添加 Alt Text
+-    const altItems = compressedImages
++    const altItems = (isVideo ? [resolvedVideo] : compressedImages)
+       .map((img, index) => ({ index, value: String(img.altText || '').trim() }))
+       .filter(item => item.value);
+     if (altItems.length > 0) {
+@@ -1770,7 +1782,9 @@ async function publishPin(options) {
+     const result = {
+       ok: true,
+       mode: FINAL_MODE ? 'final' : TEST_MODE ? 'test' : 'interactive',
+-      images: resolvedImages.map(img => img.path),
++      images: isVideo ? [] : resolvedImages.map(img => img.path),
++      video: isVideo ? resolvedVideo.path : '',
++      mediaType: isVideo ? 'video' : 'image',
+       isCarousel,
+       title,
+       board,
+@@ -1849,8 +1863,10 @@ if (FINAL_MODE) {
+ }
+ 
+ // 从 JSON 或命令行参数获取 pin 数据
+-// images[] array (new format) or flat image/altText (backward compat)
++// images[] array (new format), video object, or flat image/video (backward compat)
+ let images = [];
++let video = null;
++const mediaType = String(pinData?.mediaType || pinData?.media_type || '').trim().toLowerCase();
+ if (Array.isArray(pinData?.images) && pinData.images.length > 0) {
+   images = pinData.images.map(img => ({
+     path: String(img.path || ''),
+@@ -1863,6 +1879,17 @@ if (Array.isArray(pinData?.images) && pinData.images.length > 0) {
+     images = [{ path: flatImage, altText: flatAltText }];
+   }
+ }
++if (pinData?.video && typeof pinData.video === 'object') {
++  video = {
++    path: String(pinData.video.path || ''),
++    altText: String(pinData.video.altText || pinData.video.alt_text || '')
++  };
++} else if (pinData?.video || args.video) {
++  video = {
++    path: String(pinData?.video || args.video || ''),
++    altText: String(pinData?.altText || pinData?.alt_text || args['alt-text'] || '')
++  };
++}
+ const title = pinData?.title || args.title;
+ const board = pinData?.board || args.board || '';
+ const link = pinData?.link || args.link || '';
+@@ -1894,15 +1921,17 @@ if (CHECK_LOGIN_MODE) {
+     });
+     process.exit(1);
+   });
+-} else if (!images.length || !title) {
+-  logError('缺少参数: --image (或 images[]), --title');
++} else if ((!images.length && !(video && video.path)) || !title) {
++  logError('缺少参数: --image/--video (或 images[]/video), --title');
+   console.log('\n用法:');
+   console.log('  命令行: node publish_playwright.js --image <图片> --title <标题> --description <描述> --final');
++  console.log('  命令行: node publish_playwright.js --video <视频> --title <标题> --description <描述> --final');
+   console.log('  JSON文件: node publish_playwright.js --input <json文件> --final');
+   writeStructuredResult(RESULT_JSON_PATH, {
+     ok: false,
+-    error: '缺少参数: images/image, title',
++    error: '缺少参数: images/image/video, title',
+     images,
++    video,
+     title,
+     completedAt: new Date().toISOString()
+   });
+@@ -1913,6 +1942,7 @@ if (CHECK_LOGIN_MODE) {
+     ok: false,
+     error: '测试模式和发布模式必须提供 board',
+     images,
++    video,
+     title,
+     board,
+     link,
+@@ -1922,6 +1952,8 @@ if (CHECK_LOGIN_MODE) {
+ } else {
+   publishPin({
+     images,
++    video,
++    mediaType,
+     title,
+     board,
+     link,
+@@ -1936,6 +1968,7 @@ if (CHECK_LOGIN_MODE) {
+       code: err.code || '',
+       details: err.details || null,
+       images,
++      video,
+       title,
+       board,
+       link,
+diff --git a/tests/test_pinterest_publish_pin.py b/tests/test_pinterest_publish_pin.py
+index 8ae2a47..1e8775a 100644
+--- a/tests/test_pinterest_publish_pin.py
++++ b/tests/test_pinterest_publish_pin.py
+@@ -48,6 +48,13 @@ class PinterestPublishPinValidationTest(unittest.TestCase):
+         self.addCleanup(lambda: Path(image.name).unlink(missing_ok=True))
+         return image.name
+ 
++    def make_video(self, suffix: str = ".mp4") -> str:
++        video = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
++        video.write(b"not a real video, but validate only checks path existence")
++        video.close()
++        self.addCleanup(lambda: Path(video.name).unlink(missing_ok=True))
++        return video.name
++
+     def valid_payload(self) -> dict:
+         return {
+             "images": [{"path": self.make_image(), "altText": "Alt text"}],
+@@ -140,6 +147,52 @@ class PinterestPublishPinValidationTest(unittest.TestCase):
+ 
+         self.assertEqual([{"path": image, "altText": "Legacy alt"}], payload["images"])
+ 
++    def test_normalize_payload_accepts_flat_video_pin(self) -> None:
++        video = self.make_video()
++        payload = pinterest_publish_pin.normalize_payload(
++            {"video": video, "altText": "Packing process"}, self.args()
++        )
++
++        self.assertEqual("video", payload["mediaType"])
++        self.assertEqual({"path": video, "altText": "Packing process"}, payload["video"])
++        self.assertEqual([], payload["images"])
++
++    def test_video_payload_passes_validate_mode(self) -> None:
++        payload = self.valid_payload()
++        payload["mediaType"] = "video"
++        payload["images"] = []
++        payload["video"] = {"path": self.make_video(), "altText": "Studio packing video"}
++
++        errors, warnings = pinterest_publish_pin.validate_payload(
++            payload, fake_checks(), "validate"
++        )
++
++        self.assertEqual([], errors)
++        self.assertEqual([], warnings)
++
++    def test_video_path_must_be_supported_video_extension(self) -> None:
++        payload = self.valid_payload()
++        payload["mediaType"] = "video"
++        payload["images"] = []
++        payload["video"] = {"path": self.make_video(".txt"), "altText": ""}
++
++        errors, _warnings = pinterest_publish_pin.validate_payload(
++            payload, fake_checks(), "validate"
++        )
++
++        self.assertIn("video.path must be .mp4, .mov, or .m4v", errors)
++
++    def test_video_payload_rejects_images_at_same_time(self) -> None:
++        payload = self.valid_payload()
++        payload["mediaType"] = "video"
++        payload["video"] = {"path": self.make_video(), "altText": ""}
++
++        errors, _warnings = pinterest_publish_pin.validate_payload(
++            payload, fake_checks(), "validate"
++        )
++
++        self.assertIn("video Pins cannot include images[]", errors)
++
+     def test_link_must_be_absolute_http_url(self) -> None:
+         payload = self.valid_payload()
+         payload["link"] = "example.com/product"
+diff --git a/tests/test_worker_publish.py b/tests/test_worker_publish.py
+index ce95ad3..df58a9a 100644
+--- a/tests/test_worker_publish.py
++++ b/tests/test_worker_publish.py
+@@ -252,6 +252,47 @@ class WorkerPublishTest(unittest.TestCase):
+             publisher.last_request["images"],
+         )
+ 
++    def test_publish_passes_final_video_as_video_request(self) -> None:
++        pins = [
++            {
++                "record_id": "pin-video",
++                "fields": {
++                    "status": "已批准待发布",
++                    "scheduled_at": "2000-01-01T00:00:00Z",
++                    "media_type": "video",
++                    "final_video": [{"file_token": "video-token", "name": "case.mp4"}],
++                    "final_title": "Video Title",
++                    "final_board": "Board",
++                    "product": [{"record_id": "product-1"}],
++                    "final_description": "Desc",
++                    "final_alt_text": "Packing video alt text",
++                    "publish_attempts": 0,
++                },
++            }
++        ]
++        with tempfile.TemporaryDirectory() as temp_dir:
++            store = FakeStore(pins=pins)
++            publisher = FakePublisher()
++            worker = FeishuPinterestWorker(config(), runtime(temp_dir), store, publisher)
++
++            result = worker.publish()
++
++        self.assertTrue(result.ok)
++        self.assertEqual(
++            [("video-token", str(Path(temp_dir) / "final-videos" / "pin-video-case.mp4"))],
++            store.downloads,
++        )
++        self.assertEqual("video", publisher.last_request["mediaType"])
++        self.assertEqual(
++            {
++                "path": str(Path(temp_dir) / "final-videos" / "pin-video-case.mp4"),
++                "altText": "Packing video alt text",
++            },
++            publisher.last_request["video"],
++        )
++        self.assertNotIn("image", publisher.last_request)
++        self.assertNotIn("images", publisher.last_request)
++
+     def test_publish_scans_past_first_ineligible_record(self) -> None:
+         pins = [
+             {
+diff --git a/tools/pinterest_publish_pin.py b/tools/pinterest_publish_pin.py
+index b6f23ec..15c01b6 100755
+--- a/tools/pinterest_publish_pin.py
++++ b/tools/pinterest_publish_pin.py
+@@ -30,6 +30,7 @@ TEXT_FIELDS = (
+     "chromeProfile",
+     "creationUrl",
+ )
++VIDEO_EXTENSIONS = {".mp4", ".mov", ".m4v"}
+ PROFILE_KEYS = ("chromeProfile", "chrome_profile", "chrome-profile")
+ CREATION_URL_KEYS = ("creationUrl", "creation_url", "creation-url")
+ PROFILE_ENV_VAR = "PINTEREST_AUTOPIN_CHROME_PROFILE"
+@@ -55,6 +56,7 @@ def parse_args() -> argparse.Namespace:
+         help="validate only, check login, fill without publishing, or publish for real.",
+     )
+     parser.add_argument("--image", help="Absolute path to the image file.")
++    parser.add_argument("--video", help="Absolute path to the video file.")
+     parser.add_argument("--title", help="Pin title.")
+     parser.add_argument("--board", help="Pinterest board name.")
+     parser.add_argument("--link", help="Destination link.")
+@@ -204,6 +206,32 @@ def normalize_images(payload: dict[str, Any], args: argparse.Namespace) -> list[
+     return []
+ 
+ 
++def normalize_video(payload: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
++    """Build the video object from ``video`` key or ``--video``."""
++    raw_video = args.video if getattr(args, "video", None) is not None else payload.get("video")
++    alt_text = getattr(args, "alt_text", None)
++    if alt_text is None:
++        alt_text = payload.get("altText") or payload.get("alt_text") or payload.get("alt-text") or ""
++
++    if isinstance(raw_video, dict):
++        return {
++            "path": raw_video.get("path") or "",
++            "altText": raw_video.get("altText") if raw_video.get("altText") is not None else raw_video.get("alt_text", ""),
++        }
++    if raw_video:
++        return {"path": str(raw_video), "altText": str(alt_text)}
++    return {"path": "", "altText": ""}
++
++
++def normalize_media_type(payload: dict[str, Any], video: dict[str, Any]) -> str:
++    raw = str(payload.get("mediaType") or payload.get("media_type") or "").strip().lower()
++    if raw:
++        return raw
++    if str(video.get("path") or "").strip():
++        return "video"
++    return "image"
++
++
+ def normalize_payload_with_meta(
+     file_payload: dict[str, Any], args: argparse.Namespace
+ ) -> tuple[dict[str, Any], dict[str, str]]:
+@@ -224,9 +252,13 @@ def normalize_payload_with_meta(
+     chrome_profile, chrome_profile_source = resolve_chrome_profile(payload, args)
+     creation_url = resolve_creation_url(payload, args)
+     images = normalize_images(payload, args)
++    video = normalize_video(payload, args)
++    media_type = normalize_media_type(payload, video)
+ 
+     normalized = {
++        "mediaType": media_type,
+         "images": images,
++        "video": video,
+         "title": payload.get("title", ""),
+         "board": payload.get("board", ""),
+         "link": payload.get("link", ""),
+@@ -353,30 +385,55 @@ def validate_payload(payload: dict[str, Any], checks: dict[str, Any], mode: str)
+         return errors, warnings
+ 
+     if mode != "check-login":
++        media_type = str(payload.get("mediaType") or "image").strip().lower()
+         images = payload.get("images", [])
+-        if not isinstance(images, list):
+-            errors.append("images must be an array")
+-        elif not images:
+-            errors.append("images array is required (or provide flat image field)")
+-        else:
+-            for i, img in enumerate(images):
+-                if not isinstance(img, dict):
+-                    errors.append(f"images[{i}] must be an object")
+-                    continue
+-                img_path = img.get("path", "")
+-                if not isinstance(img_path, str):
+-                    errors.append(f"images[{i}].path must be a string")
+-                elif not img_path:
+-                    errors.append(f"images[{i}].path is required")
+-                elif not Path(img_path).is_absolute():
+-                    errors.append(f"images[{i}].path must be an absolute path: {img_path}")
+-                elif not Path(img_path).exists():
+-                    errors.append(f"images[{i}].path does not exist: {img_path}")
+-                alt_text = img.get("altText", "")
++        video = payload.get("video", {})
++        if media_type not in {"image", "video"}:
++            errors.append("mediaType must be image or video")
++        elif media_type == "video":
++            if images:
++                errors.append("video Pins cannot include images[]")
++            if not isinstance(video, dict):
++                errors.append("video must be an object")
++            else:
++                video_path = video.get("path", "")
++                if not isinstance(video_path, str):
++                    errors.append("video.path must be a string")
++                elif not video_path:
++                    errors.append("video.path is required")
++                elif not Path(video_path).is_absolute():
++                    errors.append(f"video.path must be an absolute path: {video_path}")
++                elif Path(video_path).suffix.lower() not in VIDEO_EXTENSIONS:
++                    errors.append("video.path must be .mp4, .mov, or .m4v")
++                elif not Path(video_path).exists():
++                    errors.append(f"video.path does not exist: {video_path}")
++                alt_text = video.get("altText", "")
+                 if not isinstance(alt_text, str):
+-                    errors.append(f"images[{i}].altText must be a string")
+-            if len(images) > 5:
+-                errors.append(f"images array has {len(images)} elements; Pinterest carousel limit is 5")
++                    errors.append("video.altText must be a string")
++        else:
++            if not isinstance(images, list):
++                errors.append("images must be an array")
++            elif not images:
++                errors.append("images array is required (or provide flat image field)")
++            else:
++                for i, img in enumerate(images):
++                    if not isinstance(img, dict):
++                        errors.append(f"images[{i}] must be an object")
++                        continue
++                    img_path = img.get("path", "")
++                    if not isinstance(img_path, str):
++                        errors.append(f"images[{i}].path must be a string")
++                    elif not img_path:
++                        errors.append(f"images[{i}].path is required")
++                    elif not Path(img_path).is_absolute():
++                        errors.append(f"images[{i}].path must be an absolute path: {img_path}")
++                    elif not Path(img_path).exists():
++                        errors.append(f"images[{i}].path does not exist: {img_path}")
++                    alt_text = img.get("altText", "")
++                    if not isinstance(alt_text, str):
++                        errors.append(f"images[{i}].altText must be a string")
++                if len(images) > 5:
++                    errors.append(f"images array has {len(images)} elements; Pinterest carousel limit is 5")
+ 
+         if not payload["title"].strip():
+             errors.append("title is required")
+-- 
+2.50.1 (Apple Git-155)
+
