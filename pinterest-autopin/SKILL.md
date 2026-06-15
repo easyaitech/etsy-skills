@@ -17,6 +17,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 **架构**：本 skill 维护**语义层**（Pin Queue Base：写什么、发到哪、是否发成功），物理发布动作下沉到 Pinterest-autopin 这个外部 CLI 工具。两层之间通过一个 `request.json` 文件交接。
 
+**工具补丁交付**：`references/patches/pinterest-video-pin-support-a5ccaec.patch` 是 Pinterest-autopin 视频 Pin 支持补丁（源自不可访问的工具仓库本地提交 `a5ccaec`）。在 `easyaitech/Pinterest-autopin` 不可访问时，先通过本仓库沉淀；拿到工具仓库权限后，把该 patch 应用到工具源码仓库再开 PR。
+
 **对外的实操接口**：
 - 飞书 Base（用 `lark-base` skill 操作 Pin Queue + 反查商品 / 素材 Base）
 - 工作区根目录的 BRAND.md / SHOP.md（用 `shop-foundation` 维护）
