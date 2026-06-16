@@ -43,7 +43,7 @@ subprocess.run([
 |------|------|------|
 | `OVERLAY_TEXT` | 从产品卖点 + BRAND.md 生成 | 需 escape 单引号（`'` → `'\''`）和冒号（`:` → `\\:`） |
 | `FONTFILE` | `references/config.md` §字体路径 | CJK 字体文件绝对路径 |
-| `SAFE_Y` | 平台安全区查表 | tiktok=h*0.75, instagram=h*0.78, pinterest=h*0.85 |
+| `SAFE_Y` | 平台安全区查表 | tiktok=h*0.75, instagram=h*0.78, pinterest=h*0.85, xiaohongshu=h*0.72 |
 
 ## 音乐处理
 

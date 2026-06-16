@@ -19,9 +19,12 @@
 - `链接`
 - `标签`
 - `状态`
+- `自动发布`
+- `发布适配器`
+- `外部队列 ID`
 - `发布 URL`
 
-平台专用字段可以放在平台子队列或备注中，不进入 Asset Pool 核心 schema。
+平台专用字段可以放在 Publishing Queue 的 `平台字段 JSON`、平台子队列或备注中，不进入 Asset Pool 核心 schema。真实执行由 `social-publisher` 按 adapter registry 路由。
 
 ---
 
@@ -46,7 +49,7 @@
 
 ## 多图轮播
 
-适用：Instagram carousel、Pinterest carousel、Etsy Listing 多图组。
+适用：Instagram carousel、Pinterest carousel、小红书多图笔记、Etsy Listing 多图组。
 
 ```text
 发布类型 = 多图轮播
@@ -103,8 +106,29 @@
 规则：
 
 - 首图通常承担封面角色，但必须显式写 `封面素材`。
-- 正文、标签和标题属于 Publishing Queue，不写回素材池。
+- 正文、标签、话题和标题属于 Publishing Queue，不写回素材池。
+- 标题 / 正文 / 标签默认中文；如果 MARKETING_PLATFORM.md 要求双语，再按配置输出。
 - 如一篇笔记复用商品素材，`链接` 可为空或填站外允许的落地页；商品型发布仍优先商品 Base `分享链接`。
+- `平台字段 JSON` 可保存 `noteType=图文笔记`、话题列表、商品 ID、人工审核备注等；不知道的后台字段写 `待后台确认`。
+- 当前 `social-publisher` 尚未启用小红书 adapter，本 skill 只生成小红书发布任务草稿，不登录、不上传、不发布。人工发布后可回填公开笔记 URL 做对账。
+
+## 小红书视频
+
+```text
+发布类型 = 视频
+平台 = 小红书
+关联素材 = ASSET-VIDEO-001
+封面素材 = ASSET-COVER-001
+素材顺序 =
+1. ASSET-VIDEO-001
+```
+
+规则：
+
+- 视频本体和封面分开记录；封面可以是视频代表帧，也可以是独立图片素材。
+- 标题、正文、标签和话题写在 Publishing Queue；视频文件和封面文件仍只作为素材引用。
+- 平台尺寸、安全区和脚本模板以 MARKETING_PLATFORM.md 为准；缺配置时只建草稿，不声称已满足平台最佳实践。
+- 当前 `social-publisher` 尚未启用小红书 adapter，发布动作交给未来小红书 adapter 或用户手动后台处理。
 
 ---
 
@@ -141,10 +165,11 @@
 
 协作规则：
 
-- 下游 `pinterest-autopin` / Pinterest operations 创建 Pin Queue。
-- Pin Queue 的 `关联 SKU` 写 SKU + 商品 record_id + Etsy Listing ID。
-- Pin Queue 的 `Link` 使用商品 Base `分享链接`，不临时拼 Etsy listing URL。
+- 下游 `social-publisher` 读取 Publishing Queue，并调用 `pinterest-autopin` adapter 创建或补齐 Pin Queue。
+- Pin Queue 的 `关联 SKU` 写 SKU + 商品 record_id + 平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
+- Pin Queue 的 `Link` 使用商品 Base `分享链接`，不临时拼任何平台商品 URL。
 - Pinterest 发布成功后回写 `发布 URL` 到 Publishing Queue。
+- `发布适配器 = pinterest-autopin`；`外部队列 ID` 保存 Pin Queue 的 `pin_id`。
 
 ---
 

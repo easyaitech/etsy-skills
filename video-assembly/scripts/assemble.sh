@@ -66,6 +66,7 @@ case "$PLATFORM" in
   tiktok)    SAFE_Y="h*0.75" ;;
   instagram) SAFE_Y="h*0.78" ;;
   pinterest) SAFE_Y="h*0.85" ;;
+  xiaohongshu) SAFE_Y="h*0.72" ;;
   *)         SAFE_Y="h*0.75" ;;
 esac
 

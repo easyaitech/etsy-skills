@@ -5,6 +5,9 @@
 ## [Unreleased]
 
 ### 新增
+- `stack 级`：从 Etsy 专用 skill 包泛化为电商平台通用栈，新增 `ecommerce-stack` 入口、`shared/platform-config.md` 平台配置契约和 `COMMERCE_PLATFORM.md` 基座模板；首批内置 Etsy / 小红书两个平台配置，并保留旧 `etsy-stack` 命令与 `.etsy-workspace` 标记兼容。
+- `listing-catalog` / `orders-customers`：新增小红书上架与订单字段参考，覆盖标题、类目、封面图、轮播图、视频、笔记正文、话题、价格、库存、SKU、物流、售后、订单状态、买家留言等上架和履约需要的字段。
+- `social-publisher`：新增社交媒体自动发布 skill，首期支持 Pinterest 发布队列、适配器注册和发布回写契约；小红书先作为手动发布 / 待适配平台进入同一平台配置模型，后续可按适配器扩展。
 - `content-asset-pool`：新增 FuBlessings 跨平台素材发布池 skill，登记待发布图片 / 视频、生成不覆盖原图的发布副本，并用素材池 + 发布任务双表追踪 Pinterest、Instagram、小红书、TikTok、Etsy 等平台的入队和发布状态。
 - `orders-customers`：新增订单履约 SOP，覆盖新订单到发货、签收跟进的阶段检查、证据要求、Base 推荐字段和卡住视图；明确只处理订单之后的履约流程，不加入 listing 创建 SOP。
 - `shared`：新增 AI 发布图清理协议 `ai-image-sanitization.md`，只在最终 listing 图片和社媒待发布图片的发布副本上使用 `remove-ai-watermarks` 清 AI metadata / AI visible watermark；明确素材库 `待处理/`、`image-synth` 的 `ai_raw/` 和内部参考图不处理，`invisible` / `all` 因会重写像素需用户显式 opt-in。
@@ -20,6 +23,8 @@
 - `pinterest-autopin`：新增 `references/patches/pinterest-video-pin-support-a5ccaec.patch`，临时沉淀 Pinterest-autopin 视频 Pin 支持补丁，供拿到工具仓库权限后应用到发布工具源码。
 
 ### 修
+- `README.md` / `install.sh` / `scripts/etsy-stack`：安装、更新、工作区解析和文档从 Etsy 命名迁移到通用电商命名，同时兼容既有 Etsy 环境变量、缓存目录和工作区标记。
+- `assets-library` / `image-synth` / `video-assembly` / `content-asset-pool`：把 Etsy / Pinterest 单平台约束调整为平台配置驱动，避免商品图、视频安全区、素材状态和发布目标只能服务单一平台。
 - `listing-catalog` / `pinterest-autopin`：补充商品 Base `分享链接` 字段，并要求商品型 Pinterest 发布使用该字段作为 `Link`，不再临时拼 Etsy listing URL；同步应用层架构图和 Base 命名约定。
 - `photo-style`：从 stack 中移除。Hermes 当前只能调用生图模型，不能把原图作为可控 reference/edit input 传给模型，生成结果和原图差异过大；因此移除 skill、CLI 安装入口、manifest 暴露和后续 TODO。
 - `assets-library` / `image-synth` / `pinterest-autopin`：把 AI metadata / AI watermark 清理接到发布出口，而不是素材管理入口；Pinterest processed 图片从“清空所有 metadata”改为“只清 AI metadata + AI visible watermark，并保留标准 metadata”。

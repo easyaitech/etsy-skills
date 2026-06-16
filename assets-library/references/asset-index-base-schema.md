@@ -64,6 +64,7 @@
 | 客户 UGC（已授权） | 可发渠道的 UGC 池 | 筛：素材类型 ⊇ 客户拍摄 AND 公开授权 = 已授权 |
 | 客户 UGC（待沟通） | 还没拿到授权的素材 | 筛：素材类型 ⊇ 客户拍摄 AND 公开授权 = 待沟通 |
 | Pinterest 候选 | 待发 Pinterest | 筛：用途标签 ⊇ Pinterest AND 公开授权 = 已授权 |
+| 小红书候选 | 待发小红书 | 筛：用途标签 ⊇ 小红书 AND 公开授权 = 已授权 |
 | Instagram Reels 候选 | 待发 Reels | 筛：用途标签 ⊇ Instagram Reels |
 | 视频库 | 仅看视频类成品 | 筛：素材类型 ⊇ 视频母版 |
 
@@ -77,7 +78,7 @@
    - 摄影成图 / 场景图 / 视频母版 / 视觉模板 → 关联 SKU 必填（跨 SKU 的 vlog / 品牌片可空）
    - 客户拍摄 / 客户定制参考 → 关联订单 + 关联客户必填，且 `公开授权 = 已授权` 才能 promote 进可投渠道状态
    - **摄影原图 / 视频原料**（未经编辑的原片）→ 不应该直接 promote。如用户尝试，提示：原片需先在外部工具编辑导出成品，按命名公式命名后再 promote
-4. 用途标签可以先空着——发布到某渠道时再勾上（避免"Pinterest 候选"视图被未投的素材污染）。**Etsy listing 用图建议在 promote 时就勾对应槽位 ID**（hero / detail / lifestyle 等，词汇表见 [etsy-listing-photo-slots.md § 3](etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐)）——这是模式 D 部分跑反查"该 SKU 已覆盖槽位"的依据；不勾不阻塞但部分跑会降级为问用户
+4. 用途标签可以先空着——发布到某渠道时再勾上（避免"Pinterest 候选" / "小红书候选"视图被未投的素材污染）。**Etsy listing 用图建议在 promote 时就勾对应槽位 ID**（hero / detail / lifestyle 等，词汇表见 [etsy-listing-photo-slots.md § 3](etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐)）；**小红书商品图 / 笔记图**建议勾 `小红书` 并在备注说明用途（商品图 / 使用指南图 / 图文详情图 / 图文笔记封面）。不勾不阻塞但部分跑会降级为问用户
 5. BRAND 合规不通过时仍然录入，checkbox 留空 + 在"备注"写理由——保留可追溯，不假装没发生
 
 ## 与文件夹的边界

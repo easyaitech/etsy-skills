@@ -33,7 +33,7 @@
 
 - **文件名**：切好的片段文件名，如 `hook-candle-warm-01.mp4`
 - **stage**：hook / body / close
-- **产品**：对应的 Etsy 产品（至少覆盖 1-2 个产品）
+- **产品**：对应的商品 / SKU（至少覆盖 1-2 个产品）
 - **时长**：秒数（Hook 建议 2-5s，Body 5-15s，Close 2-5s）
 - **风格标签**：极简 / 暖调 / 冷调 / 动感 / 安静 / 手工感 / 自然光（可多选）
 - **mood**：energetic / calm / cozy / playful / elegant（单选）

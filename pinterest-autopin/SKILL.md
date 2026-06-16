@@ -1,13 +1,15 @@
 ---
 name: pinterest-autopin
-description: 把 Etsy 商品 + 素材库 + 品牌底座 组装成 Pinterest pin，用 Pinterest-autopin 工具发布。支持单图 pin 和轮播 pin（carousel，2-5 张图）。三种触发：(1) "接 Pinterest / 配置自动 pin / 建 pin 流水线"——装工具 + 建 Pin Queue Base；(2) "给 SKU 出 pin / 写 pin 文案 / 排队下一条 pin"——读 BRAND + 商品 Base + 素材 Base 组装一条 Pin Queue；(3) "发 pin / 跑 autopin / 测试 pin / validate / publish"——按 validate→test→final 三阶段执行并回写状态。每次只发一条。
+description: 把电商商品 + 素材库 + 品牌底座组装成 Pinterest pin，用 Pinterest-autopin 工具发布；也作为 social-publisher 的 Pinterest adapter。支持单图 pin 和轮播 pin（carousel，2-5 张图）。三种触发：(1) "接 Pinterest / 配置自动 pin / 建 pin 流水线"——装工具 + 建 Pin Queue Base；(2) "给 SKU 出 pin / 写 pin 文案 / 排队下一条 pin"——读 BRAND + 商品 Base + 素材 Base 组装一条 Pin Queue；(3) "发 pin / 跑 autopin / 测试 pin / validate / publish"——按 validate→test→final 三阶段执行并回写状态。每次只发一条。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
 
 # Pinterest AutoPin
 
-这个 skill 把 Etsy 店铺的「商品 + 素材 + 品牌」组装成 Pinterest pin，并用外部工具 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin)（Playwright + Chrome profile，非 Pinterest 官方 API）发布。
+这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成 Pinterest pin，并用外部工具 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin)（Playwright + Chrome profile，非 Pinterest 官方 API）发布。
+
+它可以被用户直接触发，也可以作为 `social-publisher` 的 Pinterest adapter 被调用。跨平台 Publishing Queue 的 source of truth 仍在 `content-asset-pool` / `social-publisher`；本 skill 只负责 Pinterest Pin Queue 与 Pinterest 发布动作。
 
 支持两种 pin 类型：
 - **单图 pin**：1 张图片，经典 Pinterest pin
@@ -185,6 +187,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
   - 也可能是 Pinterest 这个**渠道特有**的文案手感——这种暂时记到本 skill 的 `references/pin-composition.md`（用户后续触发"沉淀"再进 BRAND.md），不要硬塞 BRAND.md
 - **listing-catalog**：本 skill 只**读**商品 Base，不改。如果发 pin 后想统计"哪条 listing 由哪些 pin 引流"，未来在商品 Base 加一个反向关联视图（不在本 skill 现版本范围）
 - **content-asset-pool**：当 Pinterest pin 来自跨平台素材发布池时，本 skill 只消费已经确认顺序、授权和发布副本的素材任务；Pin Queue `关联 SKU` 需要保留 SKU + 商品 record_id + `Etsy Listing ID`，`Link` 必须使用商品 Base `分享链接`，发布成功后把 `pin_url` 回写给素材池对应发布任务。
+- **social-publisher**：当用户要“自动发布 / 到点发布 / 发布任务对账”时，优先让 `social-publisher` 读取 Publishing Queue 并调用本 skill。发布成功或失败后，除 Pin Queue 外还必须回写 Publishing Queue。
 - **assets-library**：本 skill 只**读**素材索引 Base 的「Pinterest 候选」视图，不改。模式 B 第 3 步若指定素材还未录入 Base，提示用户先回 assets-library 走 B2 promote 再回来排 pin。素材发 pin 后想加标记也回 assets-library 手动维护
 - **orders-customers**：UGC 类素材的「公开授权」由 orders-customers 走客户沟通完成；本 skill 只消费已授权的结果
 - **image-synth**：模式 B step 3 候选池空时反向触发 image-synth 模式 B；现传 SKU + 目标 board + 已草拟的 pin 文案 in-memory，目标平台 Pinterest 1000×1500；image-synth 出图 + QA + 入库（走 assets-library 模式 B2 promote）后回到本 skill step 3 选这张作 pin 素材

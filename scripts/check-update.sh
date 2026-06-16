@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# 静默检查 etsy-stack 是否有新版本。
+# 静默检查电商 skill stack 是否有新版本。
 # - 两条提示路径：远端有新 tag、或者用户跟 main 但 main 比当前 HEAD 还领先（未发版的 commit）
 # - 24 小时缓存：避免每次 skill 激活都打 GitHub
 # - 只在"有更新可用"时输出一行提示到 stdout，否则 silent
 # - 任何错误（无网 / 仓库异常）都吞掉，不打扰当前任务
-# - 缓存命中时不打 GitHub —— 5 个 skill 的启动开销控制在最低
+# - 缓存命中时不打 GitHub —— 多个 skill 串行激活的开销控制在最低
 
 set -uo pipefail
 
-INSTALL_DIR="${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}"
-CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
+INSTALL_DIR="${ECOMMERCE_SKILLS_HOME:-${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}}"
+CACHE_DIR="${ECOMMERCE_STACK_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ecommerce-skills}"
 LAST_CHECK="$CACHE_DIR/last-check"
 LATEST_TAG="$CACHE_DIR/latest-tag"
 LATEST_MAIN="$CACHE_DIR/latest-main"
@@ -32,7 +32,7 @@ emit_if_behind() {
     local newest
     newest=$(printf '%s\n%s\n' "$current" "$latest_tag" | sort -V | tail -n1)
     if [[ "$newest" == "$latest_tag" && "$newest" != "$current" ]]; then
-      echo "💡 Etsy stack 有新版本：${current} → ${latest_tag}（运行 \`etsy-stack update\` 升级）"
+      echo "💡 电商 skill stack 有新版本：${current} → ${latest_tag}（运行 \`ecommerce-stack update\` 升级；旧命令 \`etsy-stack update\` 仍可用）"
       return 0
     fi
   fi
@@ -48,7 +48,7 @@ emit_if_behind() {
     ahead=$(git -C "$INSTALL_DIR" rev-list "HEAD..$latest_main" --count 2>/dev/null || echo 0)
     short=$(git -C "$INSTALL_DIR" rev-parse --short "$latest_main" 2>/dev/null || echo "")
     if [[ "$ahead" -gt 0 ]]; then
-      echo "💡 Etsy stack main 比当前快 ${ahead} 个 commit（${current} → main@${short}，运行 \`etsy-stack update\` 拉取）"
+      echo "💡 电商 skill stack main 比当前快 ${ahead} 个 commit（${current} → main@${short}，运行 \`ecommerce-stack update\` 拉取；旧命令 \`etsy-stack update\` 仍可用）"
     fi
   fi
 }

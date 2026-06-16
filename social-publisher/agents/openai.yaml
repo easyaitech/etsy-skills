@@ -1,0 +1,4 @@
+interface:
+  display_name: "Social Publisher"
+  short_description: "Publish queued social media tasks through platform adapters."
+  default_prompt: "Publish or reconcile a social media task from the cross-platform publishing queue."
