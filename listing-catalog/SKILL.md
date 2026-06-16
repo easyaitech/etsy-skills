@@ -1,14 +1,14 @@
 ---
 name: listing-catalog
-description: 维护 Etsy 商品目录（飞书 Base）+ 撰写 listing 文案。三种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——建 Base；(2) "写 listing / 上新文案 / Etsy SEO / 产品描述"——按 BRAND.md 语调 + Etsy SEO 写文案；(3) "改 SKU / 调价 / 调库存"——读写 Base。
+description: 维护电商商品目录（飞书 Base）+ 按目标销售平台配置撰写商品页 / listing 文案。三种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——建 Base；(2) "写 listing / 上新文案 / 商品标题 / 产品描述 / 平台 SEO / 小红书商品页"——按 BRAND.md 语调 + COMMERCE_PLATFORM.md 平台规则写文案；(3) "改 SKU / 调价 / 调库存"——读写 Base。Etsy 和小红书是内置平台 preset，其他平台必须先有平台配置。
 layer: foundation
 ---
 
 # 商品目录 (Listing Catalog)
 
-这个 skill 维护 Etsy 商品目录（结构化数据 → 飞书 Base）+ 撰写 Etsy listing 文案。
+这个 skill 维护电商商品目录（结构化数据 → 飞书 Base）+ 按目标销售平台撰写商品页 / listing 文案。
 
-**对外的实操接口**：飞书 Base（用 `lark-base` skill 操作）+ 工作区根目录的 BRAND.md / SHOP.md（用 `shop-foundation` skill 维护）。
+**对外的实操接口**：飞书 Base（用 `lark-base` skill 操作）+ 工作区根目录的 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md（用 `shop-foundation` skill 维护）。
 
 > 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
@@ -16,20 +16,27 @@ layer: foundation
 
 ## 依赖关系（写 listing 前必读）
 
-任何 listing 文案写作都必须参考以下文件（按存在性读取）：
+任何商品页 / listing 文案写作都必须参考以下文件（按存在性读取）：
 
 | 来源 | 提供什么 | 怎么用 |
 |---|---|---|
 | `<workspace>/BRAND.md` | 文案语调 / 视觉原则 / 品牌定位 | 标题、描述、标签的语气与措辞——"应该说"、"避免说"、"原则"段都要遵守 |
-| `<workspace>/SHOP.md` | 处理时间 / 运输方式 / 退换货 / 定制政策 | 描述末尾的政策段引用 SHOP.md 原文，不要自行编造 |
-| 飞书 Base 商品行 | 成本、变体、库存、SEO 关键词 | 写 listing 时先查 SKU 行；写完后回写 listing_id、状态、上线日 |
+| `<workspace>/SHOP.md` | 处理时间 / 运输方式 / 退换货 / 定制政策 | 描述或客服相关政策段引用 SHOP.md 原文，不要自行编造 |
+| `<workspace>/COMMERCE_PLATFORM.md` | 目标销售平台、买家语言、标题/描述/tag/媒体/订单规则 | 决定输出语言、字段、长度、平台枚举和自动化边界；非 Etsy / 小红书平台缺失时阻塞 |
+| 飞书 Base 商品行 | 成本、变体、库存、关键词、平台商品 ID | 写商品页时先查 SKU 行；写完后回写平台商品 ID、状态、上线日 |
 
 **写 listing 之前**永远先：
 1. 读 BRAND.md（如不存在，提示用户先用 shop-foundation 建立——这是品牌一致性的根）
 2. 读 SHOP.md（同上）
-3. 从 Base 取该 SKU 的字段（用 lark-base 查询）
+3. 读 COMMERCE_PLATFORM.md（目标平台不是 Etsy / 小红书且缺失时，先停下补配置）
+4. 从 Base 取该 SKU 的字段（用 lark-base 查询）
 
-如果 BRAND.md / SHOP.md 缺失，在写 listing 前主动提示用户："在写文案之前，建议先建立 BRAND.md 和 SHOP.md。否则文案的语调和政策口径会缺乏锚点。要先建吗？"
+如果 BRAND.md / SHOP.md 缺失，在写商品页前主动提示用户："在写文案之前，建议先建立 BRAND.md 和 SHOP.md。否则文案的语调和政策口径会缺乏锚点。要先建吗？"
+
+如果 COMMERCE_PLATFORM.md 缺失：
+- 目标平台是 Etsy → 可继续使用内置 Etsy preset，并说明"这次按内置 Etsy 规则跑；建议后续用 shop-foundation 建 COMMERCE_PLATFORM.md 固化配置"。
+- 目标平台是小红书 → 可继续使用内置小红书 preset，并说明"这次按内置小红书规则跑；建议后续用 shop-foundation 建 COMMERCE_PLATFORM.md 固化配置"。
+- 目标平台不是 Etsy / 小红书 → 停止并提示用户先建立 COMMERCE_PLATFORM.md。不要把 Etsy 或小红书规则套到淘宝、天猫、抖店、Amazon、Shopify 等平台。
 
 ---
 
@@ -44,22 +51,27 @@ layer: foundation
 
 **执行步骤**：
 1. 读 `references/base-schema.md`，了解推荐字段集
-2. 用 lark-base skill 创建 `{店铺名}-商品` Base（店铺名取自 SHOP.md）
-3. 按 schema 逐字段配置（核心字段必建，辅助字段视用户需要）
-4. 落盘后告诉用户 Base 链接 + 字段清单 + 可选的下一步（"导入第一条 SKU 试试")
+2. 如果目标平台包含小红书，读 `references/xiaohongshu-commerce.md`；创建 Base 时必须加建 `base-schema.md` 的“小红书字段”分组
+3. 用 lark-base skill 创建 `{店铺名}-商品` Base（店铺名取自 SHOP.md）
+4. 按 schema 逐字段配置（核心字段必建；小红书字段在启用小红书平台时必建；其他辅助字段视用户需要）
+5. 落盘后告诉用户 Base 链接 + 字段清单 + 可选的下一步（"导入第一条 SKU 试试")
 
-> **不要硬塞所有字段**——先建核心 8-10 个，让用户用着；后续按需补字段比一开始全建更稳。
+> **不要硬塞无关字段**——通用核心字段必建；启用小红书时，小红书字段分组也必建但可以先为空；其他平台辅助字段后续按需补。
 
-### 模式 B：写 listing 文案
+### 模式 B：写商品页 / listing 文案
 
 **进入条件**：
-- 用户要写新 listing 文案 / 上新 / 重写某条 listing 的 title 或 description / 调整 tags
+- 用户要写新商品页 / listing 文案 / 上新 / 重写某条商品标题或描述 / 调整 tags 或平台关键词
 
 **执行步骤**：
 1. 按 `references/input-checklist.md` 盘点用户已给的输入；**缺必填项一次性问全**，不要边写边追问。**预期售价**与**礼物倾向**是必填——前者决定 step 5.5 客单价档，后者决定 step 5.5 是走完整问还是 Q2-Q5 全跳过
 2. 确认目标 SKU（如果是新品，先在 Base 里建一行记录基础信息；如果是改既有 listing，用 lark-base 查现有行）
-3. 读 BRAND.md（语调 / 定位 / 视觉关键词作为 SEO 词库的源头）+ SHOP.md（政策段 + 礼盒服务字段）
-4. 读 `references/etsy-seo.md`：理解 Etsy 标题 / 标签 / 描述 / materials / category 的 SEO 规则
+3. 确认目标销售平台。读 BRAND.md（语调 / 定位 / 视觉关键词作为关键词源头）+ SHOP.md（政策段 + 礼盒服务字段）+ COMMERCE_PLATFORM.md（平台配置）
+4. 按平台选择规则来源：
+   - **Etsy**：读 `references/etsy-seo.md`，理解 Etsy 标题 / 标签 / 描述 / materials / category 的 SEO 规则
+   - **小红书**：读 `references/xiaohongshu-commerce.md`，理解 SPU / SPL / SPV / ITEM 分层、商品图、描述、特色、属性、FAQ、使用指南、图文详情、条码、重量、原产国、价格、库存、上下架和审核状态字段
+   - **其他已配置平台**：只使用 COMMERCE_PLATFORM.md 对应平台章节里的标题、描述、关键词、属性、媒体和合规规则；配置没写的限制视为未知，向用户确认，不自行补全
+   - **其他未配置平台**：停止，引导用户先用 `shop-foundation` 建立该平台配置
 5. **(可选) eRank 预调研** — 任一命中即主动提示用户去 eRank 调研：① 用户提到有 eRank 账号；② 新品类首品；③ 主推 SKU；④ 单价 ≥ $50；⑤ 用户主动要求"调研 / 看竞品 / 做 SEO"。命中 → 读 `references/erank-research.md`，按节点 ② 向用户发问。低价值 SKU（重复款 / 变体 / 低价位）或用户跳过 → 直接进 step 5.5（沿用 step 1 的"可选项缺失不必停下"规则）
 5.5. **(强制) 礼物场景调研** — 读 `references/gift-scenario.md`，按客单价档运行：
    - **< $20**：走轻问法，只问 Q1（礼物倾向）；其余自动从 holiday-calendar.md 命中节日生成 3 个纯节日词
@@ -73,21 +85,21 @@ layer: foundation
    - 有命中 → 在草稿前展示「可参考知识卡片」小节，逐条标明来源、记录日期、可用处、本次采用 yes/no/partial、原因和边界；不得静默采用
    - 只有选中的少量卡片需要读 `知识页链接`；不要为了检索把所有 wiki 都读一遍
 6. 读 `assets/listing-template.md`：标准 listing 文案结构
-7. 输出草稿：title + description（含分段）+ tags（13 个槽，按客单价档礼物槽数 3/4/3）+ materials（13 个槽）+ Sustainability / Occasion / Holiday + category 建议
-   - 13 tag 严格守恒，礼物槽数与客单价档对应；展示与写入 Base 时都用一行英文文本，tag 之间用半角逗号 `,` 分隔，方便复制到 Etsy 后台；其余非礼物槽如有 eRank 词库优先用，否则按 etsy-seo.md 规则 LLM 填
-   - 13 material 严格守恒；展示与写入 Base 时同样用一行英文文本，material 之间用半角逗号 `,` 分隔，方便复制到 Etsy 后台
-   - Sustainability / Occasion / Holiday 必须从 Etsy 后台字段选项中选择；不要自行编写新值。不确定或只是泛泛适合作礼物时留空
-   - title 公式 `[核心品类词] + [核心修饰词] + [礼物维度] + [次要属性] + [情感词]`，礼物维度槽优先级：节日词 > 受众词 > 场景词；自购为主 SKU 留空
-   - description 段 3 双小段（使用语境 + 礼物语境，按 etsy-seo.md § Description）
+7. 输出草稿：平台商品标题 + 商品描述（含分段）+ 平台关键词 / tags + 平台属性 / materials + 类目建议
+   - Etsy：13 tag / 13 material 严格守恒，礼物槽数与客单价档对应；展示与写入 Base 时都用一行英文文本，tag / material 之间用半角逗号 `,` 分隔，方便复制到 Etsy 后台
+   - Etsy：Sustainability / Occasion / Holiday 必须从 Etsy 后台字段选项中选择；不要自行编写新值。不确定或只是泛泛适合作礼物时留空
+   - Etsy：title 公式 `[核心品类词] + [核心修饰词] + [礼物维度] + [次要属性] + [情感词]`，礼物维度槽优先级：节日词 > 受众词 > 场景词；自购为主 SKU 留空
+   - Etsy：description 段 3 双小段（使用语境 + 礼物语境，按 etsy-seo.md § Description）
+   - 非 Etsy：字段数量、字段名、输出语言、分隔符、类目/属性枚举只按 COMMERCE_PLATFORM.md；没有配置就标注未知并向用户确认
    - 如果跑了 eRank 节点 ③，title 词序参考竞品模式
    - 如果 step 5.6 命中卡片，先展示「可参考知识卡片」小节，再展示 listing 草稿；listing 正文只采用标为 yes / partial 的卡片，不采用 no 的卡片
 8. **整篇展示**给用户，等用户确认或调整。同时展示「过滤掉的候选词」清单，方便用户判断是否要纠正 BRAND.md
 9. 用户确认后：
    - 把文案写入 Base 该 SKU 对应行（通过 lark-base 更新）
    - 如果 step 5.6 有采用 yes / partial 的 Knowledge Cards，best-effort 回写 `引用次数 += 1` / `最后引用日期 = today`；失败不阻塞 listing 写入，但要简短告诉用户统计字段未能更新
-   - 提醒用户去 Etsy 后台贴上线
+   - 提醒用户去目标平台后台贴上线；若 COMMERCE_PLATFORM.md 明确允许 API / ERP 发布，也必须按对应平台 skill 或人工确认流程执行
    - 如果跑了 eRank 节点 ⑤ 之前的环节，顺带提醒用户去 eRank 做定价对标（节点 ⑤）
-   - 不要替用户上 Etsy（Etsy 后台操作不在本 skill 范围）
+   - 不要替用户在平台后台真实上架（平台后台操作不在本 skill 默认范围）
 10. **(可选) 反向触发图像产出** — listing 文案写入 Base 后，如果该 SKU 还没有 `商品/{SKU}_shoot-brief.md`，且也没成品图：
     - 提示用户："文案定了，刚生成的 4 类礼物词库 + Mood 新鲜可用。下一步图怎么办？① 出 shoot brief 去拍（assets-library 模式 D）② 不拍直接 AI 合成（image-synth 模式 A）③ 都跳过（之后再说）"
     - **选 ①** → invoke `assets-library` 进入模式 D，**调用方现传** 4 类礼物词库（受众 / 场景 / 节日 / 包装）+ description 段 3 in-memory，让模式 D 直接用，不走 Base 反推。assets-library 模式 D step 11 还会再追问"要不要直接 AI 合成"，用户可在那里继续接 image-synth
@@ -112,7 +124,7 @@ layer: foundation
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有禁区：
 
-- **不替用户上 Etsy**：只产文案 + 维护 Base；上 Etsy 是用户在后台手动复制（涉及登录态、平台合规）
+- **不替用户上架或发买家消息**：只产文案 + 维护 Base；真实发布遵守 COMMERCE_PLATFORM.md 的自动化边界，默认由用户在平台后台手动复制
 - **新增 SKU 不要自动估价**：成本 / 售价让用户确认；可基于 Base 历史给"参考区间"，但不替用户拍板
 - **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘
 
@@ -130,4 +142,4 @@ layer: foundation
 
 ## 工作语言
 
-通用规则见 [`shared/preamble.md`](../shared/preamble.md) §工作语言。本 skill 特有：listing 文案输出（title / description / tags / materials / category）为**英文**（Etsy 海外平台）；Base 字段标签中英混用（schema 文件里给规范）。
+通用规则见 [`shared/preamble.md`](../shared/preamble.md) §工作语言。本 skill 特有：商品页输出语言由 COMMERCE_PLATFORM.md 的「买家语言」决定；Etsy 内置 preset 默认英文。Base 字段标签中英混用（schema 文件里给规范）。

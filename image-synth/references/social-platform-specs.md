@@ -2,7 +2,7 @@
 
 > SKILL.md 模式 B step 3 引用本文档拿目标平台的尺寸 / 安全区 / 文字规范，填进 shot-spec + format 词库。
 >
-> 仅列**主流跨境平台 + Pinterest / IG**。其他平台（小红书 / 微信视频号 / TikTok）如未来加，按本表结构补。
+> 列主流跨境平台 + Pinterest / IG + 小红书。具体平台策略如已写入 MARKETING_PLATFORM.md，以工作区配置优先。
 
 ---
 
@@ -64,6 +64,29 @@ Composition: square 1:1, subject centered, balanced negative space on all four s
 **shot-spec 填法**：
 ```
 Composition: vertical 9:16, subject centered in middle 70% of frame (avoid top 15% and bottom 15% for IG UI overlay zones), bold focal point that reads in under 2 seconds.
+```
+
+---
+
+## 小红书图文 / 商品种草图
+
+| 维度 | 值 |
+|---|---|
+| 长宽比 | **3:4**（竖图优先）/ 1:1（方图备选）|
+| 推荐分辨率 | **750 × 1000** 或按商品 preset 使用 800 × 800 |
+| 文字密度 | ≤ 25%，商品主体和标题都要在缩略图可读 |
+| 安全区 | 顶 / 底 / 左 / 右各留 8%；底部不放关键信息 |
+| 视觉权重重心 | 中央偏上；首图承担封面角色 |
+| 特殊约束 | 商品型图片同时遵守 `listing-catalog/references/xiaohongshu-commerce.md` 的商品图 / 使用指南图 / 图文详情图规则 |
+
+**shot-spec 填法**：
+```
+Composition: vertical 3:4 portrait, product centered slightly above middle, clean lifestyle context, cover-like first image with readable Chinese headline area and no important details near edges.
+```
+
+**format 填法**：
+```
+Format: 3:4 aspect ratio, 750x1000 resolution, mobile-first product note cover, sharp readable Chinese text if text overlay is requested.
 ```
 
 ---
@@ -137,3 +160,4 @@ format 段直接传用户给的 W × H。如果有更具体的渠道，建议反
 | 版本 | 日期 | 改动 |
 |---|---|---|
 | v1 | 2026-05-07 | 初版：Pinterest / Instagram (post & Story) / Twitter / Facebook + 通用 OG / 自定义尺寸 |
+| v2 | 2026-06-16 | 增加小红书图文 / 商品种草图默认规格入口 |

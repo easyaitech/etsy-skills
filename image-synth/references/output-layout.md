@@ -34,12 +34,13 @@
 {标签ID}_{SKU}_{seq}.png
 ```
 
-- `{标签ID}`：模式 A 用 Etsy 槽位 ID（取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐)）；模式 B 用渠道值（取值见 [`assets-library/references/asset-index-base-schema.md` § 用途标签](../../assets-library/references/asset-index-base-schema.md) 渠道段，如 `Pinterest` / `Instagram Posts` / `Instagram Reels` / 等）。**直接用词汇表原值**（含中文 / 空格也无所谓——本地 fs 都接受），不做小写化转写。
+- `{标签ID}`：模式 A 用目标平台商品图用途。Etsy 用槽位 ID（取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐)）；小红书用 `商品图` / `使用指南图` / `图文详情图`；其他平台按 COMMERCE_PLATFORM.md。模式 B 用渠道值（取值见 [`assets-library/references/asset-index-base-schema.md` § 用途标签](../../assets-library/references/asset-index-base-schema.md) 渠道段，如 `Pinterest` / `Instagram Posts` / `Instagram Reels` / `小红书` / 等）。**直接用词汇表原值**（含中文 / 空格也无所谓——本地 fs 都接受），不做小写化转写。
 - `{SKU}`：商品 Base SKU；用户没指定 SKU（如做品牌物料图）用 `general`
 - `{seq}`：当日同标签 + 同 SKU 的序号，从 `001` 开始
 
 例：
 - `hero_TEACUP-001_001.png`（模式 A）
+- `商品图_TEACUP-001_001.png`（模式 A，小红书）
 - `Pinterest_TEACUP-001_001.png`（模式 B）
 
 ### QA 重试候选

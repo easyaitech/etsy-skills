@@ -13,7 +13,7 @@
 
 只在以下出口运行：
 
-1. **最终 listing 图片**：`assets-library` 模式 B2 promote，且用途标签是 Etsy listing 槽位（`hero` / `detail` / `lifestyle` / 等）。
+1. **最终电商平台商品图 / listing 图片**：`assets-library` 模式 B2 promote，且用途标签是目标平台商品图用途；Etsy 为 listing 槽位（`hero` / `detail` / `lifestyle` / 等）。
 2. **计划发布到社交媒体的图片**：`assets-library` 模式 B2 promote，且用途标签包含社媒渠道（如 `Pinterest` / `Instagram Posts` / `Instagram Stories` / `Facebook` / `Twitter/X`）；以及 `pinterest-autopin` 写入 Pin Queue / 发布前的 processed 副本。
 
 明确不处理：
@@ -63,7 +63,7 @@ pipx install git+https://github.com/wiltodelta/remove-ai-watermarks.git
 如果 Hermes Agent 机器不能访问 GitHub，或没有 `uv` / `pipx`：
 
 1. 停止发布，不上传未清理图片。
-2. 告诉用户在 Hermes Agent 机器上先安装 `uv` 或 `pipx`，再执行 `etsy-stack ai-cleaner update`。
+2. 告诉用户在 Hermes Agent 机器上先安装 `uv` 或 `pipx`，再执行 `ecommerce-stack ai-cleaner update`（旧命令 `etsy-stack ai-cleaner update` 兼容）。
 3. 如用户只能离线安装，让用户把已打包的 Python wheel / 本地 git checkout 放到 Hermes Agent 机器，再用 `uv tool install <本地路径>` 或 `pipx install <本地路径>` 安装。安装完成后重新跑发布流程。
 
 ---

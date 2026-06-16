@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# etsy-stack — 管理 Etsy skill bundle 的 CLI
+# ecommerce-stack / etsy-stack — 管理电商 skill bundle 的 CLI
 set -uo pipefail
 
-INSTALL_DIR="${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}"
-CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
+CMD_NAME="$(basename "$0")"
+INSTALL_DIR="${ECOMMERCE_SKILLS_HOME:-${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}}"
+CACHE_DIR="${ECOMMERCE_STACK_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ecommerce-skills}"
 HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-${HERMES_HOME:-$HOME/.hermes}/skills}"
 PINTEREST_AUTOPIN_REPO="${PINTEREST_AUTOPIN_REPO:-}"
 PINTEREST_AUTOPIN_DIR="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
@@ -12,19 +13,19 @@ AI_CLEANER_REPO="${AI_CLEANER_REPO:-https://github.com/wiltodelta/remove-ai-wate
 
 usage() {
   cat <<EOF
-etsy-stack — Etsy skill bundle 管理工具
+$CMD_NAME — 电商 skill bundle 管理工具（兼容旧 etsy-stack 名称）
 
 用法：
-  etsy-stack version            当前安装版本
-  etsy-stack check              立即检查更新（绕过 24h 缓存）
-  etsy-stack update             拉最新版本并刷新软链
-  etsy-stack list               列出 manifest 中的 skill 及链接状态
-  etsy-stack pinterest-tool     查看 / 更新 Pinterest-autopin 发布工具
-  etsy-stack ai-cleaner         查看 / 安装 AI 发布图清理工具
-  etsy-stack where              打印源码安装目录
-  etsy-stack workspace          解析当前 Etsy 工作区根目录
-  etsy-stack init [DIR]         在 DIR（默认 cwd）创建 .etsy-workspace 标记
-  etsy-stack help               查看本帮助
+  $CMD_NAME version            当前安装版本
+  $CMD_NAME check              立即检查更新（绕过 24h 缓存）
+  $CMD_NAME update             拉最新版本并刷新软链
+  $CMD_NAME list               列出 manifest 中的 skill 及链接状态
+  $CMD_NAME pinterest-tool     查看 / 更新 Pinterest-autopin 发布工具
+  $CMD_NAME ai-cleaner         查看 / 安装 AI 发布图清理工具
+  $CMD_NAME where              打印源码安装目录
+  $CMD_NAME workspace          解析当前电商工作区根目录
+  $CMD_NAME init [DIR]         在 DIR（默认 cwd）创建 .ecommerce-workspace 标记
+  $CMD_NAME help               查看本帮助
 EOF
 }
 
@@ -57,7 +58,7 @@ pinterest_tool_status() {
   echo "Pinterest-autopin 工具路径：$PINTEREST_AUTOPIN_DIR"
   if [[ ! -d "$PINTEREST_AUTOPIN_DIR" ]]; then
     echo "状态：未安装"
-    echo "安装 / 更新：etsy-stack pinterest-tool update"
+    echo "安装 / 更新：$CMD_NAME pinterest-tool update"
     return 1
   fi
 
@@ -68,7 +69,7 @@ pinterest_tool_status() {
     echo "轮播发布：可用（需要 Pinterest 企业账号，工具会走 Ads Manager Pin builder）"
   else
     echo "轮播发布：不可用（需要 Pinterest-autopin >= $PINTEREST_AUTOPIN_MIN_VERSION）"
-    echo "升级：etsy-stack pinterest-tool update"
+    echo "升级：$CMD_NAME pinterest-tool update"
     return 1
   fi
 
@@ -131,7 +132,7 @@ pinterest_tool_update() {
 ai_cleaner_status() {
   if ! command -v remove-ai-watermarks >/dev/null 2>&1; then
     echo "AI 发布图清理工具：未安装"
-    echo "安装 / 更新：etsy-stack ai-cleaner update"
+    echo "安装 / 更新：$CMD_NAME ai-cleaner update"
     return 1
   fi
 
@@ -162,17 +163,21 @@ ai_cleaner_update() {
   ai_cleaner_status
 }
 
-# 解析 Etsy 工作区根目录。顺序：
-#   1. $ETSY_WORKSPACE 环境变量（指向不存在目录视为错误）
-#   2. 从 cwd 向上找 .etsy-workspace 标记文件
+# 解析电商工作区根目录。顺序：
+#   1. $ECOMMERCE_WORKSPACE 环境变量（指向不存在目录视为错误）
+#   2. 兼容旧 $ETSY_WORKSPACE 环境变量（指向不存在目录视为错误）
+#   3. 从 cwd 向上找 .ecommerce-workspace 标记文件
+#   4. 兼容旧 .etsy-workspace 标记文件
 # 成功 → echo 路径，return 0
-# $ETSY_WORKSPACE 设了但目录不存在 → return 2
+# 工作区环境变量设了但目录不存在 → return 2
 # 完全找不到 → return 1
 # 不打印任何内容；调用方决定怎么报错
 resolve_workspace() {
-  if [[ -n "${ETSY_WORKSPACE:-}" ]]; then
-    if [[ -d "$ETSY_WORKSPACE" ]]; then
-      ( cd "$ETSY_WORKSPACE" && pwd )
+  local workspace_env
+  workspace_env="${ECOMMERCE_WORKSPACE:-${ETSY_WORKSPACE:-}}"
+  if [[ -n "$workspace_env" ]]; then
+    if [[ -d "$workspace_env" ]]; then
+      ( cd "$workspace_env" && pwd )
       return 0
     else
       return 2
@@ -182,7 +187,7 @@ resolve_workspace() {
   local dir
   dir="$(pwd)"
   while [[ "$dir" != "/" ]]; do
-    if [[ -f "$dir/.etsy-workspace" ]]; then
+    if [[ -f "$dir/.ecommerce-workspace" || -f "$dir/.etsy-workspace" ]]; then
       echo "$dir"
       return 0
     fi
@@ -194,7 +199,7 @@ resolve_workspace() {
 
 require_install() {
   git -C "$INSTALL_DIR" rev-parse --git-dir >/dev/null 2>&1 || {
-    echo "❌ 找不到 etsy-stack 源码（${INSTALL_DIR}）" >&2
+    echo "❌ 找不到电商 skill bundle 源码（${INSTALL_DIR}）" >&2
     echo "   请重新跑安装脚本：" >&2
     echo "   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash" >&2
     exit 1
@@ -300,20 +305,24 @@ for skill in manifest["skills"]:
         exit 0
         ;;
       2)
-        echo "❌ \$ETSY_WORKSPACE 指向的目录不存在：${ETSY_WORKSPACE:-}" >&2
+        if [[ -n "${ECOMMERCE_WORKSPACE:-}" ]]; then
+          echo "❌ \$ECOMMERCE_WORKSPACE 指向的目录不存在：${ECOMMERCE_WORKSPACE}" >&2
+        else
+          echo "❌ \$ETSY_WORKSPACE 指向的目录不存在：${ETSY_WORKSPACE:-}" >&2
+        fi
         echo "   请把它指向实际存在的工作区根目录。" >&2
         exit 1
         ;;
       *)
         cat >&2 <<'EOF'
-❌ 找不到 Etsy 工作区。
+❌ 找不到电商工作区。
 
 按以下任一方式声明：
 
   1. 设置环境变量（推荐写进 shell 配置）：
-       export ETSY_WORKSPACE=/path/to/your/etsy-workspace
+       export ECOMMERCE_WORKSPACE=/path/to/your/ecommerce-workspace
 
-  2. 在工作区根目录跑一次 `etsy-stack init`，会写一个 .etsy-workspace 标记文件，
+  2. 在工作区根目录跑一次 `ecommerce-stack init`，会写一个 .ecommerce-workspace 标记文件，
      之后从工作区子目录调用本命令会自动向上找到根。
 
 不要让 skill 把文件写到当前目录或 $HOME 下——Hermes profile 的 $HOME 不是
@@ -331,31 +340,36 @@ EOF
       exit 1
     fi
     target="$( cd "$target" && pwd )"
-    marker="$target/.etsy-workspace"
-    if [[ -f "$marker" ]]; then
-      echo "✓ 已是 Etsy 工作区：$target"
-      echo "  （$marker 已存在，未覆盖）"
+    marker="$target/.ecommerce-workspace"
+    legacy_marker="$target/.etsy-workspace"
+    if [[ -f "$marker" || -f "$legacy_marker" ]]; then
+      echo "✓ 已是电商工作区：$target"
+      if [[ -f "$marker" ]]; then
+        echo "  （$marker 已存在，未覆盖）"
+      else
+        echo "  （兼容旧标记 $legacy_marker，未覆盖）"
+      fi
       exit 0
     fi
     cat > "$marker" <<EOF
-# Etsy workspace marker
-# 由 etsy-stack init 创建。skill 会向上找这个文件来定位工作区根目录。
+# E-commerce workspace marker
+# 由 $CMD_NAME init 创建。skill 会向上找这个文件来定位工作区根目录。
 name=$(basename "$target")
 created=$(date +%Y-%m-%d)
 EOF
-    echo "✓ 已初始化 Etsy 工作区：$target"
+    echo "✓ 已初始化电商工作区：$target"
     echo ""
     echo "建议把下面这行加到 shell 配置（~/.zshrc 或 ~/.bashrc），跨目录也能定位："
     echo ""
-    echo "  export ETSY_WORKSPACE=\"$target\""
+    echo "  export ECOMMERCE_WORKSPACE=\"$target\""
     echo ""
     if [[ -d "$target/.git" ]] || git -C "$target" rev-parse --git-dir >/dev/null 2>&1; then
       echo "工作区是 git 仓库——记得把以下两行加进 .gitignore："
       echo "  .cache/             # Pinterest-autopin runtime 等临时数据"
-      echo "  # .etsy-workspace   # 标记文件本身建议提交，便于团队成员从 cwd 自动定位"
+      echo "  # .ecommerce-workspace   # 标记文件本身建议提交，便于团队成员从 cwd 自动定位"
       echo ""
     fi
-    echo "下一步：用 shop-foundation 建 BRAND.md / SHOP.md"
+    echo "下一步：用 shop-foundation 建 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md"
     ;;
 
   help|-h|--help|"")
