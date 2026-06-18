@@ -13,7 +13,7 @@ if [[ -z "$CLIPS_DIR" ]]; then
 fi
 
 if [[ -z "$WORKSPACE" ]]; then
-  WORKSPACE=$(etsy-stack workspace 2>/dev/null) || WORKSPACE=""
+  WORKSPACE=$(ecommerce-stack workspace 2>/dev/null || etsy-stack workspace 2>/dev/null) || WORKSPACE=""
 fi
 
 if [[ "$CLIPS_DIR" != /* ]]; then

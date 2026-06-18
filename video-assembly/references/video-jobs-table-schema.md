@@ -13,7 +13,7 @@
 | product_id | 关联 | ✓ | 目标产品（关联 products 表） |
 | music_track | 文本 | ✓ | 使用的背景音乐文件名 |
 | overlay_copy | 文本 | | 叠加的文案内容 |
-| platform | 单选 | ✓ | tiktok / instagram / pinterest |
+| platform | 单选 | ✓ | tiktok / instagram / pinterest / xiaohongshu |
 | output_path | 文本 | | 输出文件路径（工作区相对路径） |
 | thumb_path | 文本 | | 封面图路径（工作区相对路径） |
 | status | 单选 | ✓ | pending / generated / approved / rejected / error |
@@ -27,6 +27,7 @@
 - tiktok
 - instagram
 - pinterest
+- xiaohongshu
 
 ### status
 - pending — 已创建记录，等待 FFmpeg 处理

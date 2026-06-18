@@ -5,8 +5,9 @@
 ```
 ┌──────────────────────────────────────────────────┐
 │              应用层（Application）                 │
-│ content-asset-pool pinterest-autopin image-synth  │
-│ video-assembly      (未来...)                      │
+│ content-asset-pool social-publisher              │
+│ pinterest-autopin image-synth video-assembly     │
+│ (未来...)                                         │
 └─────────────────────┬────────────────────────────┘
                       │ 依赖
 ┌─────────────────────┴────────────────────────────┐
@@ -40,7 +41,8 @@
 
 围绕基座层运行，从基座取数据、用基座的规则约束输出。当前：
 - `content-asset-pool`：取素材 + 商品 + 平台意图 → 维护跨平台发布池与发布任务
-- `pinterest-autopin`：取商品 + 素材 + 品牌 → 组 pin 发布
+- `social-publisher`：取 Publishing Queue → 做任务校验、占用、适配器路由、自动发布巡检和结果回写
+- `pinterest-autopin`：Pinterest adapter；取 Pin Queue + 商品 + 素材 + 品牌 → 组 pin 发布
 - `image-synth`：取品牌视觉 + 商品信息 → AI 合成图
 - `video-assembly`：取商品 + clips + 营销策略 → 装配短视频
 
@@ -71,16 +73,18 @@
 
 下表列出各 skill 对基座文件的依赖等级（按模式区分）。具体用法见各 skill 的「依赖关系」节。
 
-| 依赖 \ Skill | listing-catalog | orders-customers | supplier-foundation | business-knowledge | assets-library | pinterest-autopin | image-synth | video-assembly |
-|---|---|---|---|---|---|---|---|---|
-| BRAND.md | 写文案=**BLOCK**；查改=SKIP | 客服=**BLOCK**；录入=SKIP | SKIP | brief=**DEGRADE** | B2=**DEGRADE**；D=**DEGRADE** | 组 pin=**BLOCK** | **DEGRADE** | **DEGRADE** |
-| SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | 建卡片 Base=**BLOCK**；brief=**DEGRADE** | D=SKIP | 组 pin=**BLOCK** | SKIP | SKIP |
-| BRAND_MARKETING.md | — | — | — | brief=**DEGRADE** | — | 组 pin=SKIP | — | Mode B=**BLOCK** |
-| MARKETING_PLATFORM.md | — | — | — | brief=**DEGRADE** | — | 组 pin=SKIP | — | Mode B=**BLOCK** |
-| Knowledge Cards Base | SKIP | SKIP | SKIP | 写卡片=**BLOCK**；读卡片=SKIP | SKIP | SKIP | SKIP | SKIP |
-| 商品 Base | 写文案=**BLOCK** | 录入=SKIP | 有 SKU 上下文时=SKIP | brief=SKIP | D=**BLOCK** | 组 pin=**BLOCK** | SKIP | Mode B=**BLOCK** |
-| 供应商管理 Base | — | — | 录入/选型=**BLOCK** | SKIP | SKIP | — | — | — |
-| 素材索引 Base | — | — | — | SKIP | B2=**BLOCK**；C=SKIP | 组 pin=**DEGRADE** | SKIP | SKIP |
-| 订单 Base | — | 录入=**BLOCK** | — | SKIP | SKIP | — | — | — |
-| 客户 Base | — | 客服=**BLOCK** | — | SKIP | SKIP | — | — | — |
-| Pin Queue Base | — | — | — | SKIP | — | 发 pin=**BLOCK** | — | — |
+| 依赖 \ Skill | listing-catalog | orders-customers | supplier-foundation | business-knowledge | assets-library | content-asset-pool | social-publisher | pinterest-autopin | image-synth | video-assembly |
+|---|---|---|---|---|---|---|---|---|---|---|
+| BRAND.md | 写文案=**BLOCK**；查改=SKIP | 客服=**BLOCK**；录入=SKIP | SKIP | brief=**DEGRADE** | B2=**DEGRADE**；D=**DEGRADE** | SKIP | SKIP | 组 pin=**BLOCK** | **DEGRADE** | **DEGRADE** |
+| SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | 建卡片 Base=**BLOCK**；brief=**DEGRADE** | D=SKIP | 建表=**BLOCK** | 发布表定位=**BLOCK** | 组 pin=**BLOCK** | SKIP | SKIP |
+| BRAND_MARKETING.md | — | — | — | brief=**DEGRADE** | — | SKIP | SKIP | 组 pin=SKIP | — | Mode B=**BLOCK** |
+| MARKETING_PLATFORM.md | — | — | — | brief=**DEGRADE** | — | 建任务=**DEGRADE** | SKIP | 组 pin=SKIP | — | Mode B=**BLOCK** |
+| Knowledge Cards Base | SKIP | SKIP | SKIP | 写卡片=**BLOCK**；读卡片=SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
+| 商品 Base | 写文案=**BLOCK** | 录入=SKIP | 有 SKU 上下文时=SKIP | brief=SKIP | D=**BLOCK** | 商品型任务=**BLOCK** | SKIP | 组 pin=**BLOCK** | SKIP | Mode B=**BLOCK** |
+| 供应商管理 Base | — | — | 录入/选型=**BLOCK** | SKIP | SKIP | SKIP | SKIP | — | — | — |
+| 素材索引 Base | — | — | — | SKIP | B2=**BLOCK**；C=SKIP | 入队=**DEGRADE** | SKIP | 组 pin=**DEGRADE** | SKIP | SKIP |
+| 素材发布池 Base | — | — | — | SKIP | SKIP | 建池/入队=**BLOCK** | 发布校验=**BLOCK** | SKIP | SKIP | SKIP |
+| Publishing Queue Base | — | — | — | SKIP | SKIP | 建任务=**BLOCK** | 发布=**BLOCK** | SKIP | SKIP | SKIP |
+| 订单 Base | — | 录入=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — | — |
+| 客户 Base | — | 客服=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — | — |
+| Pin Queue Base | — | — | — | SKIP | — | SKIP | Pinterest=**BLOCK** | 发 pin=**BLOCK** | — | — |

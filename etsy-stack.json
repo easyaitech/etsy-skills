@@ -1,6 +1,13 @@
 {
-  "name": "etsy-stack",
-  "description": "Etsy 店铺运营 skill bundle（Hermes runtime）。版本来源是 git tag，不在此处维护。",
+  "name": "ecommerce-stack",
+  "legacyName": "etsy-stack",
+  "description": "通用电商运营 skill bundle（Hermes runtime），Etsy 和小红书作为内置平台 preset。版本来源是 git tag，不在此处维护。",
+  "defaultPlatform": "etsy",
+  "platformPresets": [
+    "etsy",
+    "xiaohongshu"
+  ],
+  "platformConfig": "shared/platform-config.md",
   "homepage": "https://github.com/easyaitech/etsy-skills",
   "skills": [
     "shop-foundation",
@@ -10,7 +17,9 @@
     "business-knowledge",
     "assets-library",
     "content-asset-pool",
+    "social-publisher",
     "pinterest-autopin",
+    "social-media/fublessings-pinterest-operations",
     "image-synth",
     "video-assembly",
     "trend-radar"

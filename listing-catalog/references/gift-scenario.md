@@ -203,7 +203,7 @@ skill 收到日期后查 [holiday-calendar.md](holiday-calendar.md)：
 
 ## 边界
 
-- **不替用户上 Etsy**——只产词库 + 驱动文案，上 Etsy 走原 SKILL.md step 9（用户在后台手动复制）
+- **不替用户上架**——只产词库 + 驱动文案，真实发布走 SKILL.md step 9（用户在目标平台后台手动复制）
 - **包装服务词不强行生造**——SHOP.md 没说店铺提供礼盒服务，就**不要**编出 `gift wrapped` / `with greeting card` 进词库
 - **节日命中 0 不打断流程**——记录「无节日命中」继续走，节日维度本来就不是每条 listing 都需要
 - **跟 eRank 节点的复用**——如果 eRank 节点 ② 跑过且词库里已有礼物相关词，本环节可以直接采纳，**不要重复让用户挑词**；只问 Q1-Q5 这 5 个判断题，词库由 eRank + 节日命中合并生成

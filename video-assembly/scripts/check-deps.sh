@@ -6,7 +6,7 @@ set -uo pipefail
 
 WORKSPACE="${1:-}"
 if [[ -z "$WORKSPACE" ]]; then
-  WORKSPACE=$(etsy-stack workspace 2>/dev/null) || {
+  WORKSPACE=$(ecommerce-stack workspace 2>/dev/null || etsy-stack workspace 2>/dev/null) || {
     echo '{"ok":false,"missing":["workspace"],"detail":"无法解析工作区根目录"}'
     exit 1
   }

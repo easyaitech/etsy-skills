@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Etsy skill stack 安装 / 升级脚本
+# 电商 skill stack 安装 / 升级脚本（兼容旧 etsy-stack 安装路径）
 #
 # ── 推荐（钉死版本）─────────────────────────────────────────────
 #   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.0/install.sh | bash
@@ -8,7 +8,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash
 #
 # ── 已 clone 后本地升级 ────────────────────────────────────────
-#   bash install.sh    或    etsy-stack update
+#   bash install.sh    或    ecommerce-stack update（旧命令 etsy-stack update 兼容）
 #
 # ── 谨慎模式（先看再跑） ───────────────────────────────────────
 #   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.0/install.sh -o install.sh
@@ -16,20 +16,22 @@
 #   bash install.sh
 #
 # 环境变量（可选）：
-#   ETSY_SKILLS_HOME    源码安装目录（默认 ~/.local/share/etsy-skills）
-#   HERMES_SKILLS_DIR   Hermes 加载 skill 的目录（默认 ~/.hermes/skills）
-#   ETSY_STACK_BIN      etsy-stack 命令的安装目录（默认 ~/.local/bin）
-#   ETSY_SKILLS_REPO    Git 仓库 URL（默认 HTTPS：https://github.com/easyaitech/etsy-skills.git）
-#                       开发者可改成 SSH：git@github.com:easyaitech/etsy-skills.git
-#   ETSY_SKILLS_REF     要 checkout 的分支 / tag（默认 main；推荐传具体 tag 如 v0.1.0）
+#   ECOMMERCE_SKILLS_HOME  源码安装目录（默认 ~/.local/share/etsy-skills，保留旧路径避免破坏升级）
+#   HERMES_SKILLS_DIR      Hermes 加载 skill 的目录（默认 ~/.hermes/skills）
+#   ECOMMERCE_STACK_BIN    ecommerce-stack / etsy-stack 命令的安装目录（默认 ~/.local/bin）
+#   ECOMMERCE_SKILLS_REPO  Git 仓库 URL（默认 HTTPS：https://github.com/easyaitech/etsy-skills.git）
+#                          开发者可改成 SSH：git@github.com:easyaitech/etsy-skills.git
+#   ECOMMERCE_SKILLS_REF   要 checkout 的分支 / tag（默认 main；推荐传具体 tag 如 v0.1.0）
+#
+# 旧变量 ETSY_SKILLS_HOME / ETSY_STACK_BIN / ETSY_SKILLS_REPO / ETSY_SKILLS_REF 继续兼容。
 
 set -euo pipefail
 
-REPO_URL="${ETSY_SKILLS_REPO:-https://github.com/easyaitech/etsy-skills.git}"
-REF="${ETSY_SKILLS_REF:-main}"
-INSTALL_DIR="${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}"
+REPO_URL="${ECOMMERCE_SKILLS_REPO:-${ETSY_SKILLS_REPO:-https://github.com/easyaitech/etsy-skills.git}}"
+REF="${ECOMMERCE_SKILLS_REF:-${ETSY_SKILLS_REF:-main}}"
+INSTALL_DIR="${ECOMMERCE_SKILLS_HOME:-${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}}"
 HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-${HERMES_HOME:-$HOME/.hermes}/skills}"
-BIN_DIR="${ETSY_STACK_BIN:-$HOME/.local/bin}"
+BIN_DIR="${ECOMMERCE_STACK_BIN:-${ETSY_STACK_BIN:-$HOME/.local/bin}}"
 
 log()   { printf "  %s\n" "$*"; }
 ok()    { printf "✓ %s\n" "$*"; }
@@ -104,6 +106,7 @@ for skill in "${SKILLS[@]}"; do
     warn "$dst 已存在且不是软链，备份到 $backup"
     mv "$dst" "$backup"
   fi
+  mkdir -p "$(dirname "$dst")"
   ln -sfn "$src" "$dst"
   ok "$skill"
 done
@@ -123,8 +126,9 @@ fi
 
 mkdir -p "$BIN_DIR"
 chmod +x "$INSTALL_DIR/scripts/etsy-stack" "$INSTALL_DIR/scripts/check-update.sh"
+ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/ecommerce-stack"
 ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/etsy-stack"
-ok "命令安装到：$BIN_DIR/etsy-stack"
+ok "命令安装到：$BIN_DIR/ecommerce-stack（兼容旧命令：$BIN_DIR/etsy-stack）"
 
 _retired_photo_style="$BIN_DIR/photo-style"
 if [[ -L "$_retired_photo_style" ]]; then
@@ -158,10 +162,10 @@ if [[ -d "$PINTEREST_AUTOPIN_DIR/.git" ]]; then
   if bash "$INSTALL_DIR/scripts/etsy-stack" pinterest-tool update; then
     ok "Pinterest-autopin 工具已同步"
   else
-    warn "Pinterest-autopin 工具同步失败；需要发布 pin 时请手动运行：etsy-stack pinterest-tool update"
+    warn "Pinterest-autopin 工具同步失败；需要发布 pin 时请手动运行：ecommerce-stack pinterest-tool update"
   fi
 else
-  log "Pinterest-autopin 工具未安装；需要发布 pin 时运行：etsy-stack pinterest-tool update"
+  log "Pinterest-autopin 工具未安装；需要发布 pin 时运行：ecommerce-stack pinterest-tool update"
 fi
 
 INSTALLED=$(git -C "$INSTALL_DIR" describe --tags --always)
@@ -169,8 +173,12 @@ INSTALLED=$(git -C "$INSTALL_DIR" describe --tags --always)
 # 清掉旧 stack 留下的更新检查缓存：current 现在直接从 git 推导，但缓存里可能还
 # 留着上一次的 latest，不清的话会立刻误报"有新版本"。glob 顺手清掉历史命名
 # （latest-version → latest-tag / latest-main）
-ETSY_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
-rm -f "$ETSY_CACHE_DIR/last-check" "$ETSY_CACHE_DIR"/latest-*
+for _cache_dir in \
+  "${ECOMMERCE_STACK_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ecommerce-skills}" \
+  "${XDG_CACHE_HOME:-$HOME/.cache}/etsy-skills"
+do
+  rm -f "$_cache_dir/last-check" "$_cache_dir"/latest-* 2>/dev/null || true
+done
 
 echo ""
 ok "安装完成（版本：${INSTALLED}）"
@@ -184,8 +192,9 @@ case ":$PATH:" in
     ;;
 esac
 echo "常用命令："
-echo "    etsy-stack version    # 当前版本"
-echo "    etsy-stack check      # 立即检查更新"
-echo "    etsy-stack update     # 拉最新版本"
-echo "    etsy-stack list       # 列出已安装 skill"
-echo "    etsy-stack ai-cleaner # 查看 / 安装 AI 发布图清理工具"
+echo "    ecommerce-stack version    # 当前版本"
+echo "    ecommerce-stack check      # 立即检查更新"
+echo "    ecommerce-stack update     # 拉最新版本"
+echo "    ecommerce-stack list       # 列出已安装 skill"
+echo "    ecommerce-stack ai-cleaner # 查看 / 安装 AI 发布图清理工具"
+echo "    etsy-stack ...             # 旧命令仍可用"

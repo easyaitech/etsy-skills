@@ -1,13 +1,13 @@
 ---
 name: image-synth
-description: 用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。三种触发：(1) 模式 A 电商图：用户提到"出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图"等请求时——按 Etsy 槽位语义出图，QA 检查商品形态保持 + 文字可读性 + Etsy 主图规范；(2) 模式 B 社媒图：用户提到"出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / 群发图 / banner"等请求时——按目标平台尺寸出图，QA 仅检查文字可读性；(3) 反向触发：assets-library 模式 D 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，落 `<workspace>/.cache/image-synth/ai_raw/`，QA 不通过自动调 prompt 重试 ≤ 2 次；用户三选一（入库走 assets-library promote / 留 ai_raw / 丢弃）。严格遵守 BRAND.md 视觉禁区（如存在）。
+description: 用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。三种触发：(1) 模式 A 电商图：用户提到"出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图 / 小红书商品图"等请求时——按 COMMERCE_PLATFORM.md 的目标销售平台媒体规则出图；Etsy 走内置槽位语义，小红书走内置商品图 / 详情图规则，QA 检查商品形态保持 + 文字可读性 + 平台主图规范；(2) 模式 B 社媒图：用户提到"出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / 群发图 / banner"等请求时——按目标内容平台尺寸出图，QA 仅检查文字可读性；(3) 反向触发：assets-library 模式 D 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，落 `<workspace>/.cache/image-synth/ai_raw/`，QA 不通过自动调 prompt 重试 ≤ 2 次；用户三选一（入库走 assets-library promote / 留 ai_raw / 丢弃）。严格遵守 BRAND.md 视觉禁区（如存在）。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
 
 # Image Synth (AI 图片合成)
 
-把"详细图片需求 + 商品实拍图"调 Hermes 自带的图像生成能力合成成 1 张成品图。专攻**电商图**（Etsy listing 槽位 / 商品级营销图）+ **社媒图**（Pinterest / Instagram / Story / 节日营销 / 群发 banner）。
+把"详细图片需求 + 商品实拍图"调 Hermes 自带的图像生成能力合成成 1 张成品图。专攻**电商图**（目标销售平台商品页图 / listing 槽位 / 商品级营销图）+ **社媒图**（Pinterest / Instagram / Story / 节日营销 / 群发 banner）。
 
 **架构**：本 skill 维护**提示词层**（输入 → 5 类词库 → 最终 prompt）+ **质量闸门层**（差异化 QA），生图动作下沉到 Hermes runtime 自带能力。生成的图先落本地 `.cache/image-synth/ai_raw/`，由用户三选一决定是否进资产库。
 
@@ -16,7 +16,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **对外的实操接口**：
 - Hermes 自带生图能力（不点名具体工具，按 runtime 提供）
 - Hermes 看图能力（看实拍图作 anchor + 看生成图做 QA）
-- 工作区根目录的 BRAND.md（视觉原则 + 视觉禁区）+ SHOP.md（仅 packaging / brand-story 类用到）
+- 工作区根目录的 BRAND.md（视觉原则 + 视觉禁区）+ SHOP.md（仅 packaging / brand-story 类用到）+ COMMERCE_PLATFORM.md（销售平台媒体规则）
 - `assets-library` 模式 B2 promote 流程（用户选"入库"时调用，本 skill 不重新实现归档）
 
 > 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
@@ -31,6 +31,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 | 商品实拍图 ≥ 1 张（必需） | 本地路径 / 飞书云空间链接 | **必须用 Hermes 看图能力**看图识别商品（材质 / 色 / 比例 / Logo），作为 anchor 喂给生图——跳过这步 AI 容易把商品形态画跑偏 |
 | `<workspace>/BRAND.md` § 视觉原则 + § 视觉禁区 | 整体气质 / 配色 / 视觉禁区 | mood 词库源 + negative 词库**唯一**来源；BRAND 缺失降级 |
 | `<workspace>/SHOP.md` § 物料 / 礼盒服务 | 包装物料 + 礼盒服务字段 | 仅 packaging 槽位 / brand-story 槽位 / 礼盒营销图用到 |
+| `<workspace>/COMMERCE_PLATFORM.md` | 销售平台媒体规则（主图 / 详情图 / 视频 / 水印 / 文字限制） | 模式 A 决定槽位、比例、分辨率和平台硬禁区；Etsy / 小红书缺失可用内置 preset，其他平台缺失阻塞 |
 | 商品 Base 该 SKU 行（如已建） | title / 品类 / 变体 / SEO 关键词 | 选填——精确化 anchor，缺也能跑 |
 | 素材索引 Base 已 promoted 候选 | 已有同 SKU 成品图 | 选填——参考已有视觉风格保持一致 |
 
@@ -48,12 +49,12 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 |---|---|---|
 | 核心诉求 | 商品本身的真实呈现 | 品牌氛围 / 节日感 / 情绪 |
 | QA 商品形态 | ✅ 严格比对 | ❌ 不比对 |
-| QA hero 主图规范 | hero 槽位特检有 | 不适用 |
-| 长宽比 | 槽位决定（见 [prompt-vocabulary.md § format](references/prompt-vocabulary.md#format-词库映射规则)）| 平台决定（见 [social-platform-specs.md](references/social-platform-specs.md)）|
+| QA 主图规范 | 目标平台主图 / hero 槽位特检有 | 不适用 |
+| 长宽比 | COMMERCE_PLATFORM.md 或 Etsy 内置槽位决定（见 [prompt-vocabulary.md § format](references/prompt-vocabulary.md#format-词库映射规则)）| 内容平台决定（见 [social-platform-specs.md](references/social-platform-specs.md)）|
 | 文案叠层 | 罕见 | 常见（标题 / hashtag / CTA） |
-| 入库标签字段值 | Etsy 槽位 ID（hero / detail / lifestyle / ...）| 渠道值（Pinterest / Instagram Posts / ...）|
+| 入库标签字段值 | 目标平台商品图用途；Etsy 为槽位 ID（hero / detail / lifestyle / ...）| 渠道值（Pinterest / Instagram Posts / ...）|
 
-**入库标签的取值集**：与 [`assets-library/references/asset-index-base-schema.md` § 用途标签](../assets-library/references/asset-index-base-schema.md) 字段词汇表一一对应——本 skill **不**自定义。Etsy 槽位 ID 见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐)。
+**入库标签的取值集**：与 [`assets-library/references/asset-index-base-schema.md` § 用途标签](../assets-library/references/asset-index-base-schema.md) 字段词汇表一一对应——本 skill **不**自定义。Etsy 槽位 ID 见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐)；其他平台按 COMMERCE_PLATFORM.md 与素材索引 schema 对齐，缺值时先补 schema，不临时编标签。
 
 **边界场景**："黑五营销图（含商品 + 营销文字）"——核心是商品形态保真则走 A，核心是营销氛围则走 B。盘点输入时反问用户，**不替用户拍板**。
 
@@ -63,7 +64,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 模式 A / B 走同一套 11 步骤；差异见后面两节（输入表 + 模式差异表）。
 
-1. **解析工作区根**（`etsy-stack workspace`），得到 `<workspace>`
+1. **解析工作区根**（`ecommerce-stack workspace`，旧命令 `etsy-stack workspace` 兼容），得到 `<workspace>`
 2. **盘点输入**——必填项一次性问全（不要边走边追问）。**反向触发时已 in-memory 现传的字段不重复盘点**（见 § 反向触发条件）
 3. **解析图片需求** → 5 类词库（按 [prompt-vocabulary.md](references/prompt-vocabulary.md)）：
    - 输入是 shoot-brief.md 路径：读文件按模板段映射
@@ -81,7 +82,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
     - **丢弃** → 移到 `retired/`（详见 output-layout.md，给 7 天回滚窗口）
 11. 给用户回执：本地路径 / 入库后的飞书云空间链接 / "已丢弃"
 
-### 模式 A：电商图（Etsy listing 槽位 / 商品级营销图）
+### 模式 A：电商图（销售平台商品图 / listing 槽位 / 商品级营销图）
 
 **进入条件**：
 - 用户明确说"出 listing 主图 / hero / 详情图 / lifestyle / packaging / scale / size chart / 槽位 X"
@@ -94,7 +95,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 |---|---|---|---|
 | 1 | 图片需求（brief 路径 / 反向触发 in-memory / 用户口述）| ✅ | 阻塞 + 反问 |
 | 2 | 商品实拍图 ≥ 1 张 | ✅ | 阻塞 + 让用户给路径 / 飞书链接 |
-| 3 | 目标 Etsy 槽位（取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐) 的 10 槽位 ID）| ✅ | 阻塞 + 反问"哪个槽位——决定 QA 严格度和长宽比" |
+| 3 | 目标销售平台 + 商品图用途 / 槽位 | ✅ | Etsy 取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐) 的 10 槽位 ID；小红书取值按商品图 / 使用指南图 / 图文详情图；其他平台按 COMMERCE_PLATFORM.md，缺配置则阻塞 |
 | 4 | `<workspace>/BRAND.md` 视觉原则 + 视觉禁区 | 必需但**降级可跑** | 见 § 依赖关系 降级规则 |
 | 5 | 商品 Base 该 SKU 行 | 可选 | anchor 段只用实拍图 vision 结果 |
 
@@ -104,7 +105,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 |---|---|
 | 3 镜头清单源 | shoot-brief.md §C 当前槽位段 |
 | 8 QA 段 | [qa-gates.md § 模式 A](references/qa-gates.md#模式-a-电商图) |
-| 10 入库标签字段 | Etsy 槽位 ID（hero / detail / lifestyle / ...）|
+| 10 入库标签字段 | 目标平台商品图用途；Etsy 为槽位 ID（hero / detail / lifestyle / ...）|
 
 ### 模式 B：社媒图（Pinterest / Instagram / Story / 节日营销 / 群发 banner / 自定义氛围图）
 

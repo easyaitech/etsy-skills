@@ -54,7 +54,7 @@
 
 - 必须是工作区相对路径，不含 workspace root 前缀
 - 示例：`assets/clips/candle-set/hook-warm-01.mp4`
-- 运行时拼接：`$(etsy-stack workspace)/assets/clips/candle-set/hook-warm-01.mp4`
+- 运行时拼接：`$(ecommerce-stack workspace)/assets/clips/candle-set/hook-warm-01.mp4`（旧命令 `etsy-stack workspace` 兼容）
 - 不允许出现 `~`、`$HOME`、绝对路径
 
 ## compatible_with 语义
