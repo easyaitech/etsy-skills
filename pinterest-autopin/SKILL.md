@@ -57,10 +57,10 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 | 来源 | 提供什么 | 怎么用 |
 |---|---|---|
 | `<workspace>/BRAND.md` | 文案语调 / 视觉原则 / 边界 | pin 的 title / description / altText 严格遵守"应该说"、"避免说"、"原则"段；选图时用视觉禁区做合规自检 |
-| `<workspace>/SHOP.md` | Etsy 店铺 URL / 主营品类 | 店铺 URL 只作人工核对或非商品内容 fallback；商品型 pin 的 `link` 必须由商品 Base `分享链接` 提供 |
+| `<workspace>/SHOP.md` | 店铺 URL / 主营品类 | 店铺 URL 只作人工核对或非商品内容 fallback；商品型 pin 的 `link` 必须由商品 Base `分享链接` 提供 |
 | `<workspace>/BRAND_MARKETING.md` | 营销定位 / 人群 / 情感触点 / 场景矩阵 / 红线 | pin 文案的情感锚点与场景归属；选题优先级；红线过滤 |
 | `<workspace>/MARKETING_PLATFORM.md` | Pinterest 章节：内容规范 / 配比 / 红线 | pin 视觉规范、文字规范、内容配比按 Pinterest 章节执行 |
-| 商品 Base（listing-catalog）| `分享链接` / `Etsy Listing ID` / 标题 / SEO 关键词 / 上线状态 | `Link` 优先读取商品 Base `分享链接`；SKU、record_id 与 `Etsy Listing ID` 用于追溯；标题与 SEO 词做 pin title 的锚；**未上线或缺分享链接的 SKU 不允许排队** |
+| 商品 Base（listing-catalog）| `分享链接` / `平台商品 ID` / 标题 / SEO 关键词 / 上线状态 | `Link` 优先读取商品 Base `分享链接`；SKU、record_id 与 `平台商品 ID`（如 Etsy Listing ID / ASIN / item_id）用于追溯；标题与 SEO 词做 pin title 的锚；**未上线或缺分享链接的 SKU 不允许排队** |
 | 素材索引 Base（assets-library）| 「Pinterest 候选」视图 | 用筛选 `用途标签 ⊇ Pinterest AND 公开授权 = 已授权` 的素材；客户 UGC 没拿到授权的**绝不发** |
 | Pin Queue Base（本 skill）| 待发 / 已发 / 失败状态 + pin URL | 模式 B 写入草稿；模式 C 取草稿发布并回写结果 |
 
@@ -97,7 +97,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 1. 按 `references/pin-composition.md` § 输入清单盘点用户已给的输入；**缺必填项一次性问全**（目标 SKU、目标 board、是否指定素材），不要边写边追问。如用户给了多张素材，确认是否要做轮播 pin
 2. 用 `lark-base` 查商品 Base 取 SKU 行：
    - 校验 `状态 = 在售`，否则中止并提示用户先上线 listing
-   - 取商品 Base `分享链接` → 写入 Pin Queue `Link`；同时记录 SKU + 商品 record_id + `Etsy Listing ID` 便于追溯。缺 `分享链接` 时中止，回 `listing-catalog` 补字段，不临时拼 Etsy URL
+   - 取商品 Base `分享链接` → 写入 Pin Queue `Link`；同时记录 SKU + 商品 record_id + `平台商品 ID` 便于追溯。缺 `分享链接` 时中止，回 `listing-catalog` 补字段，不临时拼平台 URL
    - 取 SKU 标题 / SEO 关键词作 pin title 的锚
 3. 用 `lark-base` 查素材索引 Base 的「Pinterest 候选」视图：
    - **如果用户指定了素材**（1 张或多张）——逐张做 4 路分流，统一格式 `条件 → 中止，先去解决 X 再回来`：
@@ -172,8 +172,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **Pin Queue 写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘
 - **final 发布前必须经过 test**：除非用户明确豁免
 - **Pinterest-autopin 跑挂了不重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入（盲目重试可能被 Pinterest 风控）
-- **自动发布 cron 要做过期 backlog 恢复**：每次运行发布脚本前，先检查 `待发` / `草稿`、`pin_url` 为空、`重试次数 < 2` 的记录；如果 Hermes/cron 中断导致多条记录已过期，保留最早一条立即发布，把其余过期记录顺延到现有未来队列之后的北美友好档位，避免恢复后连续发布旧 backlog。当前默认内容配比为每天 1 条汉字解释 + 1 条商品/礼物图片；商品图片按 1 条/天规划，不要再按 2 条/天消耗。不要重启 `失败` 或已发记录。
-- **Pinterest 库存提醒必须分库存独立触发**：文字科普/汉字解释库存、商品图片/礼物场景库存是两个不同库存；各自按 3 天阈值独立提醒，不用“总待发/草稿”合并判断，也不要把两类缺货混成一条泛化库存提醒。
+- **自动发布 cron 要做过期 backlog 恢复**：每次运行发布脚本前，先检查 `待发` / `草稿`、`pin_url` 为空、`重试次数 < 2` 的记录；如果 Hermes/cron 中断导致多条记录已过期，保留最早一条立即发布，把其余过期记录顺延到现有未来队列之后的北美友好档位，避免恢复后连续发布旧 backlog。内容配比与每日条数按 `MARKETING_PLATFORM.md` 的 Pinterest 章节执行（未配置时默认每天 1 条品牌/内容型 pin + 1 条商品/礼物型 pin）；各类别按各自配额规划，不要超量消耗。不要重启 `失败` 或已发记录。
+- **Pinterest 库存提醒必须分库存独立触发**：品牌/内容型 pin 库存、商品/礼物型 pin 库存是两个不同库存；各自按 3 天阈值独立提醒，不用“总待发/草稿”合并判断，也不要把两类缺货混成一条泛化库存提醒。
 - **轮播 pin 不要拆成多个单图 pin 发**：轮播是一个 pin 对象，必须整体发布
 - **Ads Manager Board 选中判定只信任 dropdown selected 值**：Board 下拉打开时列表里出现目标 Board 名，不代表已选中；必须看右侧 `[data-test-id="board-dropdown-select-button"]` / `[data-test-id="board-dropdown-item-selected"]` 的文本。若选中后页面仍残留“必须要有图板”旧提示，但发布按钮可用，可视为旧草稿残留，不要因为 body 文本残留而回滚。
 - **不要用 `关联素材` 的返回顺序作为发布顺序**：飞书关联字段只做追溯，真正顺序永远来自 `image 路径` 的行顺序
@@ -186,7 +186,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
   - **BRAND.md 文案语调**的补充（→ distillation-brand.md 流程）
   - 也可能是 Pinterest 这个**渠道特有**的文案手感——这种暂时记到本 skill 的 `references/pin-composition.md`（用户后续触发"沉淀"再进 BRAND.md），不要硬塞 BRAND.md
 - **listing-catalog**：本 skill 只**读**商品 Base，不改。如果发 pin 后想统计"哪条 listing 由哪些 pin 引流"，未来在商品 Base 加一个反向关联视图（不在本 skill 现版本范围）
-- **content-asset-pool**：当 Pinterest pin 来自跨平台素材发布池时，本 skill 只消费已经确认顺序、授权和发布副本的素材任务；Pin Queue `关联 SKU` 需要保留 SKU + 商品 record_id + `Etsy Listing ID`，`Link` 必须使用商品 Base `分享链接`，发布成功后把 `pin_url` 回写给素材池对应发布任务。
+- **content-asset-pool**：当 Pinterest pin 来自跨平台素材发布池时，本 skill 只消费已经确认顺序、授权和发布副本的素材任务；Pin Queue `关联 SKU` 需要保留 SKU + 商品 record_id + `平台商品 ID`，`Link` 必须使用商品 Base `分享链接`，发布成功后把 `pin_url` 回写给素材池对应发布任务。
 - **social-publisher**：当用户要“自动发布 / 到点发布 / 发布任务对账”时，优先让 `social-publisher` 读取 Publishing Queue 并调用本 skill。发布成功或失败后，除 Pin Queue 外还必须回写 Publishing Queue。
 - **assets-library**：本 skill 只**读**素材索引 Base 的「Pinterest 候选」视图，不改。模式 B 第 3 步若指定素材还未录入 Base，提示用户先回 assets-library 走 B2 promote 再回来排 pin。素材发 pin 后想加标记也回 assets-library 手动维护
 - **orders-customers**：UGC 类素材的「公开授权」由 orders-customers 走客户沟通完成；本 skill 只消费已授权的结果

@@ -1,8 +1,7 @@
 {
   "name": "ecommerce-stack",
   "legacyName": "etsy-stack",
-  "description": "通用电商运营 skill bundle（Hermes runtime），Etsy 和小红书作为内置平台 preset。版本来源是 git tag，不在此处维护。",
-  "defaultPlatform": "etsy",
+  "description": "通用电商运营 skill bundle（Hermes runtime）。平台由工作区 COMMERCE_PLATFORM.md 驱动，Etsy 和小红书作为可选内置平台 preset，无特权默认平台。版本来源是 git tag，不在此处维护。",
   "platformPresets": [
     "etsy",
     "xiaohongshu"
@@ -19,7 +18,6 @@
     "content-asset-pool",
     "social-publisher",
     "pinterest-autopin",
-    "social-media/fublessings-pinterest-operations",
     "image-synth",
     "video-assembly",
     "trend-radar"

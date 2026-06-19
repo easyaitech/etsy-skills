@@ -81,7 +81,7 @@ function writeTrendRun(
 function writeBusinessContext(workspace: string): void {
   writeFileSync(
     join(workspace, "BRAND.md"),
-    "Custom Chinese calligraphy gifts with warm, personal meaning.\n"
+    "Custom personalized name gifts with warm, personal meaning.\n"
   );
   writeFileSync(join(workspace, "SHOP.md"), "店铺名: Test Shop\n");
   writeFileSync(
@@ -103,12 +103,12 @@ function writeBusinessContext(workspace: string): void {
     {
       products: [
         {
-          SKU: "BM-001",
-          "品类": "Bookmark",
-          "Title (EN)": "Custom Chinese Calligraphy Bookmark",
+          SKU: "NK-001",
+          "品类": "Necklace",
+          "Title (EN)": "Personalized Name Necklace",
           "Description (EN)": "Personalized name meaning birthday gift for a friend.",
-          Tags: ["custom bookmark", "name meaning", "friend gift"],
-          "SEO 关键词": ["Chinese name meaning gift", "personalized bookmark"],
+          Tags: ["custom necklace", "name meaning", "friend gift"],
+          "SEO 关键词": ["Chinese name meaning gift", "personalized necklace"],
           "状态": "草稿",
         },
       ],
@@ -174,7 +174,7 @@ describe("fit report helpers", () => {
 
   it("loads missing product cache as a degraded context", () => {
     const workspace = makeWorkspace();
-    writeFileSync(join(workspace, "BRAND.md"), "Chinese calligraphy gift\n");
+    writeFileSync(join(workspace, "BRAND.md"), "personalized name gift\n");
 
     const context = loadBusinessContext(workspace);
     expect(context.productCache).toBe("missing");
@@ -193,13 +193,13 @@ describe("fit report helpers", () => {
         "business-context",
         "product-catalog.json"
       ),
-      [{ SKU: "BM-001", "品类": "Bookmark" }]
+      [{ SKU: "NK-001", "品类": "Necklace" }]
     );
 
     const context = loadBusinessContext(workspace);
     expect(context.productCache).toBe("found");
     expect(context.products).toHaveLength(1);
-    expect(context.products[0].sku).toBe("BM-001");
+    expect(context.products[0].sku).toBe("NK-001");
   });
 
   it("rejects product cache with an unsupported shape", () => {
@@ -262,7 +262,7 @@ describe("fit report helpers", () => {
       human_decision: null,
       human_decision_at: null,
     });
-    expect(report.items[0].candidate_products[0].sku).toBe("BM-001");
+    expect(report.items[0].candidate_products[0].sku).toBe("NK-001");
     expect(report.items[1].decision).toBe("不做");
   });
 
@@ -270,7 +270,7 @@ describe("fit report helpers", () => {
     const workspace = makeWorkspace();
     writeFileSync(
       join(workspace, "BRAND.md"),
-      "Custom Chinese calligraphy gifts with warm, personal meaning.\n"
+      "Custom personalized name gifts with warm, personal meaning.\n"
     );
     writeJson(
       join(
@@ -332,7 +332,7 @@ describe("fit report helpers", () => {
     expect(markdown).toContain("- 关键词来源: Google Trends 总榜 rank 1 (+5,000%)");
     expect(markdown).toContain("- 中文含义: 中国 / 中文 / 中式 + 名字 + 含义 / 寓意");
     expect(markdown).toContain("- 搜索意图: 礼物/寓意/文化灵感型搜索");
-    expect(markdown).toContain("BM-001");
+    expect(markdown).toContain("NK-001");
   });
 
   it("writes dated report files and latest markdown", () => {

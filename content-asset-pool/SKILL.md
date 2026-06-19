@@ -139,11 +139,11 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 1. 读 [`references/ai-sanitization-policy.md`](references/ai-sanitization-policy.md) 和 [`../shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md)。
 2. 对每个素材复制原图到 `<workspace>/.cache/content-asset-pool/processed/`。
 3. 只对发布副本清 EXIF / XMP / C2PA / OpenAI provenance / prompt / 软件生成记录等 metadata。
-4. 做无损或轻度压缩；不要破坏商品边缘、中文文字、书法笔画。
+4. 做无损或轻度压缩；不要破坏商品边缘、文字、手工笔触 / 纹样。
 5. 输出 `发布副本本地路径`、`发布副本 hash`、`AI 清理状态`。
 6. 如用户确认上传回飞书，再由 `lark-drive` 上传发布副本，并回写 `发布副本链接`。
 
-默认不做像素级隐形水印处理。只有用户明确说“这批图可以做像素级处理”并接受画面可能变化，才允许对发布副本执行，并把 `像素级水印处理 = 已处理`。如果图片包含大量文字、书法或商品细节，默认写 `像素级水印处理 = 不建议`。
+默认不做像素级隐形水印处理。只有用户明确说“这批图可以做像素级处理”并接受画面可能变化，才允许对发布副本执行，并把 `像素级水印处理 = 已处理`。如果图片包含大量文字、手工纹样或商品细节，默认写 `像素级水印处理 = 不建议`。
 
 ---
 
@@ -265,7 +265,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 - 删除原图
 - 默认跑像素级隐形水印处理
 - 重绘、画面修复、破坏性压缩
-- 在中文文字、书法笔画、商品边缘密集的图上自动做像素级处理
+- 在文字、手工纹样、商品边缘密集的图上自动做像素级处理
 
 ---
 
@@ -288,7 +288,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 
 ### pinterest-autopin
 
-- 本仓现有 Pinterest 发布 skill 是 `pinterest-autopin`；现在作为 `social-publisher` 的 Pinterest adapter 使用。业务里如称 `fublessings-pinterest-operations`，按同一类下游 Pinterest 发布层处理。
+- 本仓现有 Pinterest 发布 skill 是 `pinterest-autopin`；现在作为 `social-publisher` 的 Pinterest adapter 使用。
 - 当素材池中素材用于 Pinterest，Publishing Queue 先建任务；执行时由 `social-publisher` 创建或补齐 Pin Queue。
 - Pin Queue 的 `关联 SKU` 必须写 SKU + 商品 record_id + 平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
 - Pin Queue 的 `Link` 必须使用商品 Base `分享链接` 字段，不临时拼任何平台商品 URL。

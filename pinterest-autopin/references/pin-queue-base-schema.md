@@ -36,14 +36,14 @@
 | `pin_id` | 单行文本（**主键**） | 格式 `PIN-{YYYYMMDD}-{3 位序号}` |
 | `状态` | 单选 | 草稿 / 待发 / 已发 / 失败 |
 | `pin 类型` | 单选 | 单图 / 轮播。单图 = 1 张，轮播 = 2-5 张（Pinterest carousel pin） |
-| `关联 SKU` | 关联（→ 商品 Base） | 必填；用于追溯 SKU + 商品 record_id + `Etsy Listing ID`；`Link` 另从商品 Base `分享链接` 读取 |
+| `关联 SKU` | 关联（→ 商品 Base） | 必填；用于追溯 SKU + 商品 record_id + `平台商品 ID`（如 Etsy Listing ID / ASIN / item_id）；`Link` 另从商品 Base `分享链接` 读取 |
 | `关联素材` | 关联（→ 素材索引 Base，**允许多值**） | 必填；单图关联 1 条，轮播关联 2-5 条。用于追溯素材来源；发布顺序以 `image 路径` 行顺序为准 |
 | `Board (Pinterest)` | 单选 | Pinterest 后台已建好的 board 名；用单选避免拼写漂移 |
 | `image 路径` | 多行文本 | 每张图的绝对本地路径各占一行，顺序就是 carousel 展示顺序（见下方 § 多图路径格式） |
 | `Title (EN)` | 多行文本 | ≤ 100 字符 |
 | `Description (EN)` | 多行文本 | 建议 200-500 字符 |
 | `Alt Text (EN)` | 多行文本 | 每张图的 alt text 用 `---` 独占一行分隔（见下方 § 多图 alt text 格式）；单图时无分隔符 |
-| `Link` | URL | 商品型 pin 必须 = 商品 Base `分享链接`；不要临时拼 Etsy listing URL |
+| `Link` | URL | 商品型 pin 必须 = 商品 Base `分享链接`；不要临时拼平台 listing URL |
 | `创建时间` | 创建时间（系统） | Base 自动 |
 | `创建人` | 创建人（系统） | Base 自动 |
 
@@ -115,10 +115,10 @@ Three cups arranged on a wooden shelf, each showing a slightly different shade o
       "altText": "Alt text for image 2"
     }
   ],
-  "title": "The Story Inside the Chinese Character Fu",
+  "title": "The Story Behind Our Handmade Process",
   "description": "...",
-  "board": "The Calligrapher's Studio · Behind the Brush",
-  "link": "https://fublessings.com"
+  "board": "Behind the Scenes · Our Studio",
+  "link": "https://your-shop.example.com"
 }
 ```
 

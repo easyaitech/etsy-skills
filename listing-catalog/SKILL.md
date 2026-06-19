@@ -132,7 +132,7 @@ layer: foundation
 
 ## 与 shop-foundation 的回流关系
 
-写 listing 过程中如果用户**纠正**了文案，且纠正反映品牌偏好（"这文案太冷了"），不要自己改——按 shop-foundation 的沉淀流程（`references/distillation-brand.md`）提示用户：
+写 listing 过程中如果用户**纠正**了文案，且纠正反映品牌偏好（"这文案太冷了"），不要自己改——按 shop-foundation 的沉淀流程（`../shop-foundation/references/distillation-brand.md`）提示用户：
 
 > 「这次的纠正背后好像是一条文案语调原则。你想沉淀进 BRAND.md 吗？沉淀完我用新原则重写这条 listing。」
 

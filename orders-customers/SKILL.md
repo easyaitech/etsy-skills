@@ -112,7 +112,7 @@ layer: foundation
 
 ## 与 shop-foundation 的回流关系
 
-客服处理过程中如果用户**纠正**了 Agent 的回复（"语气太冷"、"不该这么快道歉"），按 shop-foundation 的沉淀流程（`references/distillation-brand.md`）提示：
+客服处理过程中如果用户**纠正**了 Agent 的回复（"语气太冷"、"不该这么快道歉"），按 shop-foundation 的沉淀流程（`../shop-foundation/references/distillation-brand.md`）提示：
 
 > 「这次的纠正反映客服姿态的偏好。要沉淀进 BRAND.md 文案语调段吗？」
 

@@ -5,10 +5,16 @@
 ## [Unreleased]
 
 ### 新增
-- `stack 级`：从 Etsy 专用 skill 包泛化为电商平台通用栈，新增 `ecommerce-stack` 入口、`shared/platform-config.md` 平台配置契约和 `COMMERCE_PLATFORM.md` 基座模板；首批内置 Etsy / 小红书两个平台配置，并保留旧 `etsy-stack` 命令与 `.etsy-workspace` 标记兼容。
+- `stack 级`：从 Etsy 专用 skill 包泛化为电商平台通用栈，新增 `ecommerce-stack` 入口、`shared/platform-config.md` 平台配置契约和 `COMMERCE_PLATFORM.md` 基座模板；内置 Etsy / 小红书两个可选平台 preset，并保留旧 `etsy-stack` 命令与 `.etsy-workspace` 标记兼容。
+
+### 去品牌化 / 去平台特权
+- `stack 级`：移除所有品牌专属内容，使其成为真正通用的电商平台运营技能包。删除 ~28 个品牌 / Etsy 专属的遗留嵌套运营 skill（listing-catalog 下的 Etsy listing 优化 / SEO / 媒体一致性 / 数字打印件、orders-customers 下的品牌客服 / 订单 / 履约 / 运单运营、pinterest-autopin 下的品牌 Pinterest 运营子 skill，以及 image-synth / trend-radar 的品牌运营层、独立的 social-media / productivity / devops 目录）——这些工作流已由顶层通用 skill 覆盖。
+- `etsy-stack.json`：移除 `defaultPlatform: "etsy"` 特权默认平台。Etsy 与小红书并列为可选 preset，平台由 `COMMERCE_PLATFORM.md` 驱动；任何 skill 不再假定 Etsy。
+- 各 skill / shared / 参考文档：清除残留品牌字样与单一品类专属示例（硬编码的默认内容配比、示例文案、品牌官网链接等），改为通用占位或品类无关示例；假定 Etsy 的措辞（如裸用「Etsy 店铺 URL」「Etsy Listing ID」）改为通用「店铺 URL」/「平台商品 ID（如 Etsy Listing ID）」。
+- `listing-catalog`：修复历史 merge 遗留的悬空引用——恢复被丢弃的 `references/{etsy-seo,input-checklist,erank-research,business-knowledge-lookup,holiday-calendar}.md`（`etsy-seo` / `erank-research` 作为 Etsy preset 参考，其余为通用流程参考），并把通用流程参考里假定 Etsy 的措辞与单一品类示例改为平台 / 品类无关；修正 `distillation-brand.md` 指向 `../shop-foundation/references/`。全仓 markdown 链接已无悬空引用。
 - `listing-catalog` / `orders-customers`：新增小红书上架与订单字段参考，覆盖标题、类目、封面图、轮播图、视频、笔记正文、话题、价格、库存、SKU、物流、售后、订单状态、买家留言等上架和履约需要的字段。
 - `social-publisher`：新增社交媒体自动发布 skill，首期支持 Pinterest 发布队列、适配器注册和发布回写契约；小红书先作为手动发布 / 待适配平台进入同一平台配置模型，后续可按适配器扩展。
-- `content-asset-pool`：新增 FuBlessings 跨平台素材发布池 skill，登记待发布图片 / 视频、生成不覆盖原图的发布副本，并用素材池 + 发布任务双表追踪 Pinterest、Instagram、小红书、TikTok、Etsy 等平台的入队和发布状态。
+- `content-asset-pool`：新增跨平台素材发布池 skill，登记待发布图片 / 视频、生成不覆盖原图的发布副本，并用素材池 + 发布任务双表追踪 Pinterest、Instagram、小红书、TikTok、Etsy 等平台的入队和发布状态。
 - `orders-customers`：新增订单履约 SOP，覆盖新订单到发货、签收跟进的阶段检查、证据要求、Base 推荐字段和卡住视图；明确只处理订单之后的履约流程，不加入 listing 创建 SOP。
 - `shared`：新增 AI 发布图清理协议 `ai-image-sanitization.md`，只在最终 listing 图片和社媒待发布图片的发布副本上使用 `remove-ai-watermarks` 清 AI metadata / AI visible watermark；明确素材库 `待处理/`、`image-synth` 的 `ai_raw/` 和内部参考图不处理，`invisible` / `all` 因会重写像素需用户显式 opt-in。
 - `etsy-stack`：新增 `ai-cleaner` 子命令，用于检查 / 安装 [wiltodelta/remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)。
@@ -19,7 +25,6 @@
 - `trend-radar`：新增 Pinterest Trends 月度热词来源 `pinterest-trends` 和 `pinterest-chinese`。两个来源都采集 `trendsPreset=1` 的 monthly keywords，`pinterest-chinese` 额外带 `keywordsToInclude=chinese` 并只保留包含 `chinese` 的关键词，避免未登录通用预览污染结果；沿用现有 JSON 输出合同、截图和 HTML evidence，并新增 parser / URL 单元测试。
 - `trend-radar`：新增 eRank Trend Buzz 数据源 `erank-trend-buzz`，采集 Etsy / Last 30 Days 关键词并写入现有趋势 JSON 合同，供 `fit-report` 自动合并；免费态可能只有预览，完整列表可通过 `ERANK_TREND_BUZZ_PROFILE` / `ERANK_TREND_BUZZ_CDP_PORT` 复用已登录账号权限。
 - `trend-radar`：新增 `trend-fetch fit-report` 第二步，读取当天所有趋势源 JSON、四份基座文件和本地商品上下文缓存，输出按趋势词组织的 `fit-report.md/json`。报告只做人工判断（`可做 / 观察 / 不做`），不自动生成 Marketing Brief，不直连飞书 Base。
-- `fublessings-pinterest-operations`：新增 FuBlessings Pinterest 运营约定层，并纳入安装 manifest / README。安装后 Hermes 能加载图片组入队、单图/轮播、发布回写、失败重试和库存节奏规则。
 - `pinterest-autopin`：新增 `references/patches/pinterest-video-pin-support-a5ccaec.patch`，临时沉淀 Pinterest-autopin 视频 Pin 支持补丁，供拿到工具仓库权限后应用到发布工具源码。
 
 ### 修
@@ -35,7 +40,6 @@
 - `install.sh`：移除 trend-radar 的 retired 集合；新增 trend-radar npm 依赖安装 + Playwright chromium 安装 + `trend-fetch` CLI 链接。
 - `README.md`：skill 表加 trend-radar 一行；仓库布局加 utility/input 层；运行环境加 node/npm；移除"趋势分析交给 CoWork"措辞。
 - `install.sh` / `etsy-stack`：支持嵌套 skill 路径软链，并阻止 `pinterest-tool update` 默认拉旧 `easyaitech/Pinterest-autopin` 仓库；必须先核实真实工具来源或显式设置 `PINTEREST_AUTOPIN_REPO`。
-- `fublessings-pinterest-operations`：清理损坏的触发条件标题和重复的 final publish guard，避免 skill prompt 误导发布流程。
 
 ## [0.4.0] - 2026-05-10
 
