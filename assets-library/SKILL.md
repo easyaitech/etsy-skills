@@ -199,7 +199,7 @@ layer: foundation
 
 ## 与其他 skill 的协作
 
-- **shop-foundation**：每次归档后如果发现 BRAND.md 视觉原则需要补充（比如新增"自然光必拍"这种偏好），按 shop-foundation 的沉淀流程（`references/distillation-brand.md`）提议进 BRAND.md
+- **shop-foundation**：每次归档后如果发现 BRAND.md 视觉原则需要补充（比如新增"自然光必拍"这种偏好），按 shop-foundation 的沉淀流程（`../shop-foundation/references/distillation-brand.md`）提议进 BRAND.md
 - **listing-catalog**：
   - 商品 Base 通过"关联 SKU"反向看到全部素材；详见 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)
   - **模式 D 出 brief 时**消费 listing-catalog 模式 B step 5.5 的 4 类礼物词库——反向触发场景下 listing-catalog 现传 in-memory；主动触发场景下从该 SKU 的 Base description 段 3 + tags 礼物槽抽取已 fused 文本

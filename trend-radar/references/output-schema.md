@@ -107,10 +107,10 @@
       ],
       "candidate_products": [
         {
-          "sku": "BM-001",
-          "category": "Bookmark",
-          "title": "Custom Chinese Calligraphy Bookmark",
-          "reason": "关键词与 Bookmark / SKU 文案有重合"
+          "sku": "NK-001",
+          "category": "Necklace",
+          "title": "Personalized Name Necklace",
+          "reason": "关键词与 Necklace / SKU 文案有重合"
         }
       ],
       "reasons": {

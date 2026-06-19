@@ -75,12 +75,12 @@ v1 不在 Node CLI 中直接连接飞书 Base。商品 Base 由人工导出、He
 ```json
 [
   {
-    "SKU": "BM-001",
-    "品类": "Bookmark",
-    "Title (EN)": "Custom Chinese Calligraphy Bookmark",
-    "Description (EN)": "Personalized name meaning birthday gift",
-    "Tags": ["custom bookmark", "name meaning"],
-    "SEO 关键词": ["Chinese name meaning gift"],
+    "SKU": "NK-001",
+    "品类": "Necklace",
+    "Title (EN)": "Personalized Name Necklace",
+    "Description (EN)": "Custom name birthday gift for her",
+    "Tags": ["personalized necklace", "name jewelry"],
+    "SEO 关键词": ["custom name necklace gift"],
     "状态": "草稿"
   }
 ]
@@ -92,8 +92,8 @@ v1 不在 Node CLI 中直接连接飞书 Base。商品 Base 由人工导出、He
 {
   "products": [
     {
-      "SKU": "BM-001",
-      "品类": "Bookmark"
+      "SKU": "NK-001",
+      "品类": "Necklace"
     }
   ]
 }
