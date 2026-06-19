@@ -14,7 +14,7 @@ layer: foundation
 
 > **Base 是查素材的唯一入口**：用户找素材时走 Base 视图筛选 → 点文件链接跳转。不应该在文件夹里翻找——文件夹只是存储后端。
 
-**对外的实操接口**：飞书云空间（`lark-drive`） + 素材索引 Base（`lark-base`） + 商品 Base（`lark-base`，模式 D 读 SKU 行） + 工作区根目录的 BRAND.md（视觉原则）。
+**对外的实操接口**：飞书云空间（`lark-drive`） + 店铺总 Base 内的 `Assets 素材池` 表（`lark-base`） + `Products 商品` / `SKUs 变体` 表（模式 D 读 SKU 行） + 工作区根目录的 BRAND.md（视觉原则）。
 
 > 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
@@ -27,7 +27,7 @@ layer: foundation
 | `<workspace>/BRAND.md` § 视觉原则 / 视觉禁区 | 整体气质 / 色彩 / 排版构图 / 视觉禁区 | **B2 promote 时**用作"是否合规"自检；自检结果写进素材索引 Base 的"BRAND 合规"字段。**模式 D 出 brief 时**作为 §B Mood 段抽取源。raw 不做合规检查 |
 | `<workspace>/SHOP.md` § 物料 / 礼盒服务 | 包装物料 / 感谢卡 / 礼盒服务字段 | **模式 D 出 brief 时**决定 §A 表第 9 行 packaging 计划该拍什么物料 |
 | `<workspace>/COMMERCE_PLATFORM.md` | 目标销售平台媒体规则（主图 / 详情图 / 视频 / 水印 / 文字限制） | **模式 D 出 brief 时**决定槽位、比例、分辨率和硬禁区；Etsy / 小红书可使用内置 preset |
-| 商品 Base | SKU 列表 + 字段（title / 品类 / 变体 / SEO 关键词 / description 段 3） | 素材索引 Base 的"关联 SKU"字段直接关联（B2 用）；**模式 D 读 SKU 行**作为输入；商品 Base 通过反向查询能看到该 SKU 的全部素材 |
+| 店铺总 Base 的 `SKUs 变体` 表 | SKU 列表 + 字段（title / 品类 / 变体 / SEO 关键词 / description 段 3） | `Assets 素材池` 的"关联 SKU"字段直接关联（B2 用）；**模式 D 读 SKU 行**作为输入；SKU 行通过反向查询能看到该 SKU 的全部素材 |
 | 订单 Base | 订单号 | 客户拍摄 / 客户定制类素材通过"关联订单"字段挂上 |
 | 客户 Base | 客户列表 | UGC 类素材通过"关联客户"字段溯源授权 |
 | listing-catalog 礼物词库 | 4 类礼物词库（受众 / 场景 / 节日 / 包装） | **模式 D 出 brief 时**喂入 §C Lifestyle 段；获取路径见模式 D §输入 |

@@ -1,14 +1,14 @@
 ---
 name: orders-customers
-description: 维护电商订单 + 客户的两份飞书 Base，并按目标销售平台配置支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。三种触发：(1) "建订单库 / 客户库"——建两个 Base；(2) "录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"——读写 Base；(3) "回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发"——按客服 SOP + BRAND.md 语调 + COMMERCE_PLATFORM.md 平台边界输出回复。Etsy 和小红书是内置平台 preset，其他平台必须先有平台配置。
+description: 维护电商订单 + 客户两张表（默认位于店铺总 Base 内），并按目标销售平台配置支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。三种触发：(1) "建订单库 / 客户库"——在店铺总 Base 建表；(2) "录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"——读写 Base；(3) "回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发"——按客服 SOP + BRAND.md 语调 + COMMERCE_PLATFORM.md 平台边界输出回复。Etsy 和小红书是内置平台 preset，其他平台必须先有平台配置。
 layer: foundation
 ---
 
 # 订单与客户 (Orders & Customers)
 
-这个 skill 维护电商订单和客户的结构化数据（飞书 Base × 2）+ 支撑订单处理 / 履约检查 / 客服 / 客户运营。
+这个 skill 维护电商订单和客户的结构化数据（店铺总 Base 内的 `Orders 订单` / `Customers 客户` 两张表）+ 支撑订单处理 / 履约检查 / 客服 / 客户运营。
 
-**对外的实操接口**：飞书 Base（用 `lark-base` skill 操作）+ 工作区根目录的 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md（用 `shop-foundation` 维护）。
+**对外的实操接口**：店铺总 Base 内表（用 `lark-base` skill 操作；架构见 `../shared/store-base-architecture.md`）+ 工作区根目录的 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md（用 `shop-foundation` 维护）。
 
 > 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
@@ -30,18 +30,19 @@ layer: foundation
 
 ## 四种执行模式
 
-### 模式 A：建库（首次建立两个 Base）
+### 模式 A：建表（首次建立订单 / 客户表）
 
-**进入条件**：项目下尚无对应的订单 Base 或客户 Base。
+**进入条件**：项目下尚无对应的 `Orders 订单` 表或 `Customers 客户` 表。
 
 **执行步骤**：
-1. 读 `references/base-schema.md`，了解订单 Base + 客户 Base 字段
-2. 如果目标平台包含小红书，读 `references/xiaohongshu-orders.md`；创建 Base 时必须加建 `base-schema.md` 的“小红书字段”分组
-3. 用 lark-base skill 创建两个 Base（建议同一个云空间目录下）：
-   - `{店铺名}-订单库`
-   - `{店铺名}-客户库`
-4. 客户 Base 与订单 Base 建立**关联关系**（订单的 `客户` 字段 → 客户 Base 主键）
-5. 落盘后告诉用户两个 Base 的链接 + 字段清单
+1. 读 `../shared/store-base-architecture.md` 和 `references/base-schema.md`，了解店铺总 Base + 订单 / 客户表字段
+2. 如果目标平台包含小红书，读 `references/xiaohongshu-orders.md`；创建表时必须加建 `base-schema.md` 的“小红书字段”分组
+3. 解析工作区根并读取 `<workspace>/docs/store-base.md`：
+   - 若店铺总 Base 已存在：在其中创建或补齐 `Orders 订单` / `Customers 客户` 表
+   - 若店铺总 Base 不存在：先展示 one-shop-one-base 方案，等用户确认后再创建 `{店铺名}-运营中枢`
+   - 迁移期若发现旧独立订单 / 客户 Base，可作为 legacy fallback 查询，但新写入优先进入店铺总 Base
+4. 客户表与订单表建立**关联关系**（订单的 `客户` 字段 → `Customers 客户` 主键）
+5. 落盘后告诉用户店铺总 Base 链接、表名和字段清单
 
 > **不要硬塞无关字段**——通用核心字段必建；启用小红书时，小红书字段分组也必建但可以先为空；其他平台辅助字段后续按需补。
 

@@ -73,23 +73,29 @@ ecommerce-stack workspace
 
 ---
 
-## 飞书 Base 命名约定
+## 飞书 Base 架构与命名约定
 
-所有 skill 创建或搜索飞书 Base 表时，统一使用 **`{店铺名}-{表名}`** 格式。`{店铺名}` 取自 `<workspace>/SHOP.md` 的「店铺名」字段（§店铺基础）。
+默认采用 **一个店铺 = 一个飞书多维表格 Base；一个业务对象 = Base 内一张表**。详细契约见 [`shared/store-base-architecture.md`](store-base-architecture.md)。`{店铺名}` 取自 `<workspace>/SHOP.md` 的「店铺名」字段（§店铺基础）。
 
-| skill | 表名 |
-|---|---|
-| listing-catalog | `{店铺名}-商品` |
-| orders-customers | `{店铺名}-订单库`、`{店铺名}-客户库` |
-| supplier-foundation | `{店铺名}-供应商管理` |
-| business-knowledge | `{店铺名}-知识卡片` |
-| assets-library | `{店铺名}-素材索引` |
-| content-asset-pool | `{店铺名}-素材发布池`、`{店铺名}-发布任务` |
-| social-publisher | `{店铺名}-发布任务`、平台适配器队列（如 `{店铺名}-Pin Queue`） |
-| pinterest-autopin | `{店铺名}-Pin Queue` |
-| video-assembly | `{店铺名}-Clips`、`{店铺名}-Video Jobs` |
+推荐店铺总 Base 命名：`{店铺名}-运营中枢`。各 skill 不再默认创建彼此独立的 Base，而是优先在店铺总 Base 内定位或创建表：
 
-搜索表时用 `{店铺名}-` 前缀做过滤，避免多店铺在同一飞书空间时撞名。
+| 逻辑键 | 推荐表名 | 归属 skill |
+|---|---|---|
+| `products` | `Products 商品` | listing-catalog |
+| `skus` | `SKUs 变体` | listing-catalog |
+| `orders` | `Orders 订单` | orders-customers |
+| `customers` | `Customers 客户` | orders-customers |
+| `suppliers` | `Suppliers 供应商` | supplier-foundation |
+| `knowledge_cards` | `Knowledge Cards 知识卡片` | business-knowledge |
+| `assets` | `Assets 素材池` | assets-library / content-asset-pool |
+| `publishing_queue` | `Publishing Queue 发布任务` | content-asset-pool / social-publisher |
+| `pinterest_queue` | `Pinterest Queue` | pinterest-autopin |
+| `clips` | `Clips 视频片段` | video-assembly |
+| `video_jobs` | `Video Jobs 视频任务` | video-assembly |
+
+每次读写 Base 前，先解析工作区根，再读取 `<workspace>/docs/store-base.md`（或未来等价机器可读配置）获取店铺总 Base 与 table_id。配置缺失时，建库场景应引导创建店铺总 Base 内表；迁移期查询可兼容旧独立 Base，但必须标注为 legacy fallback。除非用户明确要求隔离，不要为新模块默认创建独立 Base。
+
+面向用户的回复不要暴露 Base token、table_id、record_id、field_id 或 file token；需要交付时给飞书链接或说明已写入配置文件。
 
 ---
 
