@@ -27,11 +27,11 @@
 | Skill | 管什么 |
 |---|---|
 | shop-foundation | 品牌原则 + 店铺事实 + 营销策略 + 平台策略（四份 .md 基座文件） |
-| listing-catalog | 商品目录（飞书 Base）+ listing 文案 |
-| assets-library | 视觉与素材资产（飞书云空间 + 素材索引 Base） |
-| orders-customers | 订单 + 客户（飞书 Base × 2）+ 客服 SOP |
-| supplier-foundation | 供应商与采购来源（飞书 Base） |
-| business-knowledge | 业务知识库（raw / weekly / wiki / briefs markdown + Knowledge Cards Base），optional memory foundation |
+| listing-catalog | 店铺总 Base 内商品表 + listing 文案 |
+| assets-library | 视觉与素材资产（飞书云空间 + `Assets 素材池` 表） |
+| orders-customers | 店铺总 Base 内订单 / 客户表 + 客服 SOP |
+| supplier-foundation | 店铺总 Base 内供应商表 |
+| business-knowledge | 业务知识库（raw / weekly / wiki / briefs markdown + `Knowledge Cards 知识卡片` 表），optional memory foundation |
 
 基座 skill 之间有协作（如 assets-library 读店铺总 Base 的 SKU 表、orders-customers 读 BRAND.md、supplier-foundation 服务物料采购、business-knowledge 提供可选业务记忆），但**不存在启动先后顺序**——哪个先建视用户业务需求而定。
 
@@ -42,7 +42,7 @@
 围绕基座层运行，从基座取数据、用基座的规则约束输出。当前：
 - `content-asset-pool`：取素材 + 商品 + 平台意图 → 维护跨平台发布池与发布任务
 - `social-publisher`：取 Publishing Queue → 做任务校验、占用、适配器路由、自动发布巡检和结果回写
-- `pinterest-autopin`：Pinterest adapter；取 Pin Queue + 商品 + 素材 + 品牌 → 组 pin 发布
+- `pinterest-autopin`：Pinterest adapter；取 `Pinterest Queue` 表 + 商品 + 素材 + 品牌 → 组 pin 发布
 - `image-synth`：取品牌视觉 + 商品信息 → AI 合成图
 - `video-assembly`：取商品 + clips + 营销策略 → 装配短视频
 
@@ -76,15 +76,15 @@
 | 依赖 \ Skill | listing-catalog | orders-customers | supplier-foundation | business-knowledge | assets-library | content-asset-pool | social-publisher | pinterest-autopin | image-synth | video-assembly |
 |---|---|---|---|---|---|---|---|---|---|---|
 | BRAND.md | 写文案=**BLOCK**；查改=SKIP | 客服=**BLOCK**；录入=SKIP | SKIP | brief=**DEGRADE** | B2=**DEGRADE**；D=**DEGRADE** | SKIP | SKIP | 组 pin=**BLOCK** | **DEGRADE** | **DEGRADE** |
-| SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | 建卡片 Base=**BLOCK**；brief=**DEGRADE** | D=SKIP | 建表=**BLOCK** | 发布表定位=**BLOCK** | 组 pin=**BLOCK** | SKIP | SKIP |
+| SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | 建知识卡片表=**BLOCK**；brief=**DEGRADE** | D=SKIP | 建表=**BLOCK** | 发布表定位=**BLOCK** | 组 pin=**BLOCK** | SKIP | SKIP |
 | BRAND_MARKETING.md | — | — | — | brief=**DEGRADE** | — | SKIP | SKIP | 组 pin=SKIP | — | Mode B=**BLOCK** |
 | MARKETING_PLATFORM.md | — | — | — | brief=**DEGRADE** | — | 建任务=**DEGRADE** | SKIP | 组 pin=SKIP | — | Mode B=**BLOCK** |
-| Knowledge Cards Base | SKIP | SKIP | SKIP | 写卡片=**BLOCK**；读卡片=SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
-| 商品 Base | 写文案=**BLOCK** | 录入=SKIP | 有 SKU 上下文时=SKIP | brief=SKIP | D=**BLOCK** | 商品型任务=**BLOCK** | SKIP | 组 pin=**BLOCK** | SKIP | Mode B=**BLOCK** |
-| 供应商管理 Base | — | — | 录入/选型=**BLOCK** | SKIP | SKIP | SKIP | SKIP | — | — | — |
-| 素材索引 Base | — | — | — | SKIP | B2=**BLOCK**；C=SKIP | 入队=**DEGRADE** | SKIP | 组 pin=**DEGRADE** | SKIP | SKIP |
-| 素材发布池 Base | — | — | — | SKIP | SKIP | 建池/入队=**BLOCK** | 发布校验=**BLOCK** | SKIP | SKIP | SKIP |
-| Publishing Queue Base | — | — | — | SKIP | SKIP | 建任务=**BLOCK** | 发布=**BLOCK** | SKIP | SKIP | SKIP |
-| 订单 Base | — | 录入=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — | — |
-| 客户 Base | — | 客服=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — | — |
-| Pin Queue Base | — | — | — | SKIP | — | SKIP | Pinterest=**BLOCK** | 发 pin=**BLOCK** | — | — |
+| `Knowledge Cards 知识卡片` 表 | SKIP | SKIP | SKIP | 写卡片=**BLOCK**；读卡片=SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
+| `Products 商品` / `SKUs 变体` 表 | 写文案=**BLOCK** | 录入=SKIP | 有 SKU 上下文时=SKIP | brief=SKIP | D=**BLOCK** | 商品型任务=**BLOCK** | SKIP | 组 pin=**BLOCK** | SKIP | Mode B=**BLOCK** |
+| `Suppliers 供应商` 表 | — | — | 录入/选型=**BLOCK** | SKIP | SKIP | SKIP | SKIP | — | — | — |
+| `Assets 素材池` 表（基础素材字段） | — | — | — | SKIP | B2=**BLOCK**；C=SKIP | 入队=**DEGRADE** | SKIP | 组 pin=**DEGRADE** | SKIP | SKIP |
+| `Assets 素材池` 表（发布副本字段） | — | — | — | SKIP | SKIP | 建池/入队=**BLOCK** | 发布校验=**BLOCK** | SKIP | SKIP | SKIP |
+| `Publishing Queue 发布任务` 表 | — | — | — | SKIP | SKIP | 建任务=**BLOCK** | 发布=**BLOCK** | SKIP | SKIP | SKIP |
+| `Orders 订单` 表 | — | 录入=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — | — |
+| `Customers 客户` 表 | — | 客服=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — | — |
+| `Pinterest Queue` 表 | — | — | — | SKIP | — | SKIP | Pinterest=**BLOCK** | 发 pin=**BLOCK** | — | — |

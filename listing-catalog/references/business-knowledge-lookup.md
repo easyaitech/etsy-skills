@@ -6,8 +6,8 @@
 
 Knowledge Cards 对 listing 是 `SKIP`：
 
-- `{店铺名}-知识卡片` Base 不存在：静默跳过。
-- Base 为空或不可读：静默跳过。
+- 店铺总 Base 或 `Knowledge Cards 知识卡片` 表不存在：静默跳过。
+- `Knowledge Cards 知识卡片` 表为空或不可读：静默跳过。
 - 没有 active / watch 且适用 `listing` 的卡片：静默跳过。
 - 检索失败不能阻塞 title / description / tags / materials 生成。
 
@@ -29,12 +29,12 @@ Knowledge Cards 对 listing 是 `SKIP`：
 ```text
 scenario: listing
 sku_context:
-  sku: 商品 Base 或用户输入的 SKU
-  category: 中文产品名 / 类目、商品 Base 品类
+  sku: `Products 商品` / `SKUs 变体` 表或用户输入的 SKU
+  category: 中文产品名 / 类目、`Products 商品` / `SKUs 变体` 表 品类
   materials: 关键参数、Materials 候选
   price_range: < $20 / $20-$50 / >= $50
   gift_words: step 5.5 的受众词 / 场景词 / 节日词 / 包装服务词
-  seo_keywords: 平台 SEO 词库（如 eRank / etsy-seo 候选）、商品 Base SEO 关键词
+  seo_keywords: 平台 SEO 词库（如 eRank / etsy-seo 候选）、`Products 商品` / `SKUs 变体` 表 SEO 关键词
   target_audience: step 5.5 Q2 / Q5
 marketing_context:
   channels: 目标平台 listing
@@ -85,4 +85,4 @@ listing 正文只能使用 `yes` / `partial` 卡片。`no` 卡片只展示为 re
 - `引用次数 += 1`
 - `最后引用日期 = today`
 
-统计回写失败不阻塞商品 Base 写入，也不改变 listing 输出。只在最终回复里简短说明“Knowledge Cards 统计字段未能更新”。
+统计回写失败不阻塞 `Products 商品` / `SKUs 变体` 表写入，也不改变 listing 输出。只在最终回复里简短说明“Knowledge Cards 统计字段未能更新”。

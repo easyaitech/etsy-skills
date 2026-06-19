@@ -1,10 +1,10 @@
-# Pin Queue Base Schema
+# `Pinterest Queue` 表 Schema
 
-> 用 `lark-base` 在飞书云空间创建 `{店铺名}-Pin Queue` Base，建在与商品 / 素材 Base 同一目录下。建表后删除飞书自动生成的「文本」「日期」「附件」三个默认列——它们在本流程中没有用途。
+> 用 `lark-base` 在店铺总 Base 内创建或补齐 `Pinterest Queue` 表。不要为 Pinterest 队列默认创建独立 Base；迁移期旧独立 Pinterest 队列数据源只作为只读来源。
 
 ## 数据模型
 
-一条 Pin Queue 记录就是一个 Pinterest Pin。单图 pin 和轮播 pin 共用同一张表：
+一条 `Pinterest Queue` 记录就是一个 Pinterest Pin。单图 pin 和轮播 pin 共用同一张表：
 
 - 单图：`images` 数组长度 = 1
 - 轮播：`images` 数组长度 = 2-5
@@ -16,7 +16,7 @@
 
 ## 已有 Base 升级（从单图升级到多图支持）
 
-如果已有 Pin Queue Base（之前用 Mode A 建的单图版本），需要手动修改以下字段以支持轮播 pin：
+如果已有 `Pinterest Queue` 表（之前用 Mode A 建的单图版本），需要手动修改以下字段以支持轮播 pin：
 
 1. 新增 `pin 类型` 字段（单选：单图 / 轮播）
 2. 把 `关联素材` 改为**允许多值**（飞书 Base 关联字段设置里勾选「允许关联多条记录」）
@@ -36,14 +36,14 @@
 | `pin_id` | 单行文本（**主键**） | 格式 `PIN-{YYYYMMDD}-{3 位序号}` |
 | `状态` | 单选 | 草稿 / 待发 / 已发 / 失败 |
 | `pin 类型` | 单选 | 单图 / 轮播。单图 = 1 张，轮播 = 2-5 张（Pinterest carousel pin） |
-| `关联 SKU` | 关联（→ 商品 Base） | 必填；用于追溯 SKU + 商品 record_id + `平台商品 ID`（如 Etsy Listing ID / ASIN / item_id）；`Link` 另从商品 Base `分享链接` 读取 |
-| `关联素材` | 关联（→ 素材索引 Base，**允许多值**） | 必填；单图关联 1 条，轮播关联 2-5 条。用于追溯素材来源；发布顺序以 `image 路径` 行顺序为准 |
+| `关联 SKU` | 关联（→ `SKUs 变体` 表；必要时反查 `Products 商品` 表） | 必填；用于追溯 SKU + 商品 record_id + `平台商品 ID`（如 Etsy Listing ID / ASIN / item_id）；`Link` 另从商品表 `分享链接` 读取 |
+| `关联素材` | 关联（→ `Assets 素材池` 表，**允许多值**） | 必填；单图关联 1 条，轮播关联 2-5 条。用于追溯素材来源；发布顺序以 `image 路径` 行顺序为准 |
 | `Board (Pinterest)` | 单选 | Pinterest 后台已建好的 board 名；用单选避免拼写漂移 |
 | `image 路径` | 多行文本 | 每张图的绝对本地路径各占一行，顺序就是 carousel 展示顺序（见下方 § 多图路径格式） |
 | `Title (EN)` | 多行文本 | ≤ 100 字符 |
 | `Description (EN)` | 多行文本 | 建议 200-500 字符 |
 | `Alt Text (EN)` | 多行文本 | 每张图的 alt text 用 `---` 独占一行分隔（见下方 § 多图 alt text 格式）；单图时无分隔符 |
-| `Link` | URL | 商品型 pin 必须 = 商品 Base `分享链接`；不要临时拼平台 listing URL |
+| `Link` | URL | 商品型 pin 必须 = 商品表 `分享链接`；不要临时拼平台 listing URL |
 | `创建时间` | 创建时间（系统） | Base 自动 |
 | `创建人` | 创建人（系统） | Base 自动 |
 
@@ -101,7 +101,7 @@ Three cups arranged on a wooden shelf, each showing a slightly different shade o
 
 ## request.json 目标结构
 
-发布器从一行 Pin Queue 记录构造统一的 `images[]`，单图和轮播都走同一格式：
+发布器从一行 `Pinterest Queue` 记录构造统一的 `images[]`，单图和轮播都走同一格式：
 
 ```json
 {

@@ -1,6 +1,6 @@
 # Publishing Queue Contract
 
-social-publisher 消费 `content-asset-pool` 创建的 `{店铺名}-发布任务` 表。发布状态只以这张表为跨平台 source of truth；平台子队列（如 Pin Queue）是适配器执行细节。
+social-publisher 消费店铺总 Base 内的 `Publishing Queue 发布任务` 表。发布状态只以这张表为跨平台 source of truth；平台子队列（如 `Pinterest Queue` 表）是适配器执行细节。
 
 ## 必填字段
 
@@ -14,7 +14,7 @@ social-publisher 消费 `content-asset-pool` 创建的 `{店铺名}-发布任务
 | `封面素材` | 多图 / 视频 / 图文笔记必须填 |
 | `标题` | 平台标题 |
 | `描述` | 平台正文 / caption |
-| `链接` | 商品型发布必须来自商品 Base `分享链接`；非商品型可空 |
+| `链接` | 商品型发布必须来自 `Products 商品` / `SKUs 变体` 表的 `分享链接`；非商品型可空 |
 | `状态` | 发布状态 |
 | `计划发布时间` | 自动发布筛选依据 |
 | `自动发布` | true 才允许无人值守自动执行 |
@@ -24,7 +24,7 @@ social-publisher 消费 `content-asset-pool` 创建的 `{店铺名}-发布任务
 | 字段 | 类型建议 | 说明 |
 |---|---|---|
 | `发布适配器` | 单选 / 文本 | 如 `pinterest-autopin`、`manual-xiaohongshu` |
-| `外部队列 ID` | 单行文本 | 平台子队列 ID；Pinterest 填 Pin Queue `pin_id` |
+| `外部队列 ID` | 单行文本 | 平台子队列 ID；Pinterest 填 `Pinterest Queue` 表的 `pin_id` |
 | `发布尝试次数` | 数字 | 每次进入真实发布前累加；默认 0 |
 | `最后尝试时间` | 日期时间 | 每次自动 / 手动执行后更新 |
 | `执行锁` | 单行文本 | 真实发布前写入本轮唯一令牌；完成、失败或放弃后清空 |
@@ -74,9 +74,9 @@ social-publisher 消费 `content-asset-pool` 创建的 `{店铺名}-发布任务
 
 ## Pinterest 映射
 
-Pinterest Publishing Queue 行必须映射到 Pin Queue：
+Pinterest Publishing Queue 行必须映射到 `Pinterest Queue` 表：
 
-| Publishing Queue | Pin Queue |
+| Publishing Queue | `Pinterest Queue` 表 |
 |---|---|
 | `任务 ID` | `pin_id`，可复用 `PIN-...` |
 | `发布类型` | `pin 类型`：单图 / 轮播 |
@@ -90,10 +90,10 @@ Pinterest Publishing Queue 行必须映射到 Pin Queue：
 
 发布成功后：
 
-- Pin Queue：`状态 = 已发`、`pin_url`、`发布时间`
+- `Pinterest Queue` 表：`状态 = 已发`、`pin_url`、`发布时间`
 - Publishing Queue：`状态 = 已发`、`发布 URL`、`发布时间`、`外部队列 ID`
 
-发布失败后两边都要记录失败，不允许只改 Pin Queue。
+发布失败后两边都要记录失败，不允许只改 `Pinterest Queue` 表。
 
 ## Manual-only 平台
 

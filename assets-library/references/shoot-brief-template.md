@@ -12,7 +12,7 @@
 # {SKU} 拍摄 Brief — {YYYY-MM-DD}
 
 > Etsy listing 槽位、风格 mood、镜头清单
-> 输入来源：[x] 商品 Base [x] BRAND.md [{x|-}] listing-catalog 礼物词库（来源：反向传入 / Base 反推 / 未跑过）[{x|-}] eRank [{x|-}] SHOP.md 物料
+> 输入来源：[x] `Products 商品` / `SKUs 变体` 表 [x] BRAND.md [{x|-}] listing-catalog 礼物词库（来源：反向传入 / Base 反推 / 未跑过）[{x|-}] eRank [{x|-}] SHOP.md 物料
 > 适用 shoot 节奏：[ ] 集中 shoot（与 X/Y/Z 同批）  [ ] 零散补拍
 
 ---
@@ -62,7 +62,7 @@
 ### Variation grid（{N} 张，如有变体）
 - **网格构图**：{2x2 / 3x3 / 横向并排}
 - **统一项**：{光线 / 角度 / 背景必须一致}
-- **变体清单**：{从商品 Base 变体字段抽——颜色 / 尺寸 / 款式}
+- **变体清单**：{从`Products 商品` / `SKUs 变体` 表 变体字段抽——颜色 / 尺寸 / 款式}
 
 ### Scale（1 张）
 - **参照物**：{手 / 硬币 / 信用卡 / 已知尺寸家具}
@@ -95,7 +95,7 @@
 
 ## D. 参考图（用户手填）
 
-> PR1 范围：仅用户手填，skill 不主动反查素材索引 Base。
+> PR1 范围：仅用户手填，skill 不主动反查`Assets 素材池` 表。
 
 - {Pinterest 链接}
 - {已有 raw 链接}
@@ -114,7 +114,7 @@
 
 - BRAND.md § 视觉原则
 - BRAND.md § 视觉禁区
-- 商品 Base 该 SKU 行（链接）
+- `Products 商品` / `SKUs 变体` 表中该 SKU 行（链接）
 - listing description 段 3（如已生成）
 - references/etsy-listing-photo-slots.md（10 槽位社区 SOP）
 - {SHOP.md § 物料 + § 礼盒服务，如已建立}
@@ -142,14 +142,14 @@
 ### C 段填写规则
 
 - Hero 一定要有
-- Variation grid: 看商品 Base 变体字段；无变体时整段省略
+- Variation grid: 看 `Products 商品` / `SKUs 变体` 表的变体字段；无变体时整段省略
 - Detail: 至少 3 张（材质 / 工艺 / 纹理 Logo 三选三）
 - Lifestyle 段 "词库来源标记"勾选必须如实——反向触发 = in-memory 现传；主动触发 = Base description 反推；都没跑过 listing 流程 = 用户口述
 - 老 SKU 部分跑场景：仅填 §A 表缺位行 + §C 对应镜头清单段；§B 沿用旧 brief，不重写
 
 ### D 段填写规则
 
-- PR1 范围：skill 不反查素材索引 Base，仅用户手填
+- PR1 范围：skill 不反查 `Assets 素材池` 表，仅用户手填
 - 出 brief 时 §D 留 3-5 个空 bullet，给用户事后填
 
 ### E 段填写规则

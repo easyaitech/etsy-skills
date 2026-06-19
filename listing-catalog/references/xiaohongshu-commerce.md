@@ -20,7 +20,7 @@
 
 ## 上架前必备信息
 
-建小红书商品 Base 或准备上新时，至少盘点：
+建小红书 `Products 商品` / `SKUs 变体` 表或准备上新时，至少盘点：
 
 | 信息 | 说明 |
 |---|---|
@@ -61,7 +61,7 @@
 
 ## 飞书 Base 建字段要求
 
-当 `COMMERCE_PLATFORM.md` 包含小红书平台时，`listing-catalog` 模式 A 建商品 Base 必须在通用核心字段外加建 `base-schema.md` 的“小红书字段”分组。字段多，但这是平台约束；可以先建空字段，后续按 SKU 慢慢补齐。
+当 `COMMERCE_PLATFORM.md` 包含小红书平台时，`listing-catalog` 模式 A 建 `Products 商品` / `SKUs 变体` 表必须在通用核心字段外加建 `base-schema.md` 的“小红书字段”分组。字段多，但这是平台约束；可以先建空字段，后续按 SKU 慢慢补齐。
 
 ## 发布边界
 

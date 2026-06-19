@@ -1,6 +1,6 @@
-# Video Jobs 表 Schema（飞书 Base）
+# Video Jobs 表 Schema
 
-表名：`{店铺名}-Video Jobs`
+表位置：店铺总 Base 内的 `video_jobs` 表。迁移期旧独立 Video Jobs 数据源只作为只读来源。
 
 ## 字段定义
 
@@ -10,7 +10,7 @@
 | hook_clip_id | 关联 | ✓ | 使用的 Hook 片段（关联 clips 表） |
 | body_clip_id | 关联 | ✓ | 使用的 Body 片段（关联 clips 表） |
 | close_clip_id | 关联 | ✓ | 使用的 Close 片段（关联 clips 表） |
-| product_id | 关联 | ✓ | 目标产品（关联 products 表） |
+| product_id | 关联 | ✓ | 目标产品（关联 `Products 商品` / `SKUs 变体` 表） |
 | music_track | 文本 | ✓ | 使用的背景音乐文件名 |
 | overlay_copy | 文本 | | 叠加的文案内容 |
 | platform | 单选 | ✓ | tiktok / instagram / pinterest / xiaohongshu |

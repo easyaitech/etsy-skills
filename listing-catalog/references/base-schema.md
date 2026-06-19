@@ -1,7 +1,8 @@
-# 商品 Base 推荐 Schema
+# 商品目录表推荐 Schema
 
-> 用 `lark-base` skill 在飞书云空间创建一个 Base，命名建议：`{店铺名}-商品目录`。
-> 字段默认平台中性。历史 Etsy 工作区可以保留旧字段名，但新建 Base 优先使用下面的通用字段；平台专属要求写入 `COMMERCE_PLATFORM.md`。
+> 用 `lark-base` skill 在店铺总 Base 内创建或补齐 `Products 商品` / `SKUs 变体` 表。
+> 字段默认平台中性。历史 Etsy 工作区可以保留旧字段名，但新建表优先使用下面的通用字段；平台专属要求写入 `COMMERCE_PLATFORM.md`。
+> 本文核心字段主要服务 `SKUs 变体` 表；商品级故事、品类聚合和跨变体信息放 `Products 商品` 表。
 
 ## 核心字段（必建）
 
@@ -123,17 +124,17 @@
 ## 不建议在 Base 里塞的东西
 
 - 摄影原图：体积大、版本多 → 走资产库（`assets-library` skill）+ 链接字段
-- 客户订单数据：另一个 Base（未来 `orders-customers` skill）
-- 评价记录：未来另一个 Base
+- 客户订单数据：店铺总 Base 内 `Orders 订单` / `Customers 客户` 表（`orders-customers` skill）
+- 评价记录：店铺总 Base 内订单 / 客户相关表
 - 长篇 listing 描述的草稿历史：写完确认就覆盖；版本控制不该在 Base 里做
 
-## 反查素材：商品 Base ↔ 素材索引 Base
+## 反查素材：商品表 ↔ `Assets 素材池` 表
 
-本商品 Base 没有"照片字段"——素材通过 `assets-library` 的素材索引 Base 反向关联（关联 SKU 字段）。在飞书 Base 里点开某 SKU 行，能看到所有指向它的素材索引行。
+商品表不直接存放图片文件本体——素材通过 `Assets 素材池` 表反向关联（关联 SKU 字段）。在飞书 Base 里点开某 SKU 行，能看到所有指向它的素材行。
 
 **注意范围**：反查到的是该 SKU 的 **promoted 成品**（已经走过 assets-library 模式 B2 的）。**未录入 Base 的素材不在反查结果里**——找未分类素材浏览 `素材库/待处理/` 文件夹（详见 [assets-library/references/folder-structure.md](../../assets-library/references/folder-structure.md)）。
 
-是否在商品 Base 上加"照片链接"快捷字段，由 assets-library 的 [asset-types.md § 与 listing-catalog 的协作](../../assets-library/references/asset-types.md#与-listing-catalog-的协作) 在每次 promote 时反向问用户，本表不预设。
+是否在商品表上加"照片链接"快捷字段，由 assets-library 的 [asset-types.md § 与 listing-catalog 的协作](../../assets-library/references/asset-types.md#与-listing-catalog-的协作) 在每次 promote 时反向问用户，本表不预设。
 
 ## 建表后的下一步
 

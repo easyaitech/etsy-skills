@@ -157,6 +157,6 @@ studio_raw-material_01.jpg
 
 同一 SKU 拍多组不同情境（早晨 / 棚拍 / 手持），用 `shot-context` 字段区分。全部放在同一个 `商品/` 文件夹中。
 
-## 与素材索引 Base 的关联
+## 与 `Assets 素材池` 表的关联
 
-文件名是物理层的"短标识"，[素材索引 Base](asset-index-base-schema.md) 是语义层。**dump（B1）不录 Base，promote（B2）才录**：promote 时把成品文件按公式命名 + 移入对应文件夹 + 录入 Base 一行（"文件名" + "文件链接" + 素材类型 / 关联 SKU / 用途等）。
+文件名是物理层的"短标识"，[`Assets 素材池` 表](asset-index-base-schema.md) 是语义层。**dump（B1）不录 Base，promote（B2）才录**：promote 时把成品文件按公式命名 + 移入对应文件夹 + 录入 Base 一行（"文件名" + "文件链接" + 素材类型 / 关联 SKU / 用途等）。

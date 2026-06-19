@@ -1,14 +1,13 @@
-# 供应商管理 Base Schema
+# `Suppliers 供应商` 表 Schema
 
-> 用 `lark-base` skill 在飞书云空间创建一份 Base：
-> - `{店铺名}-供应商管理`
+> 用 `lark-base` skill 在店铺总 Base 内创建或补齐供应商表。
+> 默认表名：`Suppliers 供应商`；如团队已沿用旧名，可保留 `采购来源` 作为显示名。
 >
-> Base 内核心表：
-> - `采购来源`
+> 不要为供应商管理默认创建独立 Base。迁移期旧独立供应商数据源只能作为只读来源，验收后迁入店铺总 Base。
 
 ---
 
-## `采购来源` 表
+## `Suppliers 供应商` / `采购来源` 表
 
 ### 核心字段（必建）
 
@@ -45,15 +44,7 @@
 
 ## 创建命令参考
 
-创建 Base：
-
-```bash
-lark-cli base +base-create \
-  --name "{店铺名}-供应商管理" \
-  --time-zone Asia/Shanghai
-```
-
-创建 `采购来源` 表时，字段最小 JSON：
+在店铺总 Base 内创建或补齐 `Suppliers 供应商` / `采购来源` 表。字段最小 JSON：
 
 ```json
 [

@@ -23,7 +23,7 @@
 
 ## 建库字段要求
 
-当 `COMMERCE_PLATFORM.md` 包含小红书平台时，`orders-customers` 模式 A 建订单 / 客户 Base 必须在通用核心字段外加建 `base-schema.md` 的“小红书字段”分组。字段可以先为空，但不要把小红书包裹状态、售后状态、SKU 明细、物流模式塞进备注。
+当 `COMMERCE_PLATFORM.md` 包含小红书平台时，`orders-customers` 模式 A 建 `Orders 订单` / `Customers 客户` 表必须在通用核心字段外加建 `base-schema.md` 的“小红书字段”分组。字段可以先为空，但不要把小红书包裹状态、售后状态、SKU 明细、物流模式塞进备注。
 
 ## 录单 / 履约规则
 

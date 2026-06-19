@@ -97,6 +97,12 @@ ecommerce-stack workspace
 
 面向用户的回复不要暴露 Base token、table_id、record_id、field_id 或 file token；需要交付时给飞书链接或说明已写入配置文件。
 
+### 共享与权限
+
+客户共享入口默认是该店铺总 Base，不默认共享飞书 Wiki / 知识库。`business-knowledge` 生成的 raw / weekly / wiki / briefs markdown 属于内部工作区材料；需要给客户看结构化知识时，写入 `Knowledge Cards 知识卡片` 表并通过 Base 权限控制可见范围。
+
+共享给客户前，先启用多维表格高级权限并配置最小权限角色：客户默认只读，只开放明确需要协作的表、视图、字段或记录；成本、利润、供应商、内部备注、执行锁、客户隐私和操作日志默认不开放。飞书机器人和 Hermes Agent 也只拿当前店铺总 Base 及必要素材文件夹权限，不申请全空间、全知识库或跨店铺权限。
+
 ---
 
 ## 写入前的通用约束

@@ -1,12 +1,12 @@
 ---
 name: listing-catalog
-description: 维护电商商品目录（飞书 Base）+ 按目标销售平台配置撰写商品页 / listing 文案。三种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——建 Base；(2) "写 listing / 上新文案 / 商品标题 / 产品描述 / 平台 SEO / 小红书商品页"——按 BRAND.md 语调 + COMMERCE_PLATFORM.md 平台规则写文案；(3) "改 SKU / 调价 / 调库存"——读写 Base。Etsy 和小红书是内置平台 preset，其他平台必须先有平台配置。
+description: 维护电商商品目录（店铺总 Base 内商品 / SKU 表）+ 按目标销售平台配置撰写商品页 / listing 文案。三种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——在店铺总 Base 内建表；(2) "写 listing / 上新文案 / 商品标题 / 产品描述 / 平台 SEO / 小红书商品页"——按 BRAND.md 语调 + COMMERCE_PLATFORM.md 平台规则写文案；(3) "改 SKU / 调价 / 调库存"——读写表。Etsy 和小红书是内置平台 preset，其他平台必须先有平台配置。
 layer: foundation
 ---
 
 # 商品目录 (Listing Catalog)
 
-这个 skill 维护电商商品目录（结构化数据 → 飞书 Base）+ 按目标销售平台撰写商品页 / listing 文案。
+这个 skill 维护电商商品目录（结构化数据 → 店铺总 Base 内商品 / SKU 表）+ 按目标销售平台撰写商品页 / listing 文案。
 
 **对外的实操接口**：店铺总 Base 内的 `Products 商品` / `SKUs 变体` 表（用 `lark-base` skill 操作；架构见 `../shared/store-base-architecture.md`）+ 工作区根目录的 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md（用 `shop-foundation` skill 维护）。
 
@@ -55,7 +55,7 @@ layer: foundation
 3. 解析工作区根并读取 `<workspace>/docs/store-base.md`：
    - 若店铺总 Base 已存在：在其中创建或补齐 `Products 商品` / `SKUs 变体` 表
    - 若店铺总 Base 不存在：先向用户展示店铺总 Base 方案和表清单，等确认后再创建 `{店铺名}-运营中枢`
-   - 迁移期若发现旧独立 `{店铺名}-商品` Base，可作为 legacy fallback 查询，但新写入优先进入店铺总 Base
+   - 迁移期若发现旧独立商品数据源，可作为 legacy fallback 查询，但新写入优先进入店铺总 Base
 4. 按 schema 逐字段配置（核心字段必建；小红书字段在启用小红书平台时必建；其他辅助字段视用户需要）
 5. `SKUs 变体` 表必须保留原 SKU 字段作为业务主键；如需要内部稳定 ID，新增 `Variant ID`，不要因迁移重命名 SKU
 6. 落盘后告诉用户 Base 链接 + 表清单 + 字段清单 + 可选的下一步（"导入第一条 SKU 试试")
@@ -82,7 +82,7 @@ layer: foundation
    - **$20-$50**：完整 5 问（Q1 礼物倾向 / Q2 受众类型 / Q3 场景 / Q4 节日时机 / Q5 受众画像）；Q1=自购为主时 Q2-Q5 跳过
    - **≥ $50**：完整 5 问 + 生成长尾语义短语（仅供 title / description 段 3，不进 tag）
    - 跑完后产出 4 类礼物词库（受众词 / 场景词 / 节日词 / 包装服务词）+ BRAND.md 三条硬过滤后的「过滤掉的候选词」清单
-5.6. **(可选) Knowledge Cards 检索** — 读 [`references/business-knowledge-lookup.md`](references/business-knowledge-lookup.md) 和 [`../business-knowledge/references/knowledge-card-lookup.md`](../business-knowledge/references/knowledge-card-lookup.md)，按 `scenario: listing` 检索 `{店铺名}-知识卡片`：
+5.6. **(可选) Knowledge Cards 检索** — 读 [`references/business-knowledge-lookup.md`](references/business-knowledge-lookup.md) 和 [`../business-knowledge/references/knowledge-card-lookup.md`](../business-knowledge/references/knowledge-card-lookup.md)，按 `scenario: listing` 检索店铺总 Base 内 `Knowledge Cards 知识卡片` 表：
    - 输入只使用已知事实：SKU、品类、材质、价格档、step 5.5 生成的礼物词库、SEO 关键词、目标受众、节日 / 场景；不要为了检索补编 SKU 信息
    - `max_cards: 3`
    - Base 不存在、为空、不可读或无命中 → **静默 SKIP**，继续原 listing 流程；只有用户问“有没有查知识库”时才说明跳过原因
@@ -107,7 +107,7 @@ layer: foundation
 10. **(可选) 反向触发图像产出** — listing 文案写入 Base 后，如果该 SKU 还没有 `商品/{SKU}_shoot-brief.md`，且也没成品图：
     - 提示用户："文案定了，刚生成的 4 类礼物词库 + Mood 新鲜可用。下一步图怎么办？① 出 shoot brief 去拍（assets-library 模式 D）② 不拍直接 AI 合成（image-synth 模式 A）③ 都跳过（之后再说）"
     - **选 ①** → invoke `assets-library` 进入模式 D，**调用方现传** 4 类礼物词库（受众 / 场景 / 节日 / 包装）+ description 段 3 in-memory，让模式 D 直接用，不走 Base 反推。assets-library 模式 D step 11 还会再追问"要不要直接 AI 合成"，用户可在那里继续接 image-synth
-    - **选 ②** → invoke `image-synth` 进入模式 A，**调用方现传** 4 类礼物词库 + description 段 3 + 商品 Base 该 SKU 行 in-memory；目标槽位由 image-synth 在盘点输入时跟用户对齐；不预先建 brief 文件
+    - **选 ②** → invoke `image-synth` 进入模式 A，**调用方现传** 4 类礼物词库 + description 段 3 + `Products 商品` / `SKUs 变体` 表中该 SKU 行 in-memory；目标槽位由 image-synth 在盘点输入时跟用户对齐；不预先建 brief 文件
     - **选 ③** → 静默跳过（不阻塞）；用户后续主动 invoke 任一下游 skill 都能正常工作
     - 节奏：本步是 step 9 完成后**同一 turn 内** agent 主动追问的可选环节，不是 step 9 的子步骤；用户回应后才 invoke 下一个 skill
 

@@ -34,8 +34,8 @@
 {标签ID}_{SKU}_{seq}.png
 ```
 
-- `{标签ID}`：模式 A 用目标平台商品图用途。Etsy 用槽位 ID（取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐)）；小红书用 `商品图` / `使用指南图` / `图文详情图`；其他平台按 COMMERCE_PLATFORM.md。模式 B 用渠道值（取值见 [`assets-library/references/asset-index-base-schema.md` § 用途标签](../../assets-library/references/asset-index-base-schema.md) 渠道段，如 `Pinterest` / `Instagram Posts` / `Instagram Reels` / `小红书` / 等）。**直接用词汇表原值**（含中文 / 空格也无所谓——本地 fs 都接受），不做小写化转写。
-- `{SKU}`：商品 Base SKU；用户没指定 SKU（如做品牌物料图）用 `general`
+- `{标签ID}`：模式 A 用目标平台商品图用途。Etsy 用槽位 ID（取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐)）；小红书用 `商品图` / `使用指南图` / `图文详情图`；其他平台按 COMMERCE_PLATFORM.md。模式 B 用渠道值（取值见 [`assets-library/references/asset-index-base-schema.md` § 用途标签](../../assets-library/references/asset-index-base-schema.md) 渠道段，如 `Pinterest` / `Instagram Posts` / `Instagram Reels` / `小红书` / 等）。**直接用词汇表原值**（含中文 / 空格也无所谓——本地 fs 都接受），不做小写化转写。
+- `{SKU}`：`Products 商品` / `SKUs 变体` 表 SKU；用户没指定 SKU（如做品牌物料图）用 `general`
 - `{seq}`：当日同标签 + 同 SKU 的序号，从 `001` 开始
 
 例：
@@ -120,9 +120,9 @@ QA 一次性通过时不存 attempt 文件，直接落正式名。用户从 atte
 | 派生字段 | assets-library 用法 |
 |---|---|
 | `input.reference_images[]` | 关联实拍图（B2 promote 时可选填进 Base 备注作"参考原片"）|
-| `label_id` | 素材索引 Base **用途标签**字段值——直接对应（hero / Pinterest / 等，源自 schema 词汇表）|
+| `label_id` | `Assets 素材池` 表 **用途标签**字段值——直接对应（hero / Pinterest / 等，源自 schema 词汇表）|
 | `sku` | **关联 SKU** 字段 |
-| `final_prompt`（截前 200 字符）| 素材索引 Base **备注**字段以 `[AI 合成] {prompt 摘要}` 前缀写入 |
+| `final_prompt`（截前 200 字符）| `Assets 素材池` 表 **备注**字段以 `[AI 合成] {prompt 摘要}` 前缀写入 |
 | `mode` + `label_id` | 模式 A 电商 / listing 图上传到 `商品/`；模式 B 社媒 / 营销图上传到 `营销/`。按 assets-library 命名公式命名 |
 | `mode` + `label_id` + `[AI 合成]` 标记 | 若目标是最终 listing 图或社媒发布图，assets-library 在上传前对发布副本执行 AI metadata / AI watermark 清理，并把清理结果追加到 Base 备注 |
 
