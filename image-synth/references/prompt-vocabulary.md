@@ -10,7 +10,7 @@
 |---|---|---|---|
 | **mood** | 整体气质 / 配色 / 光线 / 构图 / 道具白名单 / 后期方向 | BRAND.md § 视觉原则 + shoot-brief §B | BRAND 缺则降级为通用气质，不偷编品牌词 |
 | **shot-spec** | 角度 / 背景 / 主体位置 / 景深 / 镜头长 | shoot-brief §C 当前槽位段（模式 A）/ social-platform-specs.md（模式 B） | 缺则按槽位 / 平台默认值 |
-| **anchor** | 商品主体 / 材质 / 色 / 比例 / Logo 位置 / 关键纹理 | Hermes 看图能力看实拍图（必须）+ 商品 Base SKU 行（可选） | **不允许缺**——anchor 是保商品形态的根 |
+| **anchor** | 商品主体 / 材质 / 色 / 比例 / Logo 位置 / 关键纹理 | Hermes 看图能力看实拍图（必须）+ `Products 商品` / `SKUs 变体` 表 SKU 行（可选） | **不允许缺**——anchor 是保商品形态的根 |
 | **negative** | 视觉禁区原文 | BRAND.md § 视觉禁区 **唯一**来源 | BRAND 缺则段留空 + 加通用兜底（无竞品 logo / 无水印） |
 | **format** | 长宽比 / 分辨率 / 输出格式 | 目标槽位（模式 A）/ 目标平台（模式 B） | **不允许缺**——盘点输入时阻塞反问 |
 
@@ -50,7 +50,7 @@
 
 ### 模式 A：按目标销售平台查 shoot-brief.md §C
 
-目标平台是 Etsy 时，槽位 ID 取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐)（contract source）。每个槽位 ID 对应 shoot-brief.md §C 同名段；映射规则：
+目标平台是 Etsy 时，槽位 ID 取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐)（contract source）。每个槽位 ID 对应 shoot-brief.md §C 同名段；映射规则：
 
 - **hero / scale / size-chart / packaging / variation / brand-story**：读 §C 同名段，抽取「画面 / 角度 / 背景 / 后期方向」→ shot-spec.主体描述 / 角度 / 背景 / 后期
 - **detail**（槽位 5/6/7）：读 §C `Detail-1 / Detail-2 / Detail-3`（用户指定哪条），抽微距 / 景深 / 焦点区域
@@ -99,7 +99,7 @@
 
 多张实拍图时取**一致信息**（多图都有的特征作 anchor，单图独有的可作选填修饰）。
 
-### 选填来源：商品 Base SKU 行（如已建）
+### 选填来源：`Products 商品` / `SKUs 变体` 表 SKU 行（如已建）
 
 精确化 anchor.subject——把视觉提取的"a ceramic teacup"升级为"a {品类}：{title 英文}"：
 

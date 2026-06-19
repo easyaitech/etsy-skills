@@ -28,8 +28,8 @@ layer: utility-input
 
 - 采集模式只做**采集和结构化**，不做分析、排序、推荐
 - fit-report 模式只做**趋势 × 业务上下文的结合点判断**，不直接生成 Marketing Brief
-- 结构化趋势 JSON / fit report 是第一输出；每周自动任务可以把客观趋势事实和可审计洞察直接写入 business-knowledge / 知识卡片 Base
-- 但任何需要落地执行的动作（改商品 Base、写 Pin Queue、改 Listing、生成素材、发布内容、SEO 调整）都不能自动执行，必须作为建议等待人工确认
+- 结构化趋势 JSON / fit report 是第一输出；每周自动任务可以把客观趋势事实和可审计洞察直接写入 business-knowledge / `Knowledge Cards 知识卡片` 表
+- 但任何需要落地执行的动作（改 `Products 商品` / `SKUs 变体` 表、写 `Pinterest Queue` 表、改 Listing、生成素材、发布内容、SEO 调整）都不能自动执行，必须作为建议等待人工确认
 - 商品信息通过 `<workspace>/.cache/trend-radar/business-context/product-catalog.json` 读取，不在 Node CLI 里直连飞书 Base
 - 下游（business-knowledge）缺失时 SKIP，不阻塞本 skill
 - 本 skill 缺失时，下游也 SKIP — 遵循 dependency-protocol

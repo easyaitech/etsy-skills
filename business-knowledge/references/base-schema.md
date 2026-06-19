@@ -1,16 +1,16 @@
-# Knowledge Cards Base Schema
+# `Knowledge Cards 知识卡片` 表 Schema
 
-Base 名称：
+表位置：
 
 ```text
-{店铺名}-知识卡片
+店铺总 Base / Knowledge Cards 知识卡片
 ```
 
-`{店铺名}` 取自 `<workspace>/SHOP.md` 的「店铺名」字段。
+不要为知识卡片默认创建独立 Base。迁移期旧独立知识卡片数据源只能作为只读来源，验收后迁入店铺总 Base。
 
 ## 设计原则
 
-- Base 是行动索引，不是知识本体。
+- `Knowledge Cards 知识卡片` 表是行动索引，不是知识本体。
 - 原始材料、周报、wiki、brief 正文都在 markdown。
 - 一行 = 一张 Knowledge Card。
 - 默认字段少，隐藏字段为未来自动化和健康检查预留。

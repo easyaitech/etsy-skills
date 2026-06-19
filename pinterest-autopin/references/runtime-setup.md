@@ -144,7 +144,7 @@ Pinterest-autopin 已就绪：
 
 工具路径：~/code/etsy-skills/tools/Pinterest-autopin/
 Chrome profile：~/.config/pinterest-autopin/chrome-profile/
-Pin Queue Base：{Base 链接}
+`Pinterest Queue` 表：{Base 链接}
 登录状态：已登录（Pinterest 账号 {email/username}）
 
 下一步可以：

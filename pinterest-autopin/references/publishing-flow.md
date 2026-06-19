@@ -1,13 +1,13 @@
 # Publishing Flow（模式 C 的执行手册）
 
-模式 C 的 step-by-step。从 Pin Queue Base 一行草稿走到 Pinterest 上一条已发的 pin。
+模式 C 的 step-by-step。从 `Pinterest Queue` 表中的一行草稿走到 Pinterest 上一条已发的 pin。
 
 ---
 
 ## 总体流程
 
 ```
-Pin Queue 草稿
+`Pinterest Queue` 表草稿
    │
    ├─[0] 解析 <workspace> = `etsy-stack workspace`
    │       runtime 目录 = <workspace>/.cache/pinterest-autopin/runtime/
@@ -40,7 +40,7 @@ Pin Queue 草稿
 
 模式 B 的 step 3.8 已经对图片做过处理，`image 路径` 应指向 `<workspace>/.cache/pinterest-autopin/processed/` 下的文件。模式 C 在构造 request.json 前做一次守卫检查：
 
-1. 读 Pin Queue Base 该行的 `image 路径`（多图时按行拆分）
+1. 读 `Pinterest Queue` 表中该行的 `image 路径`（多图时按行拆分）
 2. **逐张检查**：如果路径以 `<workspace>/.cache/pinterest-autopin/processed/` 开头、文件存在，且该行备注 / sidecar / 处理记录中有 `aiSanitization` 结果 → 该张跳过
 3. 未通过检查的图片按 `image-processing.md` 的四步流程处理，处理完后用 processed 路径替换
 4. **全部图片通过后**才进 [1]；任何一张处理失败 → 中止，提示用户具体哪张图有问题
@@ -51,9 +51,9 @@ Pin Queue 草稿
 
 模板见 `assets/request-template.json`。下文 `<runtime>` 代指 `<workspace>/.cache/pinterest-autopin/runtime`，由 `etsy-stack workspace` 解析得到（见 SKILL.md §对外的实操接口）。
 
-从 Pin Queue Base 一行映射：
+从 `Pinterest Queue` 表中的一行映射：
 
-| Pin Queue 字段 | request.json key | 说明 |
+| `Pinterest Queue` 表字段 | request.json key | 说明 |
 |---|---|---|
 | `image 路径` + `Alt Text (EN)` | `images` | 数组，每个元素 `{ "path": "...", "altText": "..." }`。单图和轮播都用这个字段；见下方 § images 数组构造 |
 | `Title (EN)` | `title` | 直接拷 |
@@ -113,7 +113,7 @@ npm run pin:validate -- --input <runtime>/{pin_id}.json
 {"ok": true, "mode": "validate", ...}
 ```
 
-**失败处理**：解析错误信息 → 通常是 JSON 字段缺失 / 路径错 / link 不是 absolute http(s) → 改 request.json 或回 Pin Queue Base 改字段，再来。validate 阶段失败不算入 Pin Queue 的「重试次数」（没真跑浏览器）。
+**失败处理**：解析错误信息 → 通常是 JSON 字段缺失 / 路径错 / link 不是 absolute http(s) → 改 request.json 或回 `Pinterest Queue` 表改字段，再来。validate 阶段失败不算入 `Pinterest Queue` 表的「重试次数」（没真跑浏览器）。
 
 **多图额外校验**：
 - `images` 数组不为空
@@ -156,7 +156,7 @@ npm run pin:publish -- --input <runtime>/{pin_id}.json
 {"ok": true, "mode": "final", "pinUrl": "https://www.pinterest.com/pin/123456789012345678/", ...}
 ```
 
-**回写 Pin Queue Base**（用 `lark-base`）：
+**回写 `Pinterest Queue` 表**（用 `lark-base`）：
 
 ```
 - 状态: 已发
@@ -190,12 +190,12 @@ Pinterest 偶尔强制重登（特别是几周不操作后）。
 
 ### board 不存在（`board not found`）
 
-Pin Queue 里的 board 名和 Pinterest 后台不一致。
+`Pinterest Queue` 表里的 board 名和 Pinterest 后台不一致。
 
 1. 让用户去 Pinterest 后台核对实际 board 名（大小写、空格、特殊字符敏感）
 2. 用户改完后：
    - 如果是 Pinterest 后台拼写错 → 用户在 Pinterest 后台改 board 名
-   - 如果是 Pin Queue Base 字段填错 → 用 `lark-base` 改这一行的 `Board (Pinterest)`，并把单选选项也修正
+   - 如果是 `Pinterest Queue` 表字段填错 → 用 `lark-base` 改这一行的 `Board (Pinterest)`，并把单选选项也修正
 3. 重跑
 
 ### JSON 校验失败
@@ -204,7 +204,7 @@ Pin Queue 里的 board 名和 Pinterest 后台不一致。
 
 多图时额外注意：`images` 数组元素数和 alt text 数不一致 / 某张图路径不存在。
 
-直接看错误信息 → 改 request.json（改根源在 Pin Queue Base 字段）→ 重跑 validate。
+直接看错误信息 → 改 request.json（改根源在 `Pinterest Queue` 表字段）→ 重跑 validate。
 
 ### 网络 / Pinterest 临时错误（5xx / timeout）
 

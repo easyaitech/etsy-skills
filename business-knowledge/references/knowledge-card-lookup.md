@@ -6,7 +6,7 @@ Canonical contract for downstream skills.
 
 Knowledge Cards are `SKIP`.
 
-If `{店铺名}-知识卡片` Base is missing, empty, or unreadable, downstream skills continue their original workflow. Do not block listing, pin, shoot brief, video, or customer-service work.
+If the store Base or its `Knowledge Cards 知识卡片` table is missing, empty, or unreadable, downstream skills continue their original workflow. Do not block listing, pin, shoot brief, video, or customer-service work.
 
 ## Input shape
 

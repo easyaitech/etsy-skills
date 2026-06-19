@@ -1,6 +1,6 @@
 ---
 name: assets-library
-description: 维护电商店铺的视觉与素材资产库（摄影 / 视频 / 视觉模板 / 字体 / Logo / 包装物料 / 客户 UGC / 营销素材）。六个一级文件夹（商品 / 品牌 / 客户 / 工作室 / 营销 / 待处理）+ 素材索引 Base 双层架构。四种触发：(1) 建库：用户提到"建素材库 / 建资产库 / 整理素材"等首次建立请求时——建文件夹骨架 + 素材索引 Base；(2) 归档：用户提到"上传新摄影 / 归档某 SKU 的图 / 整理新素材 / 收到客户 UGC / 整理营销素材"等请求时——新素材先入待处理/，分类后移入对应文件夹 + 录 Base（B1 dump / B2 promote）；(3) 查找：用户提到"找某 SKU 的图 / 查能发 Pinterest 的素材 / 查某次营销活动素材"等检索请求时——走 Base 多维筛选；(4) 拍前规划：用户提到"给某 SKU 出拍摄 brief"等请求时——按 COMMERCE_PLATFORM.md 的目标平台媒体规则出 markdown shoot brief；Etsy 走内置 10 槽位 preset，小红书走内置商品图 / 详情图规则（模式 D plan，落 商品/{SKU}_shoot-brief.md）。归档与 brief 严格遵守 BRAND.md 视觉原则（如存在）。
+description: 维护电商店铺的视觉与素材资产库（摄影 / 视频 / 视觉模板 / 字体 / Logo / 包装物料 / 客户 UGC / 营销素材）。六个一级文件夹（商品 / 品牌 / 客户 / 工作室 / 营销 / 待处理）+ 店铺总 Base 内 `Assets 素材池` 表双层架构。四种触发：(1) 建库：用户提到"建素材库 / 建资产库 / 整理素材"等首次建立请求时——建文件夹骨架 + `Assets 素材池` 表；(2) 归档：用户提到"上传新摄影 / 归档某 SKU 的图 / 整理新素材 / 收到客户 UGC / 整理营销素材"等请求时——新素材先入待处理/，分类后移入对应文件夹 + 录入 `Assets 素材池` 表（B1 dump / B2 promote）；(3) 查找：用户提到"找某 SKU 的图 / 查能发 Pinterest 的素材 / 查某次营销活动素材"等检索请求时——走 Base 多维筛选；(4) 拍前规划：用户提到"给某 SKU 出拍摄 brief"等请求时——按 COMMERCE_PLATFORM.md 的目标平台媒体规则出 markdown shoot brief；Etsy 走内置 10 槽位 preset，小红书走内置商品图 / 详情图规则（模式 D plan，落 商品/{SKU}_shoot-brief.md）。归档与 brief 严格遵守 BRAND.md 视觉原则（如存在）。
 layer: foundation
 ---
 
@@ -8,7 +8,7 @@ layer: foundation
 
 这个 skill 维护电商店铺的视觉与素材资产，核心是**双层架构——扁平文件夹 + 语义 Base**：
 - **物理层（6 个一级文件夹）**——飞书云空间：`商品/ 品牌/ 客户/ 工作室/ 营销/ 待处理/`。每个文件唯一存放在一个文件夹中，**无任何子目录**
-- **语义层（素材索引 Base）**——**只收 promoted 的成品**：一行一个，多选标签 + 关联其他 Base，承载所有细粒度分类（SKU / 渠道 / 用途 / 阶段）
+- **语义层（店铺总 Base 内 `Assets 素材池` 表）**——**只收 promoted 的成品**：一行一个，多选标签 + 关联店铺总 Base 内其他表，承载所有细粒度分类（SKU / 渠道 / 用途 / 阶段）
 
 **文件夹只管来源归属 / 发布阶段**（商品相关？品牌相关？客户相关？工作室相关？营销发布版本？还没分类？）；**Base 管一切语义分类**（哪个 SKU / 什么用途 / 投哪个渠道 / raw 还是成品）。两者通过"文件链接"字段连接。
 
@@ -24,12 +24,12 @@ layer: foundation
 
 | 来源 | 提供什么 | 怎么用 |
 |---|---|---|
-| `<workspace>/BRAND.md` § 视觉原则 / 视觉禁区 | 整体气质 / 色彩 / 排版构图 / 视觉禁区 | **B2 promote 时**用作"是否合规"自检；自检结果写进素材索引 Base 的"BRAND 合规"字段。**模式 D 出 brief 时**作为 §B Mood 段抽取源。raw 不做合规检查 |
+| `<workspace>/BRAND.md` § 视觉原则 / 视觉禁区 | 整体气质 / 色彩 / 排版构图 / 视觉禁区 | **B2 promote 时**用作"是否合规"自检；自检结果写进 `Assets 素材池` 表的"BRAND 合规"字段。**模式 D 出 brief 时**作为 §B Mood 段抽取源。raw 不做合规检查 |
 | `<workspace>/SHOP.md` § 物料 / 礼盒服务 | 包装物料 / 感谢卡 / 礼盒服务字段 | **模式 D 出 brief 时**决定 §A 表第 9 行 packaging 计划该拍什么物料 |
 | `<workspace>/COMMERCE_PLATFORM.md` | 目标销售平台媒体规则（主图 / 详情图 / 视频 / 水印 / 文字限制） | **模式 D 出 brief 时**决定槽位、比例、分辨率和硬禁区；Etsy / 小红书可使用内置 preset |
 | 店铺总 Base 的 `SKUs 变体` 表 | SKU 列表 + 字段（title / 品类 / 变体 / SEO 关键词 / description 段 3） | `Assets 素材池` 的"关联 SKU"字段直接关联（B2 用）；**模式 D 读 SKU 行**作为输入；SKU 行通过反向查询能看到该 SKU 的全部素材 |
-| 订单 Base | 订单号 | 客户拍摄 / 客户定制类素材通过"关联订单"字段挂上 |
-| 客户 Base | 客户列表 | UGC 类素材通过"关联客户"字段溯源授权 |
+| `Orders 订单` 表 | 订单号 | 客户拍摄 / 客户定制类素材通过"关联订单"字段挂上 |
+| `Customers 客户` 表 | 客户列表 | UGC 类素材通过"关联客户"字段溯源授权 |
 | listing-catalog 礼物词库 | 4 类礼物词库（受众 / 场景 / 节日 / 包装） | **模式 D 出 brief 时**喂入 §C Lifestyle 段；获取路径见模式 D §输入 |
 
 ---
@@ -38,14 +38,14 @@ layer: foundation
 
 ### 模式 A：建库（首次建立双层骨架）
 
-**进入条件**：飞书云空间还没有规范的资产目录，或还没有素材索引 Base。
+**进入条件**：飞书云空间还没有规范的资产目录，或店铺总 Base 内还没有 `Assets 素材池` 表。
 
 **执行步骤**：
-1. 先按 [asset-index-base-schema.md § 何时不需要建这张 Base](references/asset-index-base-schema.md#何时不需要建这张-base) 与用户确认是否真的需要 Base——若否，本模式只做物理层
+1. 先按 [asset-index-base-schema.md § 何时不需要建这张表](references/asset-index-base-schema.md#何时不需要建这张表) 与用户确认是否真的需要 `Assets 素材池` 表——若否，本模式只做物理层
 2. 读 `references/folder-structure.md` 与 `references/asset-index-base-schema.md`，对齐双层结构
 3. **物理层**：用 `lark-drive` 在飞书云空间创建根文件夹 `{店铺名}-素材库`，下建 6 个一级文件夹：`商品/`、`品牌/`、`客户/`、`工作室/`、`营销/`、`待处理/`。**不建任何子目录**
-4. **语义层**（如需要）：用 `lark-base` 在与商品/订单/客户 Base 同一个空间创建 `{店铺名}-素材索引` Base，按 schema 建字段（关联字段必须指向已有的三张 Base）和推荐视图
-5. 落盘后告诉用户：根目录链接 + Base 链接（如建了） + 简要使用约定
+4. **语义层**（如需要）：用 `lark-base` 在店铺总 Base 内创建或补齐 `Assets 素材池` 表，按 schema 建字段（关联字段必须指向同 Base 内 `SKUs 变体`、`Orders 订单`、`Customers 客户` 表）和推荐视图
+5. 落盘后告诉用户：素材库根目录链接 + 店铺总 Base 链接 + `Assets 素材池` 表字段清单 + 简要使用约定
 
 > **建库阶段不批量迁移已有素材**——只创建空骨架。让用户自己分批迁过来；迁的过程中可以求助本 skill 给命名建议 +（要用的）录索引。实际归档动作走模式 B：**默认 B1 dump（新素材全进 待处理/，不进 Base）→ B2 promote（分类 + 移入对应文件夹 + 进 Base）**。
 
@@ -53,7 +53,7 @@ layer: foundation
 
 **进入条件**：用户上传了新摄影 / 视频 / 设计 / 模板 / 客户素材，需要按规范归档。
 
-**聊天图片硬规则**：所有通过聊天窗口发给电商 Agent 的图片，都必须先备份到飞书云盘素材库。暂时无法判断归属时默认走 B1 上传到 `待处理/`；已明确用于商品页 / listing / Pinterest / 营销时，可直接走 B2 promote。不要只写商品 Base 的 `照片附件` 而跳过 Drive 备份。
+**聊天图片硬规则**：所有通过聊天窗口发给电商 Agent 的图片，都必须先备份到飞书云盘素材库。暂时无法判断归属时默认走 B1 上传到 `待处理/`；已明确用于商品页 / listing / Pinterest / 营销时，可直接走 B2 promote。不要只写商品表的 `照片附件` 而跳过 Drive 备份。
 
 分两个子模式——B1 入待处理不录 Base，B2 分类移入对应文件夹录 Base：
 
@@ -74,7 +74,7 @@ layer: foundation
 - 不问用途标签
 - 不问关联 SKU
 - 不问分类归属（商品/品牌/客户/工作室/营销的分类延后到 B2）
-- **不录素材索引 Base**
+- **不录入 `Assets 素材池` 表**
 
 #### 模式 B2：promote（分类 + 移入对应文件夹 + 录 Base）
 
@@ -99,8 +99,8 @@ layer: foundation
      待处理/IMG_3847.JPG → 商品/TEACUP-001_listing-cover_01.jpg
      ```
 6. 用 `lark-drive` 拿到飞书云空间文件链接
-7. **录入素材索引 Base**——按 [asset-index-base-schema.md § 录入约定](references/asset-index-base-schema.md#录入约定模式-b2-promote-时执行) 执行；用 `lark-base` 新增一行，**录入前列出将写入的字段值清单等用户确认**；如第 4 步执行过 AI 清理，在"备注"字段追加 `AI 发布图清理: applied/checked-noop, steps=...`
-8. 商品 Base 该 SKU 行通过"关联 SKU"反向就能看到本条素材；商品 Base 的"照片链接"跳转字段如需手动维护，参 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)
+7. **录入 `Assets 素材池` 表**——按 [asset-index-base-schema.md § 录入约定](references/asset-index-base-schema.md#录入约定模式-b2-promote-时执行) 执行；用 `lark-base` 新增一行，**录入前列出将写入的字段值清单等用户确认**；如第 4 步执行过 AI 清理，在"备注"字段追加 `AI 发布图清理: applied/checked-noop, steps=...`
+8. `SKUs 变体` 表该 SKU 行通过"关联 SKU"反向就能看到本条素材；商品表的"照片链接"跳转字段如需手动维护，参 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)
 
 > **视觉合规检查（B2 时）**：对照 BRAND.md 视觉禁区做自检，结论写进 Base 的"BRAND 合规"字段（不通过时理由写"备注"）。详见 [asset-types.md § 视觉合规自检](references/asset-types.md#视觉合规自检b2-promote-时)。
 
@@ -110,7 +110,7 @@ layer: foundation
 
 **进入条件**：用户要找素材（"某 SKU 的图"、"那个新春模板"、"Logo PNG 透明底"、"客户 UGC 里能发 Pinterest 的"）。
 
-#### 已录入 Base 的素材 → 走素材索引 Base
+#### 已录入 Base 的素材 → 走 `Assets 素材池` 表
 
 **Base 是查素材的唯一入口**，覆盖所有 promoted 集合：
 
@@ -148,7 +148,7 @@ layer: foundation
 
 | # | 输入 | 是否必需 | 缺失时怎么办 |
 |---|---|---|---|
-| 1 | 商品 Base 该 SKU 行 | 必需 | SKU 不在 Base：**阻塞** + 提示用户先回 listing-catalog 模式 A 建一行最小记录（至少 title + 品类），再回模式 D。本 skill 不偷偷建 Base 行 |
+| 1 | `SKUs 变体` 表该 SKU 行 | 必需 | SKU 不在店铺总 Base：**阻塞** + 提示用户先回 listing-catalog 模式 A 建一行最小记录（至少 title + 品类），再回模式 D。本 skill 不偷偷建 SKU 行 |
 | 2 | `<workspace>/BRAND.md` § 视觉原则 + § 视觉禁区 | 必需但**降级可跑** | 缺失：§B Mood 段输出 "⚠️ BRAND.md 未建立——本段先留空，回 shop-foundation 建库后回头补"，brief 仍可出 §A/§C/§D/§E |
 | 3 | listing-catalog 礼物词库（4 类：受众 / 场景 / 节日 / 包装）| 强烈推荐**不阻塞** | 来源分两种：**(a) 反向触发** → listing-catalog 现传词库 in-memory；**(b) 主动触发** → 从该 SKU 的 Base description 段 3 + tags 礼物槽抽取已 fused 文本；提示用户"如想用最新结构化词库可回 listing-catalog 重跑 step 5.5" |
 | 4 | listing-catalog eRank 调研产物（如已存）| 可选 | 缺失：跳过，§B 不引用同类店铺风格 |
@@ -156,9 +156,9 @@ layer: foundation
 | 6 | `<workspace>/COMMERCE_PLATFORM.md` 目标平台媒体规则 | 目标平台非 Etsy / 小红书时必需 | Etsy 缺失可用内置 10 槽位 preset；小红书缺失可用内置商品图 / 详情图规则；其他平台缺失则阻塞，提示先用 shop-foundation 补平台配置 |
 
 **执行步骤**：
-1. **检查 SKU 是否在商品 Base**——不在则阻塞，提示用户回 listing-catalog 模式 A 建一行最小记录后再回
+1. **检查 SKU 是否在 `SKUs 变体` 表**——不在则阻塞，提示用户回 listing-catalog 模式 A 建一行最小记录后再回
 2. **检查 brief 是否已存在**（`商品/{SKU}_shoot-brief.md`）——已存在则强制问："覆盖 / 重命名旧版保留 / 仅补拍缺位（部分跑）"。重命名时旧版改为 `{SKU}_shoot-brief_{原生成日期 YYYY-MM-DD}.md`
-3. **若选"部分跑"**：用 `lark-base` 反查素材索引 Base 该 SKU 已 promoted 素材的"用途标签"。目标平台是 Etsy 时，按 [etsy-listing-photo-slots.md § 槽位 ID 与素材索引 Base "用途标签"字段对齐](references/etsy-listing-photo-slots.md#3-槽位-id-与素材索引-base-用途标签-字段对齐) 推断已覆盖槽位；目标平台是小红书时，按 `listing-catalog/references/xiaohongshu-commerce.md` 的商品图 / 使用指南图 / 图文详情图规则推断；其他平台按 COMMERCE_PLATFORM.md 的媒体规则推断，配置缺失则阻塞。列给用户确认缺哪几位 → 仅填模板 §A 缺位行 + §C 对应镜头清单段；§B Mood 段沿用旧 brief
+3. **若选"部分跑"**：用 `lark-base` 反查 `Assets 素材池` 表中该 SKU 已 promoted 素材的"用途标签"。目标平台是 Etsy 时，按 [etsy-listing-photo-slots.md § 槽位 ID 与 `Assets 素材池` 表 "用途标签"字段对齐](references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 推断已覆盖槽位；目标平台是小红书时，按 `listing-catalog/references/xiaohongshu-commerce.md` 的商品图 / 使用指南图 / 图文详情图规则推断；其他平台按 COMMERCE_PLATFORM.md 的媒体规则推断，配置缺失则阻塞。列给用户确认缺哪几位 → 仅填模板 §A 缺位行 + §C 对应镜头清单段；§B Mood 段沿用旧 brief
 4. 读上述输入（按本节"输入"表 + 降级规则）
 5. 按目标平台读取媒体规则：Etsy 读 [references/etsy-listing-photo-slots.md](references/etsy-listing-photo-slots.md) 作为内置 10 槽位 preset；小红书读 `../listing-catalog/references/xiaohongshu-commerce.md` 的图片规则；其他平台只读 COMMERCE_PLATFORM.md 对应平台章节
 6. 读 [references/shoot-brief-template.md](references/shoot-brief-template.md)：拿模板骨架
@@ -177,7 +177,7 @@ layer: foundation
     - 节奏：本步是 step 10 完成后**同一 turn 内** agent 主动追问的可选环节，不是必跑步骤；用户回应后才 invoke 下一个 skill
 
 **关键约束**：
-- brief **不进** 素材索引 Base（brief 是文档不是素材）
+- brief **不进** `Assets 素材池` 表（brief 是文档不是素材）
 - brief **不预创建**其他文件（拍不拍是另一回事，素材由 B1 dump 真正回片时上传）
 - brief **不批量聚合**：批量调用 = 循环跑 N 遍，N 份独立 brief；集中 shoot 时由用户拼合并单
 - brief 已存在时**强制问**"覆盖 / 重命名 / 部分跑"，不靠用户主动声明
@@ -201,14 +201,14 @@ layer: foundation
 
 - **shop-foundation**：每次归档后如果发现 BRAND.md 视觉原则需要补充（比如新增"自然光必拍"这种偏好），按 shop-foundation 的沉淀流程（`../shop-foundation/references/distillation-brand.md`）提议进 BRAND.md
 - **listing-catalog**：
-  - 商品 Base 通过"关联 SKU"反向看到全部素材；详见 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)
+  - `SKUs 变体` 表通过"关联 SKU"反向看到全部素材；详见 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)
   - **模式 D 出 brief 时**消费 listing-catalog 模式 B step 5.5 的 4 类礼物词库——反向触发场景下 listing-catalog 现传 in-memory；主动触发场景下从该 SKU 的 Base description 段 3 + tags 礼物槽抽取已 fused 文本
 - **orders-customers**：客户定制参考图与 UGC 通过"关联订单 + 关联客户"挂上；UGC 授权流程（找客户沟通）由 orders-customers 完成，结果回写到 Base 的"公开授权"字段。目标平台是小红书时，客户素材仍必须先拿公开授权，才能勾 `小红书` 用途标签进入小红书候选视图
 - **image-synth**：
   - 本 skill 模式 D 出的 shoot-brief.md 是 image-synth 的**主输入源**——image-synth 解析 brief 的 §B Mood 段填 mood 词库 / §C 镜头清单填 shot-spec 词库
   - 模式 D step 11 反向触发 image-synth：用户选"不拍直接合成"时现传 brief 词库 in-memory，避免重新读文件
-  - image-synth 出的 AI 合成图最终通过本 skill 模式 B2 promote 入索引 Base：素材索引 Base 的"备注"字段以 `[AI 合成] {prompt 摘要}` 前缀写入；电商 / listing 图上传到 `商品/` 文件夹，社媒 / 营销图上传到 `营销/` 文件夹，按命名规则命名
-  - **v0 不动 schema**：素材索引 Base 不新增"AI 合成"词汇，仅在"备注"字段标前缀。v1 观察后再决定是否升级
+  - image-synth 出的 AI 合成图最终通过本 skill 模式 B2 promote 入 `Assets 素材池` 表：其"备注"字段以 `[AI 合成] {prompt 摘要}` 前缀写入；电商 / listing 图上传到 `商品/` 文件夹，社媒 / 营销图上传到 `营销/` 文件夹，按命名规则命名
+  - **v0 不动 schema**：`Assets 素材池` 表不新增"AI 合成"词汇，仅在"备注"字段标前缀。v1 观察后再决定是否升级
 
 ---
 

@@ -51,7 +51,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 3. **默认只清 metadata / provenance**。默认清 EXIF、XMP、C2PA、OpenAI provenance、prompt 信息、软件生成记录和其他可检测 AI metadata。像素级隐形水印处理必须用户明确确认。
 4. **素材池和发布任务分层**。一个素材一条 Asset Pool 记录；一次平台发布一条 Publishing Queue 记录。同一素材可能 Pinterest 已发、小红书未发，所以素材池不要用单个“已发布”状态表达所有平台状态。
 5. **多图顺序必须显式记录**。多图 / 多素材发布必须用 `素材顺序` 字段决定顺序，不依赖飞书 relation / multi-select 的显示顺序。
-6. **商品型发布链接来自商品 Base `分享链接` 字段**。不要临时拼任何平台 URL（包括 Etsy listing URL）。如果 `分享链接` 缺失，阻塞发布任务创建并引导回 `listing-catalog` 补齐。
+6. **商品型发布链接来自 `Products 商品` / `SKUs 变体` 表的 `分享链接` 字段**。不要临时拼任何平台 URL（包括 Etsy listing URL）。如果 `分享链接` 缺失，阻塞发布任务创建并引导回 `listing-catalog` 补齐。
 7. **本 skill 默认只定义和准备，不直接发布**。真实飞书写入、云盘上传、平台发布、自动发布任务修改都必须由用户明确确认；发布执行交给 `social-publisher`。
 
 固定处理模型：
@@ -75,7 +75,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 - **素材池 / Asset Pool**：一张图片 / 一个视频 / 一个素材 = 一条记录。
 - **发布任务 / Publishing Queue**：一次平台发布 = 一条任务。
 
-两张表默认不再各自创建独立 Base；只有用户明确要求隔离时才单独建 Base。迁移期可与现有 Pinterest Pin Queue 并存。即使先只做 Pinterest，也要按跨平台模型保留 `平台`、`发布类型`、`关联素材`、`素材顺序`、`封面素材`、`状态`、`发布 URL`、`自动发布`、`发布适配器`、`外部队列 ID`、`执行锁` 等字段。
+两张表默认不再各自创建独立 Base；只有用户明确要求隔离时才单独建 Base。迁移期可与现有 Pinterest `Pinterest Queue` 表并存。即使先只做 Pinterest，也要按跨平台模型保留 `平台`、`发布类型`、`关联素材`、`素材顺序`、`封面素材`、`状态`、`发布 URL`、`自动发布`、`发布适配器`、`外部队列 ID`、`执行锁` 等字段。
 
 ---
 
@@ -100,7 +100,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 - `Assets 素材池`
 - `Publishing Queue 发布任务`
 
-迁移期如果已有旧独立素材池 / Pin Queue Base，先把旧 Base 作为只读来源；新写入优先进入店铺总 Base。
+迁移期如果已有旧独立素材池 / `Pinterest Queue` 表，先把旧数据源作为只读来源；新写入优先进入店铺总 Base。
 
 ---
 
@@ -165,9 +165,9 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
    - `AI 清理状态` 应为 `已清 metadata` / `无需处理`；否则先走 Workflow C。
    - `素材生命周期状态` 必须是 `可发布` 或可复用状态。
 3. 确认平台、发布类型、素材清单、封面素材和素材顺序。
-4. 如为商品型发布，查询 `listing-catalog` 商品 Base：
+4. 如为商品型发布，查询 `listing-catalog` `Products 商品` / `SKUs 变体` 表：
    - 必须取 SKU、商品 record_id、平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
-   - `链接` 必须取商品 Base 的 `分享链接` 字段。
+   - `链接` 必须取 `Products 商品` / `SKUs 变体` 表的 `分享链接` 字段。
    - `分享链接` 缺失时阻塞，不临时拼任何平台 URL。
 5. 写入 Publishing Queue 草稿：
    - `状态 = 草稿`
@@ -275,7 +275,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 
 ### assets-library
 
-- `assets-library` 负责长期归档和素材索引。
+- `assets-library` 负责长期归档和素材检索。
 - `content-asset-pool` 负责发布前调度、跨平台状态、发布副本。
 - 原图归档位置仍遵守素材库原则。
 - 发布副本可以放在营销 / 发布副本区域，或记录为 Base 链接。
@@ -291,16 +291,16 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 ### pinterest-autopin
 
 - 本仓现有 Pinterest 发布 skill 是 `pinterest-autopin`；现在作为 `social-publisher` 的 Pinterest adapter 使用。
-- 当素材池中素材用于 Pinterest，Publishing Queue 先建任务；执行时由 `social-publisher` 创建或补齐 Pin Queue。
-- Pin Queue 的 `关联 SKU` 必须写 SKU + 商品 record_id + 平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
-- Pin Queue 的 `Link` 必须使用商品 Base `分享链接` 字段，不临时拼任何平台商品 URL。
+- 当素材池中素材用于 Pinterest，Publishing Queue 先建任务；执行时由 `social-publisher` 创建或补齐 `Pinterest Queue` 表。
+- `Pinterest Queue` 表的 `关联 SKU` 必须写 SKU + 商品 record_id + 平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
+- `Pinterest Queue` 表的 `Link` 必须使用 `Products 商品` / `SKUs 变体` 表的 `分享链接` 字段，不临时拼任何平台商品 URL。
 - 素材池对应素材写入 `关联发布任务 = PIN-xxx`。
 - 发布成功后由下游回写发布 URL，再通过 Workflow E 对账。
 
 ### listing-catalog
 
 - 商品型素材必须能关联 SKU。
-- 发布链接必须优先从商品 Base 的 `分享链接` 字段读取。
+- 发布链接必须优先从 `Products 商品` / `SKUs 变体` 表的 `分享链接` 字段读取。
 - `分享链接` 缺失时，回到 `listing-catalog` 补字段；不要用平台商品 ID 临时拼链接。
 
 ### Future Platforms
@@ -316,7 +316,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 3. **不要依赖飞书关联字段顺序作为多图发布顺序。**
 4. **不要把 Pinterest 专用字段写进素材池核心 schema。**
 5. **不要默认做像素级水印处理。**
-6. **不要临时拼平台商品链接，应从商品 Base `分享链接` 取。**
+6. **不要临时拼平台商品链接，应从`Products 商品` / `SKUs 变体` 表 `分享链接` 取。**
 7. **不要把云盘文件夹当作发布状态系统，状态必须进 Base。**
 8. **不要把同一素材复制到多个云盘文件夹表达多用途，多用途应由 Base 字段表达。**
 9. **不要在本 skill 中执行真实平台发布，交给 social-publisher。**
@@ -331,6 +331,6 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 - [ ] 文档明确：原图不覆盖；发布副本清理；跨平台扩展；单图 / 多图 / 视频兼容。
 - [ ] 文档明确：素材池与发布任务分层。
 - [ ] 文档明确：AI metadata 与像素级水印处理边界。
-- [ ] 文档明确：商品分享链接从商品 Base `分享链接` 取。
+- [ ] 文档明确：商品分享链接从`Products 商品` / `SKUs 变体` 表 `分享链接` 取。
 - [ ] 已有 references：`base-schema.md`、`state-model.md`、`ai-sanitization-policy.md`、`platform-publishing-model.md`、`scan-and-dedupe.md`。
 - [ ] 没有执行真实飞书写入、云盘移动、平台发布或自动任务修改。

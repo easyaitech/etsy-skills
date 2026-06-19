@@ -21,7 +21,7 @@ Future output:
 ## Preconditions
 
 - At least 4 weekly notes exist.
-- Knowledge Cards Base has enough active/watch cards to review.
+- `Knowledge Cards 知识卡片` 表 has enough active/watch cards to review.
 - `引用次数` / `最后引用日期` have been best-effort maintained by real workflows.
 - At least one Marketing Brief has been generated or explicitly skipped.
 

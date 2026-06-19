@@ -51,7 +51,7 @@ Pinterest: pinterest-autopin
 4. 读 [`references/adapter-registry.md`](references/adapter-registry.md)，展示当前适配器状态：
    - Pinterest = enabled，真实发布走 `pinterest-autopin`
    - 小红书 = planned/manual-only，只允许建任务和人工回填
-5. 如用户要启用 Pinterest，按 `pinterest-autopin` 模式 A 检查工具、登录态和 Pin Queue。
+5. 如用户要启用 Pinterest，按 `pinterest-autopin` 模式 A 检查工具、登录态和 `Pinterest Queue` 表。
 6. 不创建任何真实定时任务，除非用户明确要求“帮我创建/更新自动任务”。如果需要创建 runtime 自动任务，必须使用当前环境提供的 automation / cron 工具，不手写不可见后台任务。
 
 ---
@@ -67,7 +67,7 @@ Pinterest: pinterest-autopin
 步骤：
 
 1. 读 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md)。
-2. 从 `{店铺名}-发布任务` 读取目标行，校验：
+2. 从店铺总 Base 内 `Publishing Queue 发布任务` 表读取目标行，校验：
    - `状态` 是 `待发` / `重试` / 用户明确确认的 `草稿`
    - `平台` 在 adapter registry 中有明确状态
    - `关联素材`、`素材顺序`、`标题`、`描述`、`链接` 等必填字段满足该平台要求
@@ -75,7 +75,7 @@ Pinterest: pinterest-autopin
 3. 查 [`references/adapter-registry.md`](references/adapter-registry.md) 决定适配器。
 4. 如果 adapter 是 enabled 且本轮会真实发布，按 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md) §占用规则生成 `执行锁` 并把任务占用为 `发布中`。占用失败、无法确认唯一占用，或当前环境不允许并发安全更新时，停止，不调用平台 adapter。
 5. Pinterest：
-   - 将 Publishing Queue 映射或补齐为 Pin Queue 行；`外部队列 ID` 写 Pin Queue 的 `pin_id`
+   - 将 Publishing Queue 映射或补齐为 `Pinterest Queue` 表行；`外部队列 ID` 写 `Pinterest Queue` 表的 `pin_id`
    - 调用 `pinterest-autopin` 模式 C 的 validate → test → final 流程
    - 成功后回写 Publishing Queue：`状态 = 已发`、`发布时间`、`发布 URL`、`外部队列 ID`，并清空 `执行锁`
    - 失败后回写：`状态 = 失败`、`失败原因`、`最后尝试时间`，并清空 `执行锁`；不要再次递增占用阶段已加过的 `发布尝试次数`
@@ -122,7 +122,7 @@ Pinterest: pinterest-autopin
 
 步骤：
 
-1. 读取目标 Publishing Queue 行和平台子队列行（如 Pin Queue）。
+1. 读取目标 Publishing Queue 行和平台子队列行（如 `Pinterest Queue` 表）。
 2. 核对公开 URL 是否匹配任务标题、素材、SKU 或平台返回结果。
 3. 匹配后回写 Publishing Queue：
    - `状态 = 已发`
@@ -148,7 +148,7 @@ Pinterest: pinterest-autopin
 
 - **content-asset-pool**：上游任务来源；发布任务字段和状态必须按同一张 Publishing Queue 回写。
 - **pinterest-autopin**：Pinterest enabled adapter；本 skill 不重写 Pinterest 发布逻辑，只做队列路由和对账。
-- **listing-catalog**：商品型发布的 `链接` 必须来自商品 Base `分享链接`。
+- **listing-catalog**：商品型发布的 `链接` 必须来自 `Products 商品` / `SKUs 变体` 表 `分享链接`。
 - **assets-library**：素材授权、发布副本、AI metadata 清理必须在发布前完成。
 - **video-assembly / image-synth**：只产出素材，不直接发布；发布仍进 Publishing Queue。
 

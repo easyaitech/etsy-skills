@@ -20,8 +20,8 @@
 - `shared`：新增 AI 发布图清理协议 `ai-image-sanitization.md`，只在最终 listing 图片和社媒待发布图片的发布副本上使用 `remove-ai-watermarks` 清 AI metadata / AI visible watermark；明确素材库 `待处理/`、`image-synth` 的 `ai_raw/` 和内部参考图不处理，`invisible` / `all` 因会重写像素需用户显式 opt-in。
 - `etsy-stack`：新增 `ai-cleaner` 子命令，用于检查 / 安装 [wiltodelta/remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)。
 - `assets-library`：素材库物理层新增 `营销/` 一级文件夹，专门存放社交媒体、广告、邮件、活动页等营销路径的发布素材和派生版本；同步更新目录结构、素材类型映射、命名公式、schema 边界，以及 `image-synth` 社媒图入库目标。
-- `supplier-foundation`：新增供应商管理基座，维护 `{店铺名}-供应商管理` Base 与 `采购来源` 表，覆盖物料名称、店铺名称、商品链接、状态、选择理由、合适参数、淘汰原因，以及主用/备用/测试中/淘汰视图。
-- `business-knowledge`：新增 optional memory foundation，维护 `<workspace>/knowledge/raw|weekly|wiki|briefs` markdown、`{店铺名}-知识卡片` Base、Knowledge Card lookup contract 和 Marketing Brief 持久化流程。
+- `supplier-foundation`：新增供应商管理基座，维护店铺总 Base 内 `Suppliers 供应商` / `采购来源` 表，覆盖物料名称、店铺名称、商品链接、状态、选择理由、合适参数、淘汰原因，以及主用/备用/测试中/淘汰视图。
+- `business-knowledge`：新增 optional memory foundation，维护 `<workspace>/knowledge/raw|weekly|wiki|briefs` markdown、店铺总 Base 内 `Knowledge Cards 知识卡片` 表、Knowledge Card lookup contract 和 Marketing Brief 持久化流程。
 - `trend-radar`：重新加入趋势热词采集 skill（v0.1 — Google Trends）。用 Playwright headless chromium 采集 Google Trends trending now 页面的上升关键词，输出结构化 JSON（TrendItem[] + run 元数据包装）到 `<workspace>/outputs/trend-radar/`。AutoCLI 命令 `trend-fetch google-trends [--geo GEO]`。下游 business-knowledge 可消费 `latest.json` 作为 Knowledge Cards evidence。分类 exit codes（1=usage, 2=config, 3=network, 4=parse）。vitest 单元测试覆盖 parser / runner / URL builder。
 - `trend-radar`：新增 Pinterest Trends 月度热词来源 `pinterest-trends` 和 `pinterest-chinese`。两个来源都采集 `trendsPreset=1` 的 monthly keywords，`pinterest-chinese` 额外带 `keywordsToInclude=chinese` 并只保留包含 `chinese` 的关键词，避免未登录通用预览污染结果；沿用现有 JSON 输出合同、截图和 HTML evidence，并新增 parser / URL 单元测试。
 - `trend-radar`：新增 eRank Trend Buzz 数据源 `erank-trend-buzz`，采集 Etsy / Last 30 Days 关键词并写入现有趋势 JSON 合同，供 `fit-report` 自动合并；免费态可能只有预览，完整列表可通过 `ERANK_TREND_BUZZ_PROFILE` / `ERANK_TREND_BUZZ_CDP_PORT` 复用已登录账号权限。
@@ -29,14 +29,14 @@
 - `pinterest-autopin`：新增 `references/patches/pinterest-video-pin-support-a5ccaec.patch`，临时沉淀 Pinterest-autopin 视频 Pin 支持补丁，供拿到工具仓库权限后应用到发布工具源码。
 
 ### 修
-- `shared/preamble.md` 与 listing / orders / supplier / business-knowledge / assets / content-asset-pool / social-publisher / pinterest-autopin 等 skill：把默认建库/查询口径从多个独立 Base 调整为店铺总 Base 内多张表；Pinterest Queue 短期保留为总 Base 内执行表，Publishing Queue 作为跨平台 source of truth。
+- `shared/preamble.md` 与 listing / orders / supplier / business-knowledge / assets / content-asset-pool / social-publisher / pinterest-autopin / video-assembly 等 skill：把默认建库/查询口径从多个独立 Base 调整为店铺总 Base 内多张表；客户共享入口默认只给店铺总 Base，不默认共享知识库；机器人和 Hermes Agent 权限默认限定到当前店铺总 Base 与必要素材文件夹。
 - `README.md` / `install.sh` / `scripts/etsy-stack`：安装、更新、工作区解析和文档从 Etsy 命名迁移到通用电商命名，同时兼容既有 Etsy 环境变量、缓存目录和工作区标记。
 - `assets-library` / `image-synth` / `video-assembly` / `content-asset-pool`：把 Etsy / Pinterest 单平台约束调整为平台配置驱动，避免商品图、视频安全区、素材状态和发布目标只能服务单一平台。
-- `listing-catalog` / `pinterest-autopin`：补充商品 Base `分享链接` 字段，并要求商品型 Pinterest 发布使用该字段作为 `Link`，不再临时拼 Etsy listing URL；同步应用层架构图和 Base 命名约定。
+- `listing-catalog` / `pinterest-autopin`：补充商品表 `分享链接` 字段，并要求商品型 Pinterest 发布使用该字段作为 `Link`，不再临时拼 Etsy listing URL；同步应用层架构图和表命名约定。
 - `photo-style`：从 stack 中移除。Hermes 当前只能调用生图模型，不能把原图作为可控 reference/edit input 传给模型，生成结果和原图差异过大；因此移除 skill、CLI 安装入口、manifest 暴露和后续 TODO。
 - `assets-library` / `image-synth` / `pinterest-autopin`：把 AI metadata / AI watermark 清理接到发布出口，而不是素材管理入口；Pinterest processed 图片从“清空所有 metadata”改为“只清 AI metadata + AI visible watermark，并保留标准 metadata”。
 - `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把供应商管理纳入 Foundation 层和安装 manifest。
-- `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把 `business-knowledge` 纳入 Foundation 层、Base 命名约定和安装 manifest；下游引用 Knowledge Cards 时默认 `SKIP`，不阻塞原流程。
+- `shared/preamble.md` / `shared/dependency-protocol.md` / `README.md` / `etsy-stack.json`：把 `business-knowledge` 纳入 Foundation 层、店铺总 Base 表命名约定和安装 manifest；下游引用 Knowledge Cards 时默认 `SKIP`，不阻塞原流程。
 - `listing-catalog`：模式 B 写 listing 时新增 step 5.6，可在礼物场景调研后按 `business-knowledge` canonical contract 检索 Knowledge Cards；无命中静默跳过，有命中先展示采用 / 拒绝 / 边界，再生成文案。
 - `shared/preamble.md`：补充 Hermes cron 输出型报告的窄例外。用户在配置定时任务时确认固定输出目录后，cron 可追加新的时间戳报告 / JSON / raw evidence 文件；仍禁止覆盖旧报告或修改业务文件。
 - `install.sh`：移除 trend-radar 的 retired 集合；新增 trend-radar npm 依赖安装 + Playwright chromium 安装 + `trend-fetch` CLI 链接。
@@ -82,7 +82,7 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.4.0/insta
 ### 修
 - `assets-library/SKILL.md` 模式 D：加 step 11 反向触发 image-synth（用户选"不拍直接合成"），含 guard——若来自 listing-catalog 反向触发则跳过本步避免重复追问；与其他 skill 协作段加 image-synth；关键约束更新 `image-design` → `image-synth`
 - `assets-library/PLAN-MODE.md`：frozen design doc 的命名同步（image-design → image-synth）
-- `listing-catalog/SKILL.md` 模式 B step 10：从「shoot brief 二选一」改成「shoot brief / 直接 AI 合成 / 跳过」三选一；选 ② 时 invoke image-synth 现传 4 类礼物词库 + description 段 3 + 商品 Base 该 SKU 行 in-memory
+- `listing-catalog/SKILL.md` 模式 B step 10：从「shoot brief 二选一」改成「shoot brief / 直接 AI 合成 / 跳过」三选一；选 ② 时 invoke image-synth 现传 4 类礼物词库 + description 段 3 + 商品表该 SKU 行 in-memory
 - `pinterest-autopin/SKILL.md` 模式 B：候选池空时拆出 step 3.5 三选一（assets-library promote / 反向触发 image-synth / 跳过），结构对齐 sibling 反向触发块；与其他 skill 协作段加 image-synth
 - `etsy-stack.json`：skills 列表加 image-synth
 - `README.md`：skill 表加 image-synth 一行；硬编码"X 个 skill"字眼改成"每个 / 所有 / stack 中"模板措辞，未来加 skill 不再 churn 计数；钉死 v0.3.0 安装入口
@@ -101,11 +101,11 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.3.0/insta
 
 ### 新增
 - `assets-library/PLAN-MODE.md`：模式 D 设计 doc（Approved，前置 office-hours 会话 2026-05-07，reviewer x2 = 6/10 → 8/10 PASS）
-- `assets-library/references/etsy-listing-photo-slots.md`：Etsy 10 槽位社区 SOP；首段警示"平台只规定 10 张图，槽位无平台语义"；P0/P1/P2/P3 优先级定义；与素材索引 Base "用途标签"字段对齐的槽位 ID 词汇表（hero / variation / scale / size-chart / detail / lifestyle / packaging / brand-story / context / comparison）；PR1 仅做通用 SOP，按品类细化留 v2
+- `assets-library/references/etsy-listing-photo-slots.md`：Etsy 10 槽位社区 SOP；首段警示"平台只规定 10 张图，槽位无平台语义"；P0/P1/P2/P3 优先级定义；与 `Assets 素材池` 表 "用途标签"字段对齐的槽位 ID 词汇表（hero / variation / scale / size-chart / detail / lifestyle / packaging / brand-story / context / comparison）；PR1 仅做通用 SOP，按品类细化留 v2
 - `assets-library/references/shoot-brief-template.md`：三段式 brief 模板骨架 + 填写指引（A/B/C/D/E + References 段；BRAND 缺失降级为 ⚠️ 占位；老 SKU 部分跑只填缺位行）
 
 ### 修
-- `assets-library/SKILL.md`：description "三种触发 → 四种触发"加模式 D；"对外接口"段补"商品 Base"；"依赖关系"表补 BRAND.md 视觉禁区段、SHOP.md § 物料、商品 Base SKU 行字段、listing-catalog 礼物词库；"三种执行模式 → 四种执行模式"；加模式 D 章节（10 步执行 + 部分跑分支 + 9a 逐层建目录 + 输入降级表 + 关键约束）；"与其他 skill 的协作"补 listing-catalog 礼物词库消费路径
+- `assets-library/SKILL.md`：description "三种触发 → 四种触发"加模式 D；"对外接口"段补商品表；"依赖关系"表补 BRAND.md 视觉禁区段、SHOP.md § 物料、商品表 SKU 行字段、listing-catalog 礼物词库；"三种执行模式 → 四种执行模式"；加模式 D 章节（10 步执行 + 部分跑分支 + 9a 逐层建目录 + 输入降级表 + 关键约束）；"与其他 skill 的协作"补 listing-catalog 礼物词库消费路径
 - `assets-library/references/asset-index-base-schema.md`：用途标签字段词汇表加 Etsy 槽位 ID 段（与 etsy-listing-photo-slots.md 对齐）+ legacy 段（"Etsy listing 主图 → 等同 hero"等映射）；录入约定 §4 加"Etsy listing 用图建议 promote 时就勾槽位 ID（模式 D 部分跑反查依赖）"
 - `assets-library/references/folder-structure.md`：`by-SKU/{SKU}/` 子目录列表加 `shoot-brief.md` 一行
 - `listing-catalog/SKILL.md` 模式 B 加 step 10：listing 文案写入 Base 后追问"要不要顺手出 shoot brief"——用户同意时 invoke assets-library 模式 D，**调用方现传** 4 类礼物词库 + description 段 3 in-memory（避免走 Base 反推路径，词库新鲜可用）；用户跳过不阻塞
@@ -189,7 +189,7 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v0.1.5/insta
 - `assets-library/references/naming-convention.md`：加"两阶段命名"段——dump 接受相机原始名，promote 强制按公式；改名时机段拆三档
 - `assets-library/references/asset-types.md`：视觉合规自检章节改名"（B2 promote 时）"；RAW 段明确不进 Base；客户拍摄 row 加 B1/B2 流程注释
 - `pinterest-autopin/SKILL.md`：模式 B 第 3 步加 4 路 fallback（在 Base ✅ / 缺 Pinterest 用途 / 未授权 / 不在 Base 反向触发 B2 promote）；硬性约束"未授权 UGC 一律拒绝"软化为指引走授权 / promote 流程
-- `listing-catalog/references/base-schema.md`：加"反查素材：商品 Base ↔ 素材索引 Base"段——反向关联看到的是 promoted 成品，原片不在反查结果里要直接打开 raw/ 目录
+- `listing-catalog/references/base-schema.md`：加"反查素材：商品表 ↔ `Assets 素材池` 表"段——反向关联看到的是 promoted 成品，原片不在反查结果里要直接打开 raw/ 目录
 
 ### 新增
 - `assets-library/REDESIGN.md`：office-hours 会话产物，记录这次 refactor 的决策、三种节奏（a 集中 shoot 主 / b 零散补拍辅 / c UGC 槽位）与落地步骤
@@ -261,10 +261,10 @@ SHA256：`cbbb1b34a93c1903b9e2a2c2a4378c0ac825d2c13ef1ff6c39a88ec4c5a8132b`
 
 ### Skills
 - `shop-foundation` — BRAND.md / SHOP.md 元基础
-- `listing-catalog` — 商品目录 Base + Etsy listing 文案
-- `orders-customers` — 订单 / 客户双 Base + 客服 SOP
-- `assets-library` — 飞书云空间素材库 + 索引 Base
-- `pinterest-autopin` — Pin Queue Base + 外部 Pinterest 自动发布工具
+- `listing-catalog` — 商品目录表 + Etsy listing 文案
+- `orders-customers` — 订单 / 客户表 + 客服 SOP
+- `assets-library` — 飞书云空间素材库 + `Assets 素材池` 表
+- `pinterest-autopin` — `Pinterest Queue` 表 + 外部 Pinterest 自动发布工具
 
 ### Bundle 工具链
 - `install.sh` — clone + 软链 + 安装 CLI（默认 HTTPS clone，匿名可装 public 仓库）
