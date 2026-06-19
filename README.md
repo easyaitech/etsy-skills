@@ -2,7 +2,7 @@
 
 通用电商运营 skill bundle，跑在 [Hermes Agent](https://hermes-agent.nousresearch.com/) 上（Mac mini 本地），用 [larksuite/cli](https://github.com/larksuite/cli) 操作飞书 Base / 文档 / 云空间。
 
-每个 skill 各管一摊：品牌底座、销售平台配置、商品目录、订单客服、供应商管理、业务知识库、素材库、社交媒体发布、Pinterest 自动 pin、AI 图片合成、趋势热词采集（完整列表见下面 §Skills）。下游都引用 `BRAND.md` / `SHOP.md` / `COMMERCE_PLATFORM.md`，从 `shop-foundation` 开始建是推荐顺序。
+每个 skill 各管一摊：品牌底座、销售平台配置、商品目录、订单客服、供应商管理、业务知识库、素材库、社交媒体发布、Pinterest 自动 pin、AI 图片合成、趋势热词采集（完整列表见下面 §Skills）。默认数据架构是 **一个店铺 = 一个飞书多维表格 Base；一个业务对象 = Base 内一张表**，下游都引用 `BRAND.md` / `SHOP.md` / `COMMERCE_PLATFORM.md`，从 `shop-foundation` 开始建是推荐顺序。
 
 仓库历史上叫 `etsy-skills`，Etsy 和小红书继续作为内置平台 preset。新的通用入口是 `ecommerce-stack`，旧命令 `etsy-stack` 保留兼容。
 

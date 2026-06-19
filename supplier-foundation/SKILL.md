@@ -1,18 +1,18 @@
 ---
 name: supplier-foundation
-description: 维护电商店铺的供应商管理 Base：采购来源、物料候选、供应商筛选理由、适用参数和淘汰原因。触发条件：(1) "建供应商库 / 供应商管理 / 采购来源表"——建 Base；(2) "记录供应商 / 采购来源 / 物料来源 / 1688 店铺"——读写 Base；(3) "比较供应商 / 选主用 / 淘汰某来源"——按状态和理由维护采购来源。
+description: 维护电商店铺的供应商 / 采购来源表（默认位于店铺总 Base 内）：采购来源、物料候选、供应商筛选理由、适用参数和淘汰原因。触发条件：(1) "建供应商库 / 供应商管理 / 采购来源表"——在店铺总 Base 建表；(2) "记录供应商 / 采购来源 / 物料来源 / 1688 店铺"——读写 Base；(3) "比较供应商 / 选主用 / 淘汰某来源"——按状态和理由维护采购来源。
 layer: foundation
 ---
 
 # Supplier Foundation（供应商基座）
 
-这个 skill 维护供应商与采购来源的结构化数据，核心是一份飞书 Base：
+这个 skill 维护供应商与采购来源的结构化数据，核心是店铺总 Base 内的一张表：
 
 | Base | 表 | 管什么 |
 |---|---|---|
-| `{店铺名}-供应商管理` | `采购来源` | 物料对应的候选店铺、商品链接、选用/淘汰理由、合适参数 |
+| `{店铺名}-运营中枢` | `Suppliers 供应商` / `采购来源` | 物料对应的候选店铺、商品链接、选用/淘汰理由、合适参数 |
 
-**对外的实操接口**：飞书 Base（用 `lark-base` skill 操作）+ 工作区根目录的 SHOP.md（用 `shop-foundation` 维护店铺名）。
+**对外的实操接口**：店铺总 Base 内的供应商表（用 `lark-base` skill 操作；架构见 `../shared/store-base-architecture.md`）+ 工作区根目录的 SHOP.md（用 `shop-foundation` 维护店铺名）。
 
 > 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
@@ -32,25 +32,24 @@ layer: foundation
 
 ## 三种执行模式
 
-### 模式 A：建库（首次建立供应商管理 Base）
+### 模式 A：建表（首次建立供应商 / 采购来源表）
 
 **进入条件**：
 - 用户明确说要建供应商库 / 供应商管理 / 采购来源表
 - 用户提供一张供应商相关 Base，要求纳入 foundation
-- 项目下尚无 `{店铺名}-供应商管理` Base
+- 项目下尚无店铺总 Base 的 `Suppliers 供应商` / `采购来源` 表
 
 **执行步骤**：
-1. 读 `references/base-schema.md`，确认推荐字段和视图
+1. 读 `../shared/store-base-architecture.md` 和 `references/base-schema.md`，确认推荐字段和视图
 2. 如果用户给了现有 Base 链接：
    - 用 `lark-base` 读取 Base、表、字段、视图
-   - 已有字段能覆盖 schema 时，采用现有 Base
-   - 缺字段或视图时，按 schema 补齐
+   - 已有字段能覆盖 schema 时，作为 legacy 来源纳入迁移计划
+   - 缺字段或视图时，按 schema 补齐目标表
 3. 如果需要新建：
-   - 用 `lark-base` 创建 `{店铺名}-供应商管理` Base
-   - 建 `采购来源` 表
+   - 优先在店铺总 Base 内创建 `Suppliers 供应商` / `采购来源` 表；若店铺总 Base 不存在，先展示 one-shop-one-base 方案并等用户确认
    - 按 schema 建核心字段
    - 建 `主用`、`备用`、`测试中`、`淘汰` 四个状态视图，并设置对应筛选
-4. 完成后返回 Base 链接、表名、字段清单和视图清单
+4. 完成后返回店铺总 Base 链接、表名、字段清单和视图清单
 
 ### 模式 B：录入 / 更新采购来源
 

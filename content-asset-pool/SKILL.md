@@ -70,12 +70,12 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 
 读 [`references/base-schema.md`](references/base-schema.md)。
 
-推荐两张表：
+推荐两张表，默认位于店铺总 Base 内（见 `../shared/store-base-architecture.md`）：
 
 - **素材池 / Asset Pool**：一张图片 / 一个视频 / 一个素材 = 一条记录。
 - **发布任务 / Publishing Queue**：一次平台发布 = 一条任务。
 
-两张表可以未来独立建，也可以先让 Publishing Queue 与现有 Pinterest Pin Queue 并存。即使先只做 Pinterest，也要按跨平台模型保留 `平台`、`发布类型`、`关联素材`、`素材顺序`、`封面素材`、`状态`、`发布 URL`、`自动发布`、`发布适配器`、`外部队列 ID`、`执行锁` 等字段。
+两张表默认不再各自创建独立 Base；只有用户明确要求隔离时才单独建 Base。迁移期可与现有 Pinterest Pin Queue 并存。即使先只做 Pinterest，也要按跨平台模型保留 `平台`、`发布类型`、`关联素材`、`素材顺序`、`封面素材`、`状态`、`发布 URL`、`自动发布`、`发布适配器`、`外部队列 ID`、`执行锁` 等字段。
 
 ---
 
@@ -90,15 +90,17 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 步骤：
 
 1. 读 [`references/base-schema.md`](references/base-schema.md) 与 [`references/state-model.md`](references/state-model.md)。
-2. 确认是否已经存在 `{店铺名}-素材发布池` / `{店铺名}-发布任务` Base。只查询，不创建。
-3. 如用户确认要建 Base，展示字段清单和视图建议，等用户明确确认后才调用 `lark-base`。
-4. 建表时优先放在与商品 Base、素材索引 Base、Pin Queue 同一飞书空间目录下。
+2. 确认店铺总 Base 中是否已经存在 `Assets 素材池` / `Publishing Queue 发布任务` 表。只查询，不创建。
+3. 如用户确认要建表，展示字段清单和视图建议，等用户明确确认后才调用 `lark-base`。
+4. 建表时优先放在店铺总 Base 内，与 `Products 商品` / `SKUs 变体` / `Pinterest Queue` 同 Base，便于 relation。
 5. 初始化完成后只给 Base 链接、字段清单、下一步扫描入口；不扫描、不搬文件、不发布。
 
-建议 Base 名：
+建议表名：
 
-- `{店铺名}-素材发布池`
-- `{店铺名}-发布任务`
+- `Assets 素材池`
+- `Publishing Queue 发布任务`
+
+迁移期如果已有旧独立素材池 / Pin Queue Base，先把旧 Base 作为只读来源；新写入优先进入店铺总 Base。
 
 ---
 

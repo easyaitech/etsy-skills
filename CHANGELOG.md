@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- `shared/store-base-architecture.md`：新增 one-shop-one-base 数据架构契约，默认一个店铺一个飞书多维表格 Base、业务对象拆成 Products / SKUs / Assets / Publishing Queue / Pinterest Queue / Orders / Customers / Suppliers / Knowledge Cards 等表；明确 SKU 不因迁移改名、旧 Base 只作迁移期 fallback、旧表不自动删除。
 - `stack 级`：从 Etsy 专用 skill 包泛化为电商平台通用栈，新增 `ecommerce-stack` 入口、`shared/platform-config.md` 平台配置契约和 `COMMERCE_PLATFORM.md` 基座模板；内置 Etsy / 小红书两个可选平台 preset，并保留旧 `etsy-stack` 命令与 `.etsy-workspace` 标记兼容。
 
 ### 去品牌化 / 去平台特权
@@ -28,6 +29,7 @@
 - `pinterest-autopin`：新增 `references/patches/pinterest-video-pin-support-a5ccaec.patch`，临时沉淀 Pinterest-autopin 视频 Pin 支持补丁，供拿到工具仓库权限后应用到发布工具源码。
 
 ### 修
+- `shared/preamble.md` 与 listing / orders / supplier / business-knowledge / assets / content-asset-pool / social-publisher / pinterest-autopin 等 skill：把默认建库/查询口径从多个独立 Base 调整为店铺总 Base 内多张表；Pinterest Queue 短期保留为总 Base 内执行表，Publishing Queue 作为跨平台 source of truth。
 - `README.md` / `install.sh` / `scripts/etsy-stack`：安装、更新、工作区解析和文档从 Etsy 命名迁移到通用电商命名，同时兼容既有 Etsy 环境变量、缓存目录和工作区标记。
 - `assets-library` / `image-synth` / `video-assembly` / `content-asset-pool`：把 Etsy / Pinterest 单平台约束调整为平台配置驱动，避免商品图、视频安全区、素材状态和发布目标只能服务单一平台。
 - `listing-catalog` / `pinterest-autopin`：补充商品 Base `分享链接` 字段，并要求商品型 Pinterest 发布使用该字段作为 `Link`，不再临时拼 Etsy listing URL；同步应用层架构图和 Base 命名约定。

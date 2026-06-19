@@ -33,7 +33,7 @@
 | supplier-foundation | 供应商与采购来源（飞书 Base） |
 | business-knowledge | 业务知识库（raw / weekly / wiki / briefs markdown + Knowledge Cards Base），optional memory foundation |
 
-基座 skill 之间有协作（如 assets-library 读商品 Base、orders-customers 读 BRAND.md、supplier-foundation 服务物料采购、business-knowledge 提供可选业务记忆），但**不存在启动先后顺序**——哪个先建视用户业务需求而定。
+基座 skill 之间有协作（如 assets-library 读店铺总 Base 的 SKU 表、orders-customers 读 BRAND.md、supplier-foundation 服务物料采购、business-knowledge 提供可选业务记忆），但**不存在启动先后顺序**——哪个先建视用户业务需求而定。
 
 `business-knowledge` 是 optional memory foundation：下游引用它时默认 `SKIP`，缺失不阻塞原流程。
 

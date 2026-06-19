@@ -45,8 +45,8 @@ Pinterest: pinterest-autopin
 
 步骤：
 
-1. 解析工作区根，读取 `COMMERCE_PLATFORM.md` 和 `MARKETING_PLATFORM.md`（如存在）。
-2. 读 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md)，确认 `{店铺名}-发布任务` 是否存在。
+1. 解析工作区根，读取 `COMMERCE_PLATFORM.md` 和 `MARKETING_PLATFORM.md`（如存在），并按 `shared/store-base-architecture.md` 定位店铺总 Base。
+2. 读 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md)，确认店铺总 Base 内的 `Publishing Queue 发布任务` 表是否存在。
 3. 如果发布任务表缺少以下字段，列出字段清单给用户确认后再补：`自动发布`、`发布适配器`、`外部队列 ID`、`发布尝试次数`、`最后尝试时间`、`执行锁`。
 4. 读 [`references/adapter-registry.md`](references/adapter-registry.md)，展示当前适配器状态：
    - Pinterest = enabled，真实发布走 `pinterest-autopin`

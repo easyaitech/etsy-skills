@@ -20,7 +20,7 @@ weekly sources
 
 **对外的实操接口**：
 - 工作区文件：`<workspace>/knowledge/raw/`、`weekly/`、`wiki/`、`briefs/`
-- 飞书 Base：`{店铺名}-知识卡片`
+- 飞书 Base：店铺总 Base 内的 `Knowledge Cards 知识卡片` 表
 - 下游协议：`references/knowledge-card-lookup.md`、`references/marketing-brief-lookup.md`
 
 > 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
@@ -50,13 +50,13 @@ weekly sources
 
 ### First-run Base setup
 
-当需要写入 Knowledge Cards，但 `{店铺名}-知识卡片` Base 不存在：
+当需要写入 Knowledge Cards，但店铺总 Base 内的 `Knowledge Cards 知识卡片` 表不存在：
 
-1. 解析工作区根：`etsy-stack workspace`。
+1. 解析工作区根：`ecommerce-stack workspace`。
 2. 读取 `<workspace>/SHOP.md` 的「店铺名」字段；如果 `SHOP.md` 缺失或没有店铺名，停止并引导用户先用 `shop-foundation` 建立 / 补齐 `SHOP.md`，不要猜表名前缀。
-3. 读取 [`references/base-schema.md`](references/base-schema.md)，展示 Base schema、推荐视图和表名。
+3. 读取 `../shared/store-base-architecture.md` 和 [`references/base-schema.md`](references/base-schema.md)，展示店铺总 Base 内表 schema、推荐视图和表名。
 4. 等用户明确确认。
-5. 用 `lark-base` 创建 `{店铺名}-知识卡片`。
+5. 在店铺总 Base 中创建或补齐 `Knowledge Cards 知识卡片` 表；若店铺总 Base 不存在，先按 one-shop-one-base 方案创建 `{店铺名}-运营中枢`。
 6. 回到原流程继续。
 
 不要偷偷创建 Base。Base 缺失只在写入卡片时阻塞；读取 / Marketing Brief 可降级为“无卡片参考”继续。

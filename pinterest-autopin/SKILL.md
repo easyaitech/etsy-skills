@@ -22,7 +22,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **工具补丁交付**：`references/patches/pinterest-video-pin-support-a5ccaec.patch` 是 Pinterest-autopin 视频 Pin 支持补丁（源自不可访问的工具仓库本地提交 `a5ccaec`）。在 `easyaitech/Pinterest-autopin` 不可访问时，先通过本仓库沉淀；拿到工具仓库权限后，把该 patch 应用到工具源码仓库再开 PR。
 
 **对外的实操接口**：
-- 飞书 Base（用 `lark-base` skill 操作 Pin Queue + 反查商品 / 素材 Base）
+- 飞书 Base（用 `lark-base` skill 操作店铺总 Base 内的 `Pinterest Queue` 表 + 反查 `Products 商品` / `SKUs 变体` / `Assets 素材池` 表；架构见 `../shared/store-base-architecture.md`）
 - 工作区根目录的 BRAND.md / SHOP.md（用 `shop-foundation` 维护）
 - 外部工具：`~/code/etsy-skills/tools/Pinterest-autopin/`（用 terminal 调用 `npm run pin:*`；工具源码本体走 `$HOME` 是开发者机器约定，**runtime 数据按工作区隔离**——见模式 C）
 - 独立 Chrome profile（用于 Pinterest 登录态持久化）
@@ -40,7 +40,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 |---|--------|----------|-------------|
 | 1 | Pinterest-autopin 工具已安装且版本支持轮播 | 跑 `etsy-stack pinterest-tool status`，要求工具目录存在且版本 `>= 1.4.0` | 「Pinterest-autopin 发布工具还没装，或版本低于 1.4.0，当前发布器还不能可靠发轮播 pin。要现在运行 `etsy-stack pinterest-tool update` 升级吗？」 |
 | 2 | Chrome profile 目录已存在 | 检查 `references/runtime-setup.md` §路径约定 中的 Chrome profile 目录是否存在 | 「Pinterest 的 Chrome 登录档还没建。要现在初始化吗？」 |
-| 3 | Pin Queue Base 已存在 | 用 `lark-base` 搜索名称含 `{店铺名}-Pin Queue` 的 Base（店铺名取自 SHOP.md） | 「Pin Queue 飞书多维表格还没建。要现在建吗？我会按 schema 引导你。」 |
+| 3 | Pinterest Queue 表已存在 | 先读 `<workspace>/docs/store-base.md`，确认店铺总 Base 中已配置 `pinterest_queue`；迁移期可 fallback 到旧 `{店铺名}-Pin Queue` 独立 Base | 「Pinterest Queue 表还没建。要现在在店铺总 Base 里建吗？我会按 schema 引导你。」 |
 | 4 | `BRAND_MARKETING.md` 存在 | 检查 `<workspace>/BRAND_MARKETING.md` 是否存在 | 「营销策略底座还没建。要用 shop-foundation 建立吗？我会引导你完成营销策略访谈。」 |
 | 5 | `MARKETING_PLATFORM.md` 存在 | 检查 `<workspace>/MARKETING_PLATFORM.md` 是否存在 | 「平台内容策略还没建。要用 shop-foundation 建立吗？我会引导你定义各平台的内容规范。」 |
 
@@ -81,7 +81,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 1. 读 `references/runtime-setup.md` —— 按里面的步骤 clone Pinterest-autopin 到 `~/code/etsy-skills/tools/`、`npm install`、初始化 Chrome profile（Chrome profile 路径建议 `~/.config/pinterest-autopin/chrome-profile/`，不进 git）。runtime/ 目录按工作区隔离，模式 C 时再创建——不在装机阶段建
    - 如果工具目录已存在，先跑 `etsy-stack pinterest-tool update`，确保发布工具版本 `>= 1.4.0`；旧版 `v1.3.x` 只可靠支持单图 pin
 2. 跑一次 `npm run pin:check-login`，让用户在弹出的 Chrome 里手动完成 Pinterest 登录；登录态持久化到 Chrome profile
-3. 读 `references/pin-queue-base-schema.md`，用 `lark-base` 在与商品 / 素材 Base 同一个云空间目录下创建 `{店铺名}-Pin Queue` Base，按 schema 建字段（关联字段必须指向已有的商品 Base + 素材索引 Base；`关联素材` 设为允许多值以支持轮播 pin；`image 路径` 与 `Alt Text (EN)` 必须支持多行）和推荐视图
+3. 读 `references/pin-queue-base-schema.md` 和 `../shared/store-base-architecture.md`，用 `lark-base` 在店铺总 Base 内创建或补齐 `Pinterest Queue` 表，按 schema 建字段（关联字段优先指向同 Base 内 `SKUs 变体` + `Assets 素材池` 表；`关联素材` 设为允许多值以支持轮播 pin；`image 路径` 与 `Alt Text (EN)` 必须支持多行）和推荐视图。只有用户明确要求隔离时才创建独立 Pin Queue Base。
 4. 落盘后告诉用户：工具路径 + Chrome profile 路径 + Base 链接 + 字段清单 + 一句"下一步可以用 Pin 模式 B 出第一条 pin 试试——单图或轮播都可以"
 
 > **不要替用户在 Pinterest 上建 board**——board 是用户在 Pinterest 后台手动建好（涉及账号操作）。本 skill 在模式 B 取 board 名时假设用户已建好。
@@ -95,9 +95,9 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 **执行步骤**：
 1. 按 `references/pin-composition.md` § 输入清单盘点用户已给的输入；**缺必填项一次性问全**（目标 SKU、目标 board、是否指定素材），不要边写边追问。如用户给了多张素材，确认是否要做轮播 pin
-2. 用 `lark-base` 查商品 Base 取 SKU 行：
+2. 用 `lark-base` 查店铺总 Base 的 `SKUs 变体` 表取 SKU 行（必要时通过 relation 读取 `Products 商品`）：
    - 校验 `状态 = 在售`，否则中止并提示用户先上线 listing
-   - 取商品 Base `分享链接` → 写入 Pin Queue `Link`；同时记录 SKU + 商品 record_id + `平台商品 ID` 便于追溯。缺 `分享链接` 时中止，回 `listing-catalog` 补字段，不临时拼平台 URL
+   - 取 `分享链接` → 写入 Pinterest Queue `Link`；同时记录 SKU + SKU record_id + `平台商品 ID` 便于追溯。缺 `分享链接` 时中止，回 `listing-catalog` 补字段，不临时拼平台 URL
    - 取 SKU 标题 / SEO 关键词作 pin title 的锚
 3. 用 `lark-base` 查素材索引 Base 的「Pinterest 候选」视图：
    - **如果用户指定了素材**（1 张或多张）——逐张做 4 路分流，统一格式 `条件 → 中止，先去解决 X 再回来`：
