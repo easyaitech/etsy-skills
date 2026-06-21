@@ -24,7 +24,7 @@ layer: foundation
 |---|---|---|
 | `<workspace>/SHOP.md` | 店铺名 | 新建店铺总 Base 时用于命名 `{店铺名}-运营中枢`；已有配置优先读 `<workspace>/docs/store-base.md` |
 | `Suppliers 供应商` 表 | 采购来源事实 | 记录每个物料的主用、备用、测试中、淘汰来源 |
-| `Products 商品` / `SKUs 变体` 表 | SKU 与物料需求 | 有明确商品上下文时，用商品信息辅助判断需要的物料和参数 |
+| `Products 商品` 表 | SKU 与物料需求 | 有明确商品上下文时，用商品信息辅助判断需要的物料和参数 |
 
 如果 SHOP.md 缺失，建库前提示用户先用 `shop-foundation` 建立；如果只是用户提供了明确的 Base 链接，可以先采用链接里的现有 Base，再提醒后续补 SHOP.md 以便统一命名。
 

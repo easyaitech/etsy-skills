@@ -21,7 +21,7 @@ layer: foundation
 | `<workspace>/BRAND.md` | 文案语调 / 客服姿态 / 边界 | 写客服回复时严格遵守"应该说"、"避免说"、"原则"段（特别是处理差评的姿态原则） |
 | `<workspace>/SHOP.md` | 处理时间 / 退换货 / 运输 / 定制政策 | 客服回复涉及承诺时引用 SHOP.md 原文，**绝不自编**（避免承诺与店铺政策冲突） |
 | `<workspace>/COMMERCE_PLATFORM.md` | 目标销售平台、买家语言、订单客服边界、自动化边界 | 决定订单字段、回复语言、买家消息渠道和哪些动作不能代操作；非 Etsy / 小红书平台缺失时阻塞 |
-| `Products 商品` / `SKUs 变体` 表 | 该订单包含的 SKU 详情 | 处理订单时按订单关联到 SKU（用 lark-base 跨表关联） |
+| `Products 商品` 表 | 该订单包含的 SKU 详情 | 处理订单时按订单关联到 SKU（用 lark-base 跨表关联） |
 | `references/order-fulfillment-sop.md` | 新订单到发货、签收跟进的阶段清单 | 新订单 / 待发货订单必须用它判断下一步、缺失证据和要写回的字段 |
 | `references/order-handling.md` | 客服回复场景 SOP | 只用于买家消息、差评、退换货、感谢信等话术，不替代履约 SOP |
 | `references/xiaohongshu-orders.md` | 小红书订单 / 履约 / 售后字段和边界 | 目标平台是小红书时必读；不要把 Etsy 订单号、username、ship-by 规则套给小红书 |
@@ -87,7 +87,7 @@ layer: foundation
 - `Orders 订单` 表的 `SOP 阶段`、确认照片、跟踪号或评价跟进状态缺失；`打包视频` 只有在本单明确要求留证/用户要求/已选择录制社媒素材时才作为缺口
 
 **执行步骤**：
-1. 先查 `Orders 订单` 表、`Customers 客户` 表、`Products 商品` / `SKUs 变体` 表，拿到订单状态、SKU、定制需求、承诺发货日、跟踪号和客户标签
+1. 先查 `Orders 订单` 表、`Customers 客户` 表、`Products 商品` 表，拿到订单状态、SKU、定制需求、承诺发货日、跟踪号和客户标签
 2. 读 `references/order-fulfillment-sop.md`
 3. 按 SOP 输出：
    - 当前阶段

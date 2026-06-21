@@ -14,7 +14,7 @@
 只在以下出口运行：
 
 1. **最终电商平台商品图 / listing 图片**：`assets-library` 模式 B2 promote，且用途标签是目标平台商品图用途；Etsy 为 listing 槽位（`hero` / `detail` / `lifestyle` / 等）。
-2. **计划发布到社交媒体的图片**：`assets-library` 模式 B2 promote，且用途标签包含社媒渠道（如 `Pinterest` / `Instagram Posts` / `Instagram Stories` / `Facebook` / `Twitter/X`）；以及 `pinterest-autopin` 写入 `Pinterest Queue` 表 / 发布前的 processed 副本。
+2. **计划发布到社交媒体的图片**：`assets-library` 模式 B2 promote，且用途标签包含社媒渠道（如 `Pinterest` / `Instagram Posts` / `Instagram Stories` / `Facebook` / `Twitter/X`）；以及 `pinterest-autopin` 写入 `社媒发布队列` 表 / 发布前的 processed 副本。
 
 明确不处理：
 

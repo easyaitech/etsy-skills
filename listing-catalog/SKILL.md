@@ -8,7 +8,7 @@ layer: foundation
 
 这个 skill 维护电商商品目录（结构化数据 → 店铺总 Base 内商品 / SKU 表）+ 按目标销售平台撰写商品页 / listing 文案。
 
-**对外的实操接口**：店铺总 Base 内的 `Products 商品` / `SKUs 变体` 表（用 `lark-base` skill 操作；架构见 `../shared/store-base-architecture.md`）+ 工作区根目录的 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md（用 `shop-foundation` skill 维护）。
+**对外的实操接口**：店铺总 Base 内的 `Products 商品` 表（用 `lark-base` skill 操作；架构见 `../shared/store-base-architecture.md`）+ 工作区根目录的 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md（用 `shop-foundation` skill 维护）。
 
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
@@ -23,7 +23,7 @@ layer: foundation
 | `<workspace>/BRAND.md` | 文案语调 / 视觉原则 / 品牌定位 | 标题、描述、标签的语气与措辞——"应该说"、"避免说"、"原则"段都要遵守 |
 | `<workspace>/SHOP.md` | 处理时间 / 运输方式 / 退换货 / 定制政策 | 描述或客服相关政策段引用 SHOP.md 原文，不要自行编造 |
 | `<workspace>/COMMERCE_PLATFORM.md` | 目标销售平台、买家语言、标题/描述/tag/媒体/订单规则 | 决定输出语言、字段、长度、平台枚举和自动化边界；非 Etsy / 小红书平台缺失时阻塞 |
-| 店铺总 Base 的 SKU 行 | 成本、变体、库存、关键词、平台商品 ID | 写商品页时先查 `SKUs 变体` 表；需要商品级故事 / 分享链接时关联 `Products 商品` 表；写完后回写平台商品 ID、状态、上线日 |
+| 店铺总 Base 的 SKU 行 | 成本、变体、库存、关键词、平台商品 ID、商品级故事 / 分享链接 | 写商品页时先查 `Products 商品` 表（商品级与 SKU 级字段同表）；写完后回写平台商品 ID、状态、上线日 |
 
 **写 listing 之前**永远先：
 1. 读 BRAND.md（如不存在，提示用户先用 shop-foundation 建立——这是品牌一致性的根）
@@ -46,18 +46,18 @@ layer: foundation
 
 **进入条件**：
 - 用户明确说要建商品库 / 商品目录 / listing 表 / SKU 表
-- 店铺总 Base 尚未配置 `products` / `skus` 表
+- 店铺总 Base 尚未配置 `products`（`Products 商品`，商品 + SKU 合并）表
 - 或已有表但 schema 不齐，要补字段
 
 **执行步骤**：
 1. 读 `../shared/store-base-architecture.md` 和 `references/base-schema.md`，了解 one-shop-one-base 与推荐字段集
 2. 如果目标平台包含小红书，读 `references/xiaohongshu-commerce.md`；创建表时必须加建 `base-schema.md` 的“小红书字段”分组
 3. 解析工作区根并读取 `<workspace>/docs/store-base.md`：
-   - 若店铺总 Base 已存在：在其中创建或补齐 `Products 商品` / `SKUs 变体` 表
+   - 若店铺总 Base 已存在：在其中创建或补齐 `Products 商品` 表
    - 若店铺总 Base 不存在：先向用户展示店铺总 Base 方案和表清单，等确认后再创建 `{店铺名}-运营中枢`
    - 迁移期若发现旧独立商品数据源，可作为 legacy fallback 查询，但新写入优先进入店铺总 Base
 4. 按 schema 逐字段配置（核心字段必建；小红书字段在启用小红书平台时必建；其他辅助字段视用户需要）
-5. `SKUs 变体` 表必须保留原 SKU 字段作为业务主键；如需要内部稳定 ID，新增 `Variant ID`，不要因迁移重命名 SKU
+5. `Products 商品` 表必须保留原 SKU 字段作为业务主键；如需要内部稳定 ID，新增 `内部 ID` 字段，不要因迁移重命名 SKU
 6. 落盘后告诉用户 Base 链接 + 表清单 + 字段清单 + 可选的下一步（"导入第一条 SKU 试试")
 
 > **不要硬塞无关字段**——通用核心字段必建；启用小红书时，小红书字段分组也必建但可以先为空；其他平台辅助字段后续按需补。
@@ -99,7 +99,7 @@ layer: foundation
    - 如果 step 5.6 命中卡片，先展示「可参考知识卡片」小节，再展示 listing 草稿；listing 正文只采用标为 yes / partial 的卡片，不采用 no 的卡片
 8. **整篇展示**给用户，等用户确认或调整。同时展示「过滤掉的候选词」清单，方便用户判断是否要纠正 BRAND.md
 9. 用户确认后：
-   - 把文案写入店铺总 Base 的 `SKUs 变体` 对应行（必要时同步 `Products 商品` 的商品级字段；通过 lark-base 更新）
+   - 把文案写入店铺总 Base 的 `Products 商品` 对应行（商品级与 SKU 级字段同表；通过 lark-base 更新）
    - 如果 step 5.6 有采用 yes / partial 的 Knowledge Cards，best-effort 回写 `引用次数 += 1` / `最后引用日期 = today`；失败不阻塞 listing 写入，但要简短告诉用户统计字段未能更新
    - 提醒用户去目标平台后台贴上线；若 COMMERCE_PLATFORM.md 明确允许 API / ERP 发布，也必须按对应平台 skill 或人工确认流程执行
    - 如果跑了 eRank 节点 ⑤ 之前的环节，顺带提醒用户去 eRank 做定价对标（节点 ⑤）
@@ -107,7 +107,7 @@ layer: foundation
 10. **(可选) 反向触发图像产出** — listing 文案写入 Base 后，如果该 SKU 还没有 `商品/{SKU}_shoot-brief.md`，且也没成品图：
     - 提示用户："文案定了，刚生成的 4 类礼物词库 + Mood 新鲜可用。下一步图怎么办？① 出 shoot brief 去拍（assets-library 模式 D）② 不拍直接 AI 合成（image-synth 模式 A）③ 都跳过（之后再说）"
     - **选 ①** → invoke `assets-library` 进入模式 D，**调用方现传** 4 类礼物词库（受众 / 场景 / 节日 / 包装）+ description 段 3 in-memory，让模式 D 直接用，不走 Base 反推。assets-library 模式 D step 11 还会再追问"要不要直接 AI 合成"，用户可在那里继续接 image-synth
-    - **选 ②** → invoke `image-synth` 进入模式 A，**调用方现传** 4 类礼物词库 + description 段 3 + `Products 商品` / `SKUs 变体` 表中该 SKU 行 in-memory；目标槽位由 image-synth 在盘点输入时跟用户对齐；不预先建 brief 文件
+    - **选 ②** → invoke `image-synth` 进入模式 A，**调用方现传** 4 类礼物词库 + description 段 3 + `Products 商品` 表中该 SKU 行 in-memory；目标槽位由 image-synth 在盘点输入时跟用户对齐；不预先建 brief 文件
     - **选 ③** → 静默跳过（不阻塞）；用户后续主动 invoke 任一下游 skill 都能正常工作
     - 节奏：本步是 step 9 完成后**同一 turn 内** agent 主动追问的可选环节，不是 step 9 的子步骤；用户回应后才 invoke 下一个 skill
 

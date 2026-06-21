@@ -90,23 +90,28 @@ ecommerce-stack workspace
 
 默认采用 **一个店铺 = 一个飞书多维表格 Base；一个业务对象 = Base 内一张表**。详细契约见 [`shared/store-base-architecture.md`](store-base-architecture.md)。`{店铺名}` 取自 `<workspace>/SHOP.md` 的「店铺名」字段（§店铺基础）。
 
-推荐店铺总 Base 命名：`{店铺名}-运营中枢`。各 skill 不再默认创建彼此独立的 Base，而是优先在店铺总 Base 内定位或创建表：
+推荐店铺总 Base 命名：`{店铺名}-运营中枢`。各 skill 不再默认创建彼此独立的 Base，而是优先在店铺总 Base 内定位或创建表。
+
+**建库默认只开 4 张基础表**（新客户新建 Base 时）：
 
 | 逻辑键 | 推荐表名 | 归属 skill |
 |---|---|---|
-| `products` | `Products 商品` | listing-catalog |
-| `skus` | `SKUs 变体` | listing-catalog |
+| `products` | `Products 商品`（商品 + SKU 合并） | listing-catalog |
 | `orders` | `Orders 订单` | orders-customers |
 | `customers` | `Customers 客户` | orders-customers |
 | `suppliers` | `Suppliers 供应商` | supplier-foundation |
-| `knowledge_cards` | `Knowledge Cards 知识卡片` | business-knowledge |
+
+**扩展表按需补充**（第一次真正用到对应 skill 时再建，不在建库时全开）：
+
+| 逻辑键 | 推荐表名 | 归属 skill |
+|---|---|---|
 | `assets` | `Assets 素材池` | assets-library / content-asset-pool |
-| `publishing_queue` | `Publishing Queue 发布任务` | content-asset-pool / social-publisher |
-| `pinterest_queue` | `Pinterest Queue` | pinterest-autopin |
+| `publishing_queue` | `社媒发布队列`（含 Pinterest pin，用 `平台` 字段区分） | content-asset-pool / social-publisher / pinterest-autopin |
+| `knowledge_cards` | `Knowledge Cards 知识卡片` | business-knowledge |
 | `clips` | `Clips 视频片段` | video-assembly |
 | `video_jobs` | `Video Jobs 视频任务` | video-assembly |
 
-每次读写 Base 前，先解析工作区根，再读取 `<workspace>/docs/store-base.md`（或未来等价机器可读配置）获取店铺总 Base 与 table_id。配置缺失时，建库场景应引导创建店铺总 Base 内表；迁移期查询可兼容旧独立 Base，但必须标注为 legacy fallback。除非用户明确要求隔离，不要为新模块默认创建独立 Base。
+每次读写 Base 前，先解析工作区根，再读取 `<workspace>/docs/store-base.md`（或未来等价机器可读配置）获取店铺总 Base 与 table_id。配置缺失时，建库场景默认只建 4 张基础表，扩展表用到时再单独建；迁移期查询可兼容旧独立 Base，但必须标注为 legacy fallback。除非用户明确要求隔离，不要为新模块默认创建独立 Base。
 
 面向用户的回复不要暴露 Base token、table_id、record_id、field_id 或 file token；需要交付时给飞书链接或说明已写入配置文件。
 
@@ -114,7 +119,7 @@ ecommerce-stack workspace
 
 客户共享入口默认是该店铺总 Base，不默认共享飞书 Wiki / 知识库。`business-knowledge` 生成的 raw / weekly / wiki / briefs markdown 属于内部工作区材料；需要给客户看结构化知识时，写入 `Knowledge Cards 知识卡片` 表并通过 Base 权限控制可见范围。
 
-共享给客户前，先启用多维表格高级权限并配置最小权限角色：客户默认只读，只开放明确需要协作的表、视图、字段或记录；成本、利润、供应商、内部备注、执行锁、客户隐私和操作日志默认不开放。飞书机器人和 Hermes Agent 也只拿当前店铺总 Base 及必要素材文件夹权限，不申请全空间、全知识库或跨店铺权限。
+共享给客户前，先启用多维表格高级权限并配置最小权限角色：客户默认只读，只开放明确需要协作的表、视图、字段或记录；成本、利润、供应商、内部备注、执行锁和客户隐私默认不开放。飞书机器人和 Hermes Agent 也只拿当前店铺总 Base 及必要素材文件夹权限，不申请全空间、全知识库或跨店铺权限。
 
 ---
 

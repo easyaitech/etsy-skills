@@ -11,6 +11,12 @@
 - `shared/store-base-architecture.md`：新增 one-shop-one-base 数据架构契约，默认一个店铺一个飞书多维表格 Base、业务对象拆成 Products / SKUs / Assets / Publishing Queue / Pinterest Queue / Orders / Customers / Suppliers / Knowledge Cards 等表；明确 SKU 不因迁移改名、旧 Base 只作迁移期 fallback、旧表不自动删除。
 - `stack 级`：从 Etsy 专用 skill 包泛化为电商平台通用栈，新增 `ecommerce-stack` 入口、`shared/platform-config.md` 平台配置契约和 `COMMERCE_PLATFORM.md` 基座模板；内置 Etsy / 小红书两个可选平台 preset，并保留旧 `etsy-stack` 命令与 `.etsy-workspace` 标记兼容。
 
+### 变更（飞书 Base 表结构精简）
+- `shared/store-base-architecture.md` + `shared/preamble.md`：**建库默认只开 4 张基础表**（`Products 商品` / `Orders 订单` / `Customers 客户` / `Suppliers 供应商`）；素材池、社媒发布队列、知识卡片、视频表等扩展表第一次用到对应 skill 时再按需补建，不在建库时一次性全开。
+- `listing-catalog`：**`Products 商品` 与 `SKUs 变体` 合并为一张 `Products 商品` 表**——一行 = 一个可售 SKU，商品级故事 / 品类 / 分享链接与 SKU / 成本 / 售价 / 库存 / 平台商品 ID 同表共存；退役 `skus` 逻辑键，多变体用 `变体` 字段或单独变体行，SKU 编码不变。
+- `content-asset-pool` / `social-publisher` / `pinterest-autopin`：**`Publishing Queue 发布任务` 与 `Pinterest Queue` 合并为一张 `社媒发布队列` 表**——所有平台（含 Pinterest pin）共用一张表，用 `平台` 字段区分，Pinterest pin 即 `平台 = Pinterest` 的行；不再单建 Pinterest 子队列表，发布成功 / 失败一次回写本行，旧 `pin_id` 并入 `任务 ID`、`Title (EN)` / `Link` / `pin_url` 等并入通用字段 `标题` / `链接` / `发布 URL`。
+- 移除 `Ops Log 操作日志` 表：迁移 / 发布 / 异常追踪改由各表上的迁移字段（旧 Base / 旧 table_id / 迁移状态）与 `社媒发布队列` 状态机承载。
+
 ### 去品牌化 / 去平台特权
 - `stack 级`：移除所有品牌专属内容，使其成为真正通用的电商平台运营技能包。删除 ~28 个品牌 / Etsy 专属的遗留嵌套运营 skill（listing-catalog 下的 Etsy listing 优化 / SEO / 媒体一致性 / 数字打印件、orders-customers 下的品牌客服 / 订单 / 履约 / 运单运营、pinterest-autopin 下的品牌 Pinterest 运营子 skill，以及 image-synth / trend-radar 的品牌运营层、独立的 social-media / productivity / devops 目录）——这些工作流已由顶层通用 skill 覆盖。
 - `etsy-stack.json`：移除 `defaultPlatform: "etsy"` 特权默认平台。Etsy 与小红书并列为可选 preset，平台由 `COMMERCE_PLATFORM.md` 驱动；任何 skill 不再假定 Etsy。
