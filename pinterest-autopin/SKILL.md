@@ -28,7 +28,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - 独立 Chrome profile（用于 Pinterest 登录态持久化）
 - 图片发布副本处理工具链：`remove-ai-watermarks` + `jpegoptim` + `optipng`（只清 AI metadata / AI watermark + 无损压缩——见 `references/image-processing.md`）
 
-> 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
+> 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
 ---
 

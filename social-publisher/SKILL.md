@@ -18,7 +18,7 @@ Pinterest: pinterest-autopin
 
 它不负责长期素材归档，不负责生成图片或视频，不负责写商品事实。那些仍归 `assets-library`、`image-synth`、`video-assembly`、`listing-catalog`。
 
-> 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，平台配置见 [`shared/platform-config.md`](../shared/platform-config.md)。
+> 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，平台配置见 [`shared/platform-config.md`](../shared/platform-config.md)。
 
 ---
 

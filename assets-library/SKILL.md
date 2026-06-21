@@ -16,7 +16,7 @@ layer: foundation
 
 **对外的实操接口**：飞书云空间（`lark-drive`） + 店铺总 Base 内的 `Assets 素材池` 表（`lark-base`） + `Products 商品` / `SKUs 变体` 表（模式 D 读 SKU 行） + 工作区根目录的 BRAND.md（视觉原则）。
 
-> 共享引导（版本检查 / 工作区解析 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
+> 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
 ---
 
