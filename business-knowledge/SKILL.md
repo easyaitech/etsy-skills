@@ -1,6 +1,6 @@
 ---
 name: business-knowledge
-description: 维护电商店铺的轻量业务知识库：整理每周外部材料、生成 raw / weekly / wiki markdown、抽取 Knowledge Cards 写入店铺总 Base 内 `Knowledge Cards 知识卡片` 表，并按 SKU / 品类 / 渠道生成短期 Marketing Brief。触发条件：(1) 用户说"整理这周热点 / 沉淀知识库 / 这些材料帮我整理"；(2) 用户要给 SKU、品类或渠道生成本周营销参考 / marketing brief；(3) 下游 skill 需要引用 Knowledge Cards 或 Marketing Brief lookup contract。
+description: 维护电商店铺的轻量业务知识库：整理每周外部材料、生成 raw / weekly / wiki markdown、抽取 Knowledge Cards 写入店铺总 Base 内 `Knowledge Cards 知识卡片` 表，并按 SKU / 品类 / 渠道生成短期 Marketing Brief。触发条件：(1) 用户说"整理这周热点 / 沉淀知识库 / 这些材料帮我整理"，或 trend-radar 本周采集就绪、需把热词沉淀成卡片供 listing 等参考；(2) 用户要给 SKU、品类或渠道生成本周营销参考 / marketing brief；(3) 下游 skill 需要引用 Knowledge Cards 或 Marketing Brief lookup contract。
 layer: foundation
 ---
 
@@ -16,7 +16,7 @@ weekly sources
   -> downstream lookup contract
 ```
 
-它不是趋势抓取器，也不是品牌策略基座。外部材料来自用户、Claude CoWork、Etsy 报告、竞品观察或社媒观察；本 skill 只负责把材料沉淀成可审计、可引用、可跳过的业务参考。
+它不是趋势抓取器，也不是品牌策略基座。外部材料来自用户、Claude CoWork、Etsy 报告、竞品观察、社媒观察，以及 `trend-radar` 每周采集产出的热词文件（见 [`references/trend-radar-intake.md`](references/trend-radar-intake.md)——本 skill 读它的产出文件、不自己抓站）；本 skill 只负责把材料沉淀成可审计、可引用、可跳过的业务参考。
 
 **对外的实操接口**：
 - 工作区文件：`<workspace>/knowledge/raw/`、`weekly/`、`wiki/`、`briefs/`
@@ -68,6 +68,7 @@ weekly sources
 **进入条件**：
 - 用户说整理本周热点、知识、新闻、报告或 Claude CoWork 输出。
 - 用户给一批链接、截图说明、竞品观察、社媒观察或随手笔记，希望未来业务能引用。
+- `trend-radar` 本周采集已就绪（`<workspace>/outputs/trend-radar/latest.json` 在本周内）——把本周热词沉淀进 Knowledge Cards 供 listing 等下游参考。
 
 **执行步骤**：
 
@@ -78,10 +79,11 @@ weekly sources
    - `<workspace>/knowledge/raw/YYYY-WW/source-links.md`
    - `<workspace>/knowledge/raw/YYYY-WW/notes.md`
    - 截图只记录说明和用户提供的位置；不要伪造文件。
+4.5. **（如有）纳入 trend-radar 本周热词** — 读 [`references/trend-radar-intake.md`](references/trend-radar-intake.md)：如果 `<workspace>/outputs/trend-radar/latest.json` 存在且 `generated_at` 在本周内，按该文件把**有店铺结合点的上升热词**作为本周趋势材料纳入（缺失 / 过期 → 跳过，不阻塞）。这批材料随 step 7-8 一起被抽成卡片。
 5. 读 [`references/weekly-template.md`](references/weekly-template.md)，生成 `<workspace>/knowledge/weekly/YYYY-WW.md`。
 6. 读 [`references/wiki-style.md`](references/wiki-style.md)，对相关 `<workspace>/knowledge/wiki/*.md` 做 append / merge 草稿；不要整页重写。
 7. 读 [`references/card-extraction-rules.md`](references/card-extraction-rules.md)，抽取 5-10 张候选 Knowledge Cards。
-8. 对“客观存在的趋势 / 来源事实 / 可审计观察”可自动沉淀：生成候选卡片后，直接写入 workspace knowledge markdown，并写入店铺总 Base 内 `Knowledge Cards 知识卡片` 表，卡片内必须保留来源、日期、适用场景、禁用场景和证据边界。
+8. 对“客观存在的趋势 / 来源事实 / 可审计观察”可自动沉淀：生成候选卡片后，直接写入 workspace knowledge markdown，并写入店铺总 Base 内 `Knowledge Cards 知识卡片` 表，卡片内必须保留来源、日期、适用场景、禁用场景和证据边界。**来自 trend-radar 的热词卡**：字段映射（含 `适用场景=listing`、热词进 `关键词标签`、`过期提醒日期` 设定）、去重、以及**顺手把已过 `过期提醒日期` 的旧热词卡置 `expired`**，都按 [`references/trend-radar-intake.md`](references/trend-radar-intake.md)。
 9. 对“需要行动 / 落地执行”的事项必须人工确认：例如修改 `Products 商品` 表、`社媒发布队列` 表、Listing、素材生产、发布、SEO 改动、采购或库存动作；这些只写入报告的「建议动作 / 待确认」部分，不自动执行。
 10. 如果来源事实和行动建议混在一起：事实卡自动入库；行动项作为建议输出给用户确认。
 

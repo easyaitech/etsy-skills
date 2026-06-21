@@ -1,5 +1,7 @@
 # 节日日历
 
+> **⛔ 平台门槛：本文件只服务 Etsy 礼物场景调研（[gift-scenario.md](gift-scenario.md)），随该环节仅在 Etsy 平台读取；非 Etsy 平台不查节日窗口。**
+>
 > Etsy 流量大头是礼物 / 节日场景。这份日历给 listing-catalog 的 step 5.5（[gift-scenario.md](gift-scenario.md)）查节日时机用——**输入「计划上架日」**，输出未来 60 天命中的节日 + 关联礼物词。
 >
 > 默认聚焦 Etsy 主流市场（美 / 欧 / 澳）。海外华人节日做可选 section（默认关闭）。

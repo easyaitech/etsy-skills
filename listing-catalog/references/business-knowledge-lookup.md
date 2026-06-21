@@ -45,6 +45,8 @@ max_cards: 3
 
 只填已知字段。不要为了提高命中率编造材质、受众、节日或 SKU 事实。
 
+> `gift_words` / `target_audience` / `season_or_event` 来自 step 5.5，**仅 Etsy 平台有**；非 Etsy 平台 step 5.5 跳过，这些字段缺省，按「只填已知字段」处理即可（其余 SKU / 品类 / 材质 / 价格档 / SEO 关键词照常）。
+
 ## Conflict priority
 
 ```text

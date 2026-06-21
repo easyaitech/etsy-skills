@@ -68,7 +68,7 @@ layer: foundation
 - 用户要写新商品页 / listing 文案 / 上新 / 重写某条商品标题或描述 / 调整 tags 或平台关键词
 
 **执行步骤**：
-1. 按 `references/input-checklist.md` 盘点用户已给的输入；**缺必填项一次性问全**，不要边写边追问。**预期售价**与**礼物倾向**是必填——前者决定 step 5.5 客单价档，后者决定 step 5.5 是走完整问还是 Q2-Q5 全跳过
+1. 按 `references/input-checklist.md` 盘点用户已给的输入；**缺必填项一次性问全**，不要边写边追问。**预期售价**建议永远提供（定价语境）。**礼物倾向**是 **Etsy 专属必填**——目标平台（由 COMMERCE_PLATFORM.md 或用户目标确定）是 Etsy 时才收集，决定 step 5.5 是走完整问还是 Q2-Q5 全跳过；**非 Etsy 平台不收集礼物倾向、不跑 step 5.5**。Etsy 下预期售价还兼任 step 5.5 客单价档分流
 2. 确认目标 SKU（如果是新品，先在 Base 里建一行记录基础信息；如果是改既有 listing，用 lark-base 查现有行）
 3. 确认目标销售平台。读 BRAND.md（语调 / 定位 / 视觉关键词作为关键词源头）+ SHOP.md（政策段 + 礼盒服务字段）+ COMMERCE_PLATFORM.md（平台配置）
 4. 按平台选择规则来源：
@@ -77,13 +77,14 @@ layer: foundation
    - **其他已配置平台**：只使用 COMMERCE_PLATFORM.md 对应平台章节里的标题、描述、关键词、属性、媒体和合规规则；配置没写的限制视为未知，向用户确认，不自行补全
    - **其他未配置平台**：停止，引导用户先用 `shop-foundation` 建立该平台配置
 5. **(可选) eRank 预调研** — 任一命中即主动提示用户去 eRank 调研：① 用户提到有 eRank 账号；② 新品类首品；③ 主推 SKU；④ 单价 ≥ $50；⑤ 用户主动要求"调研 / 看竞品 / 做 SEO"。命中 → 读 `references/erank-research.md`，按节点 ② 向用户发问。低价值 SKU（重复款 / 变体 / 低价位）或用户跳过 → 直接进 step 5.5（沿用 step 1 的"可选项缺失不必停下"规则）
-5.5. **(强制) 礼物场景调研** — 读 `references/gift-scenario.md`，按客单价档运行：
+5.5. **(Etsy 专属，Etsy 下强制；非 Etsy 平台整段跳过) 礼物场景调研** — **仅当目标平台是 Etsy 时执行**。礼物 / 节日维度是 Etsy 搜索流量大头、是 Etsy SEO 的输入模块，不套用到小红书或其他平台（小红书走内容种草模型，无礼物 tag 槽位）。注册见 [`../shared/platform-config.md`](../shared/platform-config.md) § 内置平台 preset · Etsy。目标平台是 Etsy 时读 `references/gift-scenario.md`，按客单价档运行：
    - **< $20**：走轻问法，只问 Q1（礼物倾向）；其余自动从 holiday-calendar.md 命中节日生成 3 个纯节日词
    - **$20-$50**：完整 5 问（Q1 礼物倾向 / Q2 受众类型 / Q3 场景 / Q4 节日时机 / Q5 受众画像）；Q1=自购为主时 Q2-Q5 跳过
    - **≥ $50**：完整 5 问 + 生成长尾语义短语（仅供 title / description 段 3，不进 tag）
    - 跑完后产出 4 类礼物词库（受众词 / 场景词 / 节日词 / 包装服务词）+ BRAND.md 三条硬过滤后的「过滤掉的候选词」清单
+   - **非 Etsy 平台（小红书及其他已配置平台）**：跳过本环节——不收集礼物倾向、不问 5 问、不产礼物词库、不查 holiday-calendar，直接进 step 5.6
 5.6. **(可选) Knowledge Cards 检索** — 读 [`references/business-knowledge-lookup.md`](references/business-knowledge-lookup.md) 和 [`../business-knowledge/references/knowledge-card-lookup.md`](../business-knowledge/references/knowledge-card-lookup.md)，按 `scenario: listing` 检索店铺总 Base 内 `Knowledge Cards 知识卡片` 表：
-   - 输入只使用已知事实：SKU、品类、材质、价格档、step 5.5 生成的礼物词库、SEO 关键词、目标受众、节日 / 场景；不要为了检索补编 SKU 信息
+   - 输入只使用已知事实：SKU、品类、材质、价格档、SEO 关键词、目标受众；**Etsy 平台**还含 step 5.5 生成的礼物词库 / 节日 / 场景（非 Etsy 平台 step 5.5 未运行，无此项）；不要为了检索补编 SKU 信息
    - `max_cards: 3`
    - Base 不存在、为空、不可读或无命中 → **静默 SKIP**，继续原 listing 流程；只有用户问“有没有查知识库”时才说明跳过原因
    - 有命中 → 在草稿前展示「可参考知识卡片」小节，逐条标明来源、记录日期、可用处、本次采用 yes/no/partial、原因和边界；不得静默采用
@@ -104,7 +105,7 @@ layer: foundation
    - 提醒用户去目标平台后台贴上线；若 COMMERCE_PLATFORM.md 明确允许 API / ERP 发布，也必须按对应平台 skill 或人工确认流程执行
    - 如果跑了 eRank 节点 ⑤ 之前的环节，顺带提醒用户去 eRank 做定价对标（节点 ⑤）
    - 不要替用户在平台后台真实上架（平台后台操作不在本 skill 默认范围）
-10. **(可选) 反向触发图像产出** — listing 文案写入 Base 后，如果该 SKU 还没有 `商品/{SKU}_shoot-brief.md`，且也没成品图：
+10. **(可选) 反向触发图像产出** — listing 文案写入 Base 后，如果该 SKU 还没有 `商品/{SKU}_shoot-brief.md`，且也没成品图（**下方涉及的「4 类礼物词库」仅 Etsy 适用**——非 Etsy 平台 step 5.5 未运行，现传时只给 description 段 3 + `Products 商品` 表该 SKU 行，下游 skill 走其「无礼物词库」的常规分支）：
     - 提示用户："文案定了，刚生成的 4 类礼物词库 + Mood 新鲜可用。下一步图怎么办？① 出 shoot brief 去拍（assets-library 模式 D）② 不拍直接 AI 合成（image-synth 模式 A）③ 都跳过（之后再说）"
     - **选 ①** → invoke `assets-library` 进入模式 D，**调用方现传** 4 类礼物词库（受众 / 场景 / 节日 / 包装）+ description 段 3 in-memory，让模式 D 直接用，不走 Base 反推。assets-library 模式 D step 11 还会再追问"要不要直接 AI 合成"，用户可在那里继续接 image-synth
     - **选 ②** → invoke `image-synth` 进入模式 A，**调用方现传** 4 类礼物词库 + description 段 3 + `Products 商品` 表中该 SKU 行 in-memory；目标槽位由 image-synth 在盘点输入时跟用户对齐；不预先建 brief 文件

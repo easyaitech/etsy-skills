@@ -10,6 +10,15 @@
 - `scripts/etsy-stack`：新增 `doctor [--quarantine]` 子命令——扫描技能目录里 manifest 之外的非托管条目（agent 自建 / 历史遗留）并可隔离到 `.quarantine/`，同时体检工作区 skill-prefs（标记目标 skill 已不在 manifest 的失配文件）；`list` 一并列出非托管条目；`init` 现在脚手架 `skill-prefs/` 目录与 README。
 - `shared/store-base-architecture.md`：新增 one-shop-one-base 数据架构契约，默认一个店铺一个飞书多维表格 Base、业务对象拆成 Products / SKUs / Assets / Publishing Queue / Pinterest Queue / Orders / Customers / Suppliers / Knowledge Cards 等表；明确 SKU 不因迁移改名、旧 Base 只作迁移期 fallback、旧表不自动删除。
 - `stack 级`：从 Etsy 专用 skill 包泛化为电商平台通用栈，新增 `ecommerce-stack` 入口、`shared/platform-config.md` 平台配置契约和 `COMMERCE_PLATFORM.md` 基座模板；内置 Etsy / 小红书两个可选平台 preset，并保留旧 `etsy-stack` 命令与 `.etsy-workspace` 标记兼容。
+- `business-knowledge` + `trend-radar`：**接通 trend-radar → Knowledge Cards 的本周热词 ingestion**——此前 trend-radar 文档单方面声称「business-knowledge 整理周报时检查 latest.json」，但 business-knowledge 侧零引用、handoff 未落实。新增 [`business-knowledge/references/trend-radar-intake.md`](business-knowledge/references/trend-radar-intake.md) ingestion 契约：weekly intake 读 `outputs/trend-radar/latest.json` + `latest-fit-report.md`（+ 同日 `fit-report.json` 结构化优先），把 `decision ∈ {可做, 观察}` 且有 `candidate_products` 店铺结合点的上升热词映射成 `Knowledge Cards`（`适用场景=listing`、热词进 `关键词标签`、`过期提醒日期` +30-60 天、未经人工确认默认 `watch`），并在每次 intake **顺手把过期热词卡置 `expired`**（补月度 health check 尚未实现的空缺）。沉淀后 `listing-catalog` step 5.6 按现有 lookup 自动浮出作参考——**不改 listing 流程、不把热词自动塞进 title/tags**（仅作参考；自动注入是另一条可选规则，本次未做）。配套：`business-knowledge/SKILL.md` 模式 A 加 step 4.5（纳入热词材料）+ 扩 step 8（趋势卡映射 / 过期清扫指向契约）+ 进入条件 / description / 外部材料源补 trend-radar；`trend-radar/references/output-schema.md` § 下游消费 改为指向 intake 契约，handoff 双向闭环。
+
+### 修复（礼物 / 节日场景调研限定 Etsy 平台）
+- `listing-catalog`：把礼物场景调研（模式 B step 5.5）**从全平台强制收敛为 Etsy 平台专属**。该环节在 Etsy 还是特权默认平台时加入（强制、`礼物倾向` 通用必填、`gift-scenario.md`「永远跑」），stack 泛化为多平台后未同步加门槛，导致小红书等非 Etsy 平台也被强制走 5 问礼物调研、产出无处落地的礼物词库（小红书无礼物 tag 槽位），违反 `platform-config.md`「其他平台不能复用 Etsy 的 SEO 规则」。现加平台门槛——礼物 / 节日维度只在目标平台是 Etsy 时显现，不影响小红书及其他平台：
+  - `shared/platform-config.md`：Etsy preset 参考清单补 `gift-scenario.md` + `holiday-calendar.md`；门槛句明确礼物 / 节日场景调研是 Etsy 专属，非 Etsy 整段跳过
+  - `listing-catalog/SKILL.md`：step 5.5 标题改「(Etsy 专属，Etsy 下强制；非 Etsy 平台整段跳过)」+ 加非 Etsy 跳过分支；step 1 `礼物倾向` 改 Etsy 专属必填；step 5.6 输入、step 10 in-memory 现传的礼物词库标为 Etsy 条件项
+  - `listing-catalog/references/gift-scenario.md`：标题改「Etsy 专属环节」+ 顶部加平台门槛框；「永远跑」改「Etsy 每条跑 / 非 Etsy 不跑」
+  - `listing-catalog/references/input-checklist.md`：`礼物倾向` 标 Etsy 专属必填 + 加平台门槛说明
+  - `listing-catalog/references/holiday-calendar.md`：顶部加 Etsy-only 平台门槛
 
 ### 变更（飞书 Base 表结构精简）
 - `shared/store-base-architecture.md` + `shared/preamble.md`：**建库默认只开 4 张基础表**（`Products 商品` / `Orders 订单` / `Customers 客户` / `Suppliers 供应商`）；素材池、社媒发布队列、知识卡片、视频表等扩展表第一次用到对应 skill 时再按需补建，不在建库时一次性全开。
