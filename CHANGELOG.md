@@ -5,6 +5,9 @@
 ## [Unreleased]
 
 ### 新增
+- `shared/skill-prefs.md` + `shared/preamble.md`：新增**客户偏好覆盖层（skill-prefs）**——每客户在 `<workspace>/skill-prefs/<skill>.md` 叠加本 skill 的工作流 / 风格旋钮，不改 skill 本体、不 fork。覆盖层与引擎物理分离，`ecommerce-stack update` 只换引擎不碰偏好，**升级零冲突 / 零 merge**；失配偏好按依赖降级协议报 `⚠️ DEGRADE`。品牌语气 / 店铺事实 / 平台规则仍走 BRAND/SHOP/COMMERCE_PLATFORM，安全 / QA 闸不可被覆盖。
+- `shared/preamble.md`：新增**技能目录写入禁令**——agent 不得在 `~/.hermes/skills`（`$HERMES_SKILLS_DIR`）/ `~/.local/share/etsy-skills` 等共享技能目录新建 / 改写 skill（会污染全体客户并在升级时冲突）；客户专属知识走 `Knowledge Cards` / SHOP.md，通用能力产出「提拔建议」走 git。各 SKILL.md 的共享引导摘要同步加入「客户偏好」。
+- `scripts/etsy-stack`：新增 `doctor [--quarantine]` 子命令——扫描技能目录里 manifest 之外的非托管条目（agent 自建 / 历史遗留）并可隔离到 `.quarantine/`，同时体检工作区 skill-prefs（标记目标 skill 已不在 manifest 的失配文件）；`list` 一并列出非托管条目；`init` 现在脚手架 `skill-prefs/` 目录与 README。
 - `shared/store-base-architecture.md`：新增 one-shop-one-base 数据架构契约，默认一个店铺一个飞书多维表格 Base、业务对象拆成 Products / SKUs / Assets / Publishing Queue / Pinterest Queue / Orders / Customers / Suppliers / Knowledge Cards 等表；明确 SKU 不因迁移改名、旧 Base 只作迁移期 fallback、旧表不自动删除。
 - `stack 级`：从 Etsy 专用 skill 包泛化为电商平台通用栈，新增 `ecommerce-stack` 入口、`shared/platform-config.md` 平台配置契约和 `COMMERCE_PLATFORM.md` 基座模板；内置 Etsy / 小红书两个可选平台 preset，并保留旧 `etsy-stack` 命令与 `.etsy-workspace` 标记兼容。
 

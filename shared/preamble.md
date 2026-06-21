@@ -63,6 +63,19 @@ ecommerce-stack workspace
 
 ---
 
+## 客户偏好覆盖（skill-prefs）
+
+客户想让某个 skill 更贴合自己的习惯时，**不要改 skill 本体、不要 fork**。每个客户的覆盖只活在自己工作区里的一份文件，升级时原封不动。完整契约见 [`shared/skill-prefs.md`](skill-prefs.md)。
+
+每个 skill 在解析工作区根之后、产出之前：
+
+1. 若 `<workspace>/skill-prefs/<本skill名>.md` 存在，读入作为本客户覆盖，**优先级高于默认行为**；
+2. 但覆盖**不得越过**红线：安全 / 合规 / 平台硬规则、§写入前的通用约束、QA 闸、BLOCK 级依赖——这些一律不可被 skill-prefs 改写；
+3. 品牌语气、店铺事实、平台规则**不走这里**——它们是 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md，由 `shop-foundation` 沉淀；skill-prefs 只管"本 skill 怎么干活"的工作流 / 风格旋钮；
+4. 若某条偏好引用了当前版本已不支持的东西，按 [`dependency-protocol.md`](dependency-protocol.md) 报一条 `⚠️ DEGRADE` 提示用户确认，**不要静默忽略**。
+
+---
+
 ## 平台配置
 
 平台差异不写进通用流程。每次 skill 要输出商品页文案、媒体规则、客服话术、订单字段或平台发布任务前，先按 [`shared/platform-config.md`](platform-config.md) 读取 `<workspace>/COMMERCE_PLATFORM.md`。
@@ -117,6 +130,19 @@ ecommerce-stack workspace
 **Hermes cron 例外（仅限输出型报告）**：如果用户明确配置了 Hermes 定时任务，并在配置时确认了固定输出目录与文件命名规则，则 cron 运行时可以在该目录下写入新的时间戳报告 / JSON / raw evidence 文件，不需要每次再等人工确认。这个例外只适用于"追加新输出文件"，不能修改 BRAND.md / SHOP.md / Base 导出 / 既有业务文件，也不能覆盖旧报告。
 
 各 skill 可在自身 SKILL.md 里追加特有禁区，但不能豁免上述通用约束。
+
+---
+
+## 技能目录写入禁令
+
+skill 是版本化的共享产品，由 `ecommerce-stack` 统一安装 / 升级。agent **不得**自行创建或修改技能：
+
+- **禁止**在 `~/.hermes/skills`（`$HERMES_SKILLS_DIR`）、`~/.local/share/etsy-skills`（`$ECOMMERCE_SKILLS_HOME`）或任何 stack 安装目录下新建 / 改写 / 删除 skill 目录或 SKILL.md。这些路径**所有客户共享**，往里写会污染全体，并在下次 `ecommerce-stack update` 时冲突或被覆盖。
+- **客户专属的知识 / 事实**（"这家店的某个习惯""某个一次性结论"）→ 写进**本客户隔离**的归宿：`business-knowledge` 的 `Knowledge Cards 知识卡片` 表，或 SHOP.md / BRAND.md（走 `shop-foundation` 沉淀）。
+- **客户专属的 skill 行为微调** → 走 §客户偏好覆盖（`<workspace>/skill-prefs/`）。
+- **确实通用、值得所有客户拥有的新能力** → 不要就地落盘，而是产出一份「提拔建议」（要解决什么、建议加在哪个 skill、草拟内容）交人工 review，由维护者走 git 进 base。
+
+一句话：**技能目录只读；客户定制走工作区；通用能力走 git。**
 
 ---
 

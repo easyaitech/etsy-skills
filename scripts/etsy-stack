@@ -20,6 +20,7 @@ $CMD_NAME — 电商 skill bundle 管理工具（兼容旧 etsy-stack 名称）
   $CMD_NAME check              立即检查更新（绕过 24h 缓存）
   $CMD_NAME update             拉最新版本并刷新软链
   $CMD_NAME list               列出 manifest 中的 skill 及链接状态
+  $CMD_NAME doctor [--quarantine]  体检：非托管 skill 目录 + 校验工作区 skill-prefs
   $CMD_NAME pinterest-tool     查看 / 更新 Pinterest-autopin 发布工具
   $CMD_NAME ai-cleaner         查看 / 安装 AI 发布图清理工具
   $CMD_NAME where              打印源码安装目录
@@ -274,10 +275,11 @@ case "$cmd" in
 
   list|ls)
     require_install
-    INSTALL_DIR="$INSTALL_DIR" HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" python3 -c '
+    INSTALL_DIR="$INSTALL_DIR" HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" CMD_NAME="$CMD_NAME" python3 -c '
 import json, os
 install_dir = os.environ["INSTALL_DIR"]
 hermes_dir = os.environ["HERMES_SKILLS_DIR"]
+cmd_name = os.environ["CMD_NAME"]
 with open(os.path.join(install_dir, "etsy-stack.json")) as f:
     manifest = json.load(f)
 for skill in manifest["skills"]:
@@ -289,7 +291,89 @@ for skill in manifest["skills"]:
     else:
         status = "✗ 未安装"
     print(f"  {status}  {skill}")
+managed = set(manifest["skills"]) | {"shared"}
+extras = []
+if os.path.isdir(hermes_dir):
+    for name in sorted(os.listdir(hermes_dir)):
+        if name in managed or name.startswith("."):
+            continue
+        extras.append(name)
+if extras:
+    print("")
+    print("  非 stack 管理的条目（manifest 之外，可能是 agent 自建或历史遗留）：")
+    for name in extras:
+        p = os.path.join(hermes_dir, name)
+        kind = "软链" if os.path.islink(p) else ("目录" if os.path.isdir(p) else "文件")
+        print(f"  ⚠️ 非托管  {name}  [{kind}]")
+    print(f"  → 用 `{cmd_name} doctor --quarantine` 隔离它们")
 '
+    ;;
+
+  doctor)
+    require_install
+    quarantine=0
+    [[ "${1:-}" == "--quarantine" ]] && quarantine=1
+    ws="$(resolve_workspace 2>/dev/null)" || ws=""
+    INSTALL_DIR="$INSTALL_DIR" HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" CMD_NAME="$CMD_NAME" \
+      WORKSPACE="$ws" QUARANTINE="$quarantine" python3 - <<'PY'
+import json, os, shutil, time
+
+install_dir = os.environ["INSTALL_DIR"]
+hermes_dir = os.environ["HERMES_SKILLS_DIR"]
+cmd_name = os.environ["CMD_NAME"]
+workspace = os.environ.get("WORKSPACE", "")
+quarantine = os.environ.get("QUARANTINE") == "1"
+
+with open(os.path.join(install_dir, "etsy-stack.json")) as f:
+    manifest = json.load(f)
+managed = set(manifest["skills"]) | {"shared"}
+
+# 1) 技能目录：找 manifest 之外的非托管条目（agent 自建写入会落在这里）
+extras = []
+if os.path.isdir(hermes_dir):
+    for name in sorted(os.listdir(hermes_dir)):
+        if name in managed or name.startswith("."):
+            continue
+        extras.append(name)
+
+print(f"技能目录：{hermes_dir}")
+if not extras:
+    print("  ✓ 没有非托管条目")
+else:
+    print(f"  ⚠️ 发现 {len(extras)} 个非 stack 管理的条目（manifest 之外）：")
+    for name in extras:
+        p = os.path.join(hermes_dir, name)
+        kind = "软链" if os.path.islink(p) else ("目录" if os.path.isdir(p) else "文件")
+        print(f"     • {name}  [{kind}]")
+    if quarantine:
+        ts = time.strftime("%Y%m%d-%H%M%S")
+        qdir = os.path.join(hermes_dir, ".quarantine", ts)
+        os.makedirs(qdir, exist_ok=True)
+        for name in extras:
+            shutil.move(os.path.join(hermes_dir, name), os.path.join(qdir, name))
+        print(f"  ✓ 已隔离到 {qdir}（未删除，可人工复核）")
+    else:
+        print(f"  → 确认要清理就跑：{cmd_name} doctor --quarantine")
+
+# 2) 工作区 skill-prefs：校验目标 skill 是否还在 manifest
+print("")
+valid = set(manifest["skills"])
+if not workspace:
+    print("skill-prefs：未解析到工作区（在工作区目录内运行 doctor 可校验）")
+else:
+    prefs_dir = os.path.join(workspace, "skill-prefs")
+    if not os.path.isdir(prefs_dir):
+        print(f"skill-prefs：{prefs_dir}（无，跳过）")
+    else:
+        files = [f for f in sorted(os.listdir(prefs_dir)) if f.endswith(".md") and f != "README.md"]
+        print(f"skill-prefs：{prefs_dir}")
+        if not files:
+            print("  （空）")
+        for f in files:
+            skill = f[:-3]
+            mark = "✓" if skill in valid else "⚠️ 目标 skill 不在 manifest"
+            print(f"  {mark}  {f}")
+PY
     ;;
 
   where)
@@ -368,6 +452,19 @@ EOF
       echo "  .cache/             # Pinterest-autopin runtime 等临时数据"
       echo "  # .ecommerce-workspace   # 标记文件本身建议提交，便于团队成员从 cwd 自动定位"
       echo ""
+    fi
+    mkdir -p "$target/skill-prefs"
+    if [[ ! -f "$target/skill-prefs/README.md" ]]; then
+      cat > "$target/skill-prefs/README.md" <<'PREFS'
+# 客户偏好覆盖（skill-prefs）
+
+每个文件 `<skill-name>.md` 覆盖对应 skill 的工作流 / 风格旋钮，升级不冲突。
+完整契约见 stack 的 `shared/skill-prefs.md`。
+
+- 品牌语气 / 店铺事实 / 平台规则 → 走 shop-foundation 写进 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md，不是这里。
+- 安全 / 合规 / QA / 写入确认 → 不可被覆盖。
+PREFS
+      echo "✓ 已创建 skill-prefs/（客户偏好覆盖层，见 shared/skill-prefs.md）"
     fi
     echo "下一步：用 shop-foundation 建 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md"
     ;;
