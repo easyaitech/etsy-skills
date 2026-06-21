@@ -50,17 +50,19 @@
     google-trends-snapshot.html
     fit-report.md               # 当天趋势结合点人工判断报告
     fit-report.json             # 结构化报告，供后续 handoff
-  latest.json                   # 最新结果的完整副本
+  latest.json                   # 最后一个 source 的副本（逐 source 覆盖，非完整周报）
   latest-fit-report.md          # 最新人工判断报告副本
 ```
 
 ## 下游消费
 
-`business-knowledge` 检查 `outputs/trend-radar/latest.json`：
-- 如果 `generated_at` 在本周内 → 自动引用为 evidence
-- 如果缺失或过期 → SKIP，不阻塞
+`business-knowledge` 模式 A（Weekly Intake）按 [`business-knowledge/references/trend-radar-intake.md`](../../business-knowledge/references/trend-radar-intake.md) 消费本周采集：
 
-`fit-report.json` 不自动进入 Marketing Brief。人工确认后，后续流程再把确认项交给 `business-knowledge`。
+- **新鲜度闸**：`latest.json.generated_at` 在本周内 → 纳入；缺失或过期 → SKIP，不阻塞。
+- **选词主依据**：`latest-fit-report.md`（+ 同日 `{date}/fit-report.json` 的结构化 `items[]`，有则优先）里 `decision ∈ {可做, 观察}` 且有 `candidate_products` 结合点的热词 → 映射成 `Knowledge Cards`（`适用场景=listing`、热词进 `关键词标签`、设 `过期提醒日期`）。沉淀后 listing-catalog step 5.6 按现有 lookup 自动浮出作参考。
+- **证据**：每个词的 `growth_label` / `rank` / `trend_url` 从 fit-report item 的 `evidence[]` 取（**不要**读 `latest.json`——它只是最后一个 source 的副本，非完整周报）。
+
+`fit-report.json` 不自动进入 Marketing Brief / Base。人工确认后（或在 business-knowledge 写卡前的 diff 预览处确认），后续流程再把确认项交给 `business-knowledge`。
 
 ## Fit Report Output（`fit-report.json`）
 
