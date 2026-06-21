@@ -10,7 +10,7 @@
 |---|---|---|---|
 | **mood** | 整体气质 / 配色 / 光线 / 构图 / 道具白名单 / 后期方向 | BRAND.md § 视觉原则 + shoot-brief §B | BRAND 缺则降级为通用气质，不偷编品牌词 |
 | **shot-spec** | 角度 / 背景 / 主体位置 / 景深 / 镜头长 | shoot-brief §C 当前槽位段（模式 A）/ social-platform-specs.md（模式 B） | 缺则按槽位 / 平台默认值 |
-| **anchor** | 商品主体 / 材质 / 色 / 比例 / Logo 位置 / 关键纹理 | Hermes 看图能力看实拍图（必须）+ `Products 商品` / `SKUs 变体` 表 SKU 行（可选） | **不允许缺**——anchor 是保商品形态的根 |
+| **anchor** | 商品主体 / 材质 / 色 / 比例 / Logo 位置 / 关键纹理 | Hermes 看图能力看实拍图（必须）+ `Products 商品` 表 SKU 行（可选） | **不允许缺**——anchor 是保商品形态的根 |
 | **negative** | 视觉禁区原文 | BRAND.md § 视觉禁区 **唯一**来源 | BRAND 缺则段留空 + 加通用兜底（无竞品 logo / 无水印） |
 | **format** | 长宽比 / 分辨率 / 输出格式 | 目标槽位（模式 A）/ 目标平台（模式 B） | **不允许缺**——盘点输入时阻塞反问 |
 
@@ -99,7 +99,7 @@
 
 多张实拍图时取**一致信息**（多图都有的特征作 anchor，单图独有的可作选填修饰）。
 
-### 选填来源：`Products 商品` / `SKUs 变体` 表 SKU 行（如已建）
+### 选填来源：`Products 商品` 表 SKU 行（如已建）
 
 精确化 anchor.subject——把视觉提取的"a ceramic teacup"升级为"a {品类}：{title 英文}"：
 

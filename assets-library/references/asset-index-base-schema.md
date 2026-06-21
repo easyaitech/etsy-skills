@@ -23,7 +23,7 @@
 | 文件链接 | URL | ✓ | `https://xxx.feishu.cn/file/...` | 飞书云空间唯一物理位置 |
 | 文件名 | 文本 | ✓ | `2026-05-05_TEACUP-001_morning-light_001.jpg` | 与云空间真实文件名一致（参 [naming-convention.md](naming-convention.md)） |
 | 素材类型 | 多选 | ✓ | `摄影原图 / 摄影成图 / 场景图 / 视频原料 / 视频母版 / 视觉模板 / Logo / 字体 / 包装物料 / 客户拍摄 / 客户定制参考` | 多选——一个素材可同时是"摄影成图"+"客户拍摄"。⚠️ `摄影原图 / 视频原料` 仅为旧数据兼容保留；新 promote **不要勾这两个**——原片通常不直接 promote（详见 § 录入约定 §3）|
-| 关联 SKU | 关联（`Products 商品` / `SKUs 变体` 表） | △ | `TEACUP-001`, `TEACUP-007` | — |
+| 关联 SKU | 关联（`Products 商品` 表） | △ | `TEACUP-001`, `TEACUP-007` | — |
 | 关联订单 | 关联（`Orders 订单` 表） | △ | `ORDER-2026-001` | — |
 | 关联客户 | 关联（`Customers 客户` 表） | △ | (客户 open_id) | — |
 | 用途标签 | 多选 | △ | **Etsy 槽位**：`hero / variation / scale / size-chart / detail / lifestyle / packaging / brand-story / context / comparison`（与 [etsy-listing-photo-slots.md](etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 对齐）<br>**渠道**：`Pinterest / Instagram Posts / Instagram Reels / Instagram Stories / 小红书 / 评价素材 / 内部参考`<br>**Etsy 店铺**：`Etsy 店铺 banner`<br>**legacy（仅旧数据兼容）**：`Etsy listing 主图（→ 等同 hero）/ Etsy listing 详情（→ 等同 detail）` | 一份素材投多槽位 + 多渠道全勾上；先空着也行，发布到某渠道时再补。模式 D 部分跑反查 SKU 已覆盖槽位时按这套词汇表推断；遇到 legacy 标签按对应映射 |
@@ -39,11 +39,11 @@
 
 ```
 `Assets 素材池` 表
-   ├─→ 关联 `SKUs 变体` 表        （多选关联：一图多 SKU）
+   ├─→ 关联 `Products 商品` 表        （多选关联：一图多 SKU）
    ├─→ 关联 `Orders 订单` 表      （单选关联）
    └─→ 关联 `Customers 客户` 表   （单选关联）
 
-`SKUs 变体` 表（反向）
+`Products 商品` 表（反向）
    └─→ 通过"关联 SKU"字段反查：这个 SKU 有哪些素材
 
 `Orders 订单` 表（反向）

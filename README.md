@@ -30,14 +30,14 @@ bash install.sh
 | Skill | 干啥 |
 |---|---|
 | [`shop-foundation`](shop-foundation/SKILL.md) | 维护 BRAND.md（品牌原则）+ SHOP.md（店铺事实）+ COMMERCE_PLATFORM.md（销售平台配置）等元基础 |
-| [`listing-catalog`](listing-catalog/SKILL.md) | 店铺总 Base 内 `Products 商品` / `SKUs 变体` 表 + 按目标电商平台配置撰写商品页 / listing 文案 |
+| [`listing-catalog`](listing-catalog/SKILL.md) | 店铺总 Base 内 `Products 商品` 表 + 按目标电商平台配置撰写商品页 / listing 文案 |
 | [`orders-customers`](orders-customers/SKILL.md) | 店铺总 Base 内 `Orders 订单` / `Customers 客户` 表 + 按平台配置支撑客服/履约 SOP + 客户标签 |
 | [`supplier-foundation`](supplier-foundation/SKILL.md) | 店铺总 Base 内 `Suppliers 供应商` 表 + 采购来源筛选、主用/备用/淘汰记录 |
 | [`business-knowledge`](business-knowledge/SKILL.md) | 轻量业务知识库：每周材料 → raw / weekly / wiki markdown + `Knowledge Cards 知识卡片` 表 + Marketing Brief |
 | [`assets-library`](assets-library/SKILL.md) | 飞书云空间素材库（双层：六文件夹物理层 + 店铺总 Base 内 `Assets 素材池` 表，含 `营销/`）+ 拍前 shoot brief 生成（模式 D） |
 | [`content-asset-pool`](content-asset-pool/SKILL.md) | 跨平台素材发布池：登记待发布图片/视频、生成发布副本、追踪 Pinterest / Instagram / 小红书 / TikTok / Etsy 等发布任务 |
-| [`social-publisher`](social-publisher/SKILL.md) | 社交媒体自动发布总控层：从发布任务表读取待发任务，当前通过 Pinterest adapter 调用 `pinterest-autopin`，小红书等未来平台先做草稿 / 人工对账 |
-| [`pinterest-autopin`](pinterest-autopin/SKILL.md) | `Pinterest Queue` 表 + 调用本地 Pinterest-autopin 工具发 pin（用 `ecommerce-stack pinterest-tool status/update` 管理，旧命令兼容） |
+| [`social-publisher`](social-publisher/SKILL.md) | 社交媒体自动发布总控层：从店铺总 Base 内 `社媒发布队列` 表读取待发任务，当前通过 Pinterest adapter 调用 `pinterest-autopin`，小红书等未来平台先做草稿 / 人工对账 |
+| [`pinterest-autopin`](pinterest-autopin/SKILL.md) | `社媒发布队列` 表 `平台 = Pinterest` 行 + 调用本地 Pinterest-autopin 工具发 pin（用 `ecommerce-stack pinterest-tool status/update` 管理，旧命令兼容） |
 | [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
 | [`video-assembly`](video-assembly/SKILL.md) | 从已标记的视频片段库批量装配短视频，输出 Hook / Body / Close 结构的社媒视频 |
 | [`trend-radar`](trend-radar/SKILL.md) | 每周自动采集 Google Trends / Pinterest Trends / eRank Trend Buzz 热词，并生成趋势 × 店铺/品牌/商品的 fit report 供人工判断 |

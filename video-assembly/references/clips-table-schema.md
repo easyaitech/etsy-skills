@@ -8,7 +8,7 @@
 |------|------|------|------|
 | clip_id | 文本 | ✓ | 唯一标识，格式 `clip-{uuid-short}` |
 | stage | 单选 | ✓ | `hook` / `body` / `close` |
-| product_id | 关联 | ✓ | 关联 `Products 商品` / `SKUs 变体` 表 |
+| product_id | 关联 | ✓ | 关联 `Products 商品` 表 |
 | style_tags | 多选 | | 极简 / 暖调 / 冷调 / 动感 / 安静 / 手工感 / 自然光 |
 | mood | 单选 | | energetic / calm / cozy / playful / elegant |
 | overlay_text | 文本 | | 片段上的文字内容（如有），仅用于记录参考 |

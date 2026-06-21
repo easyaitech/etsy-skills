@@ -1,6 +1,6 @@
-# Publishing Queue Contract
+# 社媒发布队列 Contract
 
-social-publisher 消费店铺总 Base 内的 `Publishing Queue 发布任务` 表。发布状态只以这张表为跨平台 source of truth；平台子队列（如 `Pinterest Queue` 表）是适配器执行细节。
+social-publisher 消费店铺总 Base 内的 `社媒发布队列` 表。发布状态只以这张表为跨平台 source of truth；所有平台（含 Pinterest pin）都是这张表里的行，用 `平台` 字段区分，不再有独立的平台子队列表。
 
 ## 必填字段
 
@@ -14,7 +14,7 @@ social-publisher 消费店铺总 Base 内的 `Publishing Queue 发布任务` 表
 | `封面素材` | 多图 / 视频 / 图文笔记必须填 |
 | `标题` | 平台标题 |
 | `描述` | 平台正文 / caption |
-| `链接` | 商品型发布必须来自 `Products 商品` / `SKUs 变体` 表的 `分享链接`；非商品型可空 |
+| `链接` | 商品型发布必须来自 `Products 商品` 表的 `分享链接`；非商品型可空 |
 | `状态` | 发布状态 |
 | `计划发布时间` | 自动发布筛选依据 |
 | `自动发布` | true 才允许无人值守自动执行 |
@@ -24,7 +24,7 @@ social-publisher 消费店铺总 Base 内的 `Publishing Queue 发布任务` 表
 | 字段 | 类型建议 | 说明 |
 |---|---|---|
 | `发布适配器` | 单选 / 文本 | 如 `pinterest-autopin`、`manual-xiaohongshu` |
-| `外部队列 ID` | 单行文本 | 平台子队列 ID；Pinterest 填 `Pinterest Queue` 表的 `pin_id` |
+| `外部队列 ID` | 单行文本 | 仅当平台侧另有独立队列 / 草稿 ID 时填写；Pinterest 不再单独建表，pin 的 `任务 ID`（`PIN-...`）就是本表主键 |
 | `发布尝试次数` | 数字 | 每次进入真实发布前累加；默认 0 |
 | `最后尝试时间` | 日期时间 | 每次自动 / 手动执行后更新 |
 | `执行锁` | 单行文本 | 真实发布前写入本轮唯一令牌；完成、失败或放弃后清空 |
@@ -52,7 +52,7 @@ social-publisher 消费店铺总 Base 内的 `Publishing Queue 发布任务` 表
 
 ## 占用规则
 
-真实调用平台适配器前，必须先占用 Publishing Queue 行：
+真实调用平台适配器前，必须先占用 `社媒发布队列` 行：
 
 1. 为本轮生成唯一 `执行锁`，例如 `social-publisher:<run_id>:<任务 ID>`。
 2. 使用条件更新或等价机制，只在当前行仍是 `待发` / `重试` / 用户确认的 `草稿`，且 `执行锁` 为空时，写入 `状态 = 发布中`、`执行锁`、`最后尝试时间 = 当前时间`、`发布尝试次数 +1`。
@@ -72,34 +72,21 @@ social-publisher 消费店铺总 Base 内的 `Publishing Queue 发布任务` 表
 
 每个平台每轮默认最多发布一条，按 `计划发布时间` 最早优先。
 
-## Pinterest 映射
+## Pinterest 行（`平台 = Pinterest`）
 
-Pinterest Publishing Queue 行必须映射到 `Pinterest Queue` 表：
+Pinterest pin 不再单独建表，就是 `社媒发布队列` 里 `平台 = Pinterest` 的行。`pinterest-autopin` 作为 adapter 直接读写这一行，不做跨表映射：
 
-| Publishing Queue | `Pinterest Queue` 表 |
-|---|---|
-| `任务 ID` | `pin_id`，可复用 `PIN-...` |
-| `发布类型` | `pin 类型`：单图 / 轮播 |
-| `关联 SKU` | `关联 SKU` |
-| `关联素材` | `关联素材` |
-| `素材顺序` | `image 路径` 的行顺序 |
-| `标题` | `Title (EN)` |
-| `描述` | `Description (EN)` |
-| `链接` | `Link` |
-| `平台字段 JSON.board` 或人工字段 | `Board (Pinterest)` |
-
-发布成功后：
-
-- `Pinterest Queue` 表：`状态 = 已发`、`pin_url`、`发布时间`
-- Publishing Queue：`状态 = 已发`、`发布 URL`、`发布时间`、`外部队列 ID`
-
-发布失败后两边都要记录失败，不允许只改 `Pinterest Queue` 表。
+- `任务 ID`（`PIN-...`）即旧 `pin_id`，是本表主键。
+- `发布类型` = `单图` / `多图轮播`；轮播图片顺序以 `image 路径` 行顺序为准（`素材顺序` 仅作素材追溯）。
+- Pinterest 专属字段（`Board (Pinterest)`、`image 路径`、`Alt Text (EN)`）写在同一行；字段细节与轮播校验见 [`pinterest-autopin/references/pin-queue-base-schema.md`](../../pinterest-autopin/references/pin-queue-base-schema.md)。
+- 发布成功后回写本行：`状态 = 已发`、`发布 URL`（pin_url）、`发布时间`。
+- 发布失败回写本行：`状态 = 失败` + `失败原因`。一行就是唯一真相，不存在“两边都要记录”的问题。
 
 ## Manual-only 平台
 
 小红书、Instagram、TikTok 在 adapter 启用前只能：
 
-- 生成 Publishing Queue 草稿
+- 生成 `社媒发布队列` 草稿
 - 输出人工发布清单
 - 用户给出公开 URL 后回写 `已发`
 

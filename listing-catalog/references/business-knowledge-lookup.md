@@ -29,12 +29,12 @@ Knowledge Cards 对 listing 是 `SKIP`：
 ```text
 scenario: listing
 sku_context:
-  sku: `Products 商品` / `SKUs 变体` 表或用户输入的 SKU
-  category: 中文产品名 / 类目、`Products 商品` / `SKUs 变体` 表 品类
+  sku: `Products 商品` 表或用户输入的 SKU
+  category: 中文产品名 / 类目、`Products 商品` 表 品类
   materials: 关键参数、Materials 候选
   price_range: < $20 / $20-$50 / >= $50
   gift_words: step 5.5 的受众词 / 场景词 / 节日词 / 包装服务词
-  seo_keywords: 平台 SEO 词库（如 eRank / etsy-seo 候选）、`Products 商品` / `SKUs 变体` 表 SEO 关键词
+  seo_keywords: 平台 SEO 词库（如 eRank / etsy-seo 候选）、`Products 商品` 表 SEO 关键词
   target_audience: step 5.5 Q2 / Q5
 marketing_context:
   channels: 目标平台 listing
@@ -85,4 +85,4 @@ listing 正文只能使用 `yes` / `partial` 卡片。`no` 卡片只展示为 re
 - `引用次数 += 1`
 - `最后引用日期 = today`
 
-统计回写失败不阻塞 `Products 商品` / `SKUs 变体` 表写入，也不改变 listing 输出。只在最终回复里简短说明“Knowledge Cards 统计字段未能更新”。
+统计回写失败不阻塞 `Products 商品` 表写入，也不改变 listing 输出。只在最终回复里简短说明“Knowledge Cards 统计字段未能更新”。

@@ -1,13 +1,13 @@
 # Publishing Flow（模式 C 的执行手册）
 
-模式 C 的 step-by-step。从 `Pinterest Queue` 表中的一行草稿走到 Pinterest 上一条已发的 pin。
+模式 C 的 step-by-step。从 `社媒发布队列` 表中的一行草稿走到 Pinterest 上一条已发的 pin。
 
 ---
 
 ## 总体流程
 
 ```
-`Pinterest Queue` 表草稿
+`社媒发布队列` 表草稿
    │
    ├─[0] 解析 <workspace> = `etsy-stack workspace`
    │       runtime 目录 = <workspace>/.cache/pinterest-autopin/runtime/
@@ -28,7 +28,7 @@
    ├─[4] 用户在对话里说"发吧 / publish"
    │
    └─[5] final ─── 真发
-         ├─ 成功 → 回写 pin_url / 状态=已发 / 发布时间
+         ├─ 成功 → 回写 发布 URL / 状态=已发 / 发布时间
          └─ 失败 → 按 §错误恢复 分类，回写状态=失败/失败原因
 ```
 
@@ -40,7 +40,7 @@
 
 模式 B 的 step 3.8 已经对图片做过处理，`image 路径` 应指向 `<workspace>/.cache/pinterest-autopin/processed/` 下的文件。模式 C 在构造 request.json 前做一次守卫检查：
 
-1. 读 `Pinterest Queue` 表中该行的 `image 路径`（多图时按行拆分）
+1. 读 `社媒发布队列` 表中该行的 `image 路径`（多图时按行拆分）
 2. **逐张检查**：如果路径以 `<workspace>/.cache/pinterest-autopin/processed/` 开头、文件存在，且该行备注 / sidecar / 处理记录中有 `aiSanitization` 结果 → 该张跳过
 3. 未通过检查的图片按 `image-processing.md` 的四步流程处理，处理完后用 processed 路径替换
 4. **全部图片通过后**才进 [1]；任何一张处理失败 → 中止，提示用户具体哪张图有问题
@@ -51,15 +51,15 @@
 
 模板见 `assets/request-template.json`。下文 `<runtime>` 代指 `<workspace>/.cache/pinterest-autopin/runtime`，由 `etsy-stack workspace` 解析得到（见 SKILL.md §对外的实操接口）。
 
-从 `Pinterest Queue` 表中的一行映射：
+从 `社媒发布队列` 表中的一行映射：
 
-| `Pinterest Queue` 表字段 | request.json key | 说明 |
+| `社媒发布队列` 表字段 | request.json key | 说明 |
 |---|---|---|
 | `image 路径` + `Alt Text (EN)` | `images` | 数组，每个元素 `{ "path": "...", "altText": "..." }`。单图和轮播都用这个字段；见下方 § images 数组构造 |
-| `Title (EN)` | `title` | 直接拷 |
+| `标题` | `title` | 直接拷 |
 | `Board (Pinterest)` | `board` | 直接拷 |
-| `Link` | `link` | 直接拷；空字符串就省略字段 |
-| `Description (EN)` | `description` | 直接拷 |
+| `链接` | `link` | 直接拷；空字符串就省略字段 |
+| `描述` | `description` | 直接拷 |
 | —（固定值）| `creationUrl` | 默认省略走 Pinterest-autopin 默认值；日本店可显式传 `https://jp.pinterest.com/pin-creation-tool/` |
 | —（固定值）| `chromeProfile` | 永远是 `~/.config/pinterest-autopin/chrome-profile`（绝对路径，运行时把 `~` 展开） |
 
@@ -68,7 +68,7 @@
 1. 把 `image 路径` 按换行拆分为路径列表，去掉空行和首尾空白；这个顺序就是上传顺序
 2. 把 `Alt Text (EN)` 按独占一行的 `---` 拆分为 alt text 列表，去掉每段首尾空白
 3. 校验：路径数 = alt text 数，不等时中止并提示用户修正 Base 字段
-4. 校验 `pin 类型`：单图必须 1 张；轮播必须 2-5 张
+4. 校验 `发布类型`：单图必须 1 张；多图轮播必须 2-5 张
 5. 按位置一一配对，生成 `images` 数组：
 
 ```json
@@ -113,7 +113,7 @@ npm run pin:validate -- --input <runtime>/{pin_id}.json
 {"ok": true, "mode": "validate", ...}
 ```
 
-**失败处理**：解析错误信息 → 通常是 JSON 字段缺失 / 路径错 / link 不是 absolute http(s) → 改 request.json 或回 `Pinterest Queue` 表改字段，再来。validate 阶段失败不算入 `Pinterest Queue` 表的「重试次数」（没真跑浏览器）。
+**失败处理**：解析错误信息 → 通常是 JSON 字段缺失 / 路径错 / link 不是 absolute http(s) → 改 request.json 或回 `社媒发布队列` 表改字段，再来。validate 阶段失败不算入 `社媒发布队列` 表的「发布尝试次数」（没真跑浏览器）。
 
 **多图额外校验**：
 - `images` 数组不为空
@@ -156,11 +156,11 @@ npm run pin:publish -- --input <runtime>/{pin_id}.json
 {"ok": true, "mode": "final", "pinUrl": "https://www.pinterest.com/pin/123456789012345678/", ...}
 ```
 
-**回写 `Pinterest Queue` 表**（用 `lark-base`）：
+**回写 `社媒发布队列` 表**（用 `lark-base`）：
 
 ```
 - 状态: 已发
-- pin_url: {pinUrl}
+- 发布 URL: {pinUrl}
 - 发布时间: {now in YYYY-MM-DD HH:mm}
 ```
 
@@ -171,7 +171,7 @@ npm run pin:publish -- --input <runtime>/{pin_id}.json
 ```
 - 状态: 失败
 - 失败原因: {分类} - {原文截断到 100 字符}
-- 重试次数: +1
+- 发布尝试次数: +1
 ```
 
 ---
@@ -186,16 +186,16 @@ Pinterest 偶尔强制重登（特别是几周不操作后）。
 2. 让用户在弹出的 Chrome 里手工重新登录（同 runtime-setup.md § 5）
 3. 用户登录完成后，重跑失败的 stage
 
-不替用户输凭据。重登过程不算重试次数。
+不替用户输凭据。重登过程不算发布尝试次数。
 
 ### board 不存在（`board not found`）
 
-`Pinterest Queue` 表里的 board 名和 Pinterest 后台不一致。
+`社媒发布队列` 表里的 board 名和 Pinterest 后台不一致。
 
 1. 让用户去 Pinterest 后台核对实际 board 名（大小写、空格、特殊字符敏感）
 2. 用户改完后：
    - 如果是 Pinterest 后台拼写错 → 用户在 Pinterest 后台改 board 名
-   - 如果是 `Pinterest Queue` 表字段填错 → 用 `lark-base` 改这一行的 `Board (Pinterest)`，并把单选选项也修正
+   - 如果是 `社媒发布队列` 表字段填错 → 用 `lark-base` 改这一行的 `Board (Pinterest)`，并把单选选项也修正
 3. 重跑
 
 ### JSON 校验失败
@@ -204,7 +204,7 @@ Pinterest 偶尔强制重登（特别是几周不操作后）。
 
 多图时额外注意：`images` 数组元素数和 alt text 数不一致 / 某张图路径不存在。
 
-直接看错误信息 → 改 request.json（改根源在 `Pinterest Queue` 表字段）→ 重跑 validate。
+直接看错误信息 → 改 request.json（改根源在 `社媒发布队列` 表字段）→ 重跑 validate。
 
 ### 网络 / Pinterest 临时错误（5xx / timeout）
 
@@ -218,7 +218,7 @@ Pinterest 偶尔强制重登（特别是几周不操作后）。
 `ok: false` 但归不到上面任何类。
 
 - 把 `stderrTail` 完整给用户看
-- 状态停在 `失败`，重试次数 +1，等用户人工决策
+- 状态停在 `失败`，发布尝试次数 +1，等用户人工决策
 
 ---
 

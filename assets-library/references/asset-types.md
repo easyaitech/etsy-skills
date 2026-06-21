@@ -68,10 +68,10 @@
 
 ## 与 listing-catalog 的协作
 
-`Assets 素材池` 表的"关联 SKU"字段直接关联到 `Products 商品` / `SKUs 变体` 表。通过反向关联视图，SKU 行能看到该 SKU 的所有素材，无需手动维护"照片链接"字段。
+`Assets 素材池` 表的"关联 SKU"字段直接关联到 `Products 商品` 表。通过反向关联视图，SKU 行能看到该 SKU 的所有素材，无需手动维护"照片链接"字段。
 
-如果用户偏好在 `Products 商品` / `SKUs 变体` 表上仍保留"照片链接"做快速跳转，每次为某 SKU promote 新成品后提示：
+如果用户偏好在 `Products 商品` 表上仍保留"照片链接"做快速跳转，每次为某 SKU promote 新成品后提示：
 
-> 「素材已录入 `Assets 素材池` 表，SKU 行通过反向关联可以看到。如果你还希望在 `Products 商品` / `SKUs 变体` 表里维护一个跳转链接字段，要不要我请 listing-catalog 更新？」
+> 「素材已录入 `Assets 素材池` 表，SKU 行通过反向关联可以看到。如果你还希望在 `Products 商品` 表里维护一个跳转链接字段，要不要我请 listing-catalog 更新？」
 
 不要直接调用 listing-catalog —— 由用户决定是否触发跨 skill 协作。

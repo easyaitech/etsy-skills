@@ -9,7 +9,7 @@
 | 输入 | 必填 | 来源 / 默认 |
 |---|---|---|
 | 目标 SKU | ✅ | 用户给 |
-| 目标 board | ✅ | 用户给（必须是 Pinterest 后台已建好的 board，且已加进 `Pinterest Queue` 表的 `Board (Pinterest)` 单选选项） |
+| 目标 board | ✅ | 用户给（必须是 Pinterest 后台已建好的 board，且已加进 `社媒发布队列` 表的 `Board (Pinterest)` 单选选项） |
 | 指定素材 | ❌ | 用户给具体素材 ID；可给 1 张（单图 pin）或 2-5 张（轮播 pin）。不给就从 `Assets 素材池` 表的「Pinterest 候选」视图列出该 SKU 的候选让用户挑 |
 | 创意主题（一句话） | ❌ | 用户给；不给就从 SKU 标题 + 素材文件名推一个，让用户改 |
 
@@ -26,21 +26,21 @@
 
 ## 内容产出规则
 
-### 0. `Pinterest Queue` 表行结构
+### 0. `社媒发布队列` 表行结构
 
-一条草稿只写入一行 `Pinterest Queue` 记录：
+一条草稿只写入一行 `社媒发布队列` 记录（`平台 = Pinterest`）：
 
-- `pin 类型`：1 张图写 `单图`；2-5 张图写 `轮播`
+- `发布类型`：1 张图写 `单图`；2-5 张图写 `多图轮播`
 - `image 路径`：每行一张 processed 图片，行顺序就是 carousel 展示顺序
 - `Alt Text (EN)`：每张图一段，中间用独占一行的 `---` 分隔
 - `图片数量`：写入图片行数（如字段已建）
 - `封面图`：写入第一张 processed 路径或预览链接（如字段已建）
 
-不要因为轮播有多张图就拆成多条 `Pinterest Queue` 记录。多张图发布后也只对应一个 Pinterest pin URL。
+不要因为轮播有多张图就拆成多条 `社媒发布队列` 记录。多张图发布后也只对应一个 Pinterest pin URL。
 
-### 1. Link
+### 1. 链接（Link）
 
-- 默认 = `SKUs 变体` 表该 SKU 行或关联 `Products 商品` 表的 `分享链接`
+- 默认 = `Products 商品` 表该 SKU 行的 `分享链接`
   - `分享链接`：从目标平台后台或线上 listing 复制出的可分享链接，是商品型 pin 的唯一 link source
   - `平台商品 ID`（如 Etsy Listing ID / ASIN / handle / item_id）：只做商品追溯和上线校验，不用于临时拼 URL
 - 如商品表的 `状态 ≠ 在售`、`平台商品 ID` 为空或 `分享链接` 为空：**中止排队**，提示用户先上线 listing 并补齐 `分享链接`
@@ -49,10 +49,10 @@
 
 ### 2. Board
 
-- 严格用 `Pinterest Queue` 表 `Board (Pinterest)` 单选字段里的现有选项；不允许临时新增（避免拼写漂移让 Pinterest-autopin 找不到）
-- 如用户要的 board 不在选项里：先停下，提示用户去 Pinterest 后台建好 board → 把名字加进 `Pinterest Queue` 表单选选项 → 再来排队
+- 严格用 `社媒发布队列` 表 `Board (Pinterest)` 单选字段里的现有选项；不允许临时新增（避免拼写漂移让 Pinterest-autopin 找不到）
+- 如用户要的 board 不在选项里：先停下，提示用户去 Pinterest 后台建好 board → 把名字加进 `社媒发布队列` 表单选选项 → 再来排队
 
-### 3. Title (EN)
+### 3. 标题（Title，英文）
 
 **硬性约束**：
 - ≤ 100 字符（Pinterest 上限是 100，超出会被截）
@@ -95,7 +95,7 @@ Graduation Gift with Meaning — Custom Name Keepsake
 
 轮播 pin 的 title 描述整组图片的主题，不要只描述第一张。
 
-### 4. Description (EN)
+### 4. 描述（Description，英文）
 
 **硬性约束**：
 - 200-500 字符（Pinterest 推荐区间，超过 500 会被截尾）；如 MARKETING_PLATFORM 要求 ≤50 词，则优先压到 35-55 词
@@ -166,7 +166,7 @@ Pinterest 没有独立 tag 字段时，tag 写入 description 末尾；有独立
 A pale sage green ceramic teacup on a linen cloth, photographed in soft morning light from above. Steam rises faintly from the rim.
 ```
 
-**轮播 pin 示例**（3 张图，写入 `Pinterest Queue` 表时用 `---` 分隔）：
+**轮播 pin 示例**（3 张图，写入 `社媒发布队列` 表时用 `---` 分隔）：
 
 ```
 A pale sage green ceramic teacup on a linen cloth, photographed in soft morning light from above. Steam rises faintly from the rim.

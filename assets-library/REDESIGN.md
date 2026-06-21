@@ -170,9 +170,9 @@ elif 用户未指定:
 
 ### listing-catalog
 
-`Products 商品` / `SKUs 变体` 表 通过"关联 SKU"反查素材现在只能反查到 promoted 集合。这是符合预期的——listing 用图本来就是用编辑过的成图，不会用 raw。
+`Products 商品` 表 通过"关联 SKU"反查素材现在只能反查到 promoted 集合。这是符合预期的——listing 用图本来就是用编辑过的成图，不会用 raw。
 
-补一条 SKILL.md 说明：「`Products 商品` / `SKUs 变体` 表 反查的素材 = 该 SKU 的 edited / scene 成品。raw 区原片不在反查结果里——要看原片直接打开 `1. 摄影/by-SKU/{SKU}/raw/`」。
+补一条 SKILL.md 说明：「`Products 商品` 表 反查的素材 = 该 SKU 的 edited / scene 成品。raw 区原片不在反查结果里——要看原片直接打开 `1. 摄影/by-SKU/{SKU}/raw/`」。
 
 ### orders-customers
 

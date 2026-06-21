@@ -32,13 +32,13 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 | `<workspace>/BRAND.md` § 视觉原则 + § 视觉禁区 | 整体气质 / 配色 / 视觉禁区 | mood 词库源 + negative 词库**唯一**来源；BRAND 缺失降级 |
 | `<workspace>/SHOP.md` § 物料 / 礼盒服务 | 包装物料 + 礼盒服务字段 | 仅 packaging 槽位 / brand-story 槽位 / 礼盒营销图用到 |
 | `<workspace>/COMMERCE_PLATFORM.md` | 销售平台媒体规则（主图 / 详情图 / 视频 / 水印 / 文字限制） | 模式 A 决定槽位、比例、分辨率和平台硬禁区；Etsy / 小红书缺失可用内置 preset，其他平台缺失阻塞 |
-| `Products 商品` / `SKUs 变体` 表中该 SKU 行（如已建） | title / 品类 / 变体 / SEO 关键词 | 选填——精确化 anchor，缺也能跑 |
+| `Products 商品` 表中该 SKU 行（如已建） | title / 品类 / 变体 / SEO 关键词 | 选填——精确化 anchor，缺也能跑 |
 | `Assets 素材池` 表中已 promoted 候选 | 已有同 SKU 成品图 | 选填——参考已有视觉风格保持一致 |
 
 **降级规则**：
 
 - **BRAND.md 缺失** → mood 段输出 `⚠️ BRAND.md 未建立——本图按通用视觉跑` + negative 段留通用兜底 + 提示用户回 shop-foundation 建库后回头补
-- **`Products 商品` / `SKUs 变体` 表或 `Assets 素材池` 表缺失** → 跳过这两路输入，纯靠用户口述 + 实拍图 vision 结果
+- **`Products 商品` 表或 `Assets 素材池` 表缺失** → 跳过这两路输入，纯靠用户口述 + 实拍图 vision 结果
 - **实拍图 / 图片需求 缺** → **阻塞**——anchor 与 brief 是保形与拟合的根，没法降级
 
 ---
@@ -97,7 +97,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 | 2 | 商品实拍图 ≥ 1 张 | ✅ | 阻塞 + 让用户给路径 / 飞书链接 |
 | 3 | 目标销售平台 + 商品图用途 / 槽位 | ✅ | Etsy 取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 的 10 槽位 ID；小红书取值按商品图 / 使用指南图 / 图文详情图；其他平台按 COMMERCE_PLATFORM.md，缺配置则阻塞 |
 | 4 | `<workspace>/BRAND.md` 视觉原则 + 视觉禁区 | 必需但**降级可跑** | 见 § 依赖关系 降级规则 |
-| 5 | `Products 商品` / `SKUs 变体` 表中该 SKU 行 | 可选 | anchor 段只用实拍图 vision 结果 |
+| 5 | `Products 商品` 表中该 SKU 行 | 可选 | anchor 段只用实拍图 vision 结果 |
 
 **模式 A 步骤差异**：
 
@@ -140,7 +140,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 |---|---|---|---|
 | `assets-library` 模式 D step 11 | 用户选"不拍直接合成" | brief §A 槽位选项 + §B Mood + §C 镜头清单 + 用户挑的目标槽位 | **A** |
 | `pinterest-autopin` 模式 B step 3 | Pinterest 候选池空 + 用户选"AI 合成" | SKU + 目标 board + 已草拟 pin 文案 + 目标平台 = Pinterest 1000×1500 | **B** |
-| `listing-catalog` 模式 B step 10 | 用户选"不拍直接 AI 合成" | 4 类礼物词库 + description 段 3 + `Products 商品` / `SKUs 变体` 表中该 SKU 行 | **A** |
+| `listing-catalog` 模式 B step 10 | 用户选"不拍直接 AI 合成" | 4 类礼物词库 + description 段 3 + `Products 商品` 表中该 SKU 行 | **A** |
 
 **信任规则**：反向触发时**不重复盘点已现传输入**——调用方现传 = 信任。step 2 跳过对应字段；其余步骤照走（看图 anchor / 拼 prompt / 预览 / 生图 / QA / 落盘 / 三选一）。
 
@@ -165,7 +165,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
   - 模式 D 出 shoot-brief.md 是本 skill 的**主输入源**（brief 路径 / 反向触发 in-memory）
   - 用户选"入库" → 调 assets-library 模式 B2 promote；现传 sidecar 元数据（含 `[AI 合成]` 标记）。AI metadata / AI watermark 清理只在 promote 的发布副本上发生，不改 ai_raw 原图
   - 入库标签字段值取自 assets-library schema 的 § 用途标签 词汇表——本 skill **不**自定义；v0 不动 schema，AI 合成识别靠 Base "备注"字段前缀
-- **listing-catalog**：`Products 商品` / `SKUs 变体` 表中该 SKU 行的 title / 品类 / SEO 词作 anchor 选填输入；本 skill 不写 `Products 商品` / `SKUs 变体` 表
+- **listing-catalog**：`Products 商品` 表中该 SKU 行的 title / 品类 / SEO 词作 anchor 选填输入；本 skill 不写 `Products 商品` 表
 - **pinterest-autopin**：候选池空时被反向触发；本 skill 出图 → 落 .cache → 入库 → 回到 pinterest-autopin step 4
 - **orders-customers**：暂无直接耦合（v1 可能加：客户 UGC 风格反向训练 anchor 一致性）
 

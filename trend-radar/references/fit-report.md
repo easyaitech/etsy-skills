@@ -68,7 +68,7 @@ trend-fetch fit-report --date 2026-05-18 --geo US --max-items 50
 <workspace>/.cache/trend-radar/business-context/product-catalog.json
 ```
 
-v1 不在 Node CLI 中直接连接飞书 Base。`Products 商品` / `SKUs 变体` 表 由人工导出、Hermes 前置步骤，或未来专门 refresh 命令写入本地缓存。
+v1 不在 Node CLI 中直接连接飞书 Base。`Products 商品` 表 由人工导出、Hermes 前置步骤，或未来专门 refresh 命令写入本地缓存。
 
 支持两种形态：
 

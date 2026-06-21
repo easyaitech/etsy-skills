@@ -21,7 +21,7 @@
 | 买家语言 | 决定 title / description / 客服回复输出语言 |
 | 货币 | 决定价格字段和展示口径 |
 | 商品 ID 字段 | 如 Etsy Listing ID、ASIN、handle、item_id |
-| 商品链接字段 | 通常统一落 `Products 商品` / `SKUs 变体` 表的 `分享链接` |
+| 商品链接字段 | 通常统一落 `Products 商品` 表的 `分享链接` |
 | 发布方式 | 手动复制、平台后台、开放 API、第三方 ERP、暂不发布 |
 | 自动化边界 | 哪些动作禁止 agent 代操作，例如付款、真实上架、发买家消息 |
 
@@ -57,14 +57,14 @@
 
 小红书平台规则见：
 
-- 商品上架 / `Products 商品` / `SKUs 变体` 表：`listing-catalog/references/xiaohongshu-commerce.md`
+- 商品上架 / `Products 商品` 表：`listing-catalog/references/xiaohongshu-commerce.md`
 - 订单 / 客服 / 售后表：`orders-customers/references/xiaohongshu-orders.md`
 - 发布任务池：`content-asset-pool/references/platform-publishing-model.md` 的“小红书图文 / 小红书视频”
 - 自动发布状态：`social-publisher/references/adapter-registry.md` 当前将小红书标为 planned/manual-only，不能自动上传或发布
 - 社媒图默认规格：`image-synth/references/social-platform-specs.md` 的“小红书图文 / 商品种草图”
 - 短视频安全区：`video-assembly/references/platform-safe-areas.md`
 
-小红书商品按 SPU / SPL / SPV / ITEM 分层，`Products 商品` / `SKUs 变体` 表必须保留品牌、末级类目、规格、图片、描述、产品参数、价格、库存、上下架和审核状态等字段。小红书订单按订单 / 包裹 / SKU / 售后分层，`Orders 订单` 表必须保留包裹 ID、订单状态、售后状态、取消状态、SKU 明细、物流模式、承诺发货时间和收件地区等字段。
+小红书商品按 SPU / SPL / SPV / ITEM 分层，`Products 商品` 表必须保留品牌、末级类目、规格、图片、描述、产品参数、价格、库存、上下架和审核状态等字段。小红书订单按订单 / 包裹 / SKU / 售后分层，`Orders 订单` 表必须保留包裹 ID、订单状态、售后状态、取消状态、SKU 明细、物流模式、承诺发货时间和收件地区等字段。
 
 只有当 `COMMERCE_PLATFORM.md` 明确选择小红书，或用户目标明显是小红书上新 / 小红书店铺商品页 / 小红书订单 / 小红书图文笔记 / 小红书视频时，才读取小红书 preset。小红书字段、图片规则、订单规则和客服边界不能反向套给 Etsy。
 
@@ -72,7 +72,7 @@
 
 1. 用 `shop-foundation` 建立或更新 `COMMERCE_PLATFORM.md`。
 2. 在目标平台章节填完必填配置和平台规则。
-3. 用 `listing-catalog` 建或更新 `Products 商品` / `SKUs 变体` 表，字段用通用名；平台专属字段放 `平台字段 JSON` 或清晰命名的补充字段。
+3. 用 `listing-catalog` 建或更新 `Products 商品` 表，字段用通用名；平台专属字段放 `平台字段 JSON` 或清晰命名的补充字段。
 4. 若平台涉及订单或客服，再用 `orders-customers` 建或更新 `Orders 订单` / `Customers 客户` 表，字段用通用名 + 平台专属字段分组。
 5. 若平台涉及素材发布，再用 `content-asset-pool` 建发布任务；真实发布统一交给 `social-publisher`，由 enabled adapter 执行。没有 enabled adapter 的平台只做人工后台或对账。
 6. 先跑一个 SKU / 一个订单 / 一个发布任务的端到端草稿，人工确认规则够不够，再批量复用。

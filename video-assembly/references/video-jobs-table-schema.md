@@ -10,7 +10,7 @@
 | hook_clip_id | 关联 | ✓ | 使用的 Hook 片段（关联 clips 表） |
 | body_clip_id | 关联 | ✓ | 使用的 Body 片段（关联 clips 表） |
 | close_clip_id | 关联 | ✓ | 使用的 Close 片段（关联 clips 表） |
-| product_id | 关联 | ✓ | 目标产品（关联 `Products 商品` / `SKUs 变体` 表） |
+| product_id | 关联 | ✓ | 目标产品（关联 `Products 商品` 表） |
 | music_track | 文本 | ✓ | 使用的背景音乐文件名 |
 | overlay_copy | 文本 | | 叠加的文案内容 |
 | platform | 单选 | ✓ | tiktok / instagram / pinterest / xiaohongshu |

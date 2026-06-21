@@ -49,9 +49,9 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 1. **素材池不是 Pinterest 专用**。核心字段只描述素材、授权、清理、跨平台适用性和发布任务关联；不要把 Board、pin_url 这类平台专用字段塞进素材池核心 schema。
 2. **原图永远保留**。AI 清理、metadata 清理、尺寸处理、压缩、平台适配都只作用在“发布副本”上，不替换原图。
 3. **默认只清 metadata / provenance**。默认清 EXIF、XMP、C2PA、OpenAI provenance、prompt 信息、软件生成记录和其他可检测 AI metadata。像素级隐形水印处理必须用户明确确认。
-4. **素材池和发布任务分层**。一个素材一条 Asset Pool 记录；一次平台发布一条 Publishing Queue 记录。同一素材可能 Pinterest 已发、小红书未发，所以素材池不要用单个“已发布”状态表达所有平台状态。
+4. **素材池和发布任务分层**。一个素材一条 Asset Pool 记录；一次平台发布一条 社媒发布队列 记录。同一素材可能 Pinterest 已发、小红书未发，所以素材池不要用单个“已发布”状态表达所有平台状态。
 5. **多图顺序必须显式记录**。多图 / 多素材发布必须用 `素材顺序` 字段决定顺序，不依赖飞书 relation / multi-select 的显示顺序。
-6. **商品型发布链接来自 `Products 商品` / `SKUs 变体` 表的 `分享链接` 字段**。不要临时拼任何平台 URL（包括 Etsy listing URL）。如果 `分享链接` 缺失，阻塞发布任务创建并引导回 `listing-catalog` 补齐。
+6. **商品型发布链接来自 `Products 商品` 表的 `分享链接` 字段**。不要临时拼任何平台 URL（包括 Etsy listing URL）。如果 `分享链接` 缺失，阻塞发布任务创建并引导回 `listing-catalog` 补齐。
 7. **本 skill 默认只定义和准备，不直接发布**。真实飞书写入、云盘上传、平台发布、自动发布任务修改都必须由用户明确确认；发布执行交给 `social-publisher`。
 
 固定处理模型：
@@ -73,9 +73,9 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 推荐两张表，默认位于店铺总 Base 内（见 `../shared/store-base-architecture.md`）：
 
 - **素材池 / Asset Pool**：一张图片 / 一个视频 / 一个素材 = 一条记录。
-- **发布任务 / Publishing Queue**：一次平台发布 = 一条任务。
+- **社媒发布队列**：一次平台发布（含 Pinterest pin）= 一条任务。
 
-两张表默认不再各自创建独立 Base；只有用户明确要求隔离时才单独建 Base。迁移期可与现有 Pinterest `Pinterest Queue` 表并存。即使先只做 Pinterest，也要按跨平台模型保留 `平台`、`发布类型`、`关联素材`、`素材顺序`、`封面素材`、`状态`、`发布 URL`、`自动发布`、`发布适配器`、`外部队列 ID`、`执行锁` 等字段。
+两张表都是扩展表（做内容发布时再建），默认不再各自创建独立 Base；只有用户明确要求隔离时才单独建 Base。Pinterest pin 不再单独建表，就是 `社媒发布队列` 里 `平台 = Pinterest` 的行；迁移期可与旧的独立 Pinterest 队列并存。即使先只做 Pinterest，也要按跨平台模型保留 `平台`、`发布类型`、`关联素材`、`素材顺序`、`封面素材`、`状态`、`发布 URL`、`自动发布`、`发布适配器`、`外部队列 ID`、`执行锁` 等字段。
 
 ---
 
@@ -90,17 +90,17 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 步骤：
 
 1. 读 [`references/base-schema.md`](references/base-schema.md) 与 [`references/state-model.md`](references/state-model.md)。
-2. 确认店铺总 Base 中是否已经存在 `Assets 素材池` / `Publishing Queue 发布任务` 表。只查询，不创建。
+2. 确认店铺总 Base 中是否已经存在 `Assets 素材池` / `社媒发布队列` 表。只查询，不创建。
 3. 如用户确认要建表，展示字段清单和视图建议，等用户明确确认后才调用 `lark-base`。
-4. 建表时优先放在店铺总 Base 内，与 `Products 商品` / `SKUs 变体` / `Pinterest Queue` 同 Base，便于 relation。
+4. 建表时优先放在店铺总 Base 内，与 `Products 商品` / `社媒发布队列` 同 Base，便于 relation。
 5. 初始化完成后只给 Base 链接、字段清单、下一步扫描入口；不扫描、不搬文件、不发布。
 
 建议表名：
 
 - `Assets 素材池`
-- `Publishing Queue 发布任务`
+- `社媒发布队列`
 
-迁移期如果已有旧独立素材池 / `Pinterest Queue` 表，先把旧数据源作为只读来源；新写入优先进入店铺总 Base。
+迁移期如果已有旧独立素材池 / 旧 Pinterest 队列，先把旧数据源作为只读来源；新写入优先进入店铺总 Base。
 
 ---
 
@@ -165,18 +165,18 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
    - `AI 清理状态` 应为 `已清 metadata` / `无需处理`；否则先走 Workflow C。
    - `素材生命周期状态` 必须是 `可发布` 或可复用状态。
 3. 确认平台、发布类型、素材清单、封面素材和素材顺序。
-4. 如为商品型发布，查询 `listing-catalog` `Products 商品` / `SKUs 变体` 表：
+4. 如为商品型发布，查询 `listing-catalog` `Products 商品` 表：
    - 必须取 SKU、商品 record_id、平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
-   - `链接` 必须取 `Products 商品` / `SKUs 变体` 表的 `分享链接` 字段。
+   - `链接` 必须取 `Products 商品` 表的 `分享链接` 字段。
    - `分享链接` 缺失时阻塞，不临时拼任何平台 URL。
-5. 写入 Publishing Queue 草稿：
+5. 写入 社媒发布队列 草稿：
    - `状态 = 草稿`
    - `自动发布 = false`（除非用户明确确认了计划发布时间和无人值守发布）
    - `平台 = Pinterest / Instagram / 小红书 / TikTok / Etsy`
    - `发布类型 = 单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合`
    - `关联素材` 记录一条或多条素材
    - `素材顺序` 用编号列表记录顺序
-   - 小红书任务必须写 `封面素材`；图文笔记 / 视频的标题、正文、标签、话题进入 Publishing Queue，不写回素材池
+   - 小红书任务必须写 `封面素材`；图文笔记 / 视频的标题、正文、标签、话题进入 社媒发布队列，不写回素材池
 6. 回写素材池的 `关联发布任务`，并把素材生命周期状态改为 `已入任务`。不要改成“已发布”。
 
 写入前必须展示任务草稿和素材顺序，等用户确认。
@@ -194,7 +194,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 步骤：
 
 1. 从对应平台队列 / 发布结果读取任务 ID、状态、发布时间、发布 URL、失败原因。
-2. 回写 Publishing Queue：
+2. 回写 社媒发布队列：
    - 成功：`状态 = 已发`，写 `发布时间` 和 `发布 URL`。
    - 失败：`状态 = 失败`，写 `失败原因`，后续人工决定 `待复核 / 重试 / 跳过`。
 3. 只在发布任务表表达平台发布状态。
@@ -204,7 +204,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 
 ## Single Image / Multi Image / Video Compatibility
 
-规范见 [`references/platform-publishing-model.md`](references/platform-publishing-model.md)。真实发布由 `social-publisher` 消费 Publishing Queue。
+规范见 [`references/platform-publishing-model.md`](references/platform-publishing-model.md)。真实发布由 `social-publisher` 消费 社媒发布队列。
 
 ### 单图发布
 
@@ -283,29 +283,29 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 
 ### social-publisher
 
-- `social-publisher` 是 Publishing Queue 的执行层。用户说“自动发布 / 到点发布 / 发这条任务 / 对账发布结果”时交给它。
+- `social-publisher` 是 社媒发布队列 的执行层。用户说“自动发布 / 到点发布 / 发这条任务 / 对账发布结果”时交给它。
 - 当前 enabled adapter 只有 Pinterest，底层仍调用 `pinterest-autopin`。
 - 小红书、Instagram、TikTok 等没有 enabled adapter 时，只能建草稿和人工对账，不能标记自动发布成功。
-- 发布成功 / 失败后必须回写 Publishing Queue，不只更新平台子队列。
+- 发布成功 / 失败后必须回写 社媒发布队列；Pinterest pin 就是这张表 `平台 = Pinterest` 的行，一次回写本行即可，不存在跨表子队列。
 
 ### pinterest-autopin
 
 - 本仓现有 Pinterest 发布 skill 是 `pinterest-autopin`；现在作为 `social-publisher` 的 Pinterest adapter 使用。
-- 当素材池中素材用于 Pinterest，Publishing Queue 先建任务；执行时由 `social-publisher` 创建或补齐 `Pinterest Queue` 表。
-- `Pinterest Queue` 表的 `关联 SKU` 必须写 SKU + 商品 record_id + 平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
-- `Pinterest Queue` 表的 `Link` 必须使用 `Products 商品` / `SKUs 变体` 表的 `分享链接` 字段，不临时拼任何平台商品 URL。
+- 当素材池中素材用于 Pinterest，在 社媒发布队列 建一条 `平台 = Pinterest` 的任务；执行时由 `social-publisher` / `pinterest-autopin` 直接读写本行，不另建表。
+- 该 Pinterest 行的 `关联 SKU` 必须写 SKU + 商品 record_id + 平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
+- 该 Pinterest 行的 `链接` 必须使用 `Products 商品` 表的 `分享链接` 字段，不临时拼任何平台商品 URL。
 - 素材池对应素材写入 `关联发布任务 = PIN-xxx`。
 - 发布成功后由下游回写发布 URL，再通过 Workflow E 对账。
 
 ### listing-catalog
 
 - 商品型素材必须能关联 SKU。
-- 发布链接必须优先从 `Products 商品` / `SKUs 变体` 表的 `分享链接` 字段读取。
+- 发布链接必须优先从 `Products 商品` 表的 `分享链接` 字段读取。
 - `分享链接` 缺失时，回到 `listing-catalog` 补字段；不要用平台商品 ID 临时拼链接。
 
 ### Future Platforms
 
-预留 Instagram、小红书、TikTok、Reels、电商平台商品页 / listing 和未来平台。平台专用字段放在 Publishing Queue 或平台子队列，不污染 Asset Pool 核心 schema。未来新增真实发布能力时，只扩 `social-publisher` adapter。
+预留 Instagram、小红书、TikTok、Reels、电商平台商品页 / listing 和未来平台。平台专用字段放在 社媒发布队列 的 `平台字段 JSON`，不污染 Asset Pool 核心 schema。未来新增真实发布能力时，只扩 `social-publisher` adapter。
 
 ---
 
@@ -316,7 +316,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 3. **不要依赖飞书关联字段顺序作为多图发布顺序。**
 4. **不要把 Pinterest 专用字段写进素材池核心 schema。**
 5. **不要默认做像素级水印处理。**
-6. **不要临时拼平台商品链接，应从`Products 商品` / `SKUs 变体` 表 `分享链接` 取。**
+6. **不要临时拼平台商品链接，应从`Products 商品` 表 `分享链接` 取。**
 7. **不要把云盘文件夹当作发布状态系统，状态必须进 Base。**
 8. **不要把同一素材复制到多个云盘文件夹表达多用途，多用途应由 Base 字段表达。**
 9. **不要在本 skill 中执行真实平台发布，交给 social-publisher。**
@@ -331,6 +331,6 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 - [ ] 文档明确：原图不覆盖；发布副本清理；跨平台扩展；单图 / 多图 / 视频兼容。
 - [ ] 文档明确：素材池与发布任务分层。
 - [ ] 文档明确：AI metadata 与像素级水印处理边界。
-- [ ] 文档明确：商品分享链接从`Products 商品` / `SKUs 变体` 表 `分享链接` 取。
+- [ ] 文档明确：商品分享链接从`Products 商品` 表 `分享链接` 取。
 - [ ] 已有 references：`base-schema.md`、`state-model.md`、`ai-sanitization-policy.md`、`platform-publishing-model.md`、`scan-and-dedupe.md`。
 - [ ] 没有执行真实飞书写入、云盘移动、平台发布或自动任务修改。
