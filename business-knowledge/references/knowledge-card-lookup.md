@@ -43,13 +43,17 @@ Only include fields that exist. Do not invent missing SKU facts.
    - stronger keyword overlap
 7. Return at most `max_cards`.
 
-Do not read linked wiki pages for every candidate. First choose the small candidate set from Base; then read `知识页链接` only for selected cards that need detail.
+Do not read linked wiki pages for every candidate. First choose the small candidate set from Base. Then read `知识页链接` by card type:
+
+- **`方法论` cards (`卡片类型 = 方法论`): reading the wiki is MANDATORY.** The card's one-liner is only a pointer; the real deliverable is the wiki's checklist / template / worked examples, which you must **apply** to the output — not merely display. Skipping the wiki for a methodology card defeats its purpose: it degrades back into a vague reminder, which is exactly the failure mode these cards exist to prevent.
+- **All other types (`趋势` / `选品` / `定位` / `观察`)**: read `知识页链接` only when a selected card needs extra detail. The one-liner is usually enough.
 
 ## Output shape
 
 ```text
 cards:
   - title:
+    card_type:           # 方法论 / 趋势 / 选品 / 定位 / 观察
     source:
     recorded_date:
     summary:
@@ -57,6 +61,7 @@ cards:
     boundary:
     adopted_this_run: yes / no / partial
     why:
+    playbook_applied:    # 仅 方法论 卡：从 wiki 实际套用的清单 / 模板 / 开头规则；其余类型留空
 ```
 
 ## Display rule
@@ -67,12 +72,14 @@ If cards match, show a short section:
 
 ```text
 可参考知识卡片：
-1. {title}
+1. {title}（{card_type}）
    来源：{source}（{recorded_date}）
    可用处：{suggested_use}
    本次采用：yes/no/partial，{why}
    边界：{boundary}
 ```
+
+`方法论` 卡在上面基础上必须额外列出从 wiki 实际套用的清单 / 模板 / 开头规则（`playbook_applied`），让用户看到知识真的落进了产出，而不是只报了个标题。
 
 Never silently use a card.
 
