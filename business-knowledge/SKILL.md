@@ -61,6 +61,18 @@ weekly sources
 
 不要偷偷创建店铺总 Base 或 `Knowledge Cards 知识卡片` 表。表缺失只在写入卡片时阻塞；读取 / Marketing Brief 可降级为“无卡片参考”继续。
 
+### 知识种子卡登记（reachability bridge）
+
+`ecommerce-stack init` 会把公共包的方法论**种子 wiki** 拷进 `<workspace>/knowledge/wiki/`，并在 `<workspace>/knowledge/.seeds.json` ledger 记 `card_registered: false`。种子 wiki **自带 card-spec frontmatter**（`卡片类型: 方法论` + `标题 / 适用场景 / 关键词标签 / 建议动作 / 禁用场景 / applicability`）。
+
+每次激活时，若 ledger 里有 `card_registered: false` 的种子（或 `knowledge/wiki/` 有带 `卡片类型: 方法论` frontmatter、但 Base 里查不到的 wiki）：
+
+1. 按该 wiki 的 frontmatter 组装一张 Knowledge Card：字段照搬 frontmatter；`知识页链接` = 该 wiki 的 workspace 路径；`记录日期` = ledger 的 `installed` 日期；`有效状态 = active`（种子是 stack 策展的方法论，非待验证趋势）。
+2. 走 `lark-base` diff 预览 + 用户确认后，写入店铺总 Base 内 `Knowledge Cards 知识卡片` 表。
+3. 写成功后把 ledger 对应项置 `card_registered: true`。
+
+**登记后 listing lookup 才能从卡片入口找到种子**（卡片是入口、wiki 是正文；只拷 wiki 不登记卡 = 不可达）。Base 缺失 / 用户跳过 → 不阻塞，下次再提议；不要静默替用户登记。
+
 ---
 
 ## 模式 A：Weekly Intake

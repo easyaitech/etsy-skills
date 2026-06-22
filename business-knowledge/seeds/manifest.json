@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "description": "公共知识种子清单。引擎只读发布；ecommerce-stack init 把种子拷进租户 workspace 的 knowledge/wiki/，拷完归租户。seed_hash 是发布时内容哈希，用于 provenance（判定租户是否改过），不做版本对账。",
+  "seeds": [
+    {
+      "seed_id": "etsy-title-desc-gift-conversion",
+      "file": "etsy-title-description-gift-conversion.md",
+      "installs_to": "knowledge/wiki/etsy-title-description-gift-conversion.md",
+      "card_type": "方法论",
+      "seed_hash": "sha256:e8b4ad32f426419c1846f36b2df07db0be1d760ddfd00c96e3c95663b7b851d3",
+      "applicability": {
+        "platform": "etsy",
+        "locale": "en",
+        "scope": "gift-oriented listings (recipient / occasion driven)"
+      },
+      "summary": "Etsy 标题/描述去 AI 味：目标人群优先、场景先行的礼物转化方法论。"
+    }
+  ],
+  "debrand_denylist": [
+    "FuBlessings",
+    "WIND-",
+    "songchou"
+  ]
+}
