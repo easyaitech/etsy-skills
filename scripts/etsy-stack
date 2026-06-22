@@ -316,7 +316,7 @@ if extras:
     ws="$(resolve_workspace 2>/dev/null)" || ws=""
     INSTALL_DIR="$INSTALL_DIR" HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" CMD_NAME="$CMD_NAME" \
       WORKSPACE="$ws" QUARANTINE="$quarantine" python3 - <<'PY'
-import json, os, shutil, time
+import json, os, shutil, time, sys, hashlib
 
 install_dir = os.environ["INSTALL_DIR"]
 hermes_dir = os.environ["HERMES_SKILLS_DIR"]
@@ -373,6 +373,66 @@ else:
             skill = f[:-3]
             mark = "✓" if skill in valid else "⚠️ 目标 skill 不在 manifest"
             print(f"  {mark}  {f}")
+
+# 3) 知识种子：去品牌护栏（包自检，命中即 fail）+ 工作区采纳情况（只读上报，不写盘）
+print("")
+debrand_failed = False
+seeds_dir = os.path.join(install_dir, "business-knowledge", "seeds")
+seeds_manifest = os.path.join(seeds_dir, "manifest.json")
+if not os.path.isfile(seeds_manifest):
+    print("知识种子：未发现 seeds/manifest.json（跳过）")
+else:
+    with open(seeds_manifest, encoding="utf-8") as f:
+        sm = json.load(f)
+    seeds = sm.get("seeds", [])
+    denylist = [t for t in sm.get("debrand_denylist", []) if t]
+    print(f"知识种子：{len(seeds)} 个（{seeds_dir}）")
+    # 去品牌护栏：denylist 串不得出现在任何种子 .md（种子被所有新租户拷走）
+    leaks = []
+    for s in seeds:
+        p = os.path.join(seeds_dir, s.get("file", ""))
+        if not os.path.isfile(p):
+            continue
+        with open(p, encoding="utf-8") as f:
+            text = f.read()
+        for tok in denylist:
+            if tok in text:
+                leaks.append((s.get("file"), tok))
+    if leaks:
+        debrand_failed = True
+        print(f"  ❌ 去品牌护栏命中 {len(leaks)} 处品牌串（必须清干净，否则污染所有新租户）：")
+        for fn, tok in leaks:
+            print(f"     • {fn}：包含 “{tok}”")
+    else:
+        print("  ✓ 去品牌护栏通过（denylist 无命中）")
+    # 工作区采纳：只读上报，不写盘（doctor 永远不 mutation workspace）
+    if workspace:
+        ledger_path = os.path.join(workspace, "knowledge", ".seeds.json")
+        ledger = {}
+        if os.path.isfile(ledger_path):
+            try:
+                with open(ledger_path, encoding="utf-8") as f:
+                    ledger = json.load(f)
+            except Exception:
+                ledger = {}
+        pending = [s["seed_id"] for s in seeds if s["seed_id"] not in ledger]
+        if pending:
+            print(f"  • 本工作区尚未采纳 {len(pending)} 个种子：{', '.join(pending)}")
+            print(f"    （跑一次 `{cmd_name} init` 拷入；doctor 只读不写）")
+        unregistered = [sid for sid, v in ledger.items() if not v.get("card_registered")]
+        if unregistered:
+            print(f"  • 已拷入但未登记成 Knowledge Card：{', '.join(unregistered)}")
+            print("    （跑 business-knowledge 提议登记；登记后 listing 才能引用）")
+        for sid, v in ledger.items():
+            wiki = os.path.join(workspace, v.get("wiki", ""))
+            want = (v.get("seed_hash") or "").replace("sha256:", "")
+            if want and os.path.isfile(wiki):
+                with open(wiki, "rb") as f:
+                    got = hashlib.sha256(f.read()).hexdigest()
+                state = "未改（可安全刷新）" if got == want else "已被你修改（绝不覆盖）"
+                print(f"  • {sid}: {state}")
+
+sys.exit(1 if debrand_failed else 0)
 PY
     ;;
 
@@ -466,6 +526,57 @@ EOF
 PREFS
       echo "✓ 已创建 skill-prefs/（客户偏好覆盖层，见 shared/skill-prefs.md）"
     fi
+    # 知识种子：把公共包 seeds/ 拷进 workspace（拷完归租户、可随意改；按 seed_id 幂等；best-effort，无种子或无 python3 则静默跳过，不阻塞 init）
+    INSTALL_DIR="$INSTALL_DIR" TARGET="$target" python3 - <<'SEEDPY' 2>/dev/null || true
+import json, os, shutil, datetime
+install_dir = os.environ["INSTALL_DIR"]
+target = os.environ["TARGET"]
+seeds_dir = os.path.join(install_dir, "business-knowledge", "seeds")
+manifest_path = os.path.join(seeds_dir, "manifest.json")
+if not os.path.isfile(manifest_path):
+    raise SystemExit(0)
+with open(manifest_path, encoding="utf-8") as f:
+    manifest = json.load(f)
+seeds = manifest.get("seeds", [])
+if not seeds:
+    raise SystemExit(0)
+ledger_path = os.path.join(target, "knowledge", ".seeds.json")
+ledger = {}
+if os.path.isfile(ledger_path):
+    try:
+        with open(ledger_path, encoding="utf-8") as fh:
+            ledger = json.load(fh)
+    except Exception:
+        ledger = {}
+copied = []
+for s in seeds:
+    sid = s["seed_id"]
+    rel = s.get("installs_to") or os.path.join("knowledge", "wiki", s["file"])
+    dst = os.path.join(target, rel)
+    # 幂等：已在 ledger 或目标已存在 → 不拷、绝不覆盖租户内容
+    if sid in ledger or os.path.exists(dst):
+        continue
+    src = os.path.join(seeds_dir, s["file"])
+    if not os.path.isfile(src):
+        continue
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copyfile(src, dst)
+    ledger[sid] = {
+        "installed": datetime.date.today().isoformat(),
+        "wiki": rel,
+        "seed_hash": s.get("seed_hash", ""),
+        "card_registered": False,
+    }
+    copied.append((sid, rel))
+if copied:
+    os.makedirs(os.path.dirname(ledger_path), exist_ok=True)
+    with open(ledger_path, "w", encoding="utf-8") as fh:
+        json.dump(ledger, fh, ensure_ascii=False, indent=2)
+    print(f"✓ 已拷入 {len(copied)} 个知识种子 → knowledge/wiki/（拷完归你、可随意改）：")
+    for sid, rel in copied:
+        print(f"     • {sid} → {rel}")
+    print("  下次跑 business-knowledge 会提议把方法论种子登记成 Knowledge Card（diff 预览 + 确认）；登记后 listing 才能引用。")
+SEEDPY
     echo "下一步：用 shop-foundation 建 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md"
     ;;
 
