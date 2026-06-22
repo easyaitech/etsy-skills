@@ -88,7 +88,8 @@ layer: foundation
    - `max_cards: 3`
    - Base 不存在、为空、不可读或无命中 → **静默 SKIP**，继续原 listing 流程；只有用户问“有没有查知识库”时才说明跳过原因
    - 有命中 → 在草稿前展示「可参考知识卡片」小节，逐条标明来源、记录日期、可用处、本次采用 yes/no/partial、原因和边界；不得静默采用
-   - 只有选中的少量卡片需要读 `知识页链接`；不要为了检索把所有 wiki 都读一遍
+   - **`方法论` 卡（`卡片类型 = 方法论`）必须读 `知识页链接`，并在 step 7 把其清单 / 模板 / 正反例应用到草稿**——卡面一句话只是指针，不是交付物；其余类型（`趋势` / `选品` / `定位` / `观察`）只在选中卡需要细节时才读，不要为了检索把所有 wiki 都读一遍
+   - 命中 `方法论` 卡时，「可参考知识卡片」小节要额外列出实际套用了 wiki 的哪些清单 / 模板 / 开头规则（`playbook_applied`），不能只报标题
 6. 读 `assets/listing-template.md`：标准 listing 文案结构
 7. 输出草稿：平台商品标题 + 商品描述（含分段）+ 平台关键词 / tags + 平台属性 / materials + 类目建议
    - Etsy：13 tag / 13 material 严格守恒，礼物槽数与客单价档对应；展示与写入 Base 时都用一行英文文本，tag / material 之间用半角逗号 `,` 分隔，方便复制到 Etsy 后台
@@ -98,6 +99,7 @@ layer: foundation
    - 非 Etsy：字段数量、字段名、输出语言、分隔符、类目/属性枚举只按 COMMERCE_PLATFORM.md；没有配置就标注未知并向用户确认
    - 如果跑了 eRank 节点 ③，title 词序参考竞品模式
    - 如果 step 5.6 命中卡片，先展示「可参考知识卡片」小节，再展示 listing 草稿；listing 正文只采用标为 yes / partial 的卡片，不采用 no 的卡片
+   - **若 step 5.6 命中 `方法论` 卡**：按其 `知识页链接` wiki 正文把 SOP 真正落到草稿，而不只是展示卡片——把 wiki 的标题自检清单当作 title 的**审查闸**（草稿生成后逐条过，不过就改），把 wiki 的描述开头规则（如「先场景 / 问题切入、参数后置」）当作 description 的**开头结构**。与平台 SEO 硬规则冲突时按 [`references/business-knowledge-lookup.md`](references/business-knowledge-lookup.md) § Conflict priority：平台规则（本 title 公式、etsy-seo.md 等）为准，方法论卡的差异写法（如「收礼人 / 场景更靠前」的词序）降为 **A/B 候选**展示给用户，不强行覆盖既有公式
 8. **整篇展示**给用户，等用户确认或调整。同时展示「过滤掉的候选词」清单，方便用户判断是否要纠正 BRAND.md
 9. 用户确认后：
    - 把文案写入店铺总 Base 的 `Products 商品` 对应行（商品级与 SKU 级字段同表；通过 lark-base 更新）

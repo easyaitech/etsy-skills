@@ -42,6 +42,7 @@
 |---|---|
 | `标题` | `趋势热词：{keyword}` |
 | `一句话摘要` | `{source} {growth_label}（{geo}, {date}）；契合 {candidate 品类/SKU}` |
+| `卡片类型` | 固定 `趋势`（热词卡天生时效、薄索引即可，不触发强制读 wiki）|
 | `来源` | `trend-radar {date} fit-report` + item `evidence[].trend_url`（证据 `growth_label` / `rank` / `trend_url` 一律取 fit-report item 的 `evidence[]`，**不要**读 latest.json）|
 | `记录日期` | `latest.json.generated_at` 的日期 |
 | `适用场景` | **默认 `listing`**；若 `suggested_angle` / candidate 渠道偏内容种草，再加勾 `Pinterest` / `marketing_brief` |
@@ -55,14 +56,13 @@
 
 **状态默认 `watch` 的理由**：fit-report 是「供人工判断」，未经人工 confirm 的结合点属于 card-extraction-rules 的 “plausible but weak / seasonal / needs validation” → 默认 `watch`。不要把未确认项标 `active` 冒充已验证。
 
-## 过期清扫（必做，因为还没有月度 health check）
+## 过期清扫
 
-[`health-check-rules.md`](health-check-rules.md) 明确月度健康检查 **不是 v0**，所以没有自动把过期卡置 expired 的引擎。为避免旧热词永远漂在 listing 参考里，**每次 weekly intake 顺手扫一遍**：
+过期清扫现在是**所有时效卡的通用职责**，不限 trend-radar 来源——规则与执行见 [`card-extraction-rules.md`](card-extraction-rules.md) §Expiry sweep，由 SKILL.md 模式 A step 8.5 在每次 weekly intake 统一跑（`过期提醒日期 < today` 且 `有效状态 in active, watch` → 置 `expired`，走 diff 预览 + 确认）。
 
-- 条件：`来源` 含 `trend-radar` 且 `有效状态 in active, watch` 且 `过期提醒日期 < today`。
-- 动作：置 `有效状态 = expired`（走同样的 diff 预览 + 确认）。
+trend-radar 热词卡只是被清扫的一类：它们的 `过期提醒日期 = 记录日期 + 45 天`（短期热点 30-60 取中），到期后由通用清扫置 `expired`，listing step 5.6 的 lookup（只取 `active/watch`）自然只看到当季热词。
 
-这样 listing step 5.6 的 lookup（只取 `active/watch`）自然只看到当季热词。
+> 旧版本只扫 `来源` 含 `trend-radar` 的卡，导致周报 / 用户来源的季节卡（如父亲节窗口）永不过期、长期漂在 listing 参考里。现已并入通用清扫。
 
 ## 去重
 
