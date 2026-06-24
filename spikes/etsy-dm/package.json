@@ -1,0 +1,17 @@
+{
+  "name": "etsy-dm-spikes",
+  "private": true,
+  "type": "module",
+  "description": "命脉验证脚本:HubStudio→CDP 接管 + Etsy 通知邮件可靠性。跑通才动手建 v1。",
+  "scripts": {
+    "spike:cdp": "tsx spike-cdp.ts",
+    "spike:email": "tsx spike-email.ts"
+  },
+  "dependencies": {
+    "imapflow": "^1.0.164",
+    "playwright": "^1.45.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0"
+  }
+}
