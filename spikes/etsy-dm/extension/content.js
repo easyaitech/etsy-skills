@@ -31,8 +31,16 @@
     );
   }
 
-  // 线程 = 可滚动容器里 innerText 最多的那个(排除我的面板);找不到则从回复框往上找一个文本够多的祖先。
+  // 线程 = 优先用 Etsy 语义锚点 .msg-list-container(整条对话);否则退回"可滚动容器里文本最多者"。
   function readThread() {
+    // 0) 精确锚点(最稳):Etsy 对话消息列表容器
+    const exact =
+      document.querySelector(".msg-list-container") ||
+      document.querySelector(".detail-view .msg-list-container");
+    if (exact && (exact.innerText || "").trim().length > 0) {
+      return (exact.innerText || "").trim();
+    }
+    // 1) fallback:可滚动容器里 innerText 最多的那个
     const scrollers = [...document.querySelectorAll("body *")].filter((e) => {
       if (e.closest("#edm-panel")) return false;
       const s = getComputedStyle(e);
