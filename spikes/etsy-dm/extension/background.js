@@ -3,7 +3,7 @@
 //   自用:本地 Hermes 起草接口(http://127.0.0.1:<port>/draft)
 //   产品:云端起草服务
 // 契约统一:POST {message} → 200 {draft}
-const BRAIN_URL = ""; // 留空 = 用本地 stub,不接真脑
+const BRAIN_URL = "http://127.0.0.1:8787/draft"; // 本地脑(spikes/etsy-dm/brain);留空则回退 stub
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || msg.type !== "DRAFT") return;
