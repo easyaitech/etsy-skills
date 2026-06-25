@@ -4,7 +4,10 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-25
+
 ### 新增
+- `image-synth`：**生图后端化 + 外部模型选型（GPT Image 2）**——image-synth 从「Hermes 自带生图」切换为调**中心后端生图服务**（`POST /image/generate`，默认 GPT Image 2 / OpenRouter）。新增三模型对比选型 harness（[`image-synth/scripts/`](image-synth/scripts/)：OpenRouter（Nano Banana Pro / GPT Image 2）+ 火山方舟（Seedream 4.5），预览不偷跑 / `--run` 真跑 / 真实成本记 `usage.cost` / 产出对比图 + 评分表，多图参照 + Seedream 最小像素自动抬尺寸），用真实店铺图实测两轮选定 GPT Image 2。后端为**薄控制面 wrap OpenRouter**（per-profile token 鉴权防伪造 / 按租户 reserve-commit-refund 配额账本 / model allowlist / idempotency 去重防双扣 / 隐私脱敏），独立仓库部署到 ECS（systemd + 绑 tailnet），经代理出境解 OpenAI 地域封锁 + `imggen-health` 探测「经代理打 OpenAI」→ 飞书告警。新增契约文档 [`image-synth/references/backend-image-gen-contract.md`](image-synth/references/backend-image-gen-contract.md)（skill ↔ 后端唯一对齐源）；SKILL.md 全部「Hermes 自带生图」引用（frontmatter / 架构 / 对外接口 / step 7 / 硬性约束）改调后端契约，看图（anchor / QA）仍用 Hermes `vision_analyze`。经 `/plan-eng-review` + Codex 评审（14 项安全/计费 hardening 全折入）。
 - `shared/skill-prefs.md` + `shared/preamble.md`：新增**客户偏好覆盖层（skill-prefs）**——每客户在 `<workspace>/skill-prefs/<skill>.md` 叠加本 skill 的工作流 / 风格旋钮，不改 skill 本体、不 fork。覆盖层与引擎物理分离，`ecommerce-stack update` 只换引擎不碰偏好，**升级零冲突 / 零 merge**；失配偏好按依赖降级协议报 `⚠️ DEGRADE`。品牌语气 / 店铺事实 / 平台规则仍走 BRAND/SHOP/COMMERCE_PLATFORM，安全 / QA 闸不可被覆盖。
 - `shared/preamble.md`：新增**技能目录写入禁令**——agent 不得在 `~/.hermes/skills`（`$HERMES_SKILLS_DIR`）/ `~/.local/share/etsy-skills` 等共享技能目录新建 / 改写 skill（会污染全体客户并在升级时冲突）；客户专属知识走 `Knowledge Cards` / SHOP.md，通用能力产出「提拔建议」走 git。各 SKILL.md 的共享引导摘要同步加入「客户偏好」。
 - `scripts/etsy-stack`：新增 `doctor [--quarantine]` 子命令——扫描技能目录里 manifest 之外的非托管条目（agent 自建 / 历史遗留）并可隔离到 `.quarantine/`，同时体检工作区 skill-prefs（标记目标 skill 已不在 manifest 的失配文件）；`list` 一并列出非托管条目；`init` 现在脚手架 `skill-prefs/` 目录与 README。
