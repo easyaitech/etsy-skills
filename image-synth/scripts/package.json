@@ -1,0 +1,17 @@
+{
+  "name": "image-synth-bench",
+  "private": true,
+  "type": "module",
+  "description": "三模型生图对比 harness — Nano Banana Pro / GPT Image 2 / Seedream 4.5 via OpenRouter",
+  "scripts": {
+    "bench": "tsx bench.ts",
+    "models": "tsx models-list.ts",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
