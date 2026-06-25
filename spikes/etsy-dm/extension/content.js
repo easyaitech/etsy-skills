@@ -13,7 +13,7 @@
     "position:fixed;right:16px;bottom:16px;z-index:2147483647;background:#222;color:#fff;" +
     "font:13px/1.5 system-ui;padding:12px 14px;border-radius:10px;max-width:340px;box-shadow:0 4px 16px rgba(0,0,0,.35)";
   panel.innerHTML =
-    '<b>Etsy DM 助手 v0.3</b>' +
+    '<b>Etsy DM 助手 v0.4</b>' +
     '<div id="edm-status" style="margin-top:4px;opacity:.85">就绪 —— 打开一条对话,再点下面</div>' +
     '<div id="edm-preview" style="margin-top:6px;font-size:12px;opacity:.6;max-height:48px;overflow:hidden"></div>' +
     '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">' +

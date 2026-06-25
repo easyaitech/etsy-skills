@@ -1,31 +1,39 @@
-// v0.1 stub 脑 —— 先返回固定草稿,证明"content script → background → 取草稿 → 回填"这条线通。
-// 验过机制后,把 BRAIN_URL 指向真脑:
-//   自用:本地 Hermes 起草接口(http://127.0.0.1:<port>/draft)
-//   产品:云端起草服务
-// 契约统一:POST {message} → 200 {draft}
-const BRAIN_URL = "http://127.0.0.1:8787/draft"; // 本地脑(spikes/etsy-dm/brain);留空则回退 stub
+// v0.4 —— 接 yanggedianzhang 多租户后端的 Etsy-DM 渠道（替代早期本地 OpenRouter brain）。
+// 插件 POST {etsyDmToken, thread} 给 bridge；后端按 token 路由到该客户的 Hermes profile 出草稿，回 {draft}。
+// 不发送：草稿只填进 Etsy 回复框，由客户审后手动点发送。
+//
+// 每个客户装插件时配三处：
+//   1) BRIDGE_URL     你的后端域名 + /api/etsy-dm/draft
+//   2) ETSY_DM_TOKEN  该客户的租户 token（= 后端 tenantBindings.etsyDmToken）
+//   3) manifest.json 的 host_permissions 里加上你的后端域名（否则 MV3 拦截跨域 fetch）
+const BRIDGE_URL = ""; // 例：https://你的域名/api/etsy-dm/draft
+const ETSY_DM_TOKEN = ""; // 该客户的 etsyDmToken
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || msg.type !== "DRAFT") return;
   (async () => {
-    if (!BRAIN_URL) {
-      const snippet = (msg.message || "").slice(0, 40);
-      sendResponse({
-        draft: "（stub 草稿)Hi, thanks for reaching out! Regarding “" + snippet + "…”, …",
-      });
+    if (!BRIDGE_URL || !ETSY_DM_TOKEN) {
+      sendResponse({ draft: "（未配置 BRIDGE_URL / ETSY_DM_TOKEN，见 background.js）" });
       return;
     }
     try {
-      const r = await fetch(BRAIN_URL, {
+      const r = await fetch(BRIDGE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg.message }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + ETSY_DM_TOKEN
+        },
+        body: JSON.stringify({ etsyDmToken: ETSY_DM_TOKEN, thread: msg.message })
       });
-      const data = await r.json();
-      sendResponse({ draft: data.draft ?? "(脑没返回 draft 字段)" });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        sendResponse({ draft: "（后端 " + r.status + "：" + (data.error || "未知错误") + "）" });
+        return;
+      }
+      sendResponse({ draft: data.draft ?? data.text ?? "（后端没返回 draft 字段）" });
     } catch (e) {
-      sendResponse({ draft: "(调脑失败:" + String(e) + ")" });
+      sendResponse({ draft: "（调后端失败：" + String(e) + "）" });
     }
   })();
-  return true; // 异步 sendResponse:必须 return true
+  return true; // 异步 sendResponse 必须 return true
 });
