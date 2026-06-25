@@ -7,7 +7,10 @@
 //   2) ETSY_DM_TOKEN  该客户的租户 token（= 后端 tenantBindings.etsyDmToken）
 //   3) manifest.json 的 host_permissions 里加上你的后端域名（否则 MV3 拦截跨域 fetch）
 const BRIDGE_URL = "https://yanggedianzhang.com/api/etsy-dm/draft"; // 后端 Etsy-DM 入口
-const ETSY_DM_TOKEN = ""; // 该客户的 etsyDmToken（= 后端 tenantBindings.etsyDmToken；待 mint）
+// 租户0 = etsy-fublessings 的 etsyDmToken（已 mint 并写入后端 binding）。
+// 多租户产品化时：每个客户一份自己的 token，走 per-install 配置（chrome.storage / 安装时填），别提交进仓库。
+// 轮换：curl 后端 /api/admin/etsy-dm-token 重新 mint 即可，旧的立即失效。
+const ETSY_DM_TOKEN = "etsy_e4215c8ccb07a24767879b3013a38fa9e78e926ffb3b81b6";
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || msg.type !== "DRAFT") return;
