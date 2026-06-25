@@ -24,3 +24,13 @@
 
 - [ ] **原子写入** — 当前 JSON 和 latest.json 的写入顺序已保护（dated → latest），但未用 temp file + rename 原子操作。每周跑一次时半文件风险极低，但如果未来频率提高应实施。实现：writeFileSync 到 `.tmp` 后 renameSync。来源：Codex Outside Voice finding #12 + CEO Review D12 (2026-05-18)
 - [ ] **evidence 保留策略** — 每周累积 screenshot + HTML snapshot，一年后 ~50-250MB。实现 runner 启动时自动清理 >12 周的旧目录，或提供 `trend-fetch cleanup --keep 12` 命令。来源：Codex Outside Voice finding #13 + CEO Review D13 (2026-05-18)
+
+# TODOS — logistics-tracking
+
+## v2: 无人值守 + 多租户（v1 完成并跑稳后）
+- [ ] **无人值守每日 cron + 多 workspace 枚举** — v1 是手动触发跑单 workspace；v2 接 Hermes 真·每日 cron 自动化并枚举所有租户 workspace。**先 spike**：Hermes 用 crontab/launchd/runtime scheduler 哪种、怎么发现要扫哪些 workspace、某 workspace 权限失效是跳过还是告警。这是 v1 没解决的唯一核心机制。来源：/plan-eng-review D11 + Codex Outside Voice #6 (2026-06-24)
+- [ ] **每租户月配额上限** — 共享 17TRACK key 下给每个租户一个月注册上限，防一个旺客户吃光全局月额度（以 `getquota.quota_total` 为准，本账户实测 200）连坐其他客户；超额排队或人工提级。中央运营表计数器已按租户可分，只差上限逻辑。来源：/plan-eng-review D2 + Codex #3 (2026-06-24)
+- [ ] **多适配器（快递100/快递鸟）** — v1 查轨迹已收口成单一调用点；有客户更看重国内段或要中文支持时，按 social-publisher adapter-registry 范式接国产数据源。来源：用户决定#3 + /plan-eng-review D6 (2026-06-24)
+
+## P2: 上线前 spike（v1 实现 T3/T4 前必须实测）
+- [x] **17TRACK 重复注册 + 限速语义** — ✅ 实测完成 (2026-06-24)：重复 register 返回 `-18019901`、**不重扣额度**（幂等安全，D5 放松）；限速按 **key 维度**、突发 ~2-3 发即 429、~1-2s 恢复（D9 串行节流+429 退避坐实）。意外收获：`/getquota` 可实时查 `quota_remain`，D2 配额护栏改查它不自维护计数器。结果已回填 17track-adapter.md / sweep-contract.md / base-schema.md。来源：Codex Outside Voice #5/#17 (2026-06-24)
