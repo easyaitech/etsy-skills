@@ -74,7 +74,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 5. **拼最终 prompt**——按 [prompt-vocabulary.md § 最终 prompt 拼装](references/prompt-vocabulary.md#最终-prompt-拼装) 合成 1 段英文 prompt + negative prompt
 6. **完整性自检 + 展示预览**——展示前自检：anchor.subject 与 format.aspect_ratio 必须非空；mood 段允许全空但显式标 `(degraded — BRAND.md 缺失)`。任意硬必填空 → 不展示，回 step 3 补输入。自检过 → 用代码块展示给用户确认 / 调整。**不偷跑**——生图调用有成本
 7. **生图**——经 `terminal` 调**中心后端** `POST /image/generate`（契约见 [references/backend-image-gen-contract.md](references/backend-image-gen-contract.md)）：传 prompt + 实拍图（base64，受大小/数量上限约束）+ aspect/resolution + **idempotency key**（本次请求唯一；重试复用同一个 → 后端去重，不重复扣费）。**严格 1 张**。**不传 model slug**——模型由后端 allowlist 决定（默认 GPT Image 2）。
-   - **失败显式报错，绝不静默**：后端不可达/网络 → 报「生图服务不可达」；`quota_exceeded` → 报「本租户配额用尽」；超时（GPT 偶发数分钟）→ 报「生成超时」。瞬时错（超时/5xx）退避重试**一次**（复用同一 idempotency key）；仍失败 → 停，**不对缺失图跑 QA**。失败原因落 sidecar。
+   - **失败显式报错，绝不静默**：`quota_exceeded` → 报「本租户配额用尽」停；`upstream`/网络（明确未计费）→ 退避重试**一次**（复用同一 idempotency key）；**超时（504）→ 报「生成超时，计费未知」，换一个新的 idempotency key 再试一次，或停下**（同 key 会返 409，因后端标 uncertain 防重复扣费）。任何失败都**不对缺失图跑 QA**，原因落 sidecar。
 8. **QA**——按 [qa-gates.md](references/qa-gates.md) 对应段（模式 A / 模式 B）走全部 checks。含自动重试 ≤ 2 次 + 第 3 轮失败用户三选一
 9. **落盘**——按 [output-layout.md](references/output-layout.md) 写到 `<workspace>/.cache/image-synth/ai_raw/{date}/` + 同名 sidecar `.json`。本地写入用 `mkdir -p` 一步建目录（`.cache/` 是本地 fs，不需要 assets-library 模式 D 的逐层检查——那是 `lark-drive` 限制）
 10. **用户三选一**：

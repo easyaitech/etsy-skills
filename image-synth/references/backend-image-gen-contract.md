@@ -49,7 +49,11 @@ Headers:
 4xx { "error": { "code": "quota_exceeded"|"bad_params"|"refs_too_large"|"unauthorized", "message": "..." } }
 5xx { "error": { "code": "upstream"|"timeout", "message": "..." } }
 ```
-skill 行为:`quota_exceeded`→报「配额用尽」;`timeout`/`upstream`/网络→报「生图服务不可达/超时」+ 退避重试**一次**(复用同 Idempotency-Key);仍败→停,不对缺失图跑 QA。
+skill 行为:
+- `quota_exceeded`(429)→ 报「本租户配额用尽」,停。
+- `upstream`(502)/ 网络错 → **明确未计费**,后端已 refund;退避重试**一次**(复用同 Idempotency-Key,后端重认领);仍败→停。
+- `timeout`(504)→ **计费未知**(上游可能已生成),后端标 `uncertain`、**不退款**;**同 key 重试会返 409**——不要用同 key 重试,改用**新 Idempotency-Key** 再试一次,或停下报「生成超时,请重试/人工核查」。
+- 任何失败都**不对缺失图跑 QA**,失败原因落 sidecar。
 
 ## 鉴权(关键,防伪造)
 - **不能只靠 body 里的 `tenant`** —— 同一 mini 多个租户 profile 共用一个 Tailscale 机器身份,body 字段可伪造,中心配额就形同虚设。
