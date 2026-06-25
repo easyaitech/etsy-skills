@@ -1,21 +1,21 @@
 ---
 name: image-synth
-description: 用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。三种触发：(1) 模式 A 电商图：用户提到"出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图 / 小红书商品图"等请求时——按 COMMERCE_PLATFORM.md 的目标销售平台媒体规则出图；Etsy 走内置槽位语义，小红书走内置商品图 / 详情图规则，QA 检查商品形态保持 + 文字可读性 + 平台主图规范；(2) 模式 B 社媒图：用户提到"出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / 群发图 / banner"等请求时——按目标内容平台尺寸出图，QA 仅检查文字可读性；(3) 反向触发：assets-library 模式 D 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，落 `<workspace>/.cache/image-synth/ai_raw/`，QA 不通过自动调 prompt 重试 ≤ 2 次；用户三选一（入库走 assets-library promote / 留 ai_raw / 丢弃）。严格遵守 BRAND.md 视觉禁区（如存在）。
+description: 调中心后端生图服务(GPT Image 2 via OpenRouter)把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。三种触发：(1) 模式 A 电商图：用户提到"出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图 / 小红书商品图"等请求时——按 COMMERCE_PLATFORM.md 的目标销售平台媒体规则出图；Etsy 走内置槽位语义，小红书走内置商品图 / 详情图规则，QA 检查商品形态保持 + 文字可读性 + 平台主图规范；(2) 模式 B 社媒图：用户提到"出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / 群发图 / banner"等请求时——按目标内容平台尺寸出图，QA 仅检查文字可读性；(3) 反向触发：assets-library 模式 D 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，落 `<workspace>/.cache/image-synth/ai_raw/`，QA 不通过自动调 prompt 重试 ≤ 2 次；用户三选一（入库走 assets-library promote / 留 ai_raw / 丢弃）。严格遵守 BRAND.md 视觉禁区（如存在）。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
 
 # Image Synth (AI 图片合成)
 
-把"详细图片需求 + 商品实拍图"调 Hermes 自带的图像生成能力合成成 1 张成品图。专攻**电商图**（目标销售平台商品页图 / listing 槽位 / 商品级营销图）+ **社媒图**（Pinterest / Instagram / Story / 节日营销 / 群发 banner）。
+把"详细图片需求 + 商品实拍图"经**中心后端生图服务**(GPT Image 2 / OpenRouter)合成成 1 张成品图。专攻**电商图**（目标销售平台商品页图 / listing 槽位 / 商品级营销图）+ **社媒图**（Pinterest / Instagram / Story / 节日营销 / 群发 banner）。
 
-**架构**：本 skill 维护**提示词层**（输入 → 5 类词库 → 最终 prompt）+ **质量闸门层**（差异化 QA），生图动作下沉到 Hermes runtime 自带能力。生成的图先落本地 `.cache/image-synth/ai_raw/`，由用户三选一决定是否进资产库。
+**架构**：本 skill 维护**提示词层**（输入 → 5 类词库 → 最终 prompt）+ **质量闸门层**（差异化 QA）。生图动作经 `terminal` 调**中心后端生图端点**（`POST /image/generate`，GPT Image 2）——key / 配额 / 换模型都在后端一处，**不在 mini 本地、skill 不持 key**（见 [references/backend-image-gen-contract.md](references/backend-image-gen-contract.md)）。看图能力（取 anchor / QA）仍用 Hermes `vision_analyze`。生成的图先落本地 `.cache/image-synth/ai_raw/`，由用户三选一决定是否进资产库。
 
 **AI 发布图清理边界**：本 skill 生成后先保留原始输出，不在 `.cache/image-synth/ai_raw/` 阶段清理 AI metadata / AI watermark。只有用户选择"入库"、且该图会成为最终 listing 图片或社媒待发布图时，才由 `assets-library` 模式 B2 按 [`shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md) 处理发布副本。
 
 **对外的实操接口**：
-- Hermes 自带生图能力（不点名具体工具，按 runtime 提供）
-- Hermes 看图能力（看实拍图作 anchor + 看生成图做 QA）
+- **中心后端生图端点** `POST /image/generate`（per-profile token 鉴权 + idempotency key；契约见 [references/backend-image-gen-contract.md](references/backend-image-gen-contract.md)）——经 `terminal`（如 `curl`）调；OPENROUTER_API_KEY 只在后端，skill 不持
+- Hermes 看图能力 `vision_analyze`（看实拍图作 anchor + 看生成图做 QA）
 - 工作区根目录的 BRAND.md（视觉原则 + 视觉禁区）+ SHOP.md（仅 packaging / brand-story 类用到）+ COMMERCE_PLATFORM.md（销售平台媒体规则）
 - `assets-library` 模式 B2 promote 流程（用户选"入库"时调用，本 skill 不重新实现归档）
 
@@ -73,7 +73,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 4. **看图取 anchor**——用 Hermes 看图能力看实拍图，提取 anchor 描述（材质 / 色 / 比例 / Logo / 关键纹理）；多张实拍图取一致信息
 5. **拼最终 prompt**——按 [prompt-vocabulary.md § 最终 prompt 拼装](references/prompt-vocabulary.md#最终-prompt-拼装) 合成 1 段英文 prompt + negative prompt
 6. **完整性自检 + 展示预览**——展示前自检：anchor.subject 与 format.aspect_ratio 必须非空；mood 段允许全空但显式标 `(degraded — BRAND.md 缺失)`。任意硬必填空 → 不展示，回 step 3 补输入。自检过 → 用代码块展示给用户确认 / 调整。**不偷跑**——生图调用有成本
-7. **生图**——调 Hermes 自带的图像生成能力，传 prompt + 实拍图作 reference image + 长宽比。**严格 1 张**
+7. **生图**——经 `terminal` 调**中心后端** `POST /image/generate`（契约见 [references/backend-image-gen-contract.md](references/backend-image-gen-contract.md)）：传 prompt + 实拍图（base64，受大小/数量上限约束）+ aspect/resolution + **idempotency key**（本次请求唯一；重试复用同一个 → 后端去重，不重复扣费）。**严格 1 张**。**不传 model slug**——模型由后端 allowlist 决定（默认 GPT Image 2）。
+   - **失败显式报错，绝不静默**：后端不可达/网络 → 报「生图服务不可达」；`quota_exceeded` → 报「本租户配额用尽」；超时（GPT 偶发数分钟）→ 报「生成超时」。瞬时错（超时/5xx）退避重试**一次**（复用同一 idempotency key）；仍失败 → 停，**不对缺失图跑 QA**。失败原因落 sidecar。
 8. **QA**——按 [qa-gates.md](references/qa-gates.md) 对应段（模式 A / 模式 B）走全部 checks。含自动重试 ≤ 2 次 + 第 3 轮失败用户三选一
 9. **落盘**——按 [output-layout.md](references/output-layout.md) 写到 `<workspace>/.cache/image-synth/ai_raw/{date}/` + 同名 sidecar `.json`。本地写入用 `mkdir -p` 一步建目录（`.cache/` 是本地 fs，不需要 assets-library 模式 D 的逐层检查——那是 `lark-drive` 限制）
 10. **用户三选一**：
@@ -152,7 +153,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 - **prompt 展示给用户预览** → 等确认 → 才调生图（生图调用有成本）
 - **入库走 assets-library**：本 skill 不直接写 `Assets 素材池` 表 / 不直接上传飞书云空间——这是 assets-library 的职责边界
-- **不替用户登录任何外部生图服务**：Hermes 自带能力之外不做（v0 范围）
+- **生图走中心后端，skill 不持 key / 不直接调 OpenRouter**：`OPENROUTER_API_KEY` 只在后端；skill 经 `terminal` 调 `/image/generate`，**model 由后端 allowlist 决定**（默认 GPT Image 2），skill 不传任意 model slug（防点贵模型 / 绕安全）
 - **视觉禁区不可绕过**：BRAND § 视觉禁区原文进 negative prompt + QA 扫描清单；用户当场说"这次破例"也**不破例**——要破例先回 shop-foundation 改 BRAND.md
 - **QA 失败不入库**：QA 不通过的图最多落 `.cache/`；不调用 assets-library promote。失败原因 + 重试历史落 sidecar `.json`
 
