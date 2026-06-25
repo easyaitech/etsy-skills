@@ -6,8 +6,8 @@
 //   1) BRIDGE_URL     你的后端域名 + /api/etsy-dm/draft
 //   2) ETSY_DM_TOKEN  该客户的租户 token（= 后端 tenantBindings.etsyDmToken）
 //   3) manifest.json 的 host_permissions 里加上你的后端域名（否则 MV3 拦截跨域 fetch）
-const BRIDGE_URL = ""; // 例：https://你的域名/api/etsy-dm/draft
-const ETSY_DM_TOKEN = ""; // 该客户的 etsyDmToken
+const BRIDGE_URL = "https://yanggedianzhang.com/api/etsy-dm/draft"; // 后端 Etsy-DM 入口
+const ETSY_DM_TOKEN = ""; // 该客户的 etsyDmToken（= 后端 tenantBindings.etsyDmToken；待 mint）
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || msg.type !== "DRAFT") return;
