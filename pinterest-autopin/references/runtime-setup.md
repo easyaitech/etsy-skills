@@ -1,152 +1,127 @@
 # Runtime Setup（首次接入 Pinterest）
 
-只在 SKILL.md 模式 A 触发。装一次，后续模式 B / C 都复用。
+只在 SKILL.md 模式 A 触发。当前推荐架构是：
+
+```text
+Hermes 生成 / 判断 / 调服务器工具
+        ↓
+yanggedianzhang 服务器保存 Pinterest job 状态
+        ↓
+现有浏览器插件用租户 Chrome 登录态执行 Pinterest 页面
+```
+
+不要安装新的 Pinterest 专用插件；继续扩展已经存在的 Etsy DM / 养个店长浏览器插件。不要在 Hermes/Mac mini 上准备独立 Chrome profile。
 
 ---
 
-## 路径约定
+## 角色与边界
 
-| 角色 | 路径 | 是否进 git |
+| 角色 | 负责什么 | 不负责什么 |
 |---|---|---|
-| Pinterest-autopin 工具源码 | `~/code/etsy-skills/tools/Pinterest-autopin/` | 否（在 etsy-skills 仓库的 `.gitignore` 加 `tools/`） |
-| Chrome profile（含 Pinterest 登录态） | `~/.config/pinterest-autopin/chrome-profile/` | 否（在用户家目录，独立于仓库） |
-| 运行时 request.json | `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` | 否（`.cache/` 应进工作区 `.gitignore`） |
-| 处理后图片 | `<workspace>/.cache/pinterest-autopin/processed/{原始文件名}` | 否（同在 `.cache/` 下） |
-
-> `<workspace>` = `etsy-stack workspace` 解析出的根目录（`$ETSY_WORKSPACE` 或向上找到的 `.etsy-workspace` 标记所在目录）。SKILL.md §对外的实操接口已说明契约。
-
-三层分离的理由：
-- **工具源码**——可随时删了重 clone，不丢数据。`$HOME` 路径在 Hermes profile 隔离下落到 profile HOME 是预期行为
-- **登录态**——独立于工具与工作区，跨工作区复用同一个 Pinterest 账号登录
-- **runtime 数据**——按工作区隔离。多店铺切换时，每个店铺的 pin 历史互不污染；工作区被打包/迁移时 runtime 跟着走
+| Hermes | 读 Base、生成 pin 文案、调用服务器工具接口、转述安装 / 升级提示 | 不跑 Playwright、不保存浏览器登录态、不保存 browserToolToken |
+| yanggedianzhang 服务器 | 租户鉴权、job 状态机、执行锁、素材下载地址、test/final 结果 | 不持有用户 Pinterest 密码 |
+| 浏览器插件 | 在租户 Chrome 登录态里打开 Pinterest、填表、上传服务器 asset、回传结果 | 不决定文案、不维护业务队列 |
+| 用户 / 管理员 | 安装插件、保存 browserToolToken、登录 Pinterest、必要时人工确认 final | 不需要把 Pinterest 密码交给 Hermes |
 
 ---
 
-## 安装步骤
+## 服务器前置
 
-按顺序执行，遇错停下问用户：
+管理员侧确认：
 
-### 1. 前置环境检查
+1. yanggedianzhang 已部署 Pinterest browser tool flow。
+2. 租户已有 service binding。
+3. 已为租户 mint `browserToolToken`。
+4. Hermes tool 调用服务端时使用服务器配置的 tool secret；不要把 secret 写进 `社媒发布队列` 或对话。
+5. 浏览器插件最低版本满足服务器要求，并带 `pinterest` capability。
 
-执行命令检查（`terminal` 工具）：
+如果这些条件缺失，Hermes 调用 `POST /api/tools/pinterest/jobs` 时会收到：
 
-```bash
-node --version      # 期望 ≥ 18
-npm --version       # 期望 ≥ 9
-python3 --version   # 期望 ≥ 3.10
-remove-ai-watermarks --version # AI metadata / AI watermark 清理
-jpegoptim --version # JPEG 无损压缩
-optipng --version   # PNG 无损压缩
+- `409 BROWSER_TOOL_INSTALL_REQUIRED`
+- `426 BROWSER_TOOL_UPGRADE_REQUIRED`
+- `401 UNAUTHORIZED`
+- `503 HERMES_TOOL_DISABLED`
+
+处理方式见 `publishing-flow.md`。其中 `userMessage` 是面向用户的安装 / 升级话术，应原样转述。
+
+---
+
+## 用户侧插件安装 / 升级
+
+当服务器返回安装或升级提示时，让用户按提示操作。通用步骤如下：
+
+1. 向管理员获取最新的浏览器插件文件夹或压缩包，以及自己的 `browserToolToken`。
+2. 打开 Chrome，进入 `chrome://extensions/`。
+3. 打开右上角“开发者模式”。
+4. 点击“加载已解压的扩展程序”，选择插件文件夹；升级时可替换旧文件夹后点“重新加载”。
+5. 打开插件的“扩展程序选项”，填写：
+   - `Bridge Base URL`: `https://yanggedianzhang.com`
+   - `browserToolToken`: 管理员发放的 token
+6. 保存后回到 Hermes 对话继续。
+
+注意：
+
+- 不要新建第二个 Pinterest 插件。
+- 不要把 `browserToolToken` 写入 Base、BRAND.md、SHOP.md 或任何业务文档。
+- 如果插件选项页不存在或版本太旧，要求用户安装最新插件包。
+- Pinterest 登录在用户自己的 Chrome 中完成；Hermes 不输入账号密码、不处理二次验证。
+
+---
+
+## Base / 工作区准备
+
+模式 A 仍需要准备业务队列：
+
+1. 解析工作区根：`ecommerce-stack workspace`（旧命令 `etsy-stack workspace` 兼容）。
+2. 在店铺总 Base 内创建 / 补齐 `社媒发布队列` 表；Pinterest 行 schema 见 `pin-queue-base-schema.md`。
+3. 为 Pinterest 建推荐视图：Pinterest、Pinterest 草稿、Pinterest 已发、Pinterest 失败。
+4. 确认 `Products 商品` 表有 `分享链接`，`Assets 素材池` 表能标记 Pinterest 候选和公开授权。
+
+工作区 `.cache/` 可以继续用于图片发布副本处理，但它不是浏览器插件的输入源。插件只能拿服务器返回的 asset URL。
+
+---
+
+## 输出给用户的“接入完成”清单
+
+模式 A 完成后，用一个块告诉用户：
+
+```text
+Pinterest 发布已接入：
+
+服务器控制面：已启用
+浏览器插件：已安装 / 已升级
+插件能力：pinterest
+`社媒发布队列` 表：{Base 链接}
+Pinterest 登录态：由你的 Chrome 浏览器保存
+
+下一步可以：
+- “给 SKU TEACUP-001 出一条 pin 试试”（进入模式 B）
+- “测试这条 Pinterest 草稿”（进入模式 C test）
 ```
 
-前三个任一缺失：告诉用户去装（`brew install node python@3.12`）。
-`remove-ai-watermarks` 缺失：告诉用户在 **Hermes Agent 实际运行的机器** 上跑 `etsy-stack ai-cleaner update`（或按 `shared/ai-image-sanitization.md` 手动安装）。IDE / 开发机本地有没有该项目源码不算数。
-`jpegoptim` / `optipng` 缺失：告诉用户 `brew install jpegoptim optipng`（图片处理流程必需——见 `image-processing.md`）。
-不替用户装系统级依赖。
-
-### 2. clone Pinterest-autopin
-
-```bash
-etsy-stack pinterest-tool update
-```
-
-这条命令会 clone / 更新 `~/code/etsy-skills/tools/Pinterest-autopin/`，并刷新 npm 依赖。轮播 pin 发布要求 `Pinterest-autopin >= 1.4.0`；如果目标目录已有本地改动，命令会停下，先处理本地改动再继续。
-
-手动等价流程：
-
-```bash
-mkdir -p ~/code/etsy-skills/tools
-cd ~/code/etsy-skills/tools && git clone https://github.com/easyaitech/Pinterest-autopin.git
-cd ~/code/etsy-skills/tools/Pinterest-autopin
-git checkout main
-git pull --ff-only
-```
-
-### 3. 装依赖
-
-```bash
-cd ~/code/etsy-skills/tools/Pinterest-autopin
-npm install
-python3 -m playwright install chromium
-```
-
-`playwright install chromium` 会下载几百 MB Chromium，第一次较慢——告诉用户预计 1-3 分钟。
-
-### 4. 准备 Chrome profile 目录
-
-```bash
-mkdir -p ~/.config/pinterest-autopin/chrome-profile
-```
-
-### 5. 登录 Pinterest（人工）
-
-执行：
-
-```bash
-cd ~/code/etsy-skills/tools/Pinterest-autopin
-npm run pin:check-login -- --chrome-profile ~/.config/pinterest-autopin/chrome-profile
-```
-
-这会弹出一个 Chrome 窗口。**让用户自己在窗口里完成 Pinterest 登录**（邮箱密码、Google SSO、双因素验证都由用户手动操作；本 skill 不替用户输任何凭据）。
-
-登录完成后用户关掉窗口，命令应输出 `{"ok": true, "loggedIn": true}` 类似 JSON。
-
-如果输出 `loggedIn: false`：让用户重跑一次确认登录确实成功；可能 Pinterest 弹了二次验证用户没注意。
-
-### 6. 加 .gitignore
-
-确认 `~/code/etsy-skills/.gitignore`（或在工具仓自身的 `.gitignore`）包含：
-
-```
-tools/
-```
-
-如果没有就追加。这一步**写入 `.gitignore` 前要展示给用户确认**（仓库根目录文件改动按通用写入协议处理）。
+如果无法验证插件在线，不要写“已安装 / 已升级”；改写成“等待插件上线，服务器会在创建任务时返回安装或升级提示”。
 
 ---
 
 ## 故障排查
 
-### Playwright chromium 下载失败
+### `BROWSER_TOOL_INSTALL_REQUIRED`
 
-国内网络常见。用户需要配代理或用镜像，本 skill 不替决策——告诉用户两条路：
+服务器还没有看到该租户的可用插件。把响应里的 `userMessage` 转给用户。常见原因：
 
-```bash
-# 方案 A：走代理
-HTTPS_PROXY=http://127.0.0.1:7890 python3 -m playwright install chromium
+- 插件未安装。
+- 插件选项页没有保存 `Bridge Base URL`。
+- `browserToolToken` 填错。
+- 用户装的是旧 Etsy DM 插件，还没有 Pinterest capability。
 
-# 方案 B：用淘宝镜像
-PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright python3 -m playwright install chromium
-```
+### `BROWSER_TOOL_UPGRADE_REQUIRED`
 
-### `pin:check-login` 报"profile locked"
+插件版本低于服务器要求，或没有 `pinterest` capability。把响应里的 `userMessage` 转给用户，让用户更新同一个插件安装包。
 
-之前的 Chrome 进程没退干净。让用户：
+### 插件在线但 Pinterest 页面没填好
 
-```bash
-pkill -f "chrome-profile" 2>/dev/null
-```
+让用户截图插件浮层 / Pinterest 页面。不要回退到 Hermes 本机 Playwright；这属于浏览器执行器 adapter 的问题，应在插件和服务器 job 结果里记录失败原因。
 
-然后重跑。
+### Pinterest 弹了人机验证 / 二次验证
 
-### Pinterest 弹了人机验证
-
-不替用户过验证（违反 user_privacy 中"never bypass CAPTCHA"）。让用户在弹出的 Chrome 窗口里自己完成。
-
----
-
-## 输出给用户的"安装完成"清单
-
-模式 A 全部完成后，用一个块告诉用户：
-
-```
-Pinterest-autopin 已就绪：
-
-工具路径：~/code/etsy-skills/tools/Pinterest-autopin/
-Chrome profile：~/.config/pinterest-autopin/chrome-profile/
-`社媒发布队列` 表：{Base 链接}
-登录状态：已登录（Pinterest 账号 {email/username}）
-
-下一步可以：
-- "给 SKU TEACUP-001 出一条 pin 试试"（进入模式 B，单图或轮播都可以）
-```
+不替用户过验证。让用户在自己的 Chrome 里完成后，再重新领取或重跑任务。

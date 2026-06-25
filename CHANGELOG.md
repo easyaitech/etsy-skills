@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-26
+
+### 修
+- `pinterest-autopin`：把 Skill 说明从旧本地 `Pinterest-autopin` / Playwright / 独立 Chrome profile 方案切换为推荐架构：Hermes 只生成与判断，调用 `yanggedianzhang` 服务器 Pinterest tool；服务器做 job 状态机、鉴权、素材下载地址和结果回写；现有浏览器插件作为租户登录态执行器。
+- `social-publisher` / `content-asset-pool` / `README.md`：同步 Pinterest adapter 边界，明确新发布路径是服务器控制面 + 现有浏览器插件，不再要求 Hermes/Mac mini 安装本地 Pinterest-autopin 工具。
+- `install.sh` / `ecommerce-stack pinterest-tool`：安装时不再自动同步旧本地 Pinterest-autopin 工具；`pinterest-tool update` 默认拒绝执行，只保留 `PINTEREST_AUTOPIN_LEGACY_ALLOW=1` 的迁移排查入口。
+
 ## [1.0.0] - 2026-06-25
 
 ### 新增

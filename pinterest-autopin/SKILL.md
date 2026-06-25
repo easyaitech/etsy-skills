@@ -1,32 +1,34 @@
 ---
 name: pinterest-autopin
-description: 把电商商品 + 素材库 + 品牌底座组装成 Pinterest pin，用 Pinterest-autopin 工具发布；也作为 social-publisher 的 Pinterest adapter。支持单图 pin 和轮播 pin（carousel，2-5 张图）。三种触发：(1) "接 Pinterest / 配置自动 pin / 建 pin 流水线"——装工具 + 在店铺总 Base 内建 `社媒发布队列` 表；(2) "给 SKU 出 pin / 写 pin 文案 / 排队下一条 pin"——读 BRAND + `Products 商品` 表 + `Assets 素材池` 表，组装一条 `社媒发布队列`（平台=Pinterest）记录；(3) "发 pin / 跑 autopin / 测试 pin / validate / publish"——按 validate→test→final 三阶段执行并回写状态。每次只发一条。
+description: 把电商商品 + 素材库 + 品牌底座组装成 Pinterest pin，并通过 yanggedianzhang 服务器控制面创建浏览器插件执行任务；也作为 social-publisher 的 Pinterest adapter。Hermes 只负责判断、生成文案、调用服务器工具接口，不持有 Chrome profile、不跑 Playwright、不维护发布队列。三种触发：(1) "接 Pinterest / 配置自动 pin / 建 pin 流水线"——接通服务器工具 + 现有浏览器插件 + 店铺总 Base 内 `社媒发布队列` 表；(2) "给 SKU 出 pin / 写 pin 文案 / 排队下一条 pin"——读 BRAND + `Products 商品` 表 + `Assets 素材池` 表，组装一条 `社媒发布队列`（平台=Pinterest）记录；(3) "发 pin / 测试 pin / publish"——调用服务器工具创建 test job，用户确认后再创建 final/publish job，并回写状态。每次只处理一条。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
 
 # Pinterest AutoPin
 
-这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成 Pinterest pin，并用外部工具 [Pinterest-autopin](https://github.com/easyaitech/Pinterest-autopin)（Playwright + Chrome profile，非 Pinterest 官方 API）发布。
+这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成 Pinterest pin。发布动作不再由 Hermes 本机的 Playwright / Chrome profile 完成，而是分三层：
 
-它可以被用户直接触发，也可以作为 `social-publisher` 的 Pinterest adapter 被调用。跨平台 `社媒发布队列` 的 source of truth 仍在 `content-asset-pool` / `social-publisher`；本 skill 只负责店铺总 Base 内 `社媒发布队列` 表 `平台 = Pinterest` 行与 Pinterest 发布动作。
+1. **Hermes**：读商品、素材、品牌规则，生成 title / description / alt text，调用服务器工具接口。
+2. **yanggedianzhang 服务器**：校验租户、保存 Pinterest job 状态、加锁、发放素材下载地址、记录 test / final 结果。
+3. **现有浏览器插件**：在租户自己的 Chrome 登录态里打开 Pinterest、填表、上传服务器给的素材，并把结果回传服务器。
 
-支持两种 pin 类型：
-- **单图 pin**：1 张图片，经典 Pinterest pin
-- **轮播 pin**（carousel）：2-5 张图片，用户左右滑动浏览。适合展示产品多角度、使用场景组合、系列产品对比
+它可以被用户直接触发，也可以作为 `social-publisher` 的 Pinterest adapter 被调用。跨平台 `社媒发布队列` 的 source of truth 仍在 `content-asset-pool` / `social-publisher`；本 skill 只负责 `平台 = Pinterest` 行的语义准备、服务器 job 创建和结果回写。
 
-**`社媒发布队列` 表核心模型**：一条 Base 记录 = 一个 Pinterest Pin。多图轮播不要拆成多条记录，而是在同一行里用有序 `image 路径` 列表 + 有序 `Alt Text (EN)` 段落表示。发布成功后这一行只回写一个 `发布 URL`。
+支持的队列模型：
+- **单图 pin**：当前服务器工具接口的推荐路径。
+- **多图轮播 pin**：队列表可以表达 2-5 张图，但只有当服务器工具和浏览器插件明确支持多素材 job 时才能进入 final；否则只建草稿，不声称已经自动发布。
 
-**架构**：本 skill 维护**语义层**（`社媒发布队列` 表：写什么、发到哪、是否发成功），物理发布动作下沉到 Pinterest-autopin 这个外部 CLI 工具。两层之间通过一个 `request.json` 文件交接。
+**`社媒发布队列` 表核心模型**：一条 Base 记录 = 一个 Pinterest Pin。发布成功后这一行只回写一个 `发布 URL`。
 
-**工具补丁交付**：`references/patches/pinterest-video-pin-support-a5ccaec.patch` 是 Pinterest-autopin 视频 Pin 支持补丁（源自不可访问的工具仓库本地提交 `a5ccaec`）。在 `easyaitech/Pinterest-autopin` 不可访问时，先通过本仓库沉淀；拿到工具仓库权限后，把该 patch 应用到工具源码仓库再开 PR。
+**架构边界**：Hermes 不直接读浏览器登录态，不直接点击 Pinterest，不保存 cookie / token / 密码，不把本地绝对图片路径传给浏览器。素材必须先变成服务器能授权下载的 asset，插件再从服务器拉取 Blob/File 上传。
 
 **对外的实操接口**：
-- 飞书 Base（用 `lark-base` skill 操作店铺总 Base 内的 `社媒发布队列` 表 + 反查 `Products 商品` / `Assets 素材池` 表；架构见 `../shared/store-base-architecture.md`）
-- 工作区根目录的 BRAND.md / SHOP.md（用 `shop-foundation` 维护）
-- 外部工具：`~/code/etsy-skills/tools/Pinterest-autopin/`（用 terminal 调用 `npm run pin:*`；工具源码本体走 `$HOME` 是开发者机器约定，**runtime 数据按工作区隔离**——见模式 C）
-- 独立 Chrome profile（用于 Pinterest 登录态持久化）
-- 图片发布副本处理工具链：`remove-ai-watermarks` + `jpegoptim` + `optipng`（只清 AI metadata / AI watermark + 无损压缩——见 `references/image-processing.md`）
+- 飞书 Base：用 `lark-base` 操作店铺总 Base 内的 `社媒发布队列` 表，并反查 `Products 商品` / `Assets 素材池` 表；架构见 `../shared/store-base-architecture.md`。
+- 工作区根目录的 BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md（用 `shop-foundation` 维护）。
+- 服务器工具：`POST /api/tools/pinterest/jobs` 创建 test job；`POST /api/tools/pinterest/jobs/confirm-publish` 在 test 通过且用户确认后转 final。详见 `references/publishing-flow.md`。
+- 浏览器执行器：沿用现有 Etsy DM 浏览器插件，插件版本必须带 `pinterest` capability。安装 / 升级提示由服务器返回，Hermes 只把 `userMessage` 原样转述给用户。
+- 图片发布副本处理工具链：`remove-ai-watermarks` + `jpegoptim` + `optipng`（只清 AI metadata / AI watermark + 无损压缩——见 `references/image-processing.md`）。处理后的文件仍需进入服务器 asset 流程，不能直接作为浏览器上传路径。
 
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
@@ -34,21 +36,21 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ## 前置就绪检查（Mode B / C 入口守卫）
 
-用户触发 Mode B 或 Mode C 时，在执行任何业务逻辑之前，**静默**按编号顺序逐项检查，任何一项失败即停止后续检查，直接按该项的失败话术回复并提议进入 Mode A。
+用户触发 Mode B 或 Mode C 时，在执行任何业务逻辑之前，**静默**按编号顺序逐项检查。任何一项失败即停止后续检查，按失败话术回复，并提议进入 Mode A 或让服务器返回安装 / 升级提示。
 
 | # | 检查项 | 怎么检查 | 失败时怎么说 |
 |---|--------|----------|-------------|
-| 1 | Pinterest-autopin 工具已安装且版本支持轮播 | 跑 `etsy-stack pinterest-tool status`，要求工具目录存在且版本 `>= 1.4.0` | 「Pinterest-autopin 发布工具还没装，或版本低于 1.4.0，当前发布器还不能可靠发轮播 pin。要现在运行 `etsy-stack pinterest-tool update` 升级吗？」 |
-| 2 | Chrome profile 目录已存在 | 检查 `references/runtime-setup.md` §路径约定 中的 Chrome profile 目录是否存在 | 「Pinterest 的 Chrome 登录档还没建。要现在初始化吗？」 |
-| 3 | `社媒发布队列` 表已存在 | 先读 `<workspace>/docs/store-base.md`，确认店铺总 Base 中已配置 `publishing_queue`（社媒发布队列，属扩展表）；迁移期可 fallback 到旧独立 Pinterest 队列数据源，但新写入优先进入店铺总 Base | 「`社媒发布队列` 还没建。要现在在店铺总 Base 里建吗？我会按 schema 引导你（Pinterest pin 就是这张表 `平台 = Pinterest` 的行）。」 |
+| 1 | 服务器 Pinterest 工具已启用 | 调用服务器工具接口时若返回 `HERMES_TOOL_DISABLED` / `UNAUTHORIZED`，说明 Hermes 侧工具密钥或服务端未配置 | 「Pinterest 发布工具还没有在服务器侧启用，需要管理员先配置 yanggedianzhang 的 Hermes tool secret / tenant binding。」 |
+| 2 | 租户浏览器插件可用 | 创建 job 时如果返回 `BROWSER_TOOL_INSTALL_REQUIRED` / `BROWSER_TOOL_UPGRADE_REQUIRED`，读取响应里的 `userMessage` | 原样转述服务器给出的安装 / 升级步骤，不自行编 token，不把 token 写进 Base |
+| 3 | `社媒发布队列` 表已存在 | 先读 `<workspace>/docs/store-base.md`，确认店铺总 Base 中已配置 `publishing_queue`（社媒发布队列，属扩展表） | 「`社媒发布队列` 还没建。要现在在店铺总 Base 里建吗？Pinterest pin 就是这张表 `平台 = Pinterest` 的行。」 |
 | 4 | `BRAND_MARKETING.md` 存在 | 检查 `<workspace>/BRAND_MARKETING.md` 是否存在 | 「营销策略底座还没建。要用 shop-foundation 建立吗？我会引导你完成营销策略访谈。」 |
 | 5 | `MARKETING_PLATFORM.md` 存在 | 检查 `<workspace>/MARKETING_PLATFORM.md` 是否存在 | 「平台内容策略还没建。要用 shop-foundation 建立吗？我会引导你定义各平台的内容规范。」 |
 
-> BRAND.md / SHOP.md 的缺失检查不在此处——由下方 §依赖关系 在组 pin 前处理，属于内容锚点而非基础设施。BRAND_MARKETING.md / MARKETING_PLATFORM.md 属于策略基座，缺失时无法正确决定内容方向，因此列入前置检查。
+> BRAND.md / SHOP.md 的缺失检查不在此处——由下方 §依赖关系 在组 pin 前处理，属于内容锚点而非基础设施。
 
 **路由规则**：
-- 任何一项失败 → 提议进入 Mode A；用户同意后直接开始 Mode A 流程，不需要用户重新说"接入 Pinterest"
-- 用户说"以后再说" → 尊重，不在同一对话中反复催促；告知用户「好的，需要接入 Pinterest 时随时说」，结束当前任务路由回到待命状态
+- 服务器返回浏览器插件安装 / 升级要求 → 把 `userMessage` 给用户，并停在当前任务；用户装好 / 升级后再继续。
+- 用户说"以后再说" → 尊重，不在同一对话中反复催促。
 
 ---
 
@@ -60,104 +62,88 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 | `<workspace>/SHOP.md` | 店铺 URL / 主营品类 | 店铺 URL 只作人工核对或非商品内容 fallback；商品型 pin 的 `link` 必须由 `Products 商品` 表的 `分享链接` 提供 |
 | `<workspace>/BRAND_MARKETING.md` | 营销定位 / 人群 / 情感触点 / 场景矩阵 / 红线 | pin 文案的情感锚点与场景归属；选题优先级；红线过滤 |
 | `<workspace>/MARKETING_PLATFORM.md` | Pinterest 章节：内容规范 / 配比 / 红线 | pin 视觉规范、文字规范、内容配比按 Pinterest 章节执行 |
-| `Products 商品` 表（listing-catalog）| `分享链接` / `平台商品 ID` / 标题 / SEO 关键词 / 上线状态 | `链接` 优先读取 `Products 商品` 表的 `分享链接`；SKU、record_id 与 `平台商品 ID`（如 Etsy Listing ID / ASIN / item_id）用于追溯；标题与 SEO 词做 pin title 的锚；**未上线或缺分享链接的 SKU 不允许排队** |
+| `Products 商品` 表（listing-catalog）| `分享链接` / `平台商品 ID` / 标题 / SEO 关键词 / 上线状态 | `链接` 优先读取 `Products 商品` 表的 `分享链接`；SKU、record_id 与 `平台商品 ID` 用于追溯；**未上线或缺分享链接的 SKU 不允许排队** |
 | `Assets 素材池` 表（assets-library）| 「Pinterest 候选」视图 | 用筛选 `用途标签 ⊇ Pinterest AND 公开授权 = 已授权` 的素材；客户 UGC 没拿到授权的**绝不发** |
-| `社媒发布队列` 表（本 skill）| 待发 / 已发 / 失败状态 + pin URL | 模式 B 写入草稿；模式 C 取草稿发布并回写结果 |
+| `社媒发布队列` 表（本 skill）| 待发 / 已发 / 失败状态 + pin URL | 模式 B 写入草稿；模式 C 创建服务器 job 并回写结果 |
 
-如 BRAND.md / SHOP.md 缺失，组 pin 前主动提示用户先用 shop-foundation 建立——pin 文案的语调和店铺 URL 没有锚点。
+如 BRAND.md / SHOP.md 缺失，组 pin 前主动提示用户先用 shop-foundation 建立。
 
 ---
 
 ## 三种执行模式
 
-### 模式 A：建库 + 装工具（首次接入 Pinterest）
+### 模式 A：接入服务器工具 + 浏览器插件（首次接入 Pinterest）
 
 **进入条件**：
 - 用户明确说要接入 Pinterest / 配置自动 pin / 建 pin 流水线
 - 项目下尚无 `社媒发布队列` 表
-- 或 `~/code/etsy-skills/tools/Pinterest-autopin/` 不存在
+- 或服务器返回浏览器插件未安装 / 需升级
 
 **执行步骤**：
-1. 读 `references/runtime-setup.md` —— 按里面的步骤 clone Pinterest-autopin 到 `~/code/etsy-skills/tools/`、`npm install`、初始化 Chrome profile（Chrome profile 路径建议 `~/.config/pinterest-autopin/chrome-profile/`，不进 git）。runtime/ 目录按工作区隔离，模式 C 时再创建——不在装机阶段建
-   - 如果工具目录已存在，先跑 `etsy-stack pinterest-tool update`，确保发布工具版本 `>= 1.4.0`；旧版 `v1.3.x` 只可靠支持单图 pin
-2. 跑一次 `npm run pin:check-login`，让用户在弹出的 Chrome 里手动完成 Pinterest 登录；登录态持久化到 Chrome profile
-3. 读 `references/pin-queue-base-schema.md` 和 `../shared/store-base-architecture.md`，用 `lark-base` 在店铺总 Base 内创建或补齐 `社媒发布队列` 表，按 schema 建字段（关联字段优先指向同 Base 内 `Products 商品` + `Assets 素材池` 表；`关联素材` 设为允许多值以支持轮播 pin；`image 路径` 与 `Alt Text (EN)` 必须支持多行）和推荐视图。只有用户明确要求隔离时才创建独立 Base。
-4. 落盘后告诉用户：工具路径 + Chrome profile 路径 + Base 链接 + 字段清单 + 一句"下一步可以用 Pin 模式 B 出第一条 pin 试试——单图或轮播都可以"
+1. 读 `references/runtime-setup.md`，确认当前采用的是服务器控制面 + 现有浏览器插件，不安装旧 `Pinterest-autopin` 本地工具。
+2. 如管理员尚未给该租户 mint `browserToolToken`，提示由管理员在 yanggedianzhang 后台 / ops 接口生成；Hermes 不在对话里公开或持久化 token。
+3. 用户侧安装 / 升级现有浏览器插件：由服务器返回的 `userMessage` 指引用户进入 `chrome://extensions/`、加载已解压插件、在扩展程序选项里填写 `Bridge Base URL` 和 `browserToolToken`。
+4. 读 `references/pin-queue-base-schema.md` 和 `../shared/store-base-architecture.md`，用 `lark-base` 在店铺总 Base 内创建或补齐 `社媒发布队列` 表，按 schema 建字段和推荐视图。只有用户明确要求隔离时才创建独立 Base。
+5. 完成后告诉用户：服务器控制面、浏览器插件状态、Base 链接、字段清单，以及"下一步可以用 Pin 模式 B 出第一条 pin 试试"。
 
-> **不要替用户在 Pinterest 上建 board**——board 是用户在 Pinterest 后台手动建好（涉及账号操作）。本 skill 在模式 B 取 board 名时假设用户已建好。
+> **不要替用户在 Pinterest 上建 board**——board 是用户在 Pinterest 后台手动建好。本 skill 在模式 B 取 board 名时假设用户已建好。
 
 ### 模式 B：组 pin（读多源 → 写 `社媒发布队列` 草稿）
 
 **进入条件**：
 - 用户要给某个 SKU 出 pin / 写 pin 文案 / 排队下一条 pin
-- 用户给了某张（或多张）素材问"这几张能发 Pinterest 吗、配什么文案"
-- **前置就绪检查全部通过**（见上方 §前置就绪检查）；未通过则停下引导，不继续
+- 用户给了某张素材问"这张能发 Pinterest 吗、配什么文案"
+- **前置就绪检查全部通过**；未通过则停下引导，不继续
 
 **执行步骤**：
-1. 按 `references/pin-composition.md` § 输入清单盘点用户已给的输入；**缺必填项一次性问全**（目标 SKU、目标 board、是否指定素材），不要边写边追问。如用户给了多张素材，确认是否要做轮播 pin
+1. 按 `references/pin-composition.md` § 输入清单盘点用户已给的输入；**缺必填项一次性问全**（目标 SKU、目标 board、是否指定素材），不要边写边追问。
 2. 用 `lark-base` 查店铺总 Base 的 `Products 商品` 表取 SKU 行：
-   - 校验 `状态 = 在售`，否则中止并提示用户先上线 listing
-   - 取 `分享链接` → 写入 `社媒发布队列` 表 `链接`；同时记录 SKU + SKU record_id + `平台商品 ID` 便于追溯。缺 `分享链接` 时中止，回 `listing-catalog` 补字段，不临时拼平台 URL
-   - 取 SKU 标题 / SEO 关键词作 pin title 的锚
+   - 校验 `状态 = 在售`，否则中止并提示用户先上线 listing。
+   - 取 `分享链接` → 写入 `社媒发布队列` 表 `链接`；缺 `分享链接` 时中止，回 `listing-catalog` 补字段。
+   - 取 SKU 标题 / SEO 关键词作 pin title 的锚。
 3. 用 `lark-base` 查 `Assets 素材池` 表的「Pinterest 候选」视图：
-   - **如果用户指定了素材**（1 张或多张）——逐张做 4 路分流，统一格式 `条件 → 中止，先去解决 X 再回来`：
-     - 在 Base 且 `公开授权 = 已授权` 且 `用途标签 ⊇ Pinterest` → ✅ 该张通过
-     - 在 Base 但缺 Pinterest 用途标签 → 中止，先回 assets-library 加 Pinterest 用途标签再来
-     - 在 Base 但 `公开授权 ≠ 已授权` → 中止，先把授权拿到（公开授权改 `已授权`）再来
-     - **不在 Base**（还在待处理区） → 中止，先走 assets-library 模式 B2 promote 再来
-   - **多图时所有图都通过后才继续**；任何一张未通过则整条 pin 中止
-   - **如果未指定**：列出该 SKU 关联的、已授权且标了 Pinterest 用途的候选素材让用户挑（可选 1 张做单图 pin，或 2-5 张做轮播 pin）。视图为空时进入下面 step 3.5 的三选一
-3.5. **(条件触发) 候选池空时三选一** — Pinterest 候选视图为空时给用户挑：
-   - ① 先回 assets-library 模式 B2 promote 几张已有原片 → 中止本次组 pin，用户走完 promote 后回来
-   - ② 反向触发 image-synth 模式 B AI 合成一张：**调用方现传** SKU + 目标 board + 已草拟的 pin 文案 + 目标平台 = Pinterest 1000×1500 in-memory；image-synth 出图 + QA + 用户选"入库"（走 assets-library B2）后回到本 step 3 继续选这张
-   - ③ 跳过本次发 pin
-   - 节奏：本步是 step 3 候选池空时**同一 turn 内** agent 主动追问；用户选后才 invoke 下一个 skill
-3.7. **(轮播 pin) 确认图片顺序** — 多图时列出已选素材的编号和缩略描述，让用户确认或调整展示顺序。第一张是封面图（Pinterest feed 里默认展示的那张），选择上优先挑最抓眼球的
-3.8. **图片处理**（素材选定后、写文案前）——按 `references/image-processing.md` 的流程处理到 `<workspace>/.cache/pinterest-autopin/processed/`：
-   - 单图：发布副本流程（复制 → AI metadata / AI watermark 清理 → 无损压缩）
-   - 多图：逐张走同一流程（见 image-processing.md § 多图处理）
-   - 后续步骤统一使用 processed 路径
-4. 读 BRAND.md（文案语调 / 视觉原则）+ SHOP.md（店铺事实，描述末尾不要重复政策——Pinterest 不是 listing 页面，政策在 link 那边）
-5. 按 `references/pin-composition.md` 输出草稿：
-   - **共用内容**：title / description / link / board
-   - **每图独立**：alt text（每张图各写一段）
-   - **辅助信息**：发布类型（单图/多图轮播）、image 路径列表
-6. **整篇展示**给用户，等用户确认或调整。轮播 pin 时按顺序编号展示每张图及其 alt text，便于用户逐张检查
-7. 用户确认后，按 `references/pin-queue-base-schema.md` § 录入约定，用 `lark-base` 在 `社媒发布队列` 表写一行（状态 = `草稿`），关联到商品行 + 素材行。写入时：
-   - `发布类型` = 单图（1 张）或 多图轮播（2-5 张）
-   - `关联素材` 关联所有选中的素材记录（用于追溯来源；发布顺序以 `image 路径` 行顺序为准）
-   - `image 路径` = 每张 processed 路径各占一行（单图时一行；多图时顺序就是 carousel 展示顺序）
-   - `Alt Text (EN)` = 每张 alt text 用 `---` 独占行分隔（单图时无分隔符）
-   - `图片数量` = 图片行数；`封面图` = 第一张 processed 路径（如字段已建）
-   - `备注` = 追加 `aiSanitization` 处理记录（来自 step 3.8），用于模式 C 判断该发布副本已完成 AI metadata / AI watermark 清理；不要覆盖用户已有节日联动 / 授权备注
+   - 指定素材：逐张校验在 Base、`公开授权 = 已授权`、`用途标签 ⊇ Pinterest`。
+   - 未指定素材：列出该 SKU 关联的、已授权且标了 Pinterest 用途的候选素材让用户挑。
+   - 候选池为空：给用户三选一：① 回 assets-library promote；② 反向触发 image-synth 生成 Pinterest 素材；③ 跳过本次 pin。
+4. 图片处理：按 `references/image-processing.md` 生成发布副本并记录 `aiSanitization`。处理后的文件不能直接传给浏览器插件，必须由服务器 asset 流程提供下载。
+5. 读 BRAND.md + SHOP.md + BRAND_MARKETING.md + MARKETING_PLATFORM.md，按 `references/pin-composition.md` 输出草稿：
+   - title
+   - description
+   - link
+   - board
+   - alt text
+   - 素材来源 / 处理记录 / 是否已具备服务器 asset
+6. **整篇展示**给用户，等用户确认或调整。
+7. 用户确认后，按 `references/pin-queue-base-schema.md` § 录入约定，用 `lark-base` 在 `社媒发布队列` 表写一行（状态 = `草稿`），关联到商品行 + 素材行。不要把本地绝对路径当作最终发布输入；本地路径只可作为内部处理证据或待上传来源。
 
 > **一次只组一条 pin**——不批量。批量需求让用户重复触发，或交给 `loop` skill 编排（不在本 skill 范围）。
 
-### 模式 C：发布（取草稿 → 跑 Pinterest-autopin → 回写状态）
+### 模式 C：发布（取草稿 → 服务器 job → 浏览器插件执行 → 回写状态）
 
 **进入条件**：
-- 用户要发 pin / 跑 autopin / 测试某条 pin / 跑 validate / publish
-- **前置就绪检查全部通过**（见上方 §前置就绪检查）；未通过则停下引导，不继续
+- 用户要发 pin / 测试某条 pin / publish
+- **前置就绪检查全部通过**；未通过则停下引导，不继续
 
 **执行步骤**：
-1. 用 `lark-base` 从 `社媒发布队列` 表取目标行（用户指定 ID，或筛 `状态 = 草稿` 让用户挑一条）
-2. 解析工作区根（`etsy-stack workspace`），得到 `<workspace>`；runtime 目录是 `<workspace>/.cache/pinterest-autopin/runtime/`，不存在就 `mkdir -p` 创建（一次即可）
-2.5. **图片处理守卫**：读 `image 路径` 按行拆分，逐张检查是否以 `<workspace>/.cache/pinterest-autopin/processed/` 开头且文件存在，且处理记录包含 AI 发布图清理结果——全部通过则跳过；未通过的按 `references/image-processing.md` 处理，用 processed 路径覆盖
-3. 按 `references/publishing-flow.md` § request.json 构造 把行字段渲染成 `request.json`（用 `assets/request-template.json` 作模板）：
-   - `image 路径` 按行拆分 + `Alt Text (EN)` 按 `---` 拆分 → 配对为 `images` 数组
-   - 任何 pin 都生成 `images` 数组；单图只是长度为 1，轮播长度为 2-5
-   - 写到 `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json`
-4. **三阶段执行**（`references/publishing-flow.md` § 三阶段约定）。所有 `npm run pin:*` 命令都需要传 `--input <workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` 的**绝对路径**（工具源码在 `~/code/etsy-skills/tools/Pinterest-autopin/`，cwd 不在工作区）：
-   - **validate**：`npm run pin:validate -- --input <绝对路径>`，校验 JSON（多图时额外校验 `images` 数组长度和每个元素的完整性）
-   - **test**：`npm run pin:test -- --input <绝对路径>`，工具会先自动跑 `check-login` preflight；登录可用才弹出 Chrome 填表但不点发布；让用户**目视确认**预览效果（轮播 pin 让用户确认图片顺序和每张图的展示效果）
-   - **final**：用户在对话里说"发吧 / publish / 真发"后，跑 `npm run pin:publish -- --input <绝对路径>`；工具会先自动跑 `check-login` preflight，登录不可用时会在发布前中止
-   - CDP：工具默认探测 live Chrome CDP `9225 → 9222`，也可用 `PINTEREST_AUTOPIN_CDP_PORT` / `PINTEREST_CDP_PORT` 强制指定；如果 Chrome profile 已打开但 live CDP 可达，工具会自动切到 CDP 避免 `SingletonLock`
-5. 解析 stdout 的 JSON 输出：
-   - 成功：取 `pinUrl`，回写 `社媒发布队列` 表该行（`状态 = 已发` / `发布 URL = ...` / `发布时间 = 现在`）
-   - 失败：按 `references/publishing-flow.md` § 错误恢复 分类（登录失效 / board 找不到 / 网络），回写（`状态 = 失败` / `失败原因 = ...` / `发布尝试次数 += 1`）并告诉用户对应处置
-6. 告诉用户最终结果（pin URL 或失败原因）
+1. 用 `lark-base` 从 `社媒发布队列` 表取目标行（用户指定 ID，或筛 `状态 = 草稿 / 待发` 让用户挑一条）。
+2. 校验 `标题`、`描述`、`链接`、`Board (Pinterest)`、`Alt Text (EN)`、授权和 AI 清理记录。素材必须已经能由服务器提供给插件下载；否则停在草稿，提示先补服务器 asset 流程。
+3. 按 `references/publishing-flow.md` § 创建 test job 调用服务器：
+   - `POST /api/tools/pinterest/jobs`
+   - body 至少包含 `tenantId`、`title`、`description`、`altText`、`link`、`board`
+4. 处理服务器响应：
+   - `201`：记录 `jobId`，把队列表状态改为 `测试中` / `待测试确认`。
+   - `409 BROWSER_TOOL_INSTALL_REQUIRED`：把 `userMessage` 转述给用户，状态保持草稿。
+   - `426 BROWSER_TOOL_UPGRADE_REQUIRED`：把 `userMessage` 转述给用户，状态保持草稿。
+   - 其他错误：按错误类型写入 `失败原因` 或保持草稿待修。
+5. 浏览器插件领取 test job 后会打开 Pinterest 并填表；当前版本的安全边界是 **test 不点发布**。让用户在 Pinterest 页面目视确认图片、board、title、description、alt text、link。
+6. 用户确认 test 成功并明确说"发吧 / publish / final"后，调用：
+   - `POST /api/tools/pinterest/jobs/confirm-publish`
+7. 插件领取 publish job 后执行 final。若当前插件版本仍需要人工点击 Pinterest 页面或人工回报，按插件 UI 指引执行；不要在 Hermes 里假装已经无人值守发布。
+8. 服务器收到 final 结果后，Hermes 用结果回写 `社媒发布队列`：
+   - 成功：`状态 = 已发`、`发布 URL = resultUrl`、`发布时间 = 现在`、清空失败原因。
+   - 失败：`状态 = 失败`、`失败原因 = ...`、`发布尝试次数 += 1`。
 
-> **不替用户跳过 test 阶段**——首次发某 board / 首次用某素材尺寸 / 首次发轮播 pin 时，test 阶段的目视检查能拦下大量翻车（裁切错位、文案截断、轮播顺序错误）。用户明确说"已经测过了，直接 final"才能跳。
+> **不替用户跳过 test 阶段**——首次发某 board / 首次用某素材尺寸时，test 阶段的目视检查能拦下裁切错位、文案截断、board 选错等问题。用户明确说"已经测过了，直接 final"才能跳。
 
 ---
 
@@ -165,38 +151,36 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有禁区：
 
-- **不替用户登录 Pinterest**：登录在 Chrome profile 初始化时由用户人工完成；token / 密码不进任何文件
-- **不替用户建 board**：board 在 Pinterest 后台由用户手建；本 skill 只引用名称
-- **未授权的 UGC 绝不发**：`Assets 素材池` 表的 `公开授权` 不是 `已授权` 的素材不进入排队流程——按模式 B 第 3 步指引用户先走授权 / promote 流程，无论用户怎么催
-- **未上线 listing 不出 pin**：`Products 商品` 表中 `状态 ≠ 在售` 的 SKU 不允许排队（pin 的 link 会 404，损害店铺信用）
-- **`社媒发布队列` 表写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘
-- **final 发布前必须经过 test**：除非用户明确豁免
-- **Pinterest-autopin 跑挂了不重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入（盲目重试可能被 Pinterest 风控）
-- **自动发布 cron 要做过期 backlog 恢复**：每次运行发布脚本前，先检查 `待发` / `草稿`、`发布 URL` 为空、`发布尝试次数 < 2` 的记录；如果 Hermes/cron 中断导致多条记录已过期，保留最早一条立即发布，把其余过期记录顺延到现有未来队列之后的北美友好档位，避免恢复后连续发布旧 backlog。内容配比与每日条数按 `MARKETING_PLATFORM.md` 的 Pinterest 章节执行（未配置时默认每天 1 条品牌/内容型 pin + 1 条商品/礼物型 pin）；各类别按各自配额规划，不要超量消耗。不要重启 `失败` 或已发记录。
-- **Pinterest 库存提醒必须分库存独立触发**：品牌/内容型 pin 库存、商品/礼物型 pin 库存是两个不同库存；各自按 3 天阈值独立提醒，不用“总待发/草稿”合并判断，也不要把两类缺货混成一条泛化库存提醒。
-- **轮播 pin 不要拆成多个单图 pin 发**：轮播是一个 pin 对象，必须整体发布
-- **Ads Manager Board 选中判定只信任 dropdown selected 值**：Board 下拉打开时列表里出现目标 Board 名，不代表已选中；必须看右侧 `[data-test-id="board-dropdown-select-button"]` / `[data-test-id="board-dropdown-item-selected"]` 的文本。若选中后页面仍残留“必须要有图板”旧提示，但发布按钮可用，可视为旧草稿残留，不要因为 body 文本残留而回滚。
-- **不要用 `关联素材` 的返回顺序作为发布顺序**：飞书关联字段只做追溯，真正顺序永远来自 `image 路径` 的行顺序
+- **不在 Hermes/Mac mini 上跑 Playwright 发布 Pinterest**：旧本地工具只作为历史迁移材料，不是推荐路径。
+- **不保存浏览器登录态**：登录态只在租户自己的 Chrome / 浏览器插件里。
+- **不在对话或 Base 里暴露 browserToolToken**：token 由管理员发放给插件选项页，不让 Hermes 编造、回显或持久化。
+- **不替用户建 board**：board 在 Pinterest 后台由用户手建；本 skill 只引用名称。
+- **未授权的 UGC 绝不发**：`Assets 素材池` 表的 `公开授权` 不是 `已授权` 的素材不进入排队流程。
+- **未上线 listing 不出 pin**：`Products 商品` 表中 `状态 ≠ 在售` 的 SKU 不允许排队。
+- **`社媒发布队列` 表写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘。
+- **final 发布前必须经过 test**：除非用户明确豁免。
+- **发布失败不盲目重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入。
+- **自动发布 cron 要做过期 backlog 恢复**：每次运行发布脚本前，先检查 `待发` / `草稿`、`发布 URL` 为空、`发布尝试次数 < 2` 的记录；每轮默认只处理最早一条，避免恢复后连续发布旧 backlog。
+- **Pinterest 库存提醒必须分库存独立触发**：品牌/内容型 pin 库存、商品/礼物型 pin 库存是两个不同库存。
+- **多图轮播不拆成多个单图 pin 发**：服务器 / 插件未支持多素材 final 时只能停在草稿或人工发布，不得拆分冒充轮播。
 
 ---
 
 ## 与其他 skill 的协作 / 回流
 
-- **shop-foundation**：组 pin 时用户**纠正**了文案（"太硬广了"、"Pinterest 上不该这么写"），按 shop-foundation 的沉淀流程提示——纠正可能反映：
-  - **BRAND.md 文案语调**的补充（→ distillation-brand.md 流程）
-  - 也可能是 Pinterest 这个**渠道特有**的文案手感——这种暂时记到本 skill 的 `references/pin-composition.md`（用户后续触发"沉淀"再进 BRAND.md），不要硬塞 BRAND.md
-- **listing-catalog**：本 skill 只**读**`Products 商品` 表，不改。如果发 pin 后想统计"哪条 listing 由哪些 pin 引流"，未来在商品表加一个反向关联视图（不在本 skill 现版本范围）
-- **content-asset-pool**：当 Pinterest pin 来自跨平台素材发布池时，本 skill 只消费已经确认顺序、授权和发布副本的素材任务；`社媒发布队列` 表 `关联 SKU` 需要保留 SKU + 商品 record_id + `平台商品 ID`，`链接` 必须使用商品表 `分享链接`，发布成功后把 `发布 URL` 回写给素材池对应发布任务。
-- **social-publisher**：当用户要“自动发布 / 到点发布 / 发布任务对账”时，优先让 `social-publisher` 读取 `社媒发布队列` 并调用本 skill。Pinterest pin 就是这张表 `平台 = Pinterest` 的行，发布成功或失败后一次回写本行即可，不存在跨表双写。
-- **assets-library**：本 skill 只**读**`Assets 素材池` 表的「Pinterest 候选」视图，不改。模式 B 第 3 步若指定素材还未录入 Base，提示用户先回 assets-library 走 B2 promote 再回来排 pin。素材发 pin 后想加标记也回 assets-library 手动维护
-- **orders-customers**：UGC 类素材的「公开授权」由 orders-customers 走客户沟通完成；本 skill 只消费已授权的结果
-- **image-synth**：模式 B step 3 候选池空时反向触发 image-synth 模式 B；现传 SKU + 目标 board + 已草拟的 pin 文案 in-memory，目标平台 Pinterest 1000×1500；image-synth 出图 + QA + 入库（走 assets-library 模式 B2 promote）后回到本 skill step 3 选这张作 pin 素材
+- **shop-foundation**：组 pin 时用户纠正文案，先判断是 BRAND.md 的语调补充，还是 Pinterest 渠道特有手感；渠道特有内容暂记到 `references/pin-composition.md`。
+- **listing-catalog**：本 skill 只读 `Products 商品` 表，不改商品事实。商品型 pin 的 `链接` 必须来自 `Products 商品` 表 `分享链接`。
+- **content-asset-pool**：当 Pinterest pin 来自跨平台素材发布池时，本 skill 只消费已经确认顺序、授权和发布副本的素材任务；发布成功后把 `发布 URL` 回写给素材池对应发布任务。
+- **social-publisher**：当用户要“自动发布 / 到点发布 / 发布任务对账”时，优先让 `social-publisher` 读取 `社媒发布队列` 并调用本 skill。Pinterest pin 就是这张表 `平台 = Pinterest` 的行，发布成功或失败后一次回写本行即可。
+- **assets-library**：本 skill 只读 `Assets 素材池` 表的「Pinterest 候选」视图，不改。素材未入库或未授权时，提示用户先回 assets-library。
+- **orders-customers**：UGC 类素材的「公开授权」由 orders-customers 走客户沟通完成；本 skill 只消费已授权的结果。
+- **image-synth**：模式 B 候选池空时反向触发 image-synth 模式 B；目标平台 Pinterest 1000x1500；image-synth 出图 + QA + 入库后回到本 skill 继续。
 
 ---
 
 ## 工作语言
 
 通用规则见 [`shared/preamble.md`](../shared/preamble.md) §工作语言。本 skill 特有：
-- pin 文案输出（title / description / altText）为**英文**（Pinterest 是海外平台）
-- `社媒发布队列` 表字段标签中英混用（schema 文件里给规范）
-- `request.json` 字段名严格按 Pinterest-autopin 上游 schema（英文 camelCase）
+- pin 文案输出（title / description / altText）为**英文**（Pinterest 是海外平台）。
+- `社媒发布队列` 表字段标签中英混用（schema 文件里给规范）。
+- 服务器工具请求字段按 `references/publishing-flow.md` 的 JSON contract。
