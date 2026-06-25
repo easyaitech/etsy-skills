@@ -8,12 +8,14 @@
 
 | 角色 | 路径 | 是否进 git |
 |---|---|---|
-| Pinterest-autopin 工具源码 | `~/code/etsy-skills/tools/Pinterest-autopin/` | 否（在 etsy-skills 仓库的 `.gitignore` 加 `tools/`） |
+| Pinterest-autopin 工具源码 | `$PINTEREST_AUTOPIN_HOME`（默认 `~/code/etsy-skills/tools/Pinterest-autopin/`） | 否（在 etsy-skills 仓库的 `.gitignore` 加 `tools/`） |
 | Chrome profile（含 Pinterest 登录态） | `~/.config/pinterest-autopin/chrome-profile/` | 否（在用户家目录，独立于仓库） |
 | 运行时 request.json | `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` | 否（`.cache/` 应进工作区 `.gitignore`） |
 | 处理后图片 | `<workspace>/.cache/pinterest-autopin/processed/{原始文件名}` | 否（同在 `.cache/` 下） |
 
 > `<workspace>` = `etsy-stack workspace` 解析出的根目录（`$ETSY_WORKSPACE` 或向上找到的 `.etsy-workspace` 标记所在目录）。SKILL.md §对外的实操接口已说明契约。
+>
+> 工具源码路径以 `$PINTEREST_AUTOPIN_HOME` 为准（默认见上表）；`etsy-stack pinterest-tool update` 已自动遵守该变量。下方手动步骤里的字面路径即该默认值，若设了 `$PINTEREST_AUTOPIN_HOME` 以它为准。
 
 三层分离的理由：
 - **工具源码**——可随时删了重 clone，不丢数据。`$HOME` 路径在 Hermes profile 隔离下落到 profile HOME 是预期行为
@@ -50,14 +52,15 @@ optipng --version   # PNG 无损压缩
 etsy-stack pinterest-tool update
 ```
 
-这条命令会 clone / 更新 `~/code/etsy-skills/tools/Pinterest-autopin/`，并刷新 npm 依赖。轮播 pin 发布要求 `Pinterest-autopin >= 1.4.0`；如果目标目录已有本地改动，命令会停下，先处理本地改动再继续。
+这条命令会 clone / 更新 `$PINTEREST_AUTOPIN_HOME`（默认 `~/code/etsy-skills/tools/Pinterest-autopin/`），并刷新 npm 依赖。轮播 pin 发布要求 `Pinterest-autopin >= 1.4.0`；如果目标目录已有本地改动，命令会停下，先处理本地改动再继续。
 
 手动等价流程：
 
 ```bash
-mkdir -p ~/code/etsy-skills/tools
-cd ~/code/etsy-skills/tools && git clone https://github.com/easyaitech/Pinterest-autopin.git
-cd ~/code/etsy-skills/tools/Pinterest-autopin
+PINTEREST_AUTOPIN_HOME="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
+mkdir -p "$(dirname "$PINTEREST_AUTOPIN_HOME")"
+git clone https://github.com/easyaitech/Pinterest-autopin.git "$PINTEREST_AUTOPIN_HOME"
+cd "$PINTEREST_AUTOPIN_HOME"
 git checkout main
 git pull --ff-only
 ```
@@ -65,7 +68,7 @@ git pull --ff-only
 ### 3. 装依赖
 
 ```bash
-cd ~/code/etsy-skills/tools/Pinterest-autopin
+cd "${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
 npm install
 python3 -m playwright install chromium
 ```
@@ -83,7 +86,7 @@ mkdir -p ~/.config/pinterest-autopin/chrome-profile
 执行：
 
 ```bash
-cd ~/code/etsy-skills/tools/Pinterest-autopin
+cd "${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
 npm run pin:check-login -- --chrome-profile ~/.config/pinterest-autopin/chrome-profile
 ```
 
@@ -142,7 +145,7 @@ pkill -f "chrome-profile" 2>/dev/null
 ```
 Pinterest-autopin 已就绪：
 
-工具路径：~/code/etsy-skills/tools/Pinterest-autopin/
+工具路径：$PINTEREST_AUTOPIN_HOME（默认 ~/code/etsy-skills/tools/Pinterest-autopin/）
 Chrome profile：~/.config/pinterest-autopin/chrome-profile/
 `社媒发布队列` 表：{Base 链接}
 登录状态：已登录（Pinterest 账号 {email/username}）

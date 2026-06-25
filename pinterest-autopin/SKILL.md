@@ -19,12 +19,14 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 **架构**：本 skill 维护**语义层**（`社媒发布队列` 表：写什么、发到哪、是否发成功），物理发布动作下沉到 Pinterest-autopin 这个外部 CLI 工具。两层之间通过一个 `request.json` 文件交接。
 
+> **工具架构**（见 [`shared/tools-architecture.md`](../shared/tools-architecture.md)）：登录由用户人工完成、token / 密码不进任何文件——这是约束要求的登录态范式。物理发布 + 自动发布 cron 目前在 Mac mini 上执行，属**过渡**形态；目标是控制面（队列 / 排期 / 重试）上收 ECS，执行面按选型优先级（租户浏览器插件 + ECS 编排，或反检测专用机）归位。
+
 **工具补丁交付**：`references/patches/pinterest-video-pin-support-a5ccaec.patch` 是 Pinterest-autopin 视频 Pin 支持补丁（源自不可访问的工具仓库本地提交 `a5ccaec`）。在 `easyaitech/Pinterest-autopin` 不可访问时，先通过本仓库沉淀；拿到工具仓库权限后，把该 patch 应用到工具源码仓库再开 PR。
 
 **对外的实操接口**：
 - 飞书 Base（用 `lark-base` skill 操作店铺总 Base 内的 `社媒发布队列` 表 + 反查 `Products 商品` / `Assets 素材池` 表；架构见 `../shared/store-base-architecture.md`）
 - 工作区根目录的 BRAND.md / SHOP.md（用 `shop-foundation` 维护）
-- 外部工具：`~/code/etsy-skills/tools/Pinterest-autopin/`（用 terminal 调用 `npm run pin:*`；工具源码本体走 `$HOME` 是开发者机器约定，**runtime 数据按工作区隔离**——见模式 C）
+- 外部工具：`$PINTEREST_AUTOPIN_HOME`（默认 `~/code/etsy-skills/tools/Pinterest-autopin/`，可用环境变量覆盖；用 terminal 调用 `npm run pin:*`；工具源码走 `$HOME` 默认值是开发者机器约定，**runtime 数据按工作区隔离**——见模式 C）
 - 独立 Chrome profile（用于 Pinterest 登录态持久化）
 - 图片发布副本处理工具链：`remove-ai-watermarks` + `jpegoptim` + `optipng`（只清 AI metadata / AI watermark + 无损压缩——见 `references/image-processing.md`）
 
@@ -75,7 +77,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **进入条件**：
 - 用户明确说要接入 Pinterest / 配置自动 pin / 建 pin 流水线
 - 项目下尚无 `社媒发布队列` 表
-- 或 `~/code/etsy-skills/tools/Pinterest-autopin/` 不存在
+- 或 `$PINTEREST_AUTOPIN_HOME`（默认 `~/code/etsy-skills/tools/Pinterest-autopin/`）不存在
 
 **执行步骤**：
 1. 读 `references/runtime-setup.md` —— 按里面的步骤 clone Pinterest-autopin 到 `~/code/etsy-skills/tools/`、`npm install`、初始化 Chrome profile（Chrome profile 路径建议 `~/.config/pinterest-autopin/chrome-profile/`，不进 git）。runtime/ 目录按工作区隔离，模式 C 时再创建——不在装机阶段建
@@ -147,7 +149,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
    - `image 路径` 按行拆分 + `Alt Text (EN)` 按 `---` 拆分 → 配对为 `images` 数组
    - 任何 pin 都生成 `images` 数组；单图只是长度为 1，轮播长度为 2-5
    - 写到 `<workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json`
-4. **三阶段执行**（`references/publishing-flow.md` § 三阶段约定）。所有 `npm run pin:*` 命令都需要传 `--input <workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` 的**绝对路径**（工具源码在 `~/code/etsy-skills/tools/Pinterest-autopin/`，cwd 不在工作区）：
+4. **三阶段执行**（`references/publishing-flow.md` § 三阶段约定）。所有 `npm run pin:*` 命令都需要传 `--input <workspace>/.cache/pinterest-autopin/runtime/{pin_id}.json` 的**绝对路径**（工具源码在 `$PINTEREST_AUTOPIN_HOME`，cwd 不在工作区）：
    - **validate**：`npm run pin:validate -- --input <绝对路径>`，校验 JSON（多图时额外校验 `images` 数组长度和每个元素的完整性）
    - **test**：`npm run pin:test -- --input <绝对路径>`，工具会先自动跑 `check-login` preflight；登录可用才弹出 Chrome 填表但不点发布；让用户**目视确认**预览效果（轮播 pin 让用户确认图片顺序和每张图的展示效果）
    - **final**：用户在对话里说"发吧 / publish / 真发"后，跑 `npm run pin:publish -- --input <绝对路径>`；工具会先自动跑 `check-login` preflight，登录不可用时会在发布前中止

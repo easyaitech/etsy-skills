@@ -82,7 +82,7 @@
   "board": "Handmade Ceramics",
   "link": "https://www.etsy.com/shop/.../listing/...",
   "description": "A small ceramic cup for the quiet first sip of the day...",
-  "chromeProfile": "/Users/john/.config/pinterest-autopin/chrome-profile"
+  "chromeProfile": "/Users/<user>/.config/pinterest-autopin/chrome-profile"
 }
 ```
 
@@ -98,12 +98,12 @@
 
 ## 三阶段约定
 
-`npm run pin:*` 都需要切到 Pinterest-autopin 工具源码目录（`~/code/etsy-skills/tools/Pinterest-autopin/`）跑，但 `--input` 必须给 `<runtime>/{pin_id}.json` 的**绝对路径**——工具 cwd 不在工作区，相对路径会找不到。
+`npm run pin:*` 都需要切到 Pinterest-autopin 工具源码目录（`$PINTEREST_AUTOPIN_HOME`，默认 `~/code/etsy-skills/tools/Pinterest-autopin/`）跑，但 `--input` 必须给 `<runtime>/{pin_id}.json` 的**绝对路径**——工具 cwd 不在工作区，相对路径会找不到。
 
 ### Stage 1: validate
 
 ```bash
-cd ~/code/etsy-skills/tools/Pinterest-autopin
+cd "${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
 npm run pin:validate -- --input <runtime>/{pin_id}.json
 ```
 

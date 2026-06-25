@@ -70,9 +70,9 @@
 `image 路径` 字段存放所有图片的绝对路径，每行一个，顺序就是 Pinterest carousel 展示顺序：
 
 ```
-/Users/john/.cache/pinterest-autopin/processed/cup-sage-01.jpg
-/Users/john/.cache/pinterest-autopin/processed/cup-sage-02.jpg
-/Users/john/.cache/pinterest-autopin/processed/cup-sage-03.jpg
+<workspace>/.cache/pinterest-autopin/processed/cup-sage-01.jpg
+<workspace>/.cache/pinterest-autopin/processed/cup-sage-02.jpg
+<workspace>/.cache/pinterest-autopin/processed/cup-sage-03.jpg
 ```
 
 单图 pin 时只有一行。
