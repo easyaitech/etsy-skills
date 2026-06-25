@@ -33,6 +33,22 @@ description: 跨境物流状态跟踪——用 `track` 命令查/录包裹物流
 > → 看到 `status=delivered, latest_event="Delivered. Position: Front door"`
 > → 回：“已经签收啦，快递放在门口了～”
 
+## 主动推送（v2，由定时任务触发）
+
+Hermes cron 每天触发本流程（cron 用 `--skill logistics-tracking --deliver <运营者会话>` 把消息投给运营者）：
+
+1. 跑 `~/.local/bin/track pending <租户ID>` 取"未推送的重要变更"（已签收/异常/退回/挂起），每条带始发地 + 近几条轨迹。
+2. **没有结果就不要输出任何内容**（保持沉默，别打扰运营者）。
+3. 有结果 → 用中文逐条写给运营者：订单/运单号、状态（如"已签收"）、始发 → 目的、最近 2-3 条轨迹，末尾加一句"核对无误回『确认』我就更新订单状态"。
+4. 推送完跑 `~/.local/bin/track ack <id1,id2,...>` 标记已推，避免重复打扰。
+
+## 运营者回复"确认"后才写 Base（人在环里）
+
+运营者针对某条物流推送回复确认（"确认/对/没错"）时：
+- 把该订单写进店铺总 Base `Orders 订单` 表：`物流状态`（=对应状态），已签收再填 `物流签收日期`；字段不存在就先建。
+- 已签收可按 `orders-customers` 的签收评价引导 SOP 跟进。
+- 运营者说"不对 / 先别动" → 不写 Base。
+
 ## 来源 / 架构
 
 后端 track 服务源码与设计见独立的 track-service（ECS，零依赖 `node:sqlite` + systemd，绑 tailnet）。本 skill 只是让 agent 知道“有这个能力、怎么调”。正确性（限速/配额/幂等/状态映射/TTL）都在服务代码里，不在本 markdown。
