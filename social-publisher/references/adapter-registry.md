@@ -5,7 +5,7 @@
 | 平台 | 状态 | 支持发布类型 | 执行层 | 关键前置 | 说明 |
 |---|---|---|---|---|---|
 | Pinterest | enabled | 单图；多图轮播需服务器 / 插件显式支持后再 final | `pinterest-autopin` → yanggedianzhang server browser tool | 服务器工具可用、租户浏览器插件可用、`社媒发布队列` 表可用 | 当前唯一真实发布适配器。发布过程必须走 server test job → 用户确认 → server publish job，并回写 社媒发布队列。 |
-| 小红书 | adapter 已建，执行 gated | 图文笔记 / 视频笔记 | `xiaohongshu-autopost`（adapter skill 已建）→ 待服务器工具 + 插件 `xiaohongshu` capability + 笔记 recipe | 服务器工具 `/api/tools/xiaohongshu/jobs`、插件小红书 capability、笔记 recipe 三者就绪后改 `enabled` | adapter skill `xiaohongshu-autopost` 已建：能组 `平台=小红书` PublishIntent 草稿（`XiaohongshuExt` typed）+ 反向请求 assets-library 模式 E 派生变体 + 出人工发布清单。**真实自动发布 gated**：三件就绪前不登录、不上传、不声称已发；用户手动发布后回填公开笔记 URL 对账。 |
+| 小红书 | enabled | 图文笔记 / 视频笔记 | `xiaohongshu-autopost` → yanggedianzhang server browser tool（同 pinterest 三层范式） | 服务器工具 `/api/tools/xiaohongshu/jobs` 可用、租户插件带 `xiaohongshu` capability、笔记 recipe 已下发、`社媒发布队列` 表可用 | 真实发布适配器。发布走 server test job → 用户目视确认 → server confirm-publish → 回写 社媒发布队列；流程见 [`xiaohongshu-autopost/references/publishing-flow.md`](../../xiaohongshu-autopost/references/publishing-flow.md)。运行时若服务器返回 `BROWSER_TOOL_INSTALL/UPGRADE_REQUIRED` 等，降级人工发布清单。 |
 | Instagram | planned/manual-only | 单图 / 多图轮播 / Reels 草稿 / 人工对账 | 暂无 | 未来需要平台工具或 API 适配器 | 不自动发布。 |
 | TikTok | planned/manual-only | 视频草稿 / 人工对账 | 暂无 | 未来需要平台工具或 API 适配器 | 不自动发布。 |
 
@@ -30,11 +30,11 @@
 - 如果发布器只创建了广告草稿或拿不到公开 Pin URL，不能标记 `已发`。
 - Hermes 不跑本地 Playwright / Chrome profile；浏览器登录态只在租户已安装的浏览器插件中使用。
 
-## 小红书 adapter 规则（adapter 已建，执行 gated）
+## 小红书 adapter 规则（enabled）
 
 - adapter skill = `xiaohongshu-autopost`（同 pinterest-autopin 三层范式）。social-publisher 只通过它路由小红书行，不复制小红书表单逻辑。
 - 小红书行 = `社媒发布队列` 里 `平台 = 小红书` 的行，`任务 ID` = `XHS-...`，是本表主键。
 - 平台专属字段走 `平台扩展 (typed)` 的 `XiaohongshuExt` schema（note_type / topic_tags / cover_caption / related_item_id），过 validator，不塞自由 JSON。
 - 发布图只引用 `Asset Variants 派生素材` 的小红书规格变体（assets-library 模式 E 派生），不在 adapter 里裁切清理。
-- **执行 gated**：服务器工具 `/api/tools/xiaohongshu/jobs` + 插件 `xiaohongshu` capability + 笔记 recipe 三者就绪前，不得自动上传 / 发布；只出草稿 + 人工发布清单。三者就绪后把上表状态改 `enabled`，Mode C 走 server test → 用户确认 → final（与 Pinterest 同形）。
+- 后端就绪（服务器工具 `/api/tools/xiaohongshu/jobs` + 插件 `xiaohongshu` capability + 笔记 recipe）。Mode C 走 server test job → 用户目视确认 → confirm-publish → final（与 Pinterest 同形）；完整流程见 [`xiaohongshu-autopost/references/publishing-flow.md`](../../xiaohongshu-autopost/references/publishing-flow.md)。运行时若服务器返回安装 / 升级要求，把 `userMessage` 原样转述并降级人工清单。
 - `发布 URL` 保存公开笔记 URL；拿不到公开 URL 不能标 `已发`。Hermes 不跑本地 Playwright，登录态只在租户插件中使用。
