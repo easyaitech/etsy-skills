@@ -1,6 +1,8 @@
 # Image Processing（Pinterest 发布图片处理流程）
 
-所有进入 `社媒发布队列` 表的图片在写入 Base **之前**统一生成一份发布副本：AI metadata / AI watermark 清理 + 无损压缩。处理后的图片存到 `<workspace>/.cache/pinterest-autopin/processed/`，原始素材不动。
+所有进入 `社媒发布队列` 表的图片在写入 Base **之前**统一生成一份发布副本：AI metadata / AI watermark 清理 + 无损压缩。处理后的图片可先存到 `<workspace>/.cache/pinterest-autopin/processed/`，原始素材不动。
+
+新发布架构里，浏览器插件不能读取 Hermes/Mac mini 的本地绝对路径。`processed/` 文件只是服务器 asset 流程的输入来源；进入 final 前，必须由 yanggedianzhang 服务器提供授权下载地址给插件。
 
 多图 pin（轮播）时每张图独立走同一流程，输出路径各自独立。
 
@@ -71,7 +73,7 @@ remove-ai-watermarks visible <processed_path> -o <processed_path> --strip-metada
 1. **按顺序逐张处理**——不要并发（避免输出记录和文件名冲突）
 2. **文件名冲突**：如果多张素材原始文件名相同（来自不同目录），在 `processed/` 写入时加序号后缀避免覆盖。命名规则：`{原始文件名不含扩展名}-{序号}.{扩展名}`，序号从 1 开始，仅在冲突时添加
 3. **全部处理完成后再进入下一步**——任何一张处理失败时整条 pin 中止，提示用户处理失败的具体图片
-4. **处理结果**：输出路径列表，顺序与用户选择的素材顺序一致，作为 `社媒发布队列` 表 `image 路径` 的值（每行一个路径）
+4. **处理结果**：输出路径列表，顺序与用户选择的素材顺序一致，供服务器 asset 流程登记并回写 `发布素材`
 
 ### 示例（3 张图的轮播 pin）
 
@@ -97,9 +99,13 @@ jpegoptim <workspace>/.cache/pinterest-autopin/processed/cup-lifestyle.jpg
 ## 处理结果
 
 - **单图 pin**：输出路径 = `<workspace>/.cache/pinterest-autopin/processed/<原始文件名>`
-- **轮播 pin**：输出路径列表，每个路径各占一行，作为 `社媒发布队列` 表的 `image 路径` 值
+- **轮播 pin**：输出路径列表，每个路径各占一行，供服务器 asset 流程登记使用
 
-两种情况都作为 `request.json` 的 `images` 数组元素中的 `path` 字段。
+两种情况都只是本地处理产物。写入 `社媒发布队列` 时：
+
+- `备注` 记录 `aiSanitization` 结果。
+- `发布素材` 写服务器 asset 标识 / 授权下载 URL / 可由服务器解析的附件引用。
+- 旧 `image 路径` 可保留为迁移期处理证据，但不能作为浏览器插件上传输入。
 
 调用方需要在 `社媒发布队列` 表的备注 / 失败原因等可审计字段中记录：
 

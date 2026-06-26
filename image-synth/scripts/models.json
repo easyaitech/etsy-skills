@@ -1,0 +1,26 @@
+{
+  "$comment": "slug 已 live 核对(2026-06)。OpenRouter 的可再跑 `npm run models` 复核;Seedream 只在 fal,走 FAL_KEY。",
+  "models": [
+    {
+      "key": "nano-banana-pro",
+      "label": "Nano Banana Pro (Gemini 3 Pro Image)",
+      "provider": "openrouter",
+      "slug": "google/gemini-3-pro-image",
+      "notes": "Google;原生 4K + 14 张参照图 + 文字 94%。电商保形+高清首选候选"
+    },
+    {
+      "key": "gpt-image-2",
+      "label": "GPT Image 2 (OpenAI · GPT-5.4 Image 2)",
+      "provider": "openrouter",
+      "slug": "openai/gpt-5.4-image-2",
+      "notes": "OpenRouter 上 'GPT Image 2' 的真 slug 是 openai/gpt-5.4-image-2(另有 openai/gpt-5-image 是上一代)"
+    },
+    {
+      "key": "seedream-4.5",
+      "label": "Seedream 4.5 (ByteDance · 火山方舟)",
+      "provider": "ark",
+      "slug": "doubao-seedream-4-5-251128",
+      "notes": "字节原生火山方舟(ARK_API_KEY,Bearer)。国内直连最快最便宜、生成+编辑统一架构、支持2K/4K。已强制 watermark:false。国际区改 ARK_BASE_URL。备选 fal:见 fal.ts"
+    }
+  ]
+}

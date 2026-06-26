@@ -93,8 +93,8 @@ SKU: FUB-001
 当 `平台 = Pinterest` 时，本表行就是一条 Pinterest pin，单图和轮播（2-5 张）共用一行：
 
 - `任务 ID` 用 `PIN-YYYYMMDD-001`，即旧 `pin_id`。
-- `发布类型` 为 `单图` 或 `多图轮播`；轮播的图片顺序以 `image 路径` 行顺序为准（`素材顺序` 仅作素材追溯）。
-- Pinterest 行另需 `Board (Pinterest)`、`image 路径`（每行一张图绝对路径）、`Alt Text (EN)`（每张图用 `---` 独占一行分隔）等专属字段，以及发布结果 `发布 URL`（pin_url）。完整 Pinterest 字段、轮播校验和 `request.json` 结构见 [`pinterest-autopin/references/pin-queue-base-schema.md`](../../pinterest-autopin/references/pin-queue-base-schema.md)。
+- `发布类型` 为 `单图` 或 `多图轮播`；轮播的图片顺序以 `发布素材` 行顺序为准（`素材顺序` 仅作素材追溯）。
+- Pinterest 行另需 `Board (Pinterest)`、`发布素材`（每行一个服务器 asset 标识 / 授权下载 URL / 可由服务器解析的附件引用）、`Alt Text (EN)`（每张图用 `---` 独占一行分隔）等专属字段，以及发布结果 `发布 URL`（pin_url）。完整 Pinterest 字段、轮播校验和服务器 job 结构见 [`pinterest-autopin/references/pin-queue-base-schema.md`](../../pinterest-autopin/references/pin-queue-base-schema.md)。
 - 这些 Pinterest 专属字段对非 Pinterest 行留空即可，不影响跨平台字段模型。
 
 ### 小红书发布任务字段约定

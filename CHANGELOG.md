@@ -6,6 +6,19 @@
 
 ### 新增
 - `logistics-tracking`：新增**薄物流跟踪 skill**——让 Hermes agent 知道有个 `track` 命令（接后端常驻的 17TRACK 跟踪服务）用于查/录跨境物流（用户问"这单到哪了"→ `track query`；发货 → `track add`），覆盖 4px/燕文/云途等专线到签收。**本 skill 只是调用指引**：跟踪的正确性（按 key 限速 + 429 退避、`/getquota` 配额护栏 + 单轮上限、register 幂等、状态→中性枚举映射、TTL、每日轮询、变更流）全在**独立部署的后端 `track-service`**（ECS 常驻、零依赖 `node:sqlite`、绑 tailnet、SQLite 存状态），**不在本 markdown、不碰飞书 Base、不往 `Orders` 加字段**。务必带承运商码避免 17track auto-detect 撞号（**4px=190094**；踩过同号撞成无关旧单的坑）。注册进 [`etsy-stack.json`](etsy-stack.json)。设计经 `/plan-eng-review`（架构从"重 skill + Base 结构"**转向**"后端服务 + 薄 skill + CLI"——因共享 17TRACK key 的限速/配额必须单进程中心化收口、且 mini 是脆的 headful 机不宜承载）+ 17TRACK v2.2 实测 spike + 真实 4px 订单端到端验证（agent 调 `track` → 正确返回已签收轨迹，比网页 auto-detect 还准）。后端服务源码独立维护（非本 bundle），运维单独部署 `track` CLI 到运行机 `~/.local/bin/track`。
+- `shared/tools-architecture.md`：**工具架构硬约束**——全 stack 硬约束「Hermes 思考，ECS 做事和连接，插件只在『无 API 又必须用租户登录态』时伸手」。定义三角色（ECS 控制面 / Hermes 大脑 / 浏览器插件）、加新工具的三级选型优先级（官方 API → 租户浏览器插件 → 反检测专用机，控制面恒在 ECS）、控制面·执行面分离、安全红线（per-tenant token fail-closed、token≠tenantId、密钥不进 Hermes / skill 目录 / 工作区、改鉴权前跑 Codex 独立审），并记录**落地现状与迁移**（image-synth 中心后端、pinterest-autopin 服务器控制面 + 浏览器插件均已上收 ECS；trend-radar 抓取仍在 mini 属过渡）。已批准例外：**lark-cli 飞书访问留在 Hermes 的 Mac mini**（租户自有身份 + 数据底座，不外溢到任何外部平台）。接进 [`shared/preamble.md`](shared/preamble.md) §工具架构 / README 仓库布局 / `etsy-stack.json` `toolsArchitecture`；6 个 tool skill（content-asset-pool / social-publisher / trend-radar / video-assembly / pinterest-autopin / image-synth）各加工具架构指针。
+
+## [1.0.1] - 2026-06-26
+
+### 修
+- `pinterest-autopin`：把 Skill 说明从旧本地 `Pinterest-autopin` / Playwright / 独立 Chrome profile 方案切换为推荐架构：Hermes 只生成与判断，调用 `yanggedianzhang` 服务器 Pinterest tool；服务器做 job 状态机、鉴权、素材下载地址和结果回写；现有浏览器插件作为租户登录态执行器。
+- `social-publisher` / `content-asset-pool` / `README.md`：同步 Pinterest adapter 边界，明确新发布路径是服务器控制面 + 现有浏览器插件，不再要求 Hermes/Mac mini 安装本地 Pinterest-autopin 工具。
+- `install.sh` / `ecommerce-stack pinterest-tool`：安装时不再自动同步旧本地 Pinterest-autopin 工具；`pinterest-tool update` 默认拒绝执行，只保留 `PINTEREST_AUTOPIN_LEGACY_ALLOW=1` 的迁移排查入口。
+
+## [1.0.0] - 2026-06-25
+
+### 新增
+- `image-synth`：**生图后端化 + 外部模型选型（GPT Image 2）**——image-synth 从「Hermes 自带生图」切换为调**中心后端生图服务**（`POST /image/generate`，默认 GPT Image 2 / OpenRouter）。新增三模型对比选型 harness（[`image-synth/scripts/`](image-synth/scripts/)：OpenRouter（Nano Banana Pro / GPT Image 2）+ 火山方舟（Seedream 4.5），预览不偷跑 / `--run` 真跑 / 真实成本记 `usage.cost` / 产出对比图 + 评分表，多图参照 + Seedream 最小像素自动抬尺寸），用真实店铺图实测两轮选定 GPT Image 2。后端为**薄控制面 wrap OpenRouter**（per-profile token 鉴权防伪造 / 按租户 reserve-commit-refund 配额账本 / model allowlist / idempotency 去重防双扣 / 隐私脱敏），独立仓库部署到 ECS（systemd + 绑 tailnet），经代理出境解 OpenAI 地域封锁 + `imggen-health` 探测「经代理打 OpenAI」→ 飞书告警。新增契约文档 [`image-synth/references/backend-image-gen-contract.md`](image-synth/references/backend-image-gen-contract.md)（skill ↔ 后端唯一对齐源）；SKILL.md 全部「Hermes 自带生图」引用（frontmatter / 架构 / 对外接口 / step 7 / 硬性约束）改调后端契约，看图（anchor / QA）仍用 Hermes `vision_analyze`。经 `/plan-eng-review` + Codex 评审（14 项安全/计费 hardening 全折入）。
 - `shared/skill-prefs.md` + `shared/preamble.md`：新增**客户偏好覆盖层（skill-prefs）**——每客户在 `<workspace>/skill-prefs/<skill>.md` 叠加本 skill 的工作流 / 风格旋钮，不改 skill 本体、不 fork。覆盖层与引擎物理分离，`ecommerce-stack update` 只换引擎不碰偏好，**升级零冲突 / 零 merge**；失配偏好按依赖降级协议报 `⚠️ DEGRADE`。品牌语气 / 店铺事实 / 平台规则仍走 BRAND/SHOP/COMMERCE_PLATFORM，安全 / QA 闸不可被覆盖。
 - `shared/preamble.md`：新增**技能目录写入禁令**——agent 不得在 `~/.hermes/skills`（`$HERMES_SKILLS_DIR`）/ `~/.local/share/etsy-skills` 等共享技能目录新建 / 改写 skill（会污染全体客户并在升级时冲突）；客户专属知识走 `Knowledge Cards` / SHOP.md，通用能力产出「提拔建议」走 git。各 SKILL.md 的共享引导摘要同步加入「客户偏好」。
 - `scripts/etsy-stack`：新增 `doctor [--quarantine]` 子命令——扫描技能目录里 manifest 之外的非托管条目（agent 自建 / 历史遗留）并可隔离到 `.quarantine/`，同时体检工作区 skill-prefs（标记目标 skill 已不在 manifest 的失配文件）；`list` 一并列出非托管条目；`init` 现在脚手架 `skill-prefs/` 目录与 README。

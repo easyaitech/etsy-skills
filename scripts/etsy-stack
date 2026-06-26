@@ -21,7 +21,7 @@ $CMD_NAME — 电商 skill bundle 管理工具（兼容旧 etsy-stack 名称）
   $CMD_NAME update             拉最新版本并刷新软链
   $CMD_NAME list               列出 manifest 中的 skill 及链接状态
   $CMD_NAME doctor [--quarantine]  体检：非托管 skill 目录 + 校验工作区 skill-prefs
-  $CMD_NAME pinterest-tool     查看 / 更新 Pinterest-autopin 发布工具
+  $CMD_NAME pinterest-tool     查看旧本地 Pinterest-autopin 工具（已废弃，仅迁移排查）
   $CMD_NAME ai-cleaner         查看 / 安装 AI 发布图清理工具
   $CMD_NAME where              打印源码安装目录
   $CMD_NAME workspace          解析当前电商工作区根目录
@@ -56,10 +56,12 @@ PY
 }
 
 pinterest_tool_status() {
-  echo "Pinterest-autopin 工具路径：$PINTEREST_AUTOPIN_DIR"
+  echo "Pinterest 本地 Playwright 工具：已废弃（legacy）"
+  echo "新发布路径：yanggedianzhang 服务器控制面 + 现有浏览器插件"
+  echo "旧工具路径：$PINTEREST_AUTOPIN_DIR"
   if [[ ! -d "$PINTEREST_AUTOPIN_DIR" ]]; then
     echo "状态：未安装"
-    echo "安装 / 更新：$CMD_NAME pinterest-tool update"
+    echo "说明：新 Pinterest 发布不需要安装它"
     return 1
   fi
 
@@ -67,10 +69,9 @@ pinterest_tool_status() {
   version="$(pinterest_tool_version 2>/dev/null || echo unknown)"
   echo "版本：$version"
   if [[ "$version" != "unknown" ]] && version_at_least "$version" "$PINTEREST_AUTOPIN_MIN_VERSION"; then
-    echo "轮播发布：可用（需要 Pinterest 企业账号，工具会走 Ads Manager Pin builder）"
+    echo "旧工具轮播发布：历史可用（新架构不使用）"
   else
-    echo "轮播发布：不可用（需要 Pinterest-autopin >= $PINTEREST_AUTOPIN_MIN_VERSION）"
-    echo "升级：$CMD_NAME pinterest-tool update"
+    echo "旧工具轮播发布：不可用（新架构不使用）"
     return 1
   fi
 
@@ -83,6 +84,12 @@ pinterest_tool_status() {
 }
 
 pinterest_tool_update() {
+  if [[ "${PINTEREST_AUTOPIN_LEGACY_ALLOW:-}" != "1" ]]; then
+    echo "❌ 本地 Pinterest-autopin Playwright 工具已废弃，新发布路径是 yanggedianzhang 服务器控制面 + 现有浏览器插件。" >&2
+    echo "   如确需迁移排查旧工具，先显式设置 PINTEREST_AUTOPIN_LEGACY_ALLOW=1。" >&2
+    return 1
+  fi
+
   mkdir -p "$(dirname "$PINTEREST_AUTOPIN_DIR")"
 
   if [[ -e "$PINTEREST_AUTOPIN_DIR" && ! -d "$PINTEREST_AUTOPIN_DIR/.git" ]]; then
@@ -509,7 +516,7 @@ EOF
     echo ""
     if [[ -d "$target/.git" ]] || git -C "$target" rev-parse --git-dir >/dev/null 2>&1; then
       echo "工作区是 git 仓库——记得把以下两行加进 .gitignore："
-      echo "  .cache/             # Pinterest-autopin runtime 等临时数据"
+      echo "  .cache/             # 图片处理副本、趋势采集 evidence 等临时数据"
       echo "  # .ecommerce-workspace   # 标记文件本身建议提交，便于团队成员从 cwd 自动定位"
       echo ""
     fi

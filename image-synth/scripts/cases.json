@@ -1,0 +1,32 @@
+{
+  "$comment": "把 6 张实拍图存到 samples/ 对应文件名(见 SAVE-IMAGES.md)。products 顺序 = prompt 里的 图1..图6。resolution 改 '4K' 出更高清(更贵)。",
+  "products": [
+    { "key": "01-bookmark", "imagePath": "./samples/01-bookmark.jpg" },
+    { "key": "02-wrapping", "imagePath": "./samples/02-wrapping.jpg" },
+    { "key": "03-envelope", "imagePath": "./samples/03-envelope.jpg" },
+    { "key": "04-letter", "imagePath": "./samples/04-letter.jpg" },
+    { "key": "05-knot", "imagePath": "./samples/05-knot.jpg" },
+    { "key": "06-tassel", "imagePath": "./samples/06-tassel.jpg" },
+    { "key": "windchime", "imagePath": "./samples/windchime.png" }
+  ],
+  "cases": [
+    {
+      "id": "gift-display",
+      "products": ["01-bookmark", "02-wrapping", "03-envelope", "04-letter", "05-knot", "06-tassel"],
+      "mode": "A",
+      "aspectRatio": "3:4",
+      "resolution": "1K",
+      "prompt": "请以上传的实物照片作为主要参考依据。务必保留书签的真实形态、7 x 21 厘米的修长纵向比例、请勿对书签进行重新设计。请勿在产品上凭空捏造无法辨识的中文书法内容。请确保产品呈现出逼真的质感，并尽可能贴近参考照片的视觉效果。 品牌氛围：宁静、精致、温暖的象牙白纸张、天然木质感、柔和的自然光线、中国书法工作室的意境、充满寓意的礼品、优雅而不流于俗套的商业奢华感。画面应留有大面积的留白，构图舒缓沉静，营造出艺术工作室般的格调。 避免元素：廉价的红金配色节日风格、宗教或符咒般的神秘感、风水符号、寺庙供品、过于夸张的奢华道具、塑料质感的包装、生硬的AI拼贴痕迹、色彩饱和度过高、杂乱无章的电商海报风格、无法辨识的随机文字、手部变形、书签形状扭曲变形。 画面比例：适用于 Etsy 列表页面的纵向图片，比例为 3:4，需具备高分辨率，呈现出逼真的产品摄影效果。 以上传的中国书法书签为主打产品，为 Etsy 商品页面拍摄一张精致的礼品展示图。 场景：画面主题是刚拆开收到的书签礼物，书签斜放在包装纸上，旁边摆放着一个中国古代样式的信封、一封信（内容是解释书签上的中文含义）、解开的细麻绳（包装书签）随意的摆放在旁边，以及1件中国结小礼物。书签应保持视觉焦点。礼品组件应体现精心准备，而非过度装饰。 构图：优雅的平铺拍摄，背景为天然木质桌面。留白充足。柔和的自然光从侧面照射。营造出宁静的中国书法工作室氛围。 信件内容不变，只需要展示上半部分内容，下半部分通过遮挡或者超出画面的方式不展示出来。 风格：逼真的高端产品摄影，营造出平静、温馨、贴心、适合作为礼物的氛围，以及手工工作室的质感。 图1:书签（需要把书签上的眼改为下方，增加一个蓝色的7cm流苏如图6） 图2:包装纸 20*50cm 图3:信封 11*22cm 图4:信 21*28CM 图5:中国结小礼物 4.5*8cm 图6:流苏7cm 将宽高比设为 3:4",
+      "note": "真实用例:书签礼盒平铺(6图合成)。Etsy 3:4 主图"
+    },
+    {
+      "id": "windchime",
+      "products": ["windchime"],
+      "mode": "A",
+      "aspectRatio": "4:3",
+      "resolution": "1K",
+      "prompt": "Lifestyle Etsy listing photo for a personalized Chinese calligraphy wind chime as a meaningful new home or housewarming gift. Show the wind chime hanging near a calm entryway or beside a warm wooden shelf, with soft natural light, a neutral ceramic vase, a small key tray, and a folded note card nearby. The wind chime remains the visual focus, fully recognizable: brass bell, black cord, long xuan paper tag. Quiet new home atmosphere, thoughtful gift feeling, not staged like a commercial poster. Warm ivory, wood, gray stone, subtle red seal accent. 4:3 horizontal lifestyle image.",
+      "note": "风铃 lifestyle(单图,4:3 横构图,新居/乔迁礼物)"
+    }
+  ]
+}

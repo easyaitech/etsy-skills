@@ -6,11 +6,11 @@
 
 一条 `平台 = Pinterest` 的记录就是一个 Pinterest Pin。单图 pin 和轮播 pin 共用同一行：
 
-- 单图：`image 路径` 只有 1 行，`发布类型 = 单图`
-- 轮播：`image 路径` 有 2-5 行，`发布类型 = 多图轮播`
+- 单图：`发布素材` 只有 1 项，`发布类型 = 单图`
+- 轮播：`发布素材` 有 2-5 项，`发布类型 = 多图轮播`
 - 多张图不要拆成多条记录；它们属于同一行里的有序图片列表
 - 发布成功后只回写这一行的一个 `发布 URL`
-- 发布顺序以 `image 路径` 字段的行顺序为准，`关联素材` 只做素材来源追溯
+- 发布顺序以 `发布素材` 字段的行顺序为准，`关联素材` 只做素材来源追溯
 
 ---
 
@@ -21,7 +21,7 @@
 1. 旧 `pin_id` → `任务 ID`（保留 `PIN-...` 编码，作为本表主键）
 2. 旧 `pin 类型`（单图 / 轮播）→ `发布类型`（单图 / 多图轮播）
 3. 旧 `Title (EN)` / `Description (EN)` / `Link` / `pin_url` → 通用字段 `标题` / `描述` / `链接` / `发布 URL`
-4. `Board (Pinterest)` / `image 路径` / `Alt Text (EN)` 作为 Pinterest 专属列保留
+4. `Board (Pinterest)` / `发布素材` / `Alt Text (EN)` 作为 Pinterest 专属列保留；旧 `image 路径` 只作为迁移期只读证据
 5. 所有迁入行写 `平台 = Pinterest`
 6. 新增「Pinterest」「轮播」视图（见下方 § 视图建议）
 
@@ -36,10 +36,11 @@
 | 字段名 | 飞书字段类型 | 说明 |
 |---|---|---|
 | `Board (Pinterest)` | 单选 | Pinterest 后台已建好的 board 名；用单选避免拼写漂移 |
-| `image 路径` | 多行文本 | 每张图的绝对本地路径各占一行，顺序就是 carousel 展示顺序（见下方 § 多图路径格式） |
+| `发布素材` | 多行文本 / URL / 附件 | 每张图的服务器 asset 标识、授权下载 URL 或可由服务器解析的附件引用各占一行，顺序就是 carousel 展示顺序（见下方 § 多素材格式）。不要把本地绝对路径作为浏览器上传源 |
+| `image 路径` | 多行文本 | 迁移期旧字段；只用于追溯旧本地处理文件，不作为新架构的发布输入 |
 | `Alt Text (EN)` | 多行文本 | 每张图的 alt text 用 `---` 独占一行分隔（见下方 § 多图 alt text 格式）；单图时无分隔符 |
-| `图片数量` | 数字 / 公式 | 图片行数。手填时由 agent 写入；如用公式，等于 `image 路径` 非空行数量 |
-| `封面图` | 单行文本 / URL / 附件 | 第一张图路径或预览链接，方便人工检查 carousel 首图 |
+| `图片数量` | 数字 / 公式 | 发布素材数量。手填时由 agent 写入；如用公式，等于 `发布素材` 非空行数量 |
+| `封面图` | 单行文本 / URL / 附件 | 第一张发布素材或预览链接，方便人工检查 carousel 首图 |
 | `创意主题` | 单行文本 | 一句话描述本条 pin 想表达什么 |
 | `备注` | 多行文本 | 节日联动、授权细节，以及 `aiSanitization` 处理记录（模式 C 据此判断发布副本已完成 AI metadata / watermark 清理）等特殊情况 |
 
@@ -52,7 +53,7 @@
 | `状态` | 草稿 / 待发 / 发布中 / 已发 / 失败 / 待复核 / 重试 |
 | `发布类型` | `单图`（1 张）或 `多图轮播`（2-5 张，Pinterest carousel pin） |
 | `关联 SKU` | 关联 `Products 商品` 表；用于追溯 SKU + record_id + `平台商品 ID`（如 Etsy Listing ID / ASIN / item_id）；`链接` 另从 `Products 商品` 表 `分享链接` 读取 |
-| `关联素材` | 关联 `Assets 素材池` 表，**允许多值**；单图关联 1 条，轮播关联 2-5 条；发布顺序以 `image 路径` 行顺序为准 |
+| `关联素材` | 关联 `Assets 素材池` 表，**允许多值**；单图关联 1 条，轮播关联 2-5 条；发布顺序以 `发布素材` 行顺序为准 |
 | `标题` | Pinterest 标题：英文，≤ 100 字符 |
 | `描述` | Pinterest 正文：英文，建议 200-500 字符 |
 | `链接` | 商品型 pin 必须 = `Products 商品` 表 `分享链接`；不要临时拼平台 listing URL |
@@ -65,21 +66,21 @@
 
 ---
 
-## 多图路径格式
+## 多素材格式
 
-`image 路径` 字段存放所有图片的绝对路径，每行一个，顺序就是 Pinterest carousel 展示顺序：
+`发布素材` 字段存放所有待发布图片的服务器 asset 标识、授权下载 URL 或可解析附件引用，每行一个，顺序就是 Pinterest carousel 展示顺序：
 
 ```
-/Users/john/.cache/pinterest-autopin/processed/cup-sage-01.jpg
-/Users/john/.cache/pinterest-autopin/processed/cup-sage-02.jpg
-/Users/john/.cache/pinterest-autopin/processed/cup-sage-03.jpg
+asset://pinterest/PIN-20260626-001/01
+asset://pinterest/PIN-20260626-001/02
+asset://pinterest/PIN-20260626-001/03
 ```
 
 单图 pin 时只有一行。
 
 ## 多图 alt text 格式
 
-`Alt Text (EN)` 字段存放每张图的独立 alt text，用 `---` 独占一行分隔。段落顺序与 `image 路径` 行顺序一一对应：
+`Alt Text (EN)` 字段存放每张图的独立 alt text，用 `---` 独占一行分隔。段落顺序与 `发布素材` 行顺序一一对应：
 
 ```
 A pale sage green ceramic teacup on a linen cloth, photographed in soft morning light from above.
@@ -91,45 +92,41 @@ Three cups arranged on a wooden shelf, each showing a slightly different shade o
 
 单图 pin 时没有 `---` 分隔符，和原来一样是纯文本。
 
-构造 `request.json` 时按分隔符拆分，第 N 段 alt text 对应 `images` 数组第 N 个元素的 `altText`。
+创建服务器 job 时按分隔符拆分，第 N 段 alt text 对应第 N 个发布素材。当前服务器最小接口只接收单条 `altText`；多素材 job 未启用前，不要进入 final。
 
 ---
 
-## request.json 目标结构
+## 服务器 job 目标结构
 
-发布器从一行 Pinterest 记录构造统一的 `images[]`，单图和轮播都走同一格式：
+Hermes 从一行 Pinterest 记录构造服务器工具请求。当前已上线最小接口：
 
 ```json
 {
-  "images": [
-    {
-      "path": "/abs/path/01.jpg",
-      "altText": "Alt text for image 1"
-    },
-    {
-      "path": "/abs/path/02.jpg",
-      "altText": "Alt text for image 2"
-    }
-  ],
+  "tenantId": "tenant_xxx",
   "title": "The Story Behind Our Handmade Process",
   "description": "...",
+  "altText": "Alt text for image 1",
   "board": "Behind the Scenes · Our Studio",
   "link": "https://your-shop.example.com"
 }
 ```
 
-字段来源：`images[].path` ← `image 路径` 各行，`images[].altText` ← `Alt Text (EN)` 各段，`title` ← `标题`，`description` ← `描述`，`board` ← `Board (Pinterest)`，`link` ← `链接`。
+字段来源：`tenantId` ← 当前租户绑定，`title` ← `标题`，`description` ← `描述`，`altText` ← `Alt Text (EN)`，`board` ← `Board (Pinterest)`，`link` ← `链接`。
+
+素材不是 Hermes 请求体里的本地路径；服务器 job 返回 `assetUrl` 给浏览器插件。真实商品素材必须先进入服务器可授权下载的 asset 流程。
 
 校验伪代码：
 
 ```js
-const paths = imagePaths.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+const assets = publishAssets.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
 const alts = splitAltTextBySeparator(altText, "---");
 
-assert(paths.length === alts.length);
-assert(publishType === "单图" ? paths.length === 1 : paths.length >= 2 && paths.length <= 5);
+assert(assets.length === alts.length);
+assert(publishType === "单图" ? assets.length === 1 : assets.length >= 2 && assets.length <= 5);
 
-const images = paths.map((path, index) => ({ path, altText: alts[index] }));
+if (assets.length > 1 && !serverSupportsMultiAssetPinterestJobs) {
+  throw new Error("PINTEREST_MULTI_ASSET_JOB_NOT_SUPPORTED");
+}
 ```
 
 ---
@@ -164,9 +161,9 @@ const images = paths.map((path, index) => ({ path, altText: alts[index] }));
 | `关联素材` 每条记录的公开授权 = 已授权 | 中止（特别是客户 UGC） |
 | `关联素材` 每条记录的用途标签 ⊇ Pinterest | 警告，提示去加标签 |
 | `标题` ≤ 100 字符 | 让用户改 |
-| `image 路径` 每行都是绝对路径且文件存在 | 中止，提示素材未同步 |
-| `image 路径` 每行都已在 processed 目录且 `备注` 含 `aiSanitization` 记录 | 中止，先按 `image-processing.md` 生成发布副本 |
-| `image 路径` 行数 = `关联素材` 记录数 | 中止，路径和素材不一致 |
+| `发布素材` 每行都能被服务器解析为授权下载 asset | 中止，先补服务器 asset 流程 |
+| `备注` 含 `aiSanitization` 记录 | 中止，先按 `image-processing.md` 生成发布副本 |
+| `发布素材` 行数 = `关联素材` 记录数 | 中止，发布素材和素材来源不一致 |
 | `Alt Text (EN)` 按 `---` 拆分后段数 = 图片数 | 中止，alt text 数量和图片不一致 |
 | `发布类型 = 单图` 时图片数 = 1 | 中止，单图记录只能有一张图 |
 | `发布类型 = 多图轮播` 时图片数 2-5 张 | 中止，Pinterest carousel 限制 2-5 张 |

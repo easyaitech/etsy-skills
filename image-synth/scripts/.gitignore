@@ -1,0 +1,6 @@
+# 跑出来的对比结果(图片体积大,不进 repo)
+bench-out/
+# 本地 key(绝不进 repo)
+.env
+# 你自己的测试实拍图(可选忽略)
+samples/
