@@ -1,232 +1,286 @@
 # Publishing Flow（模式 C 的执行手册）
 
-模式 C 的 step-by-step。从 `社媒发布队列` 表中的一行草稿走到 Pinterest 上一条已发的 pin。
+模式 C 从 `社媒发布队列` 表中的一行草稿出发，通过 yanggedianzhang 服务器创建 Pinterest browser tool job，再由现有浏览器插件在租户 Chrome 登录态里执行。
+
+Hermes 不运行 Playwright，不打开本地 Chrome profile，不写 `request.json` 给本地工具。
 
 ---
 
 ## 总体流程
 
+```text
+`社媒发布队列` Pinterest 草稿
+   │
+   ├─[0] 校验业务字段与素材授权
+   │
+   ├─[1] Hermes 调服务器：POST /api/tools/pinterest/jobs
+   │       创建 test job
+   │
+   ├─[2] 浏览器插件领取 test job
+   │       GET /api/browser-tools/jobs/next?capability=pinterest&stage=test
+   │       GET /api/browser-tools/jobs/asset?jobId=...
+   │       在 Pinterest 页面填表，不自动发布
+   │       POST /api/browser-tools/jobs/result
+   │
+   ├─[3] 用户目视确认 test 页面
+   │       不 OK → 改 Base / 改素材 / 重建 test job
+   │
+   ├─[4] 用户在对话里说"发吧 / publish / final"
+   │
+   ├─[5] Hermes 调服务器：POST /api/tools/pinterest/jobs/confirm-publish
+   │       将 test_succeeded job 转成 publish job
+   │
+   └─[6] 浏览器插件领取 publish job 并回传 resultUrl
+           成功 → 回写 发布 URL / 状态=已发 / 发布时间
+           失败 → 回写 状态=失败 / 失败原因
 ```
-`社媒发布队列` 表草稿
-   │
-   ├─[0] 解析 <workspace> = `etsy-stack workspace`
-   │       runtime 目录 = <workspace>/.cache/pinterest-autopin/runtime/
-   │
-   ├─[0.5] 图片处理守卫（支持单图 / 多图）
-   │     └─ 所有 image 路径已在 processed/、文件存在且有 AI 清理记录 → 跳过
-   │     └─ 否则 → 逐张：复制/下载 → AI metadata / watermark 清理 → 无损压缩 → 用 processed 路径
-   │
-   ├─[1] 渲染 request.json (<runtime>/{pin_id}.json)
-   │
-   ├─[2] validate ── 校验 JSON 字段（不打开浏览器）
-   │     └─ 失败 → 修 JSON / 改 Base 字段，重试
-   │
-   ├─[3] test ──── 弹 Chrome 填表，不点发布
-   │     └─ 用户目视确认 → 通过
-   │     └─ 用户说"裁切错了 / 文案截断了 / 顺序不对" → 改 Base 字段，回 [1]
-   │
-   ├─[4] 用户在对话里说"发吧 / publish"
-   │
-   └─[5] final ─── 真发
-         ├─ 成功 → 回写 发布 URL / 状态=已发 / 发布时间
-         └─ 失败 → 按 §错误恢复 分类，回写状态=失败/失败原因
-```
-
-每一步的输出都是 stdout 一行 JSON（Pinterest-autopin 的契约），解析 `ok` / `pinUrl` / `result`。
 
 ---
 
-## [0.5] 图片处理守卫
+## [0] 发布前校验
 
-模式 B 的 step 3.8 已经对图片做过处理，`image 路径` 应指向 `<workspace>/.cache/pinterest-autopin/processed/` 下的文件。模式 C 在构造 request.json 前做一次守卫检查：
+从 `社媒发布队列` 表读取目标行，校验：
 
-1. 读 `社媒发布队列` 表中该行的 `image 路径`（多图时按行拆分）
-2. **逐张检查**：如果路径以 `<workspace>/.cache/pinterest-autopin/processed/` 开头、文件存在，且该行备注 / sidecar / 处理记录中有 `aiSanitization` 结果 → 该张跳过
-3. 未通过检查的图片按 `image-processing.md` 的四步流程处理，处理完后用 processed 路径替换
-4. **全部图片通过后**才进 [1]；任何一张处理失败 → 中止，提示用户具体哪张图有问题
+1. `平台 = Pinterest`。
+2. `状态` 是 `草稿` / `待发` / 用户明确确认的 `待复核`。
+3. `标题` 非空且不超过 Pinterest title 限制。
+4. `描述` 非空。
+5. `链接` 是 absolute `http(s)` URL；商品型 pin 必须来自 `Products 商品` 表 `分享链接`。
+6. `Board (Pinterest)` 非空。
+7. `Alt Text (EN)` 非空。
+8. 关联素材公开授权为 `已授权`，并完成 AI metadata / watermark 清理记录。
+9. 素材已经能由服务器提供给浏览器插件下载。不要把本地绝对路径当成浏览器上传源。
+
+当前已上线的最小服务器接口只接收单条 pin 的 `title` / `description` / `altText` / `link` / `board`。如果目标行是多图轮播，必须先确认服务器和插件已支持多素材 job；否则停在草稿或转人工发布，不要拆成多个单图冒充轮播。
 
 ---
 
-## request.json 构造
+## [1] 创建 Test Job
 
-模板见 `assets/request-template.json`。下文 `<runtime>` 代指 `<workspace>/.cache/pinterest-autopin/runtime`，由 `etsy-stack workspace` 解析得到（见 SKILL.md §对外的实操接口）。
+Hermes 调用服务器工具接口：
 
-从 `社媒发布队列` 表中的一行映射：
+```http
+POST https://yanggedianzhang.com/api/tools/pinterest/jobs
+Authorization: Bearer <HERMES_TOOL_SECRET>
+Content-Type: application/json
+```
 
-| `社媒发布队列` 表字段 | request.json key | 说明 |
-|---|---|---|
-| `image 路径` + `Alt Text (EN)` | `images` | 数组，每个元素 `{ "path": "...", "altText": "..." }`。单图和轮播都用这个字段；见下方 § images 数组构造 |
-| `标题` | `title` | 直接拷 |
-| `Board (Pinterest)` | `board` | 直接拷 |
-| `链接` | `link` | 直接拷；空字符串就省略字段 |
-| `描述` | `description` | 直接拷 |
-| —（固定值）| `creationUrl` | 默认省略走 Pinterest-autopin 默认值；日本店可显式传 `https://jp.pinterest.com/pin-creation-tool/` |
-| —（固定值）| `chromeProfile` | 永远是 `~/.config/pinterest-autopin/chrome-profile`（绝对路径，运行时把 `~` 展开） |
-
-### images 数组构造
-
-1. 把 `image 路径` 按换行拆分为路径列表，去掉空行和首尾空白；这个顺序就是上传顺序
-2. 把 `Alt Text (EN)` 按独占一行的 `---` 拆分为 alt text 列表，去掉每段首尾空白
-3. 校验：路径数 = alt text 数，不等时中止并提示用户修正 Base 字段
-4. 校验 `发布类型`：单图必须 1 张；多图轮播必须 2-5 张
-5. 按位置一一配对，生成 `images` 数组：
+请求体：
 
 ```json
 {
-  "images": [
-    { "path": "/abs/path/to/processed/cup-front.jpg", "altText": "A pale sage green ceramic teacup..." },
-    { "path": "/abs/path/to/processed/cup-detail.jpg", "altText": "Close-up of the cup's glazed rim..." },
-    { "path": "/abs/path/to/processed/cup-lifestyle.jpg", "altText": "Three cups arranged on a wooden shelf..." }
-  ],
-  "title": "Morning Mist Tea Cup — handmade ceramic for slow mornings",
-  "board": "Handmade Ceramics",
-  "link": "https://www.etsy.com/shop/.../listing/...",
-  "description": "A small ceramic cup for the quiet first sip of the day...",
-  "chromeProfile": "/Users/<user>/.config/pinterest-autopin/chrome-profile"
+  "tenantId": "tenant_xxx",
+  "title": "A calm gift idea",
+  "description": "A test Pinterest pin.",
+  "altText": "A handmade ceramic cup on a linen cloth in soft morning light.",
+  "link": "https://example.com/listing/1",
+  "board": "Gift Ideas"
 }
 ```
 
-单图 pin 时 `images` 数组只有 1 个元素，格式完全一致——工具端不需要区分单图/多图逻辑。
+成功响应：
 
-不要从 `关联素材` 字段推导顺序。飞书关联字段只用于追溯素材记录，真正发布顺序永远来自 `image 路径` 的行顺序。
+```json
+{
+  "ok": true,
+  "job": {
+    "jobId": "pin_test_...",
+    "platform": "pinterest",
+    "stage": "test",
+    "status": "ready_for_test",
+    "title": "...",
+    "description": "...",
+    "altText": "...",
+    "link": "...",
+    "board": "...",
+    "assetUrl": "/api/browser-tools/jobs/asset?jobId=pin_test_..."
+  }
+}
+```
 
-写文件路径：`<runtime>/{pin_id}.json`
-
-`<runtime>` 目录如不存在先 `mkdir -p` 创建。建议用户把 `.cache/` 加进工作区根的 `.gitignore`——runtime 数据是 ephemeral 的，不该进 git。
+把 `jobId` 写入 `社媒发布队列` 的 `外部队列 ID` 或备注，并把状态改成 `测试中` / `待测试确认`。
 
 ---
 
-## 三阶段约定
+## 创建 Job 的错误处理
 
-`npm run pin:*` 都需要切到 Pinterest-autopin 工具源码目录（`$PINTEREST_AUTOPIN_HOME`，默认 `~/code/etsy-skills/tools/Pinterest-autopin/`）跑，但 `--input` 必须给 `<runtime>/{pin_id}.json` 的**绝对路径**——工具 cwd 不在工作区，相对路径会找不到。
+| HTTP / error | 含义 | Hermes 怎么处理 |
+|---|---|---|
+| `401 UNAUTHORIZED` | Hermes 工具密钥错误或缺失 | 停止，提示管理员修服务器配置 |
+| `404 TENANT_BINDING_NOT_FOUND` | 租户没有 server binding | 停止，提示管理员先绑定租户 |
+| `409 BROWSER_TOOL_INSTALL_REQUIRED` | 服务器还没看到该租户插件上线 | 把响应里的 `userMessage` 原样转述给用户，不编 token |
+| `426 BROWSER_TOOL_UPGRADE_REQUIRED` | 插件版本低或缺 `pinterest` capability | 把响应里的 `userMessage` 原样转述给用户 |
+| `503 HERMES_TOOL_DISABLED` | 服务器未启用 Hermes tool | 停止，提示管理员配置服务端 |
 
-### Stage 1: validate
+安装 / 升级类错误不算发布失败；队列表保持草稿或待配置状态。
 
-```bash
-cd "${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
-npm run pin:validate -- --input <runtime>/{pin_id}.json
+---
+
+## [2] 浏览器插件 Test 执行
+
+插件侧流程由浏览器执行器完成，Hermes 只等待结果：
+
+```http
+GET /api/browser-tools/jobs/next?capability=pinterest&stage=test
+Authorization: Bearer <browserToolToken>
+X-Browser-Tool-Version: 0.5.1
+X-Browser-Tool-Capabilities: etsy-dm,pinterest
 ```
 
-**期望输出**（成功）：
+插件拿到 job 后下载素材：
+
+```http
+GET /api/browser-tools/jobs/asset?jobId=<jobId>
+Authorization: Bearer <browserToolToken>
+```
+
+插件执行后回传：
+
+```http
+POST /api/browser-tools/jobs/result
+Authorization: Bearer <browserToolToken>
+Content-Type: application/json
+```
 
 ```json
-{"ok": true, "mode": "validate", ...}
+{
+  "jobId": "pin_test_...",
+  "ok": true,
+  "note": "preview appeared"
+}
 ```
 
-**失败处理**：解析错误信息 → 通常是 JSON 字段缺失 / 路径错 / link 不是 absolute http(s) → 改 request.json 或回 `社媒发布队列` 表改字段，再来。validate 阶段失败不算入 `社媒发布队列` 表的「发布尝试次数」（没真跑浏览器）。
+test job 的安全边界：填表和预览，不代表已经发布。用户必须目视确认 Pinterest 页面。
 
-**多图额外校验**：
-- `images` 数组不为空
-- 每个元素的 `path` 是绝对路径且文件存在
-- 每个元素的 `altText` 非空且 ≤ 500 字符
-- 轮播 pin 时 `images` 长度在 2-5 之间
+---
 
-### Stage 2: test
+## [3] Test 结果处理
 
-```bash
-npm run pin:test -- --input <runtime>/{pin_id}.json
+服务器 job 状态：
+
+| 状态 | 含义 | Hermes 怎么处理 |
+|---|---|---|
+| `test_succeeded` | 插件已完成 test 填表 | 让用户确认页面是否正确 |
+| `test_failed` | 插件未能完成 test | 读取失败 note，写入队列表备注 / 失败原因，修正后重建 test job |
+| `claimed_for_test` 长时间不变 | 插件领取后掉线或浏览器关闭 | 等 lease 过期后可重新领取；不要创建重复 job |
+
+用户说图片、文案、board、链接不对时，回到 Base 修改源字段，再重新创建 test job。
+
+---
+
+## [5] 确认 Final / Publish
+
+前置：用户在对话里明确说"发 / publish / 真发 / final"。test 没过的不要进 final。
+
+Hermes 调用：
+
+```http
+POST https://yanggedianzhang.com/api/tools/pinterest/jobs/confirm-publish
+Authorization: Bearer <HERMES_TOOL_SECRET>
+Content-Type: application/json
 ```
-
-会弹一个 Chrome 窗口，自动跳到 Pinterest pin 创建页，自动上传图、填 title / description / altText / link / 选 board。**不会点发布**。
-
-**让用户目视确认**：
-- 图片有没有被 Pinterest 自动裁切丢掉关键内容（特别是横版图，Pinterest 默认 2:3 显示）
-- 文案有没有截断
-- board 选对没有
-- **（轮播 pin 额外）** 图片顺序是否正确、每张图的 alt text 是否匹配
-
-让用户在对话里回 OK / 不 OK 配理由。
-
-**失败处理**：
-- `loggedIn: false` → 走 §错误恢复 § 登录失效
-- `board not found` → 走 §错误恢复 § board 不存在
-- 其它 → 让用户截图 Chrome 窗口看看（本 skill 不直接看 Chrome）
-
-### Stage 3: final
-
-**前置**：用户在对话里明确说"发 / publish / 真发 / final"。test 没过的不要进 final。
-
-```bash
-npm run pin:publish -- --input <runtime>/{pin_id}.json
-```
-
-**期望输出**（成功）：
 
 ```json
-{"ok": true, "mode": "final", "pinUrl": "https://www.pinterest.com/pin/123456789012345678/", ...}
+{
+  "tenantId": "tenant_xxx",
+  "jobId": "pin_test_..."
+}
 ```
 
-**回写 `社媒发布队列` 表**（用 `lark-base`）：
+成功响应会把同一个 job 转成：
 
+```json
+{
+  "ok": true,
+  "job": {
+    "jobId": "pin_test_...",
+    "stage": "publish",
+    "status": "ready_for_publish"
+  }
+}
 ```
+
+如果返回 `JOB_NOT_TESTED`，说明 test 没成功或还没回传结果；不要绕过。
+
+---
+
+## [6] Final 结果回写
+
+插件领取 publish job：
+
+```http
+GET /api/browser-tools/jobs/next?capability=pinterest&stage=publish
+Authorization: Bearer <browserToolToken>
+```
+
+插件回传：
+
+```json
+{
+  "jobId": "pin_test_...",
+  "ok": true,
+  "note": "publish confirmed",
+  "resultUrl": "https://www.pinterest.com/pin/123/"
+}
+```
+
+成功时，用 `lark-base` 回写 `社媒发布队列`：
+
+```text
 - 状态: 已发
-- 发布 URL: {pinUrl}
+- 发布 URL: {resultUrl}
 - 发布时间: {now in YYYY-MM-DD HH:mm}
+- 失败原因: 清空
 ```
 
-回写前按通用协议**列出改动让用户确认**。
+失败时：
 
-**失败回写**：
-
-```
+```text
 - 状态: 失败
 - 失败原因: {分类} - {原文截断到 100 字符}
 - 发布尝试次数: +1
+- 最后尝试时间: {now}
 ```
+
+回写前按通用协议列出改动让用户确认。
 
 ---
 
 ## 错误恢复
 
-### 登录失效（`loggedIn: false`）
+### 浏览器插件离线
 
-Pinterest 偶尔强制重登（特别是几周不操作后）。
+如果 job 长时间停在 ready / claimed，不把它标成成功。告诉用户打开 Chrome、确认插件已启用、Pinterest 已登录，再让插件重新领取任务。
 
-1. 跑 `npm run pin:check-login -- --chrome-profile ~/.config/pinterest-autopin/chrome-profile`
-2. 让用户在弹出的 Chrome 里手工重新登录（同 runtime-setup.md § 5）
-3. 用户登录完成后，重跑失败的 stage
+### Pinterest 登录失效
 
-不替用户输凭据。重登过程不算发布尝试次数。
+插件或 Pinterest 页面会暴露登录状态问题。让用户在自己的 Chrome 里重新登录 Pinterest，然后重试。Hermes 不输入凭据。
 
-### board 不存在（`board not found`）
+### board 不存在
 
-`社媒发布队列` 表里的 board 名和 Pinterest 后台不一致。
+`社媒发布队列` 表里的 board 名和 Pinterest 后台不一致：
 
-1. 让用户去 Pinterest 后台核对实际 board 名（大小写、空格、特殊字符敏感）
-2. 用户改完后：
-   - 如果是 Pinterest 后台拼写错 → 用户在 Pinterest 后台改 board 名
-   - 如果是 `社媒发布队列` 表字段填错 → 用 `lark-base` 改这一行的 `Board (Pinterest)`，并把单选选项也修正
-3. 重跑
+1. 让用户去 Pinterest 后台核对实际 board 名。
+2. 如果是后台拼写错，用户改后台。
+3. 如果是 Base 字段填错，用 `lark-base` 改 `Board (Pinterest)`，并修正单选选项。
+4. 重建 test job。
 
-### JSON 校验失败
+### 素材下载 / 上传失败
 
-通常是 image 不是绝对路径 / link 不是 absolute http(s) / image 文件不存在。
+不要回退成本地路径上传。检查服务器 asset 是否可下载、图片尺寸是否满足 Pinterest 要求、插件是否能把 Blob/File 注入上传控件。失败原因写回 job 和队列表。
 
-多图时额外注意：`images` 数组元素数和 alt text 数不一致 / 某张图路径不存在。
+### 网络 / Pinterest 临时错误
 
-直接看错误信息 → 改 request.json（改根源在 `社媒发布队列` 表字段）→ 重跑 validate。
-
-### 网络 / Pinterest 临时错误（5xx / timeout）
-
-可能 Pinterest 临时抽风。
-
-- 第一次失败 → 等 30 秒，自动重试一次
-- 第二次还失败 → 状态停在 `失败`，告诉用户人工介入（盲目继续重试可能触发 Pinterest 风控）
-
-### 未知错误
-
-`ok: false` 但归不到上面任何类。
-
-- 把 `stderrTail` 完整给用户看
-- 状态停在 `失败`，发布尝试次数 +1，等用户人工决策
+第一次失败可等 30 秒后重试一次；第二次还失败就停在 `失败`，等待人工介入。盲目重试可能触发 Pinterest 风控。
 
 ---
 
 ## 不要做的事
 
-- **不要绕过 test 直接 final**（除非用户明确豁免——首次发某 board / 首次用某素材尺寸时尤其不要绕）
-- **不要并发跑多个 final**（同一 Chrome profile 不能多开；多发会让 Pinterest-autopin 抢 profile 锁失败）
-- **不要替用户解 Pinterest 的人机验证 / 二次验证**（违反 user_privacy 中"never bypass CAPTCHA"原则）
-- **不要在失败后把 request.json 删掉**——保留在 `<runtime>/{pin_id}.json` 便于复盘
-- **不要把任何 stdout / stderr 里出现的疑似登录态字符串（cookie 片段、token）写进 Base 或对话**——哪怕用户问"什么错"，也只回错误**类型**和最关键的一句原文
-- **不要手动拆分轮播 pin 为多个单图 pin 发布**——轮播是一个 pin 对象，必须一次性发布
+- 不要在 Hermes 本机跑 Playwright、CDP、`npm run pin:*`。
+- 不要把 Chrome profile、cookie、token 写入工作区、Base 或对话。
+- 不要绕过 test 直接 final（除非用户明确说已测过并要求 final）。
+- 不要并发跑多个 final。
+- 不要替用户解 Pinterest 的人机验证 / 二次验证。
+- 不要把任何响应里的疑似登录态字符串写进 Base 或对话。
+- 不要手动拆分轮播 pin 为多个单图 pin 发布。

@@ -1,17 +1,8 @@
 {
-  "images": [
-    {
-      "path": "/absolute/path/to/image1.jpg",
-      "altText": "Objective description of image 1 (English, ≤ 500 chars). Color, material, composition, light."
-    },
-    {
-      "path": "/absolute/path/to/image2.jpg",
-      "altText": "Objective description of image 2 (English, ≤ 500 chars)."
-    }
-  ],
-  "title": "Pin title (English, ≤ 100 chars). Must include a high-intent scene/person/occasion keyword, e.g. Birthday Gift for Mom — Personalized Birthstone Necklace",
-  "board": "Exact Pinterest Board Name",
-  "link": "Product Base 分享链接 for product pins, or the shop homepage URL for brand/education pins",
-  "description": "Pin description (English, 200-500 chars, ideally 35-55 words). Start from occasion/person/gift meaning, not a definition. End with 3-5 scene/person/value/product hashtags, e.g. #BirthdayGift #GiftForMom #MeaningfulGift #PersonalizedGift",
-  "chromeProfile": "/Users/{username}/.config/pinterest-autopin/chrome-profile"
+  "tenantId": "tenant_xxx",
+  "title": "Pinterest title, max 100 characters",
+  "description": "Pinterest description in English.",
+  "altText": "Accessible visual description for the uploaded image.",
+  "link": "https://example.com/product-or-listing",
+  "board": "Exact Pinterest Board Name"
 }

@@ -5,8 +5,14 @@
 ## [Unreleased]
 
 ### 新增
-- `shared/tools-architecture.md`：**工具架构硬约束**——全 stack 硬约束「Hermes 思考，ECS 做事和连接，插件只在『无 API 又必须用租户登录态』时伸手」。定义三角色（ECS 控制面 / Hermes 大脑 / 浏览器插件）、加新工具的三级选型优先级（官方 API → 租户浏览器插件 → 反检测专用机，控制面恒在 ECS）、控制面·执行面分离、安全红线（per-tenant token fail-closed、token≠tenantId、密钥不进 Hermes / skill 目录 / 工作区、改鉴权前跑 Codex 独立审），并记录**落地现状与迁移**（image-synth 已上收 ECS 中心后端；pinterest-autopin 发布 / trend-radar 抓取仍在 mini 属过渡）。已批准例外：**lark-cli 飞书访问留在 Hermes 的 Mac mini**（租户自有身份 + 数据底座，不外溢到任何外部平台）。接进 [`shared/preamble.md`](shared/preamble.md) §工具架构 / README 仓库布局 / `etsy-stack.json` `toolsArchitecture`；6 个 tool skill（content-asset-pool / social-publisher / trend-radar / video-assembly / pinterest-autopin / image-synth）各加工具架构指针。
-- `pinterest-autopin`：Pinterest-autopin 工具路径在文档里**参数化为 `$PINTEREST_AUTOPIN_HOME`**（默认 `~/code/etsy-skills/tools/Pinterest-autopin/`，`etsy-stack pinterest-tool update` 已遵守；未设变量时手动步骤行为不变），并把 `/Users/john` 字面示例换成 `<workspace>` / 占位符。
+- `shared/tools-architecture.md`：**工具架构硬约束**——全 stack 硬约束「Hermes 思考，ECS 做事和连接，插件只在『无 API 又必须用租户登录态』时伸手」。定义三角色（ECS 控制面 / Hermes 大脑 / 浏览器插件）、加新工具的三级选型优先级（官方 API → 租户浏览器插件 → 反检测专用机，控制面恒在 ECS）、控制面·执行面分离、安全红线（per-tenant token fail-closed、token≠tenantId、密钥不进 Hermes / skill 目录 / 工作区、改鉴权前跑 Codex 独立审），并记录**落地现状与迁移**（image-synth 中心后端、pinterest-autopin 服务器控制面 + 浏览器插件均已上收 ECS；trend-radar 抓取仍在 mini 属过渡）。已批准例外：**lark-cli 飞书访问留在 Hermes 的 Mac mini**（租户自有身份 + 数据底座，不外溢到任何外部平台）。接进 [`shared/preamble.md`](shared/preamble.md) §工具架构 / README 仓库布局 / `etsy-stack.json` `toolsArchitecture`；6 个 tool skill（content-asset-pool / social-publisher / trend-radar / video-assembly / pinterest-autopin / image-synth）各加工具架构指针。
+
+## [1.0.1] - 2026-06-26
+
+### 修
+- `pinterest-autopin`：把 Skill 说明从旧本地 `Pinterest-autopin` / Playwright / 独立 Chrome profile 方案切换为推荐架构：Hermes 只生成与判断，调用 `yanggedianzhang` 服务器 Pinterest tool；服务器做 job 状态机、鉴权、素材下载地址和结果回写；现有浏览器插件作为租户登录态执行器。
+- `social-publisher` / `content-asset-pool` / `README.md`：同步 Pinterest adapter 边界，明确新发布路径是服务器控制面 + 现有浏览器插件，不再要求 Hermes/Mac mini 安装本地 Pinterest-autopin 工具。
+- `install.sh` / `ecommerce-stack pinterest-tool`：安装时不再自动同步旧本地 Pinterest-autopin 工具；`pinterest-tool update` 默认拒绝执行，只保留 `PINTEREST_AUTOPIN_LEGACY_ALLOW=1` 的迁移排查入口。
 
 ## [1.0.0] - 2026-06-25
 
