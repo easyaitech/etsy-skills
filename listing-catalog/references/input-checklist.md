@@ -10,21 +10,21 @@
 | 产品视频（如平台 / 店铺要求，通常 5–15 秒）| 平台 listing 视频；是否每条必配由 COMMERCE_PLATFORM.md / SHOP.md 决定 | 若要求视频而缺失 → listing 状态停"草稿"，不进上线流程；同时为后续写 `视频 Alt (EN)` 提供素材 |
 | 中文产品名 / 类目 | 例："真皮钱包 / 短夹" | 起英文 title 的语义起点 |
 | 关键参数 | 材质、尺寸/容量、重量、颜色、工艺（手作/定制/手绘 等）| 进 description 的 specs 段 + tags 词源 |
-| **预期售价（USD）**| 定价语境，任何平台都建议提供；Etsy 平台还用于客单价档分流（< $20 轻问法 / $20-$50 完整 / ≥ $50 完整 + 长尾）| 通用定价参考；Etsy 下决定 step 5.5 走哪一档、tags 礼物槽分配 |
-| **礼物倾向**（**仅 Etsy 必填**）| 自购为主 / 送礼为主 / 兼顾——见 [`references/gift-scenario.md`](gift-scenario.md) Q1；**非 Etsy 平台不收集** | Etsy step 5.5 入口判断；自购为主时 Q2-Q5 全跳过 |
+| **预期售价（USD）**| 定价语境，任何平台都建议提供 | 通用定价参考；Etsy 下用于判断礼物角度的投入程度（低价轻量 / 高价值深挖）|
+| **礼物倾向**（**仅 Etsy 必填**）| 自购为主 / 送礼为主 / 兼顾——见 [`platforms/etsy.md`](platforms/etsy.md) § 礼物维度；**非 Etsy 平台不收集** | Etsy step 5.5 入口判断；自购为主品不强加礼物词 |
 
 缺任一必填项 → 停下来一次性问全，不要边写边追问。
 
-> **平台门槛**：「礼物倾向」是 **Etsy 专属必填**——礼物 / 节日场景调研（step 5.5）只在目标平台是 Etsy 时运行。非 Etsy 平台（小红书及其他已配置平台）**不收集礼物倾向，也不跑 step 5.5**，本清单里礼物 / 受众 / 场景 / 计划上架日等行对它们不适用。详见 [`gift-scenario.md`](gift-scenario.md) 顶部的平台门槛。
+> **平台门槛**：「礼物倾向」是 **Etsy 专属必填**——礼物 / 节日维度调研（step 5.5）只在目标平台是 Etsy 时运行。非 Etsy 平台（小红书及其他已配置平台）**不收集礼物倾向，也不跑 step 5.5**，本清单里礼物 / 受众 / 场景 / 计划上架日等行对它们不适用。详见 [`platforms/etsy.md`](platforms/etsy.md) 顶部的平台门槛。
 
 ## 强烈建议但可选
 
 - 创作灵感 / 故事（独立工艺品的 description 头段很吃这个）
-- 使用场景 /（自购为主 SKU 用）—— 进 description 段 3 ① 使用语境
-- **受众与场景**（送礼为主 / 兼顾 SKU 用）—— step 5.5 Q2/Q3 自动结构化收集，无需先问
+- 使用场景（自购为主 SKU 用）—— 进 description 使用语境
+- **受众与场景**（送礼为主 / 兼顾 SKU 用）—— step 5.5 礼物维度调研自动结构化收集，无需先问
 - 同类竞品 listing 链接（参考 SEO 词，不是抄文案）
-- **eRank 关键词词库**（节点 ② 输出）— 触发条件与格式见 [`references/erank-research.md`](erank-research.md)
-- **计划上架日**（默认 today）—— step 5.5 Q4 查 [`references/holiday-calendar.md`](holiday-calendar.md) 的节日命中窗口；如果想为远期节日提前 ship 一条 listing，覆盖这个值
+- **需求 / 竞品 / 定价调研数据**（如用 eRank 等工具）— 触发条件见 [`platforms/etsy.md`](platforms/etsy.md) § 上架前调研
+- **计划上架日**（默认 today）—— 用于按 [`platforms/etsy.md`](platforms/etsy.md) § 节日 / 季节 判断节日提前期；如果想为远期节日提前 ship 一条 listing，覆盖这个值
 
 可选项缺失**不必停下来**——直接基于产品图推测着写，但在草稿里标注「这部分基于产品图推测，你看要不要补真实背景」。
 

@@ -47,18 +47,17 @@
 
 旧仓库里的 Etsy 规则继续作为内置 preset：
 
-- 文案 SEO：`listing-catalog/references/etsy-seo.md`
-- 礼物 / 节日场景调研：`listing-catalog/references/gift-scenario.md` + `listing-catalog/references/holiday-calendar.md`（listing-catalog 模式 B 的 step 5.5）
+- 文案 SEO + 礼物 / 节日维度 + 上架前调研：`listing-catalog/references/platforms/etsy.md`（单文件 preset，原则级；礼物维度调研是模式 B 的 step 5.5，见该文件 § 礼物维度 / § 节日 / 季节 / § 上架前调研）
 - 商品图硬规则：`image-synth/references/etsy-listing-image-specs.md`
 - Listing 槽位语义：`assets-library/references/etsy-listing-photo-slots.md`
 
-只有当 `COMMERCE_PLATFORM.md` 明确选择 Etsy，或用户目标明显是 Etsy 时，才读取这些 Etsy 参考。其他平台不能复用 Etsy 的标题、tag、图片槽位、SEO 规则**或礼物 / 节日场景调研**。礼物维度是 Etsy 搜索流量大头、是 Etsy SEO 的输入模块，其产出（礼物词库 → title 礼物维度槽 / 13 tags 礼物槽 / description 段 3 礼物语境）全部绑定 Etsy 的 listing 结构；**非 Etsy 平台整段跳过礼物场景调研**（小红书走内容种草模型、无礼物 tag 槽位，其余平台各按自己的 `COMMERCE_PLATFORM.md` 规则）。
+只有当 `COMMERCE_PLATFORM.md` 明确选择 Etsy，或用户目标明显是 Etsy 时，才读取这些 Etsy 参考。其他平台不能复用 Etsy 的标题、tag、图片槽位、SEO 规则**或礼物 / 节日维度调研**。礼物维度是 Etsy 搜索流量大头、是 Etsy SEO 的输入，其产出（礼物词库 → title 礼物位 / tags 礼物词 / description 礼物语境）绑定 Etsy 的 listing 结构；**非 Etsy 平台整段跳过礼物维度调研**（小红书走内容种草模型、无礼物 tag 槽位，其余平台各按自己的 `COMMERCE_PLATFORM.md` 规则）。
 
 ### 小红书
 
 小红书平台规则见：
 
-- 商品上架 / `Products 商品` 表：`listing-catalog/references/xiaohongshu-commerce.md`
+- 商品上架 / `Products 商品` 表：`listing-catalog/references/platforms/xiaohongshu.md`
 - 订单 / 客服 / 售后表：`orders-customers/references/xiaohongshu-orders.md`
 - 发布任务池：`content-asset-pool/references/platform-publishing-model.md` 的“小红书图文 / 小红书视频”
 - 自动发布状态：`social-publisher/references/adapter-registry.md` 当前将小红书标为 planned/manual-only，不能自动上传或发布

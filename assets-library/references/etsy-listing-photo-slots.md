@@ -149,8 +149,8 @@ PR1 仅给**通用 10 槽位 SOP**——本文档当前内容。
 title / tag 里的关键词应该在视觉里能看到。**反向自检**：
 
 - 主图（hero）必须呈现 title 第 1-3 关键词暗示的视觉（搜 "morning tea cup" 命中 → hero 必须有 morning + tea + cup 元素）
-- description 段 3 "使用 + 礼物语境"（双小段）必须有 lifestyle 槽位对应图（讲新婚礼物 → 必须有伴娘场景图）
-- 礼物词库 4 类（受众 / 场景 / 节日 / 包装）每类至少有 1 张视觉对应图
+- description 的礼物语境必须有 lifestyle 槽位对应图（讲新婚礼物 → 必须有伴娘场景图）
+- 礼物词库各类（受众 / 场景 / 节日 / 包装）每类至少有 1 张视觉对应图
 
 如果 listing-catalog 模式 B 已生成文案而 shoot brief 还没补足这些视觉对应——**模式 D 应该提示用户**："你 listing 讲了 X 但 brief 里没对应 lifestyle 拍摄计划，要补吗？"
 

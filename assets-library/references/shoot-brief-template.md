@@ -78,7 +78,7 @@
 - **Detail-3（纹理 / Logo）**：{品牌标识或独特纹理}
 
 ### Lifestyle（{N} 张）— 来自 listing-catalog 礼物场景词库
-> 词库来源标记：[ ] 反向触发 in-memory 现传 / [ ] Base description 段 3 反推 / [ ] 用户口述
+> 词库来源标记：[ ] 反向触发 in-memory 现传 / [ ] Base description 礼物 / 使用语境反推 / [ ] 用户口述
 
 - **场景 1：{母亲节早茶}** → 画面：{母亲手握杯，窗边晨光} → 道具：{花束、贺卡、热茶}
 - **场景 2：{婚礼伴娘礼物}** → 画面：{...} → 道具：{...}
@@ -115,7 +115,7 @@
 - BRAND.md § 视觉原则
 - BRAND.md § 视觉禁区
 - `Products 商品` 表中该 SKU 行（链接）
-- listing description 段 3（如已生成）
+- listing description 礼物 / 使用语境（如已生成）
 - references/etsy-listing-photo-slots.md（10 槽位社区 SOP）
 - {SHOP.md § 物料 + § 礼盒服务，如已建立}
 ```

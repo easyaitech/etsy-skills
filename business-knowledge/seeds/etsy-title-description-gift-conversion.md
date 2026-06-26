@@ -110,7 +110,7 @@ Need a meaningful gift for a teacher, parent, or friend who appreciates somethin
 - **不应**机械套用「所有标题必须 14 个词以内」——Etsy 官方限制是 140 字符；14 词只作「不要冗长堆词」的可读性提醒。
 - **不应**为了显口语而牺牲品牌克制感——语气仍按你的 BRAND.md。
 - **不应**承诺 luck / magic / healing 等功效。
-- 与平台 SEO 硬规则（如 etsy-seo.md 的 title 公式）冲突时，平台规则为准，本页写法降为 **A/B 候选**，不强行覆盖。
+- 与平台 SEO 硬规则（如 platforms/etsy.md 的 title 公式）冲突时，平台规则为准，本页写法降为 **A/B 候选**，不强行覆盖。
 
 ## 8. 给下游 Agent 的使用方式
 

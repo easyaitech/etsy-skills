@@ -74,13 +74,13 @@
 
 ### Etsy
 
-- 文案 SEO：`listing-catalog/references/etsy-seo.md`
+- 文案 SEO + 礼物 / 节日调研 + eRank：`listing-catalog/references/platforms/etsy.md`
 - 商品图硬规则：`image-synth/references/etsy-listing-image-specs.md`
 - Listing 槽位语义：`assets-library/references/etsy-listing-photo-slots.md`
 
 ### 小红书
 
-- 商品字段与上架信息：`listing-catalog/references/xiaohongshu-commerce.md`
+- 商品字段与上架信息：`listing-catalog/references/platforms/xiaohongshu.md`
 - 订单 / 客服 / 售后字段：`orders-customers/references/xiaohongshu-orders.md`
 - 图文 / 视频发布任务：`content-asset-pool/references/platform-publishing-model.md`
 - 自动发布状态：`social-publisher/references/adapter-registry.md` 当前标记为 planned/manual-only；只能建草稿和人工对账，不能自动上传或发布。
