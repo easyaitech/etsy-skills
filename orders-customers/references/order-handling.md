@@ -170,7 +170,7 @@
 
 ## 小红书补充规则
 
-目标平台是小红书时，先读 `xiaohongshu-orders.md`：
+目标平台是小红书时，先读 `platforms/xiaohongshu.md`：
 
 - 不使用 Etsy username、Etsy order number、Etsy message 这些字段名做判断。
 - 订单详情导出前可能被消费者取消；遇到订单不存在 / 已取消，先记录取消状态，不继续推进履约。

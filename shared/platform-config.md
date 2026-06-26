@@ -58,7 +58,7 @@
 小红书平台规则见：
 
 - 商品上架 / `Products 商品` 表：`listing-catalog/references/platforms/xiaohongshu.md`
-- 订单 / 客服 / 售后表：`orders-customers/references/xiaohongshu-orders.md`
+- 订单 / 客服 / 售后表：`orders-customers/references/platforms/xiaohongshu.md`
 - 发布任务池：`content-asset-pool/references/platform-publishing-model.md` 的“小红书图文 / 小红书视频”
 - 自动发布状态：`social-publisher/references/adapter-registry.md` 当前将小红书标为 planned/manual-only，不能自动上传或发布
 - 社媒图默认规格：`image-synth/references/social-platform-specs.md` 的“小红书图文 / 商品种草图”

@@ -24,7 +24,7 @@ layer: foundation
 | `Products 商品` 表 | 该订单包含的 SKU 详情 | 处理订单时按订单关联到 SKU（用 lark-base 跨表关联） |
 | `references/order-fulfillment-sop.md` | 新订单到发货、签收跟进的阶段清单 | 新订单 / 待发货订单必须用它判断下一步、缺失证据和要写回的字段 |
 | `references/order-handling.md` | 客服回复场景 SOP | 只用于买家消息、差评、退换货、感谢信等话术，不替代履约 SOP |
-| `references/xiaohongshu-orders.md` | 小红书订单 / 履约 / 售后字段和边界 | 目标平台是小红书时必读；不要把 Etsy 订单号、username、ship-by 规则套给小红书 |
+| `references/platforms/xiaohongshu.md` | 小红书订单 / 履约 / 售后字段和边界 | 目标平台是小红书时必读；不要把 Etsy 订单号、username、ship-by 规则套给小红书 |
 
 ---
 
@@ -36,7 +36,7 @@ layer: foundation
 
 **执行步骤**：
 1. 读 `../shared/store-base-architecture.md` 和 `references/base-schema.md`，了解店铺总 Base + 订单 / 客户表字段
-2. 如果目标平台包含小红书，读 `references/xiaohongshu-orders.md`；创建表时必须加建 `base-schema.md` 的“小红书字段”分组
+2. 如果目标平台包含小红书，读 `references/platforms/xiaohongshu.md`；创建表时必须加建 `base-schema.md` 的“小红书字段”分组
 3. 解析工作区根并读取 `<workspace>/docs/store-base.md`：
    - 若店铺总 Base 已存在：在其中创建或补齐 `Orders 订单` / `Customers 客户` 表
    - 若店铺总 Base 不存在：先展示 one-shop-one-base 方案，等用户确认后再创建 `{店铺名}-运营中枢`
@@ -52,7 +52,7 @@ layer: foundation
 
 **执行步骤**：
 - 读 `references/base-schema.md` 确认字段语义
-- 确认目标销售平台；目标平台是小红书时先读 `references/xiaohongshu-orders.md`
+- 确认目标销售平台；目标平台是小红书时先读 `references/platforms/xiaohongshu.md`
 - 如果 `COMMERCE_PLATFORM.md` 缺失：
   - 目标平台是 Etsy → 可继续使用内置 Etsy preset，并说明这是内置 Etsy 规则
   - 目标平台是小红书 → 可继续使用内置小红书 preset，并说明这是内置小红书规则
