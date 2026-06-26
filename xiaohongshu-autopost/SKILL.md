@@ -15,7 +15,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 跨平台 `社媒发布队列` 的 source of truth 在 `publish-composer`；本 skill 只负责 `平台 = 小红书` 行的语义准备、服务器 job 创建和结果回写。
 
-> **架构定位**：本 skill 是「平台层」的小红书适配器。平台专属字段走 PublishIntent 的 `平台扩展 (typed)` —— `XiaohongshuExt` schema + validator（定义见 [`../content-asset-pool/references/base-schema.md` § 表 2](../content-asset-pool/references/base-schema.md)），**不是自由 JSON**。底层执行模型见 [`../shared/tools-architecture.md`](../shared/tools-architecture.md) 与 design doc 的 D-A4（插件稳定原语 + 服务端热下发 recipe）。
+> **架构定位**：本 skill 是「平台层」的小红书适配器。平台专属字段走 PublishIntent 的 `平台扩展 (typed)` —— `XiaohongshuExt` schema + validator（定义见 [`../publish-composer/references/base-schema.md` § 表 2](../publish-composer/references/base-schema.md)），**不是自由 JSON**。底层执行模型见 [`../shared/tools-architecture.md`](../shared/tools-architecture.md) 与 design doc 的 D-A4（插件稳定原语 + 服务端热下发 recipe）。
 
 > 共享引导见 [`../shared/preamble.md`](../shared/preamble.md)，降级协议见 [`../shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 

@@ -13,7 +13,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 2. **yanggedianzhang 服务器**：校验租户、保存 Pinterest job 状态、加锁、发放素材下载地址、记录 test / final 结果。
 3. **现有浏览器插件**：在租户自己的 Chrome 登录态里打开 Pinterest、填表、上传服务器给的素材，并把结果回传服务器。
 
-它可以被用户直接触发，也可以作为 `social-publisher` 的 Pinterest adapter 被调用。跨平台 `社媒发布队列` 的 source of truth 仍在 `content-asset-pool` / `social-publisher`；本 skill 只负责 `平台 = Pinterest` 行的语义准备、服务器 job 创建和结果回写。
+它可以被用户直接触发，也可以作为 `social-publisher` 的 Pinterest adapter 被调用。跨平台 `社媒发布队列` 的 source of truth 仍在 `publish-composer` / `social-publisher`；本 skill 只负责 `平台 = Pinterest` 行的语义准备、服务器 job 创建和结果回写。
 
 支持的队列模型：
 - **单图 pin**：当前服务器工具接口的推荐路径。
@@ -170,7 +170,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 - **shop-foundation**：组 pin 时用户纠正文案，先判断是 BRAND.md 的语调补充，还是 Pinterest 渠道特有手感；渠道特有内容暂记到 `references/pin-composition.md`。
 - **listing-catalog**：本 skill 只读 `Products 商品` 表，不改商品事实。商品型 pin 的 `链接` 必须来自 `Products 商品` 表 `分享链接`。
-- **content-asset-pool**：当 Pinterest pin 来自跨平台素材发布池时，本 skill 只消费已经确认顺序、授权和发布副本的素材任务；发布成功后把 `发布 URL` 回写给素材池对应发布任务。
+- **publish-composer**：当 Pinterest pin 来自跨平台素材发布池时，本 skill 只消费已经确认顺序、授权和发布副本的素材任务；发布成功后把 `发布 URL` 回写给素材池对应发布任务。
 - **social-publisher**：当用户要“自动发布 / 到点发布 / 发布任务对账”时，优先让 `social-publisher` 读取 `社媒发布队列` 并调用本 skill。Pinterest pin 就是这张表 `平台 = Pinterest` 的行，发布成功或失败后一次回写本行即可。
 - **assets-library**：本 skill 只读 `Assets 素材池` 表的「Pinterest 候选」视图，不改。素材未入库或未授权时，提示用户先回 assets-library。
 - **orders-customers**：UGC 类素材的「公开授权」由 orders-customers 走客户沟通完成；本 skill 只消费已授权的结果。

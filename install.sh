@@ -80,7 +80,7 @@ install_dir = os.path.realpath(os.environ["INSTALL_DIR"])
 hermes_dir = os.environ["HERMES_SKILLS_DIR"]
 with open(os.environ["MANIFEST"], encoding="utf-8") as f:
     active = set(json.load(f)["skills"])
-retired = {"photo-style"}
+retired = {"photo-style", "content-asset-pool"}  # content-asset-pool → 改名 publish-composer（清理旧软链）
 
 if os.path.isdir(hermes_dir):
     for name in os.listdir(hermes_dir):

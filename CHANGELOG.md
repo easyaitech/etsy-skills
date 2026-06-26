@@ -5,6 +5,12 @@
 ## [Unreleased]
 
 ### 重构
+- **社媒发布栈目标态架构落地（plan-eng-review + Codex 敲定，D-A1~D-A8）**：把素材+生产+发布整理成「基座（名词 owner）/ 工作流（动词）/ 平台（唯一变动面）」三轴，干净支持多平台。
+  - **T1 AssetVariant**：`assets-library` 新增 `Asset Variants 派生素材` 表，canonical 成品与平台发布副本（裁切/封面/清理）分离；清理/派生单点在 assets-library，下游只引用。
+  - **T2 PublishIntent 契约**：`社媒发布队列` 升级为完整契约——per-platform 语义、身份维度（平台/账号/品牌线/地区语言）、四组写者归属 + 状态机&转移权限&事件日志、平台专属走每平台 **typed extension**（弃 `平台字段 JSON` 自由块）、capability 细化、执行器（插件↔ECS）契约。
+  - **T10 变体工厂**：`assets-library` 加模式 E「按平台规格派生变体」+ 明确「收集进池」为其唯一职责；解开旧「不替用户裁切」硬约束（开机械/模板化派生例外，新创意构图仍委托 image-synth）。
+  - **T11 小红书 adapter**：新建 `xiaohongshu-autopost`（同 pinterest-autopin 三层范式，`XiaohongshuExt` typed schema，执行 gated：服务器工具+插件 capability+笔记 recipe 就绪前只出草稿+人工清单）；注册进 adapter-registry + manifest + README。
+  - **T4 改名 `content-asset-pool` → `publish-composer`**：收窄为纯发布编排（组 PublishIntent + 拥有发布队列），把收集/清理/拥有素材池三职责移交 assets-library；移除 ingestion/清理类 reference（scan-and-dedupe / ai-sanitization-policy / state-model）；旧名在描述中保留作路由兼容，install.sh `retired` 加 `content-asset-pool` 清旧软链；全仓指针、`shared/store-base-architecture.md`/`preamble.md` 表所有权、README 同步更新。
 - `listing-catalog/references`：**Etsy preset 按平台分组 + 收敛为长期有效原则**。
   - **分组**：原 `references/` 平铺混了引擎层与平台层，且 Etsy 一个平台铺了 4 个互相循环引用的文件（`etsy-seo.md` / `gift-scenario.md` / `holiday-calendar.md` / `erank-research.md` 共 733 行）。现新增 `references/platforms/` 一层，把平台 preset 与引擎层（`base-schema.md` / `business-knowledge-lookup.md` / `input-checklist.md`）分离；4 个 Etsy 文件合并为单文件 `platforms/etsy.md`，`xiaohongshu-commerce.md` → `platforms/xiaohongshu.md`。**新平台扩展 = 往 `platforms/` 丢一个 `{平台}.md`**。
   - **精简**：`platforms/etsy.md` 进一步从合并后的 ~290 行收敛到 **~68 行的原则级文档**——只留「Etsy 是什么（搜索驱动的礼物市场等不变事实）+ 要填哪些参数 + 每个参数的总原则」。剔除所有随时间变化的内容（具体节日日期表、eRank 搜索量/竞争阈值与界面流程、当前热词）与固化套路（description 段 1-7 模板、客单价档分档表、13 tag 数字配额、礼物场景 5 问脚本 Q1-Q5、title 占位公式）。

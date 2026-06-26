@@ -1,6 +1,6 @@
 # `社媒发布队列` Pinterest 行 Schema
 
-> Pinterest pin 不再单独建表。一条 Pinterest pin = 店铺总 Base 内 `社媒发布队列` 表里 `平台 = Pinterest` 的一行。用 `lark-base` 在该表内补齐下面这些 Pinterest 行需要的字段即可；跨平台通用字段（`任务 ID` / `平台` / `状态` / `关联素材` / `计划发布时间` / `自动发布` / `发布适配器` / `执行锁` 等）见 [`content-asset-pool/references/base-schema.md`](../../content-asset-pool/references/base-schema.md) 和 [`social-publisher/references/publishing-queue-contract.md`](../../social-publisher/references/publishing-queue-contract.md)。不要为 Pinterest 队列默认创建独立 Base / 独立表；迁移期旧的独立 Pinterest 队列数据源只作为只读来源。
+> Pinterest pin 不再单独建表。一条 Pinterest pin = 店铺总 Base 内 `社媒发布队列` 表里 `平台 = Pinterest` 的一行。用 `lark-base` 在该表内补齐下面这些 Pinterest 行需要的字段即可；跨平台通用字段（`任务 ID` / `平台` / `状态` / `关联素材` / `计划发布时间` / `自动发布` / `发布适配器` / `执行锁` 等）见 [`publish-composer/references/base-schema.md`](../../publish-composer/references/base-schema.md) 和 [`social-publisher/references/publishing-queue-contract.md`](../../social-publisher/references/publishing-queue-contract.md)。不要为 Pinterest 队列默认创建独立 Base / 独立表；迁移期旧的独立 Pinterest 队列数据源只作为只读来源。
 
 ## 数据模型
 

@@ -1,4 +1,4 @@
-# Content Asset Pool Tables Schema
+# Publish Composer Tables Schema（社媒发布队列 / PublishIntent）
 
 本 skill（publish-composer）真正 **owner 的是一张表：`社媒发布队列 / PublishIntent`**（表 2）。素材侧（素材池 + 派生素材）的 schema **owner 是 assets-library**，本 skill 只读引用（契约 1）。
 

@@ -44,8 +44,9 @@
 
 | 逻辑键 | 表名 | 归属 skill | 说明 |
 |---|---|---|---|
-| `assets` | `Assets 素材池` | assets-library / content-asset-pool | 图片、视频、发布副本、授权、AI 清理状态 |
-| `publishing_queue` | `社媒发布队列` | content-asset-pool / social-publisher / pinterest-autopin | 跨平台发布任务（含 Pinterest pin）的 source of truth；用 `平台` 字段区分 |
+| `assets` | `Assets 素材池` | assets-library | canonical 成品（图片/视频）、授权、检索；schema 唯一 owner |
+| `asset_variants` | `Asset Variants 派生素材` | assets-library | 平台发布副本变体（裁切/封面/清理），派生自 canonical |
+| `publishing_queue` | `社媒发布队列` | publish-composer（owner）/ social-publisher / pinterest-autopin / xiaohongshu-autopost | 跨平台发布任务 PublishIntent 的 source of truth；用 `平台` + typed extension 区分 |
 | `knowledge_cards` | `Knowledge Cards 知识卡片` | business-knowledge | 业务知识卡片、引用次数、brief 关联 |
 
 表名可以本地化，但逻辑键必须稳定，便于各 skill 读取配置。

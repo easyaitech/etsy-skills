@@ -82,7 +82,7 @@
 
 - 商品字段与上架信息：`listing-catalog/references/platforms/xiaohongshu.md`
 - 订单 / 客服 / 售后字段：`orders-customers/references/xiaohongshu-orders.md`
-- 图文 / 视频发布任务：`content-asset-pool/references/platform-publishing-model.md`
+- 图文 / 视频发布任务：`publish-composer/references/platform-publishing-model.md`
 - 自动发布状态：`social-publisher/references/adapter-registry.md` 当前标记为 planned/manual-only；只能建草稿和人工对账，不能自动上传或发布。
 - 商品结构：SPU / SPL / SPV / ITEM。
 - 关键字段：品牌 ID、末级类目 ID、商品名称、商品简称、销售规格、SKU 规格、商品图、描述、商品特色、产品参数、FAQ、使用指南图、图文详情图、条码、重量、原产国、材质/用途/厂家、海关备案图、价格、库存、上下架状态、审核状态。
