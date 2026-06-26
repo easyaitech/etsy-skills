@@ -1,6 +1,6 @@
 ---
 name: assets-library
-description: 维护电商店铺的视觉与素材资产库（摄影 / 视频 / 视觉模板 / 字体 / Logo / 包装物料 / 客户 UGC / 营销素材）。六个一级文件夹（商品 / 品牌 / 客户 / 工作室 / 营销 / 待处理）+ 店铺总 Base 内 `Assets 素材池` 表双层架构。四种触发：(1) 建库：用户提到"建素材库 / 建资产库 / 整理素材"等首次建立请求时——建文件夹骨架 + `Assets 素材池` 表；(2) 归档：用户提到"上传新摄影 / 归档某 SKU 的图 / 整理新素材 / 收到客户 UGC / 整理营销素材"等请求时——新素材先入待处理/，分类后移入对应文件夹 + 录入 `Assets 素材池` 表（B1 dump / B2 promote）；(3) 查找：用户提到"找某 SKU 的图 / 查能发 Pinterest 的素材 / 查某次营销活动素材"等检索请求时——走 Base 多维筛选；(4) 拍前规划：用户提到"给某 SKU 出拍摄 brief"等请求时——按 COMMERCE_PLATFORM.md 的目标平台媒体规则出 markdown shoot brief；Etsy 走内置 10 槽位 preset，小红书走内置商品图 / 详情图规则（模式 D plan，落 商品/{SKU}_shoot-brief.md）。归档与 brief 严格遵守 BRAND.md 视觉原则（如存在）。
+description: 维护电商店铺的视觉与素材资产库（摄影 / 视频 / 视觉模板 / 字体 / Logo / 包装物料 / 客户 UGC / 营销素材）。六个一级文件夹（商品 / 品牌 / 客户 / 工作室 / 营销 / 待处理）+ 店铺总 Base 内 `Assets 素材池` 表（canonical 成品）+ `Asset Variants 派生素材` 表（平台发布副本）双层架构。五种触发：(1) 建库：用户提到"建素材库 / 建资产库 / 整理素材"等首次建立请求时——建文件夹骨架 + `Assets 素材池` 表；(2) 归档：用户提到"上传新摄影 / 归档某 SKU 的图 / 整理新素材 / 收到客户 UGC / 整理营销素材 / 收集这些图"等请求时——新素材先入待处理/，分类后移入对应文件夹 + 录入 `Assets 素材池` 表（B1 dump / B2 promote）。**素材收集进池是本 skill 唯一职责**，下游发布编排不自己收集；(3) 查找：用户提到"找某 SKU 的图 / 查能发 Pinterest 的素材 / 查某次营销活动素材"等检索请求时——走 Base 多维筛选；(4) 拍前规划：用户提到"给某 SKU 出拍摄 brief"等请求时——按 COMMERCE_PLATFORM.md 的目标平台媒体规则出 markdown shoot brief；Etsy 走内置 10 槽位 preset，小红书走内置商品图 / 详情图规则（模式 D plan，落 商品/{SKU}_shoot-brief.md）；(5) 派生平台变体：用户或 publish-composer 提到"给某 SKU 出小红书笔记封面 / Pinterest 竖裁 / 按平台规格出发布副本 / 出某平台尺寸图"等请求时——从已有 canonical 成品按目标平台规格派生发布变体（裁切 / 封面 / 压缩 / 清理），录入 `Asset Variants 派生素材` 表（模式 E）。**多平台下本 skill 是「按平台规格的变体工厂」**。归档、brief、变体严格遵守 BRAND.md 视觉原则（如存在）。
 layer: foundation
 ---
 
@@ -34,7 +34,7 @@ layer: foundation
 
 ---
 
-## 四种执行模式
+## 五种执行模式
 
 ### 模式 A：建库（首次建立双层骨架）
 
@@ -185,6 +185,46 @@ layer: foundation
 
 ---
 
+### 模式 E：派生平台变体（多平台发布副本工厂）
+
+**进入条件**：
+- 用户主动："给 {SKU} 出小红书笔记封面 / Pinterest 竖裁 / 出某平台尺寸的发布副本"
+- `publish-composer` 组某平台 PublishIntent 时发现缺该平台规格的变体 → 反向请求本 skill 派生
+
+**输入**：
+
+| # | 输入 | 是否必需 | 缺失时怎么办 |
+|---|---|---|---|
+| 1 | 源 canonical 成品（`Assets 素材池` 一行 / 文件链接）| 必需 | 没有成品：**阻塞**，提示先走模式 B2 promote 一张 canonical 成品 |
+| 2 | 目标平台 + 用途 | 必需 | 缺：问用户"派给哪个平台、什么用途（封面 / 商品图 / 详情图 / pin）" |
+| 3 | `COMMERCE_PLATFORM.md` / `MARKETING_PLATFORM.md` 平台规格 | 目标平台非 Etsy / 小红书时必需 | Etsy / 小红书走内置 preset；其他平台缺配置则阻塞 |
+| 4 | `BRAND.md` § 视觉禁区 | 推荐不阻塞 | 带字封面 / 模板套用时作合规自检 |
+
+**派生类型与归属**（D-A8 synth-vs-派生边界）：
+
+| 派生类型 | 怎么做 | 谁做 |
+|---|---|---|
+| 裁切 / 缩放 / 比例适配（2:3 pin、3:4 小红书） | 机械裁切工具 | **本 skill** |
+| 压缩副本 / 缩略图 / 视频首帧 | 机械工具 | **本 skill** |
+| AI metadata / 水印清理 | `remove-ai-watermarks` + `jpegoptim` / `optipng`（见 [`../shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md)）| **本 skill** |
+| 模板化带字封面（品牌框 + 文字叠层，模板已定） | 套模板 | **本 skill** |
+| 需要**全新创意构图**的封面 / 海报 | 不是机械派生 | **委托 `image-synth`**（模式 B），产出物再回本 skill 录为变体 |
+
+**执行步骤**：
+1. 确认源 canonical 成品存在；读目标平台规格（preset 或 COMMERCE/MARKETING_PLATFORM.md）
+2. 判定派生类型 → 机械/模板化在本 skill 做；需新创意构图则委托 image-synth（边界见上表）
+3. **不覆盖原图**：派生输出为**新文件**，上传到对应文件夹（社媒发布图→`营销/`，listing 图→`商品/`）
+4. 列动作清单 + Base 字段值给用户确认（写入前硬约束）
+5. 在 `Asset Variants 派生素材` 表录一行：`派生自`（关联 canonical）/ `派生类型` / `目标平台` / `比例尺寸` / `AI 清理状态` / `派生来源工具`（schema 见 [asset-index-base-schema.md § 派生素材 / AssetVariant](references/asset-index-base-schema.md)）
+6. 回执：变体文件链接 + "publish-composer 引用本变体组 PublishIntent，不要再清理 / 裁切"
+
+**关键约束**：
+- 派生**只作用在发布副本**，永不替换 / 覆盖 canonical 原图（与固定处理模型一致）
+- 同一 canonical 可有多个变体（Pinterest 一个、小红书一个）；每个变体一行
+- 下游 `publish-composer` / 平台 adapter **只引用**变体文件链接，不重新清理 / 裁切（清理派生单点在本层）
+
+---
+
 ## 写入前的硬性约束
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有禁区：
@@ -192,7 +232,7 @@ layer: foundation
 - **文件操作前列出动作清单** → 等用户确认 → 执行（lark-drive）
 - **Base 录入前列出字段值清单** → 等用户确认 → 写入（lark-base）
 - **不删除原始素材**：摄影原图（RAW / 高清 JPG）一旦归档，本 skill 不主动删除（容量管理由用户人工决策）
-- **不替用户做通用图片编辑**：只管目录、命名、归档、索引；裁切 / 调色 / 加水印等由用户人工或其他工具。唯一例外是模式 B2 中 final listing / 社媒发布图的 AI metadata / AI watermark 清理，且只处理发布副本，不碰原始素材
+- **不替用户做创意图片编辑**：调色 / 创意构图 / 新海报由用户人工或 `image-synth`。但**模式 E 的机械/模板化派生平台变体（裁切 / 缩放 / 压缩 / 缩略图 / AI metadata 清理 / 套定好的模板封面）是本 skill 的职责**——这是多平台发布的「变体工厂」能力（D-A7/D-A8）。所有派生**只作用在发布副本**，永不替换 / 覆盖原始 canonical 素材；需要全新创意构图的封面/海报委托 `image-synth`
 - **single source of truth**：每个文件在云空间只放一份——多归属靠 Base 多选字段表达，不要靠拷贝。详见 [asset-index-base-schema.md § 设计原则](references/asset-index-base-schema.md#设计原则)
 
 ---
@@ -209,6 +249,10 @@ layer: foundation
   - 模式 D step 11 反向触发 image-synth：用户选"不拍直接合成"时现传 brief 词库 in-memory，避免重新读文件
   - image-synth 出的 AI 合成图最终通过本 skill 模式 B2 promote 入 `Assets 素材池` 表：其"备注"字段以 `[AI 合成] {prompt 摘要}` 前缀写入；电商 / listing 图上传到 `商品/` 文件夹，社媒 / 营销图上传到 `营销/` 文件夹，按命名规则命名
   - **v0 不动 schema**：`Assets 素材池` 表不新增"AI 合成"词汇，仅在"备注"字段标前缀。v1 观察后再决定是否升级
+- **publish-composer（社媒发布编排）**：
+  - composer 组某平台 PublishIntent 时**只引用** `Asset Variants 派生素材` 的发布副本文件链接，不自己收集 / 清理 / 裁切
+  - composer 发现缺某平台规格变体 → 反向请求本 skill 模式 E 派生；本 skill 录入变体后把链接交回 composer
+  - 边界：素材这个**名词**（canonical + 变体 + 收集 + 清理 + 检索）归本 skill；发布这个**动词**（组 intent + 队列）归 composer
 
 ---
 
