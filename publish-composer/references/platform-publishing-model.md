@@ -24,7 +24,7 @@
 - `外部队列 ID`
 - `发布 URL`
 
-平台专用字段可以放在 社媒发布队列 的 `平台字段 JSON` 或备注中，不进入 Asset Pool 核心 schema。真实执行由 `social-publisher` 按 adapter registry 路由。
+平台专用字段走 社媒发布队列 的 `平台扩展 (typed)`——每平台注册自己的 typed extension schema + validator（见 [base-schema.md 表 2](base-schema.md)），不是自由 JSON，也不进入素材 schema。真实执行由 `social-publisher` 按 adapter registry 路由。
 
 ---
 
@@ -109,7 +109,7 @@
 - 正文、标签、话题和标题属于 社媒发布队列，不写回素材池。
 - 标题 / 正文 / 标签默认中文；如果 MARKETING_PLATFORM.md 要求双语，再按配置输出。
 - 如一篇笔记复用商品素材，`链接` 可为空或填站外允许的落地页；商品型发布仍优先`Products 商品` 表 `分享链接`。
-- `平台字段 JSON` 可保存 `noteType=图文笔记`、话题列表、商品 ID、人工审核备注等；不知道的后台字段写 `待后台确认`。
+- `平台扩展 (typed)` 按 `XiaohongshuExt` schema 保存 `note_type`、`topic_tags`、`cover_caption`、`related_item_id` 等，过 validator；不知道的后台字段留空标 `待后台确认`，不接受 schema 外字段。
 - 当前 `social-publisher` 尚未启用小红书 adapter，本 skill 只生成小红书发布任务草稿，不登录、不上传、不发布。人工发布后可回填公开笔记 URL 做对账。
 
 ## 小红书视频

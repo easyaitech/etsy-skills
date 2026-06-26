@@ -5,7 +5,7 @@
 ```
 ┌──────────────────────────────────────────────────┐
 │              应用层（Application）                 │
-│ content-asset-pool social-publisher              │
+│ publish-composer social-publisher              │
 │ pinterest-autopin image-synth                    │
 │ (未来...)                                         │
 └─────────────────────┬────────────────────────────┘
@@ -40,7 +40,7 @@
 ### 应用层
 
 围绕基座层运行，从基座取数据、用基座的规则约束输出。当前：
-- `content-asset-pool`：取素材 + 商品 + 平台意图 → 维护跨平台发布池与发布任务
+- `publish-composer`：取 assets-library 变体 + 商品 + 平台策略 → 组跨平台发布意图 PublishIntent，拥有 `社媒发布队列`（只引用变体，不收集/清理/裁切）
 - `social-publisher`：取 社媒发布队列 → 做任务校验、占用、适配器路由、自动发布巡检和结果回写
 - `pinterest-autopin`：Pinterest adapter；取 社媒发布队列（`平台 = Pinterest` 行）+ 商品 + 素材 + 品牌 → 组 pin 发布
 - `image-synth`：取品牌视觉 + 商品信息 → AI 合成图
@@ -72,7 +72,7 @@
 
 下表列出各 skill 对基座文件的依赖等级（按模式区分）。具体用法见各 skill 的「依赖关系」节。
 
-| 依赖 \ Skill | listing-catalog | orders-customers | supplier-foundation | business-knowledge | assets-library | content-asset-pool | social-publisher | pinterest-autopin | image-synth |
+| 依赖 \ Skill | listing-catalog | orders-customers | supplier-foundation | business-knowledge | assets-library | publish-composer | social-publisher | pinterest-autopin | image-synth |
 |---|---|---|---|---|---|---|---|---|---|
 | BRAND.md | 写文案=**BLOCK**；查改=SKIP | 客服=**BLOCK**；录入=SKIP | SKIP | brief=**DEGRADE** | B2=**DEGRADE**；D=**DEGRADE** | SKIP | SKIP | 组 pin=**BLOCK** | **DEGRADE** |
 | SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | 建知识卡片表=**BLOCK**；brief=**DEGRADE** | D=SKIP | 建表=**BLOCK** | 发布表定位=**BLOCK** | 组 pin=**BLOCK** | SKIP |

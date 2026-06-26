@@ -60,7 +60,7 @@
 
 - 商品上架 / `Products 商品` 表：`listing-catalog/references/platforms/xiaohongshu.md`
 - 订单 / 客服 / 售后表：`orders-customers/references/platforms/xiaohongshu.md`
-- 发布任务池：`content-asset-pool/references/platform-publishing-model.md` 的“小红书图文 / 小红书视频”
+- 发布任务池：`publish-composer/references/platform-publishing-model.md` 的“小红书图文 / 小红书视频”
 - 自动发布状态：`social-publisher/references/adapter-registry.md` 当前将小红书标为 planned/manual-only，不能自动上传或发布
 - 社媒图默认规格：`image-synth/references/social-platform-specs.md` 的“小红书图文 / 商品种草图”
 
@@ -74,5 +74,5 @@
 2. 在目标平台章节填完必填配置和平台规则。
 3. 用 `listing-catalog` 建或更新 `Products 商品` 表，字段用通用名；平台专属字段放 `平台字段 JSON` 或清晰命名的补充字段。
 4. 若平台涉及订单或客服，再用 `orders-customers` 建或更新 `Orders 订单` / `Customers 客户` 表，字段用通用名 + 平台专属字段分组。
-5. 若平台涉及素材发布，再用 `content-asset-pool` 建发布任务；真实发布统一交给 `social-publisher`，由 enabled adapter 执行。没有 enabled adapter 的平台只做人工后台或对账。
+5. 若平台涉及素材发布，再用 `publish-composer` 建发布任务；真实发布统一交给 `social-publisher`，由 enabled adapter 执行。没有 enabled adapter 的平台只做人工后台或对账。
 6. 先跑一个 SKU / 一个订单 / 一个发布任务的端到端草稿，人工确认规则够不够，再批量复用。
