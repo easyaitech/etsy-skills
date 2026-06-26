@@ -26,7 +26,7 @@
 | 关联 SKU | 关联（`Products 商品` 表） | △ | `TEACUP-001`, `TEACUP-007` | — |
 | 关联订单 | 关联（`Orders 订单` 表） | △ | `ORDER-2026-001` | — |
 | 关联客户 | 关联（`Customers 客户` 表） | △ | (客户 open_id) | — |
-| 用途标签 | 多选 | △ | **Etsy 槽位**：`hero / variation / scale / size-chart / detail / lifestyle / packaging / brand-story / context / comparison`（与 [etsy-listing-photo-slots.md](etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 对齐）<br>**渠道**：`Pinterest / Instagram Posts / Instagram Reels / Instagram Stories / 小红书 / 评价素材 / 内部参考`<br>**Etsy 店铺**：`Etsy 店铺 banner`<br>**legacy（仅旧数据兼容）**：`Etsy listing 主图（→ 等同 hero）/ Etsy listing 详情（→ 等同 detail）` | 一份素材投多槽位 + 多渠道全勾上；先空着也行，发布到某渠道时再补。模式 D 部分跑反查 SKU 已覆盖槽位时按这套词汇表推断；遇到 legacy 标签按对应映射 |
+| 用途标签 | 多选 | △ | **Etsy 槽位**：`hero / variation / scale / size-chart / detail / lifestyle / packaging / brand-story / context / comparison`（与 [etsy-listing-photo-slots.md](etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 对齐）<br>**渠道**：`Pinterest / Instagram Posts / Instagram Reels / Instagram Stories / 小红书 / 评价素材 / 内部参考`<br>**Etsy 店铺**：`Etsy 店铺 banner`<br>**legacy（仅旧数据兼容）**：`Etsy listing 主图（→ 等同 hero）/ Etsy listing 详情（→ 等同 detail）` | 一份素材投多槽位 + 多渠道全勾上；先空着也行，发布到某渠道时再补。image-brief 部分跑反查 SKU 已覆盖槽位时按这套词汇表推断；遇到 legacy 标签按对应映射 |
 | 比例 / 尺寸 | 多选 | △ | `1x1 / 4x5 / 9x16 / 16x9 / 自由` | 视频和成图建议填，便于按渠道筛 |
 | 公开授权 | 单选 | ✓ | `已授权 / 仅内部 / 待沟通 / 不可公开` | 客户拍摄类的关键合规位；非客户类默认"已授权" |
 | BRAND 合规 | checkbox | ✓ | `true` / `false` | 对照 BRAND.md `§ 视觉原则` 的自检结果；不通过时把理由写进"备注" |

@@ -1,8 +1,8 @@
 ---
 name: image-synth
-description: 调中心后端生图服务(GPT Image 2 via OpenRouter)把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。三种触发：(1) 模式 A 电商图：用户提到"出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图 / 小红书商品图"等请求时——按 COMMERCE_PLATFORM.md 的目标销售平台媒体规则出图；Etsy 走内置槽位语义，小红书走内置商品图 / 详情图规则，QA 检查商品形态保持 + 文字可读性 + 平台主图规范；(2) 模式 B 社媒图：用户提到"出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / 群发图 / banner"等请求时——按目标内容平台尺寸出图，QA 仅检查文字可读性；(3) 反向触发：assets-library 模式 D 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，落 `<workspace>/.cache/image-synth/ai_raw/`，QA 不通过自动调 prompt 重试 ≤ 2 次；用户三选一（入库走 assets-library promote / 留 ai_raw / 丢弃）。严格遵守 BRAND.md 视觉禁区（如存在）。
+description: 调中心后端生图服务(GPT Image 2 via OpenRouter)把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。三种触发：(1) 模式 A 电商图：用户提到"出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图 / 小红书商品图"等请求时——按 COMMERCE_PLATFORM.md 的目标销售平台媒体规则出图；Etsy 走内置槽位语义，小红书走内置商品图 / 详情图规则，QA 检查商品形态保持 + 文字可读性 + 平台主图规范；(2) 模式 B 社媒图：用户提到"出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / 群发图 / banner"等请求时——按目标内容平台尺寸出图，QA 仅检查文字可读性；(3) 反向触发：image-brief 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，落 `<workspace>/.cache/image-synth/ai_raw/`，QA 不通过自动调 prompt 重试 ≤ 2 次；用户三选一（入库走 assets-library promote / 留 ai_raw / 丢弃）。严格遵守 BRAND.md 视觉禁区（如存在）。
 layer: application
-depends-on: [shop-foundation, listing-catalog, assets-library]
+depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 ---
 
 # Image Synth (AI 图片合成)
@@ -76,7 +76,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 7. **生图**——经 `terminal` 调**中心后端** `POST /image/generate`（契约见 [references/backend-image-gen-contract.md](references/backend-image-gen-contract.md)）：传 prompt + 实拍图（base64，受大小/数量上限约束）+ aspect/resolution + **idempotency key**（本次请求唯一；重试复用同一个 → 后端去重，不重复扣费）。**严格 1 张**。**不传 model slug**——模型由后端 allowlist 决定（默认 GPT Image 2）。
    - **失败显式报错，绝不静默**：`quota_exceeded` → 报「本租户配额用尽」停；`upstream`/网络（明确未计费）→ 退避重试**一次**（复用同一 idempotency key）；**超时（504）→ 报「生成超时，计费未知」，换一个新的 idempotency key 再试一次，或停下**（同 key 会返 409，因后端标 uncertain 防重复扣费）。任何失败都**不对缺失图跑 QA**，原因落 sidecar。
 8. **QA**——按 [qa-gates.md](references/qa-gates.md) 对应段（模式 A / 模式 B）走全部 checks。含自动重试 ≤ 2 次 + 第 3 轮失败用户三选一
-9. **落盘**——按 [output-layout.md](references/output-layout.md) 写到 `<workspace>/.cache/image-synth/ai_raw/{date}/` + 同名 sidecar `.json`。本地写入用 `mkdir -p` 一步建目录（`.cache/` 是本地 fs，不需要 assets-library 模式 D 的逐层检查——那是 `lark-drive` 限制）
+9. **落盘**——按 [output-layout.md](references/output-layout.md) 写到 `<workspace>/.cache/image-synth/ai_raw/{date}/` + 同名 sidecar `.json`。本地写入用 `mkdir -p` 一步建目录（`.cache/` 是本地 fs，不需要 image-brief 写 brief 时那种 `lark-drive` 逐层检查）
 10. **用户三选一**：
     - **入库** → 调用 `assets-library` 模式 B2 promote；按 [output-layout.md § promote 字段透传](references/output-layout.md#promote-入库时的字段透传) 现传 sidecar 元数据；如果用途是最终 listing 图或社媒发布图，由 assets-library 在 promote 时处理 AI metadata / AI watermark 发布副本
     - **留 ai_raw** → 保留 `.cache/`，不入索引
@@ -139,7 +139,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 | 调用方 | 触发位 | 现传字段 | 进入模式 |
 |---|---|---|---|
-| `assets-library` 模式 D step 11 | 用户选"不拍直接合成" | brief §A 槽位选项 + §B Mood + §C 镜头清单 + 用户挑的目标槽位 | **A** |
+| `image-brief` 模式 B 分叉 | 用户选"不拍直接合成" | brief §A 槽位选项 + §B Mood + §C 镜头清单 + 用户挑的目标槽位 | **A** |
 | `pinterest-autopin` 模式 B step 3 | Pinterest 候选池空 + 用户选"AI 合成" | SKU + 目标 board + 已草拟 pin 文案 + 目标平台 = Pinterest 1000×1500 | **B** |
 | `listing-catalog` 模式 B step 10 | 用户选"不拍直接 AI 合成" | 礼物词库（受众 / 场景 / 节日 / 包装） + description 礼物 / 使用语境 + `Products 商品` 表中该 SKU 行 | **A** |
 
@@ -162,8 +162,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 ## 与其他 skill 的协作
 
 - **shop-foundation**：BRAND.md § 视觉禁区是 negative prompt **唯一**来源；用户对生成图的纠正（"这种风格不像我们品牌"）按 shop-foundation 沉淀流程流回 BRAND.md
+- **image-brief**：image-brief 出的 brief 是本 skill 的**主输入源**（brief 路径 `商品/{SKU}_shoot-brief.md` / 反向触发现传 in-memory）；image-brief 模式 B 分叉选"不拍直接合成"时反向触发本 skill。
 - **assets-library**：
-  - 模式 D 出 shoot-brief.md 是本 skill 的**主输入源**（brief 路径 / 反向触发 in-memory）
   - 用户选"入库" → 调 assets-library 模式 B2 promote；现传 sidecar 元数据（含 `[AI 合成]` 标记）。AI metadata / AI watermark 清理只在 promote 的发布副本上发生，不改 ai_raw 原图
   - 入库标签字段值取自 assets-library schema 的 § 用途标签 词汇表——本 skill **不**自定义；v0 不动 schema，AI 合成识别靠 Base "备注"字段前缀
 - **listing-catalog**：`Products 商品` 表中该 SKU 行的 title / 品类 / SEO 词作 anchor 选填输入；本 skill 不写 `Products 商品` 表

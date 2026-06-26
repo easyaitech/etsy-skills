@@ -1,6 +1,6 @@
-# Shoot Brief 模板（模式 D 输出骨架）
+# Image Brief 模板（image-brief 模式 A 输出骨架）
 
-> 本文档是模式 D（plan）生成的 shoot-brief 文件的**模板骨架**。模式 D 执行 step 7 时，按本骨架结构填具体内容；step 9c 上传到 `商品/{SKU}_shoot-brief.md`。
+> 本文档是 `image-brief` 模式 A 生成的 brief 文件的**模板骨架**。模式 A 执行 step 7 时，按本骨架结构填具体内容；step 9c 上传到 `商品/{SKU}_shoot-brief.md`（文件名沿用 `shoot-brief` 以保持下游 image-synth 引用契约稳定；同一份 brief 同时服务人工拍摄与 AI 合成两条生产路径）。
 
 ## 模板骨架
 

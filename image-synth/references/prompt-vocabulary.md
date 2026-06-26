@@ -119,7 +119,7 @@ anchor **不允许缺**——这是保商品形态不跑偏的核心。如果实
 
 ### 唯一来源：BRAND.md § 视觉禁区
 
-**逐条复制原文**翻译成英文短语（禁区文案 **不做 paraphrase**——避免漏关键禁区元素，与 assets-library shoot-brief-template.md §B 段约定一致）。
+**逐条复制原文**翻译成英文短语（禁区文案 **不做 paraphrase**——避免漏关键禁区元素，与 image-brief brief-template.md §B 段约定一致）。
 
 例：
 
@@ -244,7 +244,7 @@ Negative prompt（独立传，如生图工具支持；不支持则附在 prompt 
 - shot-spec.背景：{从场景推断；用户没指定时按槽位 default}
 ```
 
-**第 3 轮**：让用户微调或确认。如果用户还在犹豫，**不要继续追问**——建议用户先回 assets-library 模式 D 出正式 brief 再回来。
+**第 3 轮**：让用户微调或确认。如果用户还在犹豫，**不要继续追问**——建议用户先回 image-brief 出正式 brief 再回来。
 
 3 轮内对齐不上就降级为"用户先出正式 brief"——避免无限轮聊天消耗用户耐心。
 
