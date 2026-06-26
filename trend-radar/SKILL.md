@@ -33,6 +33,7 @@ layer: utility-input
 - 商品信息通过 `<workspace>/.cache/trend-radar/business-context/product-catalog.json` 读取，不在 Node CLI 里直连飞书 Base
 - 下游（business-knowledge）缺失时 SKIP，不阻塞本 skill
 - 本 skill 缺失时，下游也 SKIP — 遵循 dependency-protocol
+- **工具架构（过渡）**：抓取在 Mac mini 上跑 Node CLI，需要 `SERPAPI_KEY` / 登录态 profile——密钥在 Hermes 上是**过渡**形态。Trends 有 API（选型优先级 tier 1），抓取与密钥应上收 ECS；当前已与飞书 Base 解耦（只读本地缓存）是好的隔离。见 [`shared/tools-architecture.md`](../shared/tools-architecture.md)
 
 ## 使用方式
 

@@ -24,7 +24,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 
 它不替代 `assets-library`、`listing-catalog` 或 `social-publisher`。它负责发布前调度、跨平台状态与发布副本追踪；长期归档仍归 `assets-library`，商品事实和分享链接仍归 `listing-catalog`，实际平台发布统一交给 `social-publisher` 再路由到具体平台适配器。
 
-> 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
+> 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)，工具架构见 [`shared/tools-architecture.md`](../shared/tools-architecture.md)（本 skill 是纯语义 / 调度层，发布执行交 social-publisher，不持有工具 / 密钥 / 浏览器会话，已符合约束）。
 
 ---
 

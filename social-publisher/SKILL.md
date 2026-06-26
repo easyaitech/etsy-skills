@@ -20,6 +20,8 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，平台配置见 [`shared/platform-config.md`](../shared/platform-config.md)。
 
+> **工具架构**（见 [`shared/tools-architecture.md`](../shared/tools-architecture.md)）：本 skill 现在用 `执行锁` + 单实例巡检 + 重试在 Hermes 上手搓控制面——这是 ECS 队列缺位时的**过渡**方案。中长期：队列调度 / 锁 / 重试归 ECS，本 skill 退化成薄调用方；Base-as-source-of-truth + `执行锁` 可作过渡期单写者保留。登录 / 凭据红线见 §禁区（已有）。
+
 ---
 
 ## 必读引用

@@ -8,6 +8,7 @@
   ],
   "platformConfig": "shared/platform-config.md",
   "storeBaseArchitecture": "shared/store-base-architecture.md",
+  "toolsArchitecture": "shared/tools-architecture.md",
   "homepage": "https://github.com/easyaitech/etsy-skills",
   "skills": [
     "shop-foundation",
