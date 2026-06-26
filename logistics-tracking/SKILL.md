@@ -17,14 +17,25 @@ description: 跨境物流状态跟踪——用 `track` 命令查/录包裹物流
 ## 何时用哪条
 
 - **拿到运单号 / 发货**：`~/.local/bin/track add <运单号> <租户ID> <order_ref> [carrier]` —— 纳入后台跟踪。
-- **用户问“这单到哪了 / 到货没 / 查快递 / 签收了吗”**：`~/.local/bin/track query <运单号> [carrier]` —— 据返回 JSON 的 `status` + `latest_event` 用中文口语化回答（别把原始 JSON 甩给用户）。
+- **用户问“这单到哪了 / 到货没 / 查快递 / 签收了吗”**：`~/.local/bin/track query <运单号> [carrier]` —— 据返回 JSON 的 `awaiting_data` + `status` + `latest_event` + `note` 用中文口语化回答（别把原始 JSON 甩给用户）。
 
 ## 关键规则
 
 - 用**运单号 / 物流跟踪号**（例 `4PX3002882403921CN`），**不是订单号**（订单号查不到）。
 - **务必带承运商码**避免撞号：**4px = 190094**。其他承运商若已知也尽量带；实在不确定才不带（自动识别，有撞错风险）。
-- `status` 枚举：`pending`(待抓) `info_received`(已揽收) `in_transit`(运输中) `out_for_delivery`(派送中) `available_for_pickup`(待自取) `delivered`(已签收) `returned`(退回) `exception`(异常) `suspended`(长期无更新挂起)。
+- `status` 枚举：`pending`(系统已收单但 17TRACK 还没返回轨迹) `not_found`(17TRACK 暂无该单数据) `info_received`(承运商已收到电子面单信息、**等待揽收**——包裹尚未实际收件) `in_transit`(运输中) `out_for_delivery`(派送中) `available_for_pickup`(待自取) `delivered`(已签收) `returned`(退回) `exception`(异常) `suspended`(长期无更新挂起)。
 - register 是幂等的，重复 `add` / `query` 不会重复扣 17TRACK 额度。
+
+### 「正在抓取」≠「等待揽收」——必须分开措辞
+
+新录入的单号第一次查时，系统刚注册、17TRACK 还没回数据，这是个**过渡态**，不是真的卡在揽收。响应里 `awaiting_data` 布尔值把这件事讲清楚了，**先看它再开口**：
+
+- `awaiting_data: true`（`pending` / `not_found` 这类）→ 说**「系统刚把这个单号纳入跟踪，物流数据还在抓取，通常几分钟到几小时到位，稍后我再帮你查一次」**。**别**说成「等待揽收」，也**别**编造轨迹。
+- `awaiting_data: false` 且 `status: info_received` → 这才是**「等待揽收」**：「承运商已经收到发货信息，正在等上门揽件，包裹还没实际收走」。
+- 其它 `status` → 照枚举正常口语化（运输中 / 派送中 / 已签收……）。
+- `note` 字段若非空，是后端给的一句事实提示（含注册失败原因），可直接拿来组织回话；`reg_state: "failed"` / note 提到「注册失败」→ 多半是**运单号或承运商码不对**，让用户核对，别说「正在抓取」。
+
+**反面教材（别这么干）**：用户问到哪了，你回了一长段「为什么状态会变」的科普——『因为这个单号刚录入…我第一次查时系统里还没有…自动注册…轮询…你提醒后强制立即拉取…』。这是把内部实现讲给用户听，啰嗦且没用。用户只想知道**现在到哪了 / 要不要等**。看 `awaiting_data` 一句话讲清楚「正在抓取，请稍候」或「等待揽收」即可。
 
 ## 例
 
@@ -32,6 +43,15 @@ description: 跨境物流状态跟踪——用 `track` 命令查/录包裹物流
 > → 跑 `~/.local/bin/track query 4PX3002882403921CN 190094`
 > → 看到 `status=delivered, latest_event="Delivered. Position: Front door"`
 > → 回：“已经签收啦，快递放在门口了～”
+
+> 用户：“刚发的这单 YT2512… 到哪了”（第一次录入）
+> → 跑 `~/.local/bin/track query YT2512... <carrier>`
+> → 看到 `awaiting_data=true, status=pending`
+> → 回：“刚帮你把这个单号纳入跟踪了，物流数据还在抓取（一般几分钟到几小时出来），稍后我再帮你查一次～” —— **不要**说“等待揽收”，也不要长篇解释为什么。
+
+> 用户：“查下这单”
+> → 看到 `awaiting_data=false, status=info_received`
+> → 回：“承运商已经收到发货信息，正在等上门揽件，包裹还没实际收走哈。”
 
 ## 主动推送（v2，由定时任务触发）
 
