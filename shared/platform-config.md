@@ -48,6 +48,7 @@
 旧仓库里的 Etsy 规则继续作为内置 preset：
 
 - 文案 SEO + 礼物 / 节日维度 + 上架前调研：`listing-catalog/references/platforms/etsy.md`（单文件 preset，原则级；礼物维度调研是模式 B 的 step 5.5，见该文件 § 礼物维度 / § 节日 / 季节 / § 上架前调研）
+- 订单 / 客服 / 履约表：`orders-customers/references/etsy-orders.md`
 - 商品图硬规则：`image-synth/references/etsy-listing-image-specs.md`
 - Listing 槽位语义：`assets-library/references/etsy-listing-photo-slots.md`
 
