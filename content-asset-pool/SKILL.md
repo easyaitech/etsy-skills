@@ -305,7 +305,7 @@ Pinterest / Instagram / 小红书 / TikTok / Etsy Listing / 未来平台
 
 ### Future Platforms
 
-预留 Instagram、小红书、TikTok、Reels、电商平台商品页 / listing 和未来平台。平台专用字段放在 社媒发布队列 的 `平台字段 JSON`，不污染 Asset Pool 核心 schema。未来新增真实发布能力时，只扩 `social-publisher` adapter。
+预留 Instagram、小红书、TikTok、Reels、电商平台商品页 / listing 和未来平台。平台专用字段走 社媒发布队列 的 `平台扩展 (typed)`——每平台注册 typed extension schema + validator（见 [references/base-schema.md 表 2](references/base-schema.md)），不是自由 JSON。未来新增真实发布能力时，只扩 `social-publisher` adapter + 注册该平台 typed schema。
 
 ---
 

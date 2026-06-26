@@ -35,12 +35,37 @@
 
 > △ = 条件必填，按"录入约定"的规则触发。"上传日期"用 Base 内置的"创建时间"即可，不另设字段。
 
+## 派生素材 / AssetVariant（平台发布副本与 canonical 分离）
+
+> **何时需要**：开始做平台发布、需要"清理副本 / 平台裁切 / 带字封面 / 缩略图 / 视频首帧"等**从同一原始成品派生出的多个文件**时。只发原图、不做平台适配的店铺可跳过本节。
+
+**核心原则**：原始成品（canonical）和它的派生文件**不是同一个 asset**。`Assets 素材池` 一行 = 一个 **canonical 成品**；平台发布副本是**派生素材**，单独成行，**不覆盖原图**（与 SKILL.md 固定处理模型一致）。把"清理图 / Pinterest 竖裁 / 小红书带字封面 / 缩略图 / 视频首帧"塞进同一行会丢失"哪个副本投哪个平台、从哪派生、清理没清理"的信息。
+
+**建议表**：店铺总 Base 内 `Asset Variants 派生素材`（扩展表，做发布时再建）。一行 = 一个派生文件。
+
+| 字段名 | 飞书字段类型 | 必填 | 示例 | 说明 |
+|---|---|---|---|---|
+| 派生标题 | 文本（主键） | ✓ | `TEACUP-001 morning-light 001 — Pinterest 2x3 清理副本` | 人眼识别 |
+| 派生自 | 关联（`Assets 素材池` 表） | ✓ | `TEACUP-001 棚拍 morning-light 001` | 指回 canonical 成品；canonical 反查能看到它所有派生 |
+| 文件链接 | URL | ✓ | `https://xxx.feishu.cn/file/...` | 派生文件在云空间的唯一物理位置 |
+| 派生类型 | 单选 | ✓ | `清理副本 / 平台裁切 / 带字封面 / 缩略图 / 视频首帧 / 压缩副本` | 一种派生一行；既裁切又带字 = 记主要意图 + 备注补充 |
+| 目标平台 | 多选 | △ | `Pinterest / 小红书 / Instagram / TikTok / Etsy` | 这个派生为哪个平台准备；通用清理副本可空 |
+| 比例 / 尺寸 | 多选 | △ | `2x3 / 1x1 / 9x16` | 平台裁切类必填 |
+| AI 清理状态 | 单选 | △ | `未处理 / 已清 metadata / 无需处理 / 需人工复核` | 见 [`../../shared/ai-image-sanitization.md`](../../shared/ai-image-sanitization.md)；AI 生成图的发布副本在此记清理 |
+| 派生来源工具 | 文本 | — | `remove-ai-watermarks + jpegoptim` | 可追溯处理链 |
+| 备注 | 多行文本 | — | — | 不结构化上下文 |
+
+> **谁产生派生素材**：assets-library 模式 B2 promote 一张会成为 listing / 社媒待发图的成品时，按 [`../../shared/ai-image-sanitization.md`](../../shared/ai-image-sanitization.md) 产出清理后的发布副本，记一行 `派生素材`。**清理 / 派生只在这一层做一次**，下游 publish-composer / 平台 adapter 只**引用**派生素材的文件链接，不自己重新清理或裁切。这是"资产基质单 owner"的落点。
+
+**边界**：assets-library owner 的是**资产生命周期**（canonical 成品 + 派生文件 + provenance + 清理 + 检索），**不 owner 创意策略**——"要拍 / 生成什么图"的 brief 属 `image-brief`（建后），不属本 skill。
+
 ## 关联方向
 
 ```
 `Assets 素材池` 表
    ├─→ 关联 `Products 商品` 表        （多选关联：一图多 SKU）
    ├─→ 关联 `Orders 订单` 表      （单选关联）
+   ├─← 反查 `Asset Variants 派生素材` 表 （一个 canonical 成品的所有发布副本）
    └─→ 关联 `Customers 客户` 表   （单选关联）
 
 `Products 商品` 表（反向）
