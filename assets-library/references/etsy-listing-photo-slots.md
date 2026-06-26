@@ -6,7 +6,7 @@
 >
 > Agent 跟用户表述时建议用"建议槽位 1 / 2 / 3..."而非"hero / variation slot"等英文术语，避免给用户造成"Etsy 平台真有这些命名"的错觉。
 
-模式 D 用本文档的槽位定义生成 shoot brief 的 §A 表（Etsy 10 槽位映射表）+ §C 镜头清单。
+image-brief 用本文档的槽位定义生成 shoot brief 的 §A 表（Etsy 10 槽位映射表）+ §C 镜头清单。
 
 ---
 
@@ -113,7 +113,7 @@
 
 ## 3. 槽位 ID 与 `Assets 素材池` 表 "用途标签" 字段对齐
 
-模式 D 部分跑（老 SKU 补拍）会用 lark-base 反查 `Assets 素材池` 表中该 SKU 已 promoted 素材的"用途标签"，推断已覆盖槽位。这要求两边的词汇表对齐。
+image-brief 部分跑（老 SKU 补拍）会用 lark-base 反查 `Assets 素材池` 表中该 SKU 已 promoted 素材的"用途标签"，推断已覆盖槽位。这要求两边的词汇表对齐。
 
 **契约词汇表**（`Assets 素材池` 表 "用途标签"字段必须包含；建库 / 升级时同步加入）：
 
@@ -132,7 +132,7 @@
 
 > 当前 `Assets 素材池` 表的"用途标签"字段也用于渠道标记（`Pinterest / Instagram / 小红书 / 评价素材` 等）——本文档的槽位 ID 与渠道标签**共用同一个多选字段**，不冲突。一个素材可同时勾 `hero + Pinterest`（既是 listing 主图又投 Pinterest）。
 
-**降级路径**：如果 `Assets 素材池` 表当前 schema "用途标签"字段词汇表里**没有**槽位 ID（即用户库存量大、历史标签词汇表是 freeform 的），模式 D 部分跑分支降级为"让用户口头列已覆盖槽位"（不阻塞），并提示用户后续在 schema 升级时加上槽位 ID 词汇。
+**降级路径**：如果 `Assets 素材池` 表当前 schema "用途标签"字段词汇表里**没有**槽位 ID（即用户库存量大、历史标签词汇表是 freeform 的），image-brief 部分跑分支降级为"让用户口头列已覆盖槽位"（不阻塞），并提示用户后续在 schema 升级时加上槽位 ID 词汇。
 
 ---
 
@@ -140,7 +140,7 @@
 
 PR1 仅给**通用 10 槽位 SOP**——本文档当前内容。
 
-按品类细化（apparel / jewelry / home & living / digital / paper goods）的优先级矩阵留作 v2，等模式 D 至少跑过 1 次实战后再决定颗粒度——避免 over-engineering 出与实际拍摄场景不匹配的细化规则。
+按品类细化（apparel / jewelry / home & living / digital / paper goods）的优先级矩阵留作 v2，等image-brief 至少跑过 1 次实战后再决定颗粒度——避免 over-engineering 出与实际拍摄场景不匹配的细化规则。
 
 ---
 
@@ -152,7 +152,7 @@ title / tag 里的关键词应该在视觉里能看到。**反向自检**：
 - description 的礼物语境必须有 lifestyle 槽位对应图（讲新婚礼物 → 必须有伴娘场景图）
 - 礼物词库各类（受众 / 场景 / 节日 / 包装）每类至少有 1 张视觉对应图
 
-如果 listing-catalog 模式 B 已生成文案而 shoot brief 还没补足这些视觉对应——**模式 D 应该提示用户**："你 listing 讲了 X 但 brief 里没对应 lifestyle 拍摄计划，要补吗？"
+如果 listing-catalog 模式 B 已生成文案而 shoot brief 还没补足这些视觉对应——**image-brief 应该提示用户**："你 listing 讲了 X 但 brief 里没对应 lifestyle 拍摄计划，要补吗？"
 
 ---
 

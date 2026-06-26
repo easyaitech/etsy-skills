@@ -103,8 +103,8 @@ layer: foundation
    - 顺带提醒用户上架前再对标一次市场定价（按 `references/platforms/etsy.md` § 上架前调研的原则）
    - 不要替用户在平台后台真实上架（平台后台操作不在本 skill 默认范围）
 10. **(可选) 反向触发图像产出** — listing 文案写入 Base 后，如果该 SKU 还没有 `商品/{SKU}_shoot-brief.md`，且也没成品图（**下方涉及的礼物词库仅 Etsy 适用**——非 Etsy 平台 step 5.5 未运行，现传时只给 description 的使用语境 + `Products 商品` 表该 SKU 行，下游 skill 走其「无礼物词库」的常规分支）：
-    - 提示用户："文案定了，刚生成的礼物词库 + Mood 新鲜可用。下一步图怎么办？① 出 shoot brief 去拍（assets-library 模式 D）② 不拍直接 AI 合成（image-synth 模式 A）③ 都跳过（之后再说）"
-    - **选 ①** → invoke `assets-library` 进入模式 D，**调用方现传** 礼物词库（受众 / 场景 / 节日 / 包装）+ description 礼物 / 使用语境 in-memory，让模式 D 直接用，不走 Base 反推。assets-library 模式 D step 11 还会再追问"要不要直接 AI 合成"，用户可在那里继续接 image-synth
+    - 提示用户："文案定了，刚生成的礼物词库 + Mood 新鲜可用。下一步图怎么办？① 出图片方案去拍（image-brief 模式 A）② 不拍直接 AI 合成（image-synth 模式 A）③ 都跳过（之后再说）"
+    - **选 ①** → invoke `image-brief` 进入模式 A，**调用方现传** 礼物词库（受众 / 场景 / 节日 / 包装）+ description 礼物 / 使用语境 in-memory，让 image-brief 直接用，不走 Base 反推。image-brief 模式 B 分叉还会再问"真拍 / 直接 AI 合成"，用户可在那里继续接 image-synth
     - **选 ②** → invoke `image-synth` 进入模式 A，**调用方现传** 礼物词库 + description 礼物 / 使用语境 + `Products 商品` 表中该 SKU 行 in-memory；目标槽位由 image-synth 在盘点输入时跟用户对齐；不预先建 brief 文件
     - **选 ③** → 静默跳过（不阻塞）；用户后续主动 invoke 任一下游 skill 都能正常工作
     - 节奏：本步是 step 9 完成后**同一 turn 内** agent 主动追问的可选环节，不是 step 9 的子步骤；用户回应后才 invoke 下一个 skill
