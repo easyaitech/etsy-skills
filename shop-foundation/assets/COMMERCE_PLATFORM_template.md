@@ -75,6 +75,7 @@
 ### Etsy
 
 - 文案 SEO：`listing-catalog/references/etsy-seo.md`
+- 订单 / 客服 / 履约字段：`orders-customers/references/etsy-orders.md`
 - 商品图硬规则：`image-synth/references/etsy-listing-image-specs.md`
 - Listing 槽位语义：`assets-library/references/etsy-listing-photo-slots.md`
 

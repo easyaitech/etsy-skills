@@ -48,6 +48,7 @@
 旧仓库里的 Etsy 规则继续作为内置 preset：
 
 - 文案 SEO：`listing-catalog/references/etsy-seo.md`
+- 订单 / 客服 / 履约表：`orders-customers/references/etsy-orders.md`
 - 礼物 / 节日场景调研：`listing-catalog/references/gift-scenario.md` + `listing-catalog/references/holiday-calendar.md`（listing-catalog 模式 B 的 step 5.5）
 - 商品图硬规则：`image-synth/references/etsy-listing-image-specs.md`
 - Listing 槽位语义：`assets-library/references/etsy-listing-photo-slots.md`
