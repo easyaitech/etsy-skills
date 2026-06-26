@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- `logistics-tracking`：新增**薄物流跟踪 skill**——让 Hermes agent 知道有个 `track` 命令（接后端常驻的 17TRACK 跟踪服务）用于查/录跨境物流（用户问"这单到哪了"→ `track query`；发货 → `track add`），覆盖 4px/燕文/云途等专线到签收。**本 skill 只是调用指引**：跟踪的正确性（按 key 限速 + 429 退避、`/getquota` 配额护栏 + 单轮上限、register 幂等、状态→中性枚举映射、TTL、每日轮询、变更流）全在**独立部署的后端 `track-service`**（ECS 常驻、零依赖 `node:sqlite`、绑 tailnet、SQLite 存状态），**不在本 markdown、不碰飞书 Base、不往 `Orders` 加字段**。务必带承运商码避免 17track auto-detect 撞号（**4px=190094**；踩过同号撞成无关旧单的坑）。注册进 [`etsy-stack.json`](etsy-stack.json)。设计经 `/plan-eng-review`（架构从"重 skill + Base 结构"**转向**"后端服务 + 薄 skill + CLI"——因共享 17TRACK key 的限速/配额必须单进程中心化收口、且 mini 是脆的 headful 机不宜承载）+ 17TRACK v2.2 实测 spike + 真实 4px 订单端到端验证（agent 调 `track` → 正确返回已签收轨迹，比网页 auto-detect 还准）。后端服务源码独立维护（非本 bundle），运维单独部署 `track` CLI 到运行机 `~/.local/bin/track`。
 - `shared/tools-architecture.md`：**工具架构硬约束**——全 stack 硬约束「Hermes 思考，ECS 做事和连接，插件只在『无 API 又必须用租户登录态』时伸手」。定义三角色（ECS 控制面 / Hermes 大脑 / 浏览器插件）、加新工具的三级选型优先级（官方 API → 租户浏览器插件 → 反检测专用机，控制面恒在 ECS）、控制面·执行面分离、安全红线（per-tenant token fail-closed、token≠tenantId、密钥不进 Hermes / skill 目录 / 工作区、改鉴权前跑 Codex 独立审），并记录**落地现状与迁移**（image-synth 中心后端、pinterest-autopin 服务器控制面 + 浏览器插件均已上收 ECS；trend-radar 抓取仍在 mini 属过渡）。已批准例外：**lark-cli 飞书访问留在 Hermes 的 Mac mini**（租户自有身份 + 数据底座，不外溢到任何外部平台）。接进 [`shared/preamble.md`](shared/preamble.md) §工具架构 / README 仓库布局 / `etsy-stack.json` `toolsArchitecture`；6 个 tool skill（content-asset-pool / social-publisher / trend-radar / video-assembly / pinterest-autopin / image-synth）各加工具架构指针。
 
 ## [1.0.1] - 2026-06-26

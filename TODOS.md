@@ -24,3 +24,22 @@
 
 - [ ] **原子写入** — 当前 JSON 和 latest.json 的写入顺序已保护（dated → latest），但未用 temp file + rename 原子操作。每周跑一次时半文件风险极低，但如果未来频率提高应实施。实现：writeFileSync 到 `.tmp` 后 renameSync。来源：Codex Outside Voice finding #12 + CEO Review D12 (2026-05-18)
 - [ ] **evidence 保留策略** — 每周累积 screenshot + HTML snapshot，一年后 ~50-250MB。实现 runner 启动时自动清理 >12 周的旧目录，或提供 `trend-fetch cleanup --keep 12` 命令。来源：Codex Outside Voice finding #13 + CEO Review D13 (2026-05-18)
+
+# TODOS — logistics-tracking
+
+> **架构转向（2026-06-25）**：从"重 skill + Base 结构"改为"**ECS 后端常驻服务 + 薄 skill + mini CLI**"。轮询/限速/配额/幂等/状态映射都在后端服务（不在 Hermes、不在 skill markdown）。原 v2 的"Hermes cron + 多 workspace 枚举"作废——轮询是后端服务的内部循环，集中跑、天然覆盖所有租户。
+
+## v1 已落地并验证（2026-06-25）
+- [x] **后端 track 服务 + 薄 skill + mini CLI** — ECS 常驻 `track.service`（零依赖 node:sqlite、绑 tailnet 100.84.89.68:8790、源 ~/code/track-service、systemd）；薄 skill 进 etsy-skills bundle（指向 `~/.local/bin/track`，CLI 自带 `--noproxy` 绕 agent 代理）；**真实 4px 订单端到端验证**（agent 调 track → 正确已签收轨迹，比网页 auto-detect 还准）。
+
+## 收尾 / 推广
+- [ ] **铺到其余活跃租户** — 薄 skill 已 pilot 在 etsy-fublessings profile；合并本 PR 后对 tenant_mqj68naq/mqmbtu/mqoyzyp 重装 bundle（或手动放 skill）+ 确认各 profile 能调 `~/.local/bin/track`。
+- [ ] **track-service 源码归一个 repo** — 现本地 ~/code/track-service + 部署在 ECS /opt/yanggedianzhang-ops/track，未版本控制。建议独立小 repo 或并进 yanggedianzhang monorepo（与 image-gen-service 同处理）。
+
+## v2: 主动推送（C，用户原始诉求"主动发给我"）
+- [ ] **Hermes 消费 `track changes` → 推消息 → 核查 → 确认才写 Base** — 后端已每天轮询并攒 changes；给租户 Hermes 配定时读 changes，签收/异常推飞书给运营者，**人工核查确认后**才由 Hermes 写 Base（不自动改）。核查需要的"始发地 + 近几条轨迹"届时在服务侧补返回（query/changes 现只回最新状态+最新事件）。
+- [ ] **每租户月配额上限** — 共享 17TRACK key 下给每租户月注册上限，防旺客户吃光全局额度（getquota.quota_total，本账户 200）；服务 SQLite 已按租户可分，只差上限逻辑。来源：/plan-eng-review D2
+- [ ] **多适配器（快递100/快递鸟）** — 查轨迹已收口在服务里；有客户重国内段/要中文支持时按 adapter 范式接国产源。来源：用户决定#3
+
+## 已完成的 spike（2026-06-24/25，结论全落进 track-service 代码）
+- [x] **17TRACK API 实测** — 重复 register `-18019901` 不重扣（幂等）；限速按 key、突发 2-3 发即 429（串行节流+429退避）；`/getquota` 实时查 quota_remain（配额护栏）；裸订单号 auto-detect 失败 `-18019903` 需带 carrier（**4px=190094**）；刚注册 `-18019909` 待抓取（异步，正常）；同号不同承运商会撞单 → 务必钉 carrier。
