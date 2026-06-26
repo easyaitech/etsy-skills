@@ -108,8 +108,6 @@ ecommerce-stack workspace
 | `assets` | `Assets 素材池` | assets-library / content-asset-pool |
 | `publishing_queue` | `社媒发布队列`（含 Pinterest pin，用 `平台` 字段区分） | content-asset-pool / social-publisher / pinterest-autopin |
 | `knowledge_cards` | `Knowledge Cards 知识卡片` | business-knowledge |
-| `clips` | `Clips 视频片段` | video-assembly |
-| `video_jobs` | `Video Jobs 视频任务` | video-assembly |
 
 每次读写 Base 前，先解析工作区根，再读取 `<workspace>/docs/store-base.md`（或未来等价机器可读配置）获取店铺总 Base 与 table_id。配置缺失时，建库场景默认只建 4 张基础表，扩展表用到时再单独建；迁移期查询可兼容旧独立 Base，但必须标注为 legacy fallback。除非用户明确要求隔离，不要为新模块默认创建独立 Base。
 

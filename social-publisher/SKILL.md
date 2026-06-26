@@ -16,7 +16,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 小红书 / Instagram / TikTok: 未来适配器或人工后台
 ```
 
-它不负责长期素材归档，不负责生成图片或视频，不负责写商品事实。那些仍归 `assets-library`、`image-synth`、`video-assembly`、`listing-catalog`。
+它不负责长期素材归档，不负责生成图片或制作视频，不负责写商品事实。素材归档归 `assets-library`，图片生成归 `image-synth`，商品事实归 `listing-catalog`。
 
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，平台配置见 [`shared/platform-config.md`](../shared/platform-config.md)。
 
@@ -152,7 +152,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 - **pinterest-autopin**：Pinterest enabled adapter；本 skill 不重写 Pinterest 发布逻辑，只做队列路由和对账。
 - **listing-catalog**：商品型发布的 `链接` 必须来自 `Products 商品` 表 `分享链接`。
 - **assets-library**：素材授权、发布副本、AI metadata 清理必须在发布前完成。
-- **video-assembly / image-synth**：只产出素材，不直接发布；发布仍进 社媒发布队列。
+- **image-synth**：只产出图片素材，不直接发布；发布仍进 社媒发布队列。
 
 ## 工作语言
 

@@ -10,7 +10,7 @@
 
 1. **店铺总 Base 是业务数据入口**：每个店铺只维护一个主要 `app_token`，所有业务表都在该 Base 里。
 2. **表承载业务对象**：Products、Orders、Customers、Suppliers、Assets、社媒发布队列、Knowledge Cards 等各自独立成表；SKU 是 `Products 商品` 表里的行，不再单独成 SKU 表。
-3. **建库只开 4 张基础表**：新客户新建店铺总 Base 时，默认只创建 `Products 商品` / `Orders 订单` / `Customers 客户` / `Suppliers 供应商` 四张表。素材池、社媒发布队列、知识卡片、视频表等都是扩展表，**第一次真正用到对应 skill 时再补建**，不在建库时一次性全开。
+3. **建库只开 4 张基础表**：新客户新建店铺总 Base 时，默认只创建 `Products 商品` / `Orders 订单` / `Customers 客户` / `Suppliers 供应商` 四张表。素材池、社媒发布队列、知识卡片等都是扩展表，**第一次真正用到对应 skill 时再补建**，不在建库时一次性全开。
 4. **relation 优先**：同 Base 内表之间优先使用关联字段；跨 Base 只作为迁移期兼容，不作为新方案默认。
 5. **SKU 不因合并改名**：SKU 是 `Products 商品` 表的业务主键，合并只改变数据组织方式，不改变 SKU 编码。若确需规范化，新增 `旧 SKU` / `SKU Alias` 字段，不覆盖原值。
 6. **社媒发布队列单表多平台**：所有平台的发布任务（含 Pinterest pin）都进 `社媒发布队列` 一张表，用 `平台` 字段区分；不再为 Pinterest 单建执行队列表，Pinterest 行就是 `平台 = Pinterest` 的记录。
@@ -47,8 +47,6 @@
 | `assets` | `Assets 素材池` | assets-library / content-asset-pool | 图片、视频、发布副本、授权、AI 清理状态 |
 | `publishing_queue` | `社媒发布队列` | content-asset-pool / social-publisher / pinterest-autopin | 跨平台发布任务（含 Pinterest pin）的 source of truth；用 `平台` 字段区分 |
 | `knowledge_cards` | `Knowledge Cards 知识卡片` | business-knowledge | 业务知识卡片、引用次数、brief 关联 |
-| `clips` | `Clips 视频片段` | video-assembly | 视频片段库 |
-| `video_jobs` | `Video Jobs 视频任务` | video-assembly | 视频装配任务 |
 
 表名可以本地化，但逻辑键必须稳定，便于各 skill 读取配置。
 
@@ -78,7 +76,7 @@
 | suppliers | Suppliers 供应商 |  |  |  | planned |
 ```
 
-扩展表（assets / publishing_queue / knowledge_cards / clips / video_jobs）在第一次建表后再补登记行；没建的表不必预先占位。
+扩展表（assets / publishing_queue / knowledge_cards）在第一次建表后再补登记行；没建的表不必预先占位。
 
 面向用户的回复不要暴露 Base token、table_id、record_id、file token、field_id 等敏感内部 ID。需要交付时给飞书链接或说明“已写入配置文件”。
 
@@ -111,7 +109,7 @@ skill 需要读写 Base 时按顺序定位：
 3. 若配置存在且目标逻辑键有 table_id：使用店铺总 Base + 对应表。
 4. 若配置缺失：
    - 建库场景：默认只创建 4 张基础表（products / orders / customers / suppliers）。
-   - 补扩展表场景（assets / publishing_queue / knowledge_cards / clips / video_jobs）：在已有店铺总 Base 内**按需新建该表**，不顺手把其他没用到的表一起建出来。
+   - 补扩展表场景（assets / publishing_queue / knowledge_cards）：在已有店铺总 Base 内**按需新建该表**，不顺手把其他没用到的表一起建出来。
    - 迁移期查询场景：可兼容旧的独立 Base，但必须提示这是 legacy fallback。
 5. 不要为新模块默认创建独立 Base，除非用户明确要求隔离。
 

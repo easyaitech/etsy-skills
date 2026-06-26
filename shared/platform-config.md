@@ -63,7 +63,6 @@
 - 发布任务池：`content-asset-pool/references/platform-publishing-model.md` 的“小红书图文 / 小红书视频”
 - 自动发布状态：`social-publisher/references/adapter-registry.md` 当前将小红书标为 planned/manual-only，不能自动上传或发布
 - 社媒图默认规格：`image-synth/references/social-platform-specs.md` 的“小红书图文 / 商品种草图”
-- 短视频安全区：`video-assembly/references/platform-safe-areas.md`
 
 小红书商品按 SPU / SPL / SPV / ITEM 分层，`Products 商品` 表必须保留品牌、末级类目、规格、图片、描述、产品参数、价格、库存、上下架和审核状态等字段。小红书订单按订单 / 包裹 / SKU / 售后分层，`Orders 订单` 表必须保留包裹 ID、订单状态、售后状态、取消状态、SKU 明细、物流模式、承诺发货时间和收件地区等字段。
 
