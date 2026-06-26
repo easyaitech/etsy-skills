@@ -1,6 +1,6 @@
 ---
 name: orders-customers
-description: 维护电商订单 + 客户两张表（默认位于店铺总 Base 内），并按目标销售平台配置支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。四种触发：(1) "建订单库 / 客户库"——在店铺总 Base 建表；(2) "录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"——读写 Base；(3) "回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发"——按客服 SOP + BRAND.md 语调 + COMMERCE_PLATFORM.md 平台边界输出回复；(4) "这单下一步 / 能不能发货 / 有没有漏 / 履约检查 / 签收跟进 / 复购触达"——按履约 SOP 输出阶段与缺口。多平台架构：每个销售平台一个 preset（见 references/platform-presets.md），Etsy 和小红书是内置 preset，亚马逊等其他平台需先在 COMMERCE_PLATFORM.md 配置 + 新增对应 preset。
+description: 维护电商订单 + 客户两张表（默认位于店铺总 Base 内），并按目标销售平台配置支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。四种触发：(1) "建订单库 / 客户库"——在店铺总 Base 建表；(2) "录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"——读写 Base；(3) "回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发"——按客服 SOP + BRAND.md 语调 + COMMERCE_PLATFORM.md 平台边界输出回复；(4) "这单下一步 / 能不能发货 / 有没有漏 / 履约检查 / 签收跟进 / 复购触达"——按履约 SOP 输出阶段与缺口。多平台架构：每个销售平台一个 preset（见 references/platforms/platform-presets.md），Etsy 和小红书是内置 preset，亚马逊等其他平台需先在 COMMERCE_PLATFORM.md 配置 + 新增对应 preset。
 layer: foundation
 ---
 
@@ -23,20 +23,20 @@ layer: foundation
 | `<workspace>/COMMERCE_PLATFORM.md` | 目标销售平台、买家语言、订单客服边界、自动化边界 | 决定订单字段、回复语言、买家消息渠道和哪些动作不能代操作；非内置 preset 平台缺失时阻塞 |
 | `Products 商品` 表 | 该订单包含的 SKU 详情 | 处理订单时按订单关联到 SKU（用 lark-base 跨表关联） |
 | `logistics-tracking` skill（`track` 命令） | 包裹物流状态 / 签收事实 | 跟踪号录入后交它纳入跟踪；**签收 / delivered 状态以它为准**，不要自己猜或去承运商网页查（会撞号）。履约 SOP 的签收评价、30 天复购触达都依赖它给的签收事实 |
-| `references/platform-presets.md` | 多平台架构与 preset 契约 | 决定读哪个平台 preset、加新平台怎么扩；核心流程平台中性，差异都在 preset |
+| `references/platforms/platform-presets.md` | 多平台架构与 preset 契约 | 决定读哪个平台 preset、加新平台怎么扩；核心流程平台中性，差异都在 preset |
 | `references/order-fulfillment-sop.md` | 新订单到发货、签收跟进的阶段清单 | 新订单 / 待发货订单必须用它判断下一步、缺失证据和要写回的字段 |
 | `references/order-handling.md` | 客服回复场景 SOP（平台中性骨架） | 只用于买家消息、差评、退换货、感谢信等话术，不替代履约 SOP；买家语言 / 措辞 / 平台特例看目标平台 preset |
-| `references/<platform>-orders.md` | 目标平台 preset（订单号 / 买家语言 / 承诺发货来源 / 消息边界 / 标签阈值） | 每次处理订单 / 客服前读对应平台 preset；内置 `etsy-orders.md` / `xiaohongshu-orders.md`，其他平台缺 preset 时阻塞 |
+| `references/platforms/<platform>.md` | 目标平台 preset（订单号 / 买家语言 / 承诺发货来源 / 消息边界 / 标签阈值） | 每次处理订单 / 客服前读对应平台 preset；内置 `platforms/etsy.md` / `platforms/xiaohongshu.md`，其他平台缺 preset 时阻塞 |
 
 ---
 
 ## 多平台架构
 
-这个 skill 的核心流程**平台中性**：`SKILL.md` 的模式、`order-handling.md` 的客服骨架、`order-fulfillment-sop.md` 的履约阶段、`base-schema.md` 的通用字段、`customer-tags.md` 的标签体系——对任何平台都一样。任何平台特有的东西（买家语言、订单号 / 买家标识解析、承诺发货时间来源、消息 / 售后入口、消息媒体限制、平台专属字段、价值标签阈值、自动化边界）都放在**该平台的 preset** `references/<platform>-orders.md`。
+这个 skill 的核心流程**平台中性**：`SKILL.md` 的模式、`order-handling.md` 的客服骨架、`order-fulfillment-sop.md` 的履约阶段、`base-schema.md` 的通用字段、`customer-tags.md` 的标签体系——对任何平台都一样。任何平台特有的东西（买家语言、订单号 / 买家标识解析、承诺发货时间来源、消息 / 售后入口、消息媒体限制、平台专属字段、价值标签阈值、自动化边界）都放在**该平台的 preset** `references/platforms/<platform>.md`。
 
-- 内置 preset：[`etsy-orders.md`](references/etsy-orders.md)、[`xiaohongshu-orders.md`](references/xiaohongshu-orders.md)。Etsy 不是隐性默认平台——它和小红书、亚马逊一样只是一个 preset。
+- 内置 preset：[`etsy.md`](references/platforms/etsy.md)、[`xiaohongshu.md`](references/platforms/xiaohongshu.md)。Etsy 不是隐性默认平台——它和小红书、亚马逊一样只是一个 preset。
 - 每次任务先按 `COMMERCE_PLATFORM.md` 的「目标销售平台」解析出 preset（多平台并行时先和用户确认这次处理哪个平台），preset 优先级高于核心流程的中性默认。
-- 加亚马逊等新平台 = 在 `COMMERCE_PLATFORM.md` 配置 + 新增一个 `references/<platform>-orders.md`（照 [`references/platform-presets.md`](references/platform-presets.md) 的 12 项契约）+ 按需在 `base-schema.md` 追加平台字段组 / 平台专属视图——**不改流程逻辑文件**（SKILL / order-handling / order-fulfillment-sop）；`base-schema.md` 是唯一按平台增长的核心文件，但只增量、不改通用部分。
+- 加亚马逊等新平台 = 在 `COMMERCE_PLATFORM.md` 配置 + 新增一个 `references/platforms/<platform>.md`（照 [`references/platforms/platform-presets.md`](references/platforms/platform-presets.md) 的 12 项契约）+ 按需在 `base-schema.md` 追加平台字段组 / 平台专属视图——**不改流程逻辑文件**（SKILL / order-handling / order-fulfillment-sop）；`base-schema.md` 是唯一按平台增长的核心文件，但只增量、不改通用部分。
 - 非内置 preset 平台缺配置时按 `../shared/dependency-protocol.md` 走 **BLOCK**，不要拿 Etsy / 小红书规则硬套。
 
 ---
@@ -49,7 +49,7 @@ layer: foundation
 
 **执行步骤**：
 1. 读 `../shared/store-base-architecture.md` 和 `references/base-schema.md`，了解店铺总 Base + 订单 / 客户表字段
-2. 按 `COMMERCE_PLATFORM.md` 的目标平台读对应 preset（`references/<platform>-orders.md`，见 [`references/platform-presets.md`](references/platform-presets.md)）；如果该平台有专属字段组（如小红书），创建表时必须一并加建 `base-schema.md` 的对应「平台专属字段组」
+2. 按 `COMMERCE_PLATFORM.md` 的目标平台读对应 preset（`references/platforms/<platform>.md`，见 [`references/platforms/platform-presets.md`](references/platforms/platform-presets.md)）；如果该平台有专属字段组（如小红书），创建表时必须一并加建 `base-schema.md` 的对应「平台专属字段组」
 3. 解析工作区根并读取 `<workspace>/docs/store-base.md`：
    - 若店铺总 Base 已存在：在其中创建或补齐 `Orders 订单` / `Customers 客户` 表
    - 若店铺总 Base 不存在：先展示 one-shop-one-base 方案，等用户确认后再创建 `{店铺名}-运营中枢`
@@ -65,8 +65,8 @@ layer: foundation
 
 **执行步骤**：
 - 读 `references/base-schema.md` 确认字段语义
-- 确认目标销售平台并读对应 preset（`references/<platform>-orders.md`）——订单号 / 买家标识怎么解析、承诺发货时间从哪取，都按 preset，不要跨平台套字段名
-- 如果 `COMMERCE_PLATFORM.md` 缺失（按 [`references/platform-presets.md`](references/platform-presets.md) §preset 解析）：
+- 确认目标销售平台并读对应 preset（`references/platforms/<platform>.md`）——订单号 / 买家标识怎么解析、承诺发货时间从哪取，都按 preset，不要跨平台套字段名
+- 如果 `COMMERCE_PLATFORM.md` 缺失（按 [`references/platforms/platform-presets.md`](references/platforms/platform-presets.md) §preset 解析）：
   - 目标平台是 Etsy / 小红书 → 用内置 preset，并说明这是内置 {平台} 规则
   - 目标平台不是内置 preset → 停止并提示用户先建立 COMMERCE_PLATFORM.md + 该平台 preset
 - 如果是新订单或订单状态进入 `待发货`，同时读 `references/order-fulfillment-sop.md`，输出当前 SOP 阶段、下一步、缺失证据和拟写回字段
@@ -100,7 +100,7 @@ layer: foundation
 
 **执行步骤**：
 1. 先查 `Orders 订单` 表、`Customers 客户` 表、`Products 商品` 表，拿到订单状态、SKU、定制需求、承诺发货日、跟踪号和客户标签
-2. 读 `references/order-fulfillment-sop.md` + 目标平台 preset（`references/<platform>-orders.md`，承诺发货时间来源按 preset）
+2. 读 `references/order-fulfillment-sop.md` + 目标平台 preset（`references/platforms/<platform>.md`，承诺发货时间来源按 preset）
 3. **签收状态以 `logistics-tracking` 为准**：涉及"是否已签收 / delivered"时用 `track` 查询（见 `../logistics-tracking`），不要自己猜或去承运商网页查；签收事实驱动签收评价、30 天复购两个触点
 4. 按 SOP 输出：
    - 当前阶段

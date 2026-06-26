@@ -1,6 +1,6 @@
 # 订单履约 SOP
 
-> 本 SOP 用于新订单 / 待发货订单的全链路执行检查。它不是客服话术；客服话术仍看 `order-handling.md`。承诺发货时间来源、买家语言等平台差异看目标平台 preset（`<platform>-orders.md`，契约见 `platform-presets.md`）。
+> 本 SOP 用于新订单 / 待发货订单的全链路执行检查。它不是客服话术；客服话术仍看 `order-handling.md`。承诺发货时间来源、买家语言等平台差异看目标平台 preset（`platforms/<platform>.md`，契约见 `platforms/platform-presets.md`）。
 
 > **触达机制（读之前先懂这条）**：本 skill 请求触发，**不驻留后台定时器**。SOP 里所有"提醒 / 触达"都不是 skill 自己会定时发，而是——把待办状态写进 `Orders 订单` 表，让记录进入 `base-schema.md` 的待办视图（`临期/超期待发` / `待发货` / `待签收跟进` / `待复购触达`）。真正到点触达靠：① 运营每天看视图按待办处理；② 配了 Hermes cron 时由 cron 扫视图推给运营核查（`shared/preamble.md` §Hermes cron 例外）。下面写"设置提醒""到期触发"，指的就是"进了正确的待办视图等人 / cron 来取"，不是承诺自动发出。
 

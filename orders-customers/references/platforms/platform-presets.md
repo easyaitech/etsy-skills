@@ -1,6 +1,6 @@
 # 平台 preset 架构（订单 / 客服 / 履约）
 
-> 这个 skill 的核心流程（`SKILL.md` / `order-handling.md` / `order-fulfillment-sop.md` / `base-schema.md` 的通用字段 / `customer-tags.md`）是**平台中性**的。任何"这个平台特有"的东西——买家语言、订单号 / 买家标识怎么解析、承诺发货时间从哪取、消息 / 售后入口、媒体限制、平台专属字段、价值标签阈值——都**不写进核心流程**，而是放进**该平台自己的 preset 文件** `references/<platform>-orders.md`。
+> 这个 skill 的核心流程（`SKILL.md` / `order-handling.md` / `order-fulfillment-sop.md` / `base-schema.md` 的通用字段 / `customer-tags.md`）是**平台中性**的。任何"这个平台特有"的东西——买家语言、订单号 / 买家标识怎么解析、承诺发货时间从哪取、消息 / 售后入口、媒体限制、平台专属字段、价值标签阈值——都**不写进核心流程**，而是放进**该平台自己的 preset 文件** `references/platforms/<platform>.md`。
 
 核心流程负责"对任何平台都一样的部分"；preset 负责"这个平台不一样的部分"。Etsy 不是隐性默认平台——它和小红书、亚马逊一样，只是一个 preset。
 
@@ -10,17 +10,17 @@
 
 | 平台 | preset 文件 | 买家语言默认 | 履约单元 |
 |---|---|---|---|
-| Etsy | [`etsy-orders.md`](etsy-orders.md) | 英文 | 订单 |
-| 小红书 / 小红书店铺 / RED | [`xiaohongshu-orders.md`](xiaohongshu-orders.md) | 中文 | 包裹 |
+| Etsy | [`etsy.md`](etsy.md) | 英文 | 订单 |
+| 小红书 / 小红书店铺 / RED | [`xiaohongshu.md`](xiaohongshu.md) | 中文 | 包裹 |
 
-其他平台（亚马逊 / Shopify / 淘宝 / 天猫 / 抖店等）目前**没有内置 preset**：必须先在 `COMMERCE_PLATFORM.md` 配置该平台，并按下面的契约新增对应 preset 文件，才能跑订单 / 客服 / 履约。缺失时按 `../../shared/dependency-protocol.md` 走 **BLOCK**——停下引导用户先建配置，不要拿 Etsy / 小红书规则硬套。
+其他平台（亚马逊 / Shopify / 淘宝 / 天猫 / 抖店等）目前**没有内置 preset**：必须先在 `COMMERCE_PLATFORM.md` 配置该平台，并按下面的契约新增对应 preset 文件，才能跑订单 / 客服 / 履约。缺失时按 `../../../shared/dependency-protocol.md` 走 **BLOCK**——停下引导用户先建配置，不要拿 Etsy / 小红书规则硬套。
 
 ---
 
 ## preset 解析（每次任务开始时）
 
 1. 读 `COMMERCE_PLATFORM.md` 的「目标销售平台」（多平台并行时先和用户确认这次处理哪个平台）。
-2. 把平台值映射到 preset 文件：Etsy → `etsy-orders.md`；小红书 → `xiaohongshu-orders.md`；其他 → `references/<platform>-orders.md`（存在才用）。
+2. 把平台值映射到 preset 文件：Etsy → `etsy.md`；小红书 → `xiaohongshu.md`；其他 → `references/platforms/<platform>.md`（存在才用）。
 3. preset 缺失：
    - 平台是 Etsy / 小红书 → 用内置 preset，并说明"这次按内置 {平台} 规则跑；建议后续用 `shop-foundation` 把 `COMMERCE_PLATFORM.md` 固化"。
    - 平台不是 Etsy / 小红书 → **BLOCK**，引导用户先建 `COMMERCE_PLATFORM.md` + 该平台 preset。
@@ -54,7 +54,7 @@
 不改**流程逻辑文件**（`SKILL.md` / `order-handling.md` / `order-fulfillment-sop.md`）；`base-schema.md` 是唯一按平台增长的核心文件——只在它的「平台专属字段组 / 平台专属视图」追加内容，通用字段与通用视图不动：
 
 1. 用 `shop-foundation` 在 `COMMERCE_PLATFORM.md` 里把「亚马逊」加进销售平台，配齐买家语言、消息 / 售后边界、自动化边界。
-2. 新建 `references/amazon-orders.md`，按上面 12 项契约写满。
+2. 新建 `references/platforms/amazon.md`，按上面 12 项契约写满。
 3. 如果亚马逊有值得结构化的订单字段（FBA / MCF、ship-by、买家无邮箱的匿名地址等），在 `base-schema.md` 的「平台专属字段组」追加一个 `亚马逊…` 字段组（暂不细化就先用通用 `平台字段 JSON`）；如该平台有专属异常 / 监控视图（契约 #12），同时在 `base-schema.md` §视图建议追加 `亚马逊异常` 类视图。
 4. 不需要改 `SKILL.md` / `order-handling.md` / `order-fulfillment-sop.md`——它们读 preset，不写死平台。
 

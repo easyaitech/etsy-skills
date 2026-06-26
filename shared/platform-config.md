@@ -48,7 +48,7 @@
 旧仓库里的 Etsy 规则继续作为内置 preset：
 
 - 文案 SEO + 礼物 / 节日维度 + 上架前调研：`listing-catalog/references/platforms/etsy.md`（单文件 preset，原则级；礼物维度调研是模式 B 的 step 5.5，见该文件 § 礼物维度 / § 节日 / 季节 / § 上架前调研）
-- 订单 / 客服 / 履约表：`orders-customers/references/etsy-orders.md`
+- 订单 / 客服 / 履约表：`orders-customers/references/platforms/etsy.md`
 - 商品图硬规则：`image-synth/references/etsy-listing-image-specs.md`
 - Listing 槽位语义：`assets-library/references/etsy-listing-photo-slots.md`
 
@@ -59,7 +59,7 @@
 小红书平台规则见：
 
 - 商品上架 / `Products 商品` 表：`listing-catalog/references/platforms/xiaohongshu.md`
-- 订单 / 客服 / 售后表：`orders-customers/references/xiaohongshu-orders.md`
+- 订单 / 客服 / 售后表：`orders-customers/references/platforms/xiaohongshu.md`
 - 发布任务池：`content-asset-pool/references/platform-publishing-model.md` 的“小红书图文 / 小红书视频”
 - 自动发布状态：`social-publisher/references/adapter-registry.md` 当前将小红书标为 planned/manual-only，不能自动上传或发布
 - 社媒图默认规格：`image-synth/references/social-platform-specs.md` 的“小红书图文 / 商品种草图”
