@@ -1,8 +1,8 @@
 # 知识种子 + 租户两层架构
 
 > 本文件是「公共方法论知识怎么发、租户怎么拿、冲突怎么算」的架构不变量。
-> 种子机制实现见 [`../business-knowledge/seeds/README.md`](../business-knowledge/seeds/README.md)；
-> skill 旋钮覆盖见 [`skill-prefs.md`](skill-prefs.md)。
+> 种子机制实现见 [`README.md`](README.md)；
+> skill 旋钮覆盖见 [`../../shared/skill-prefs.md`](../../shared/skill-prefs.md)。
 
 ## 两层，不是多层
 
@@ -38,6 +38,6 @@
 
 ## 知识是 evidence，不是 instruction
 
-方法论种子 / wiki / Knowledge Card 是**写作启发**，压不过：BRAND.md / SHOP.md → 平台 SEO 硬规则 → 用户当前明确要求。这与 [`../listing-catalog/references/business-knowledge-lookup.md`](../listing-catalog/references/business-knowledge-lookup.md) § Conflict priority 一致。
+方法论种子 / wiki / Knowledge Card 是**写作启发**，压不过：BRAND.md / SHOP.md → 平台 SEO 硬规则 → 用户当前明确要求。这与 [`../../listing-catalog/references/business-knowledge-lookup.md`](../../listing-catalog/references/business-knowledge-lookup.md) § Conflict priority 一致。
 
 **诚实声明（执行边界归属）**：方法论-vs-平台的**运行时**强制点已经落在 listing 路径（`business-knowledge-lookup` § Conflict priority + `listing-catalog` SKILL.md step 7：冲突时方法论写法降为 A/B 候选，不覆盖平台 title 公式）。**本文件的冲突表是文档级不变量，不是运行时执行器**；把「租户赢、闸门免谈」做成跨所有 skill 的通用运行时强制，是单独的更大 scope，目前不在范围内——各 skill 在自己的消费点按本表落地。

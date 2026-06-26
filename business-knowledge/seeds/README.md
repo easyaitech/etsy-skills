@@ -1,5 +1,7 @@
 # Knowledge Seeds（知识种子）
 
+> 本文件是种子机制的**实现说明**；「怎么发 / 怎么拿 / 冲突怎么算」的架构不变量见 [`knowledge-seeds.md`](knowledge-seeds.md)。
+
 公共包发出的**起步方法论知识**。引擎只读发布；`ecommerce-stack init` 把每个种子拷进租户 workspace 的 `knowledge/wiki/`，**拷完归租户、随便改**。
 
 种子是平台 preset 的方法论同构：平台 preset「引用 live」，种子「拷贝即拥有」。运行时永远两层（公共引擎 / 租户 workspace），种子拷进来后就是租户个性化的一部分，零 override 语义、零 drift。

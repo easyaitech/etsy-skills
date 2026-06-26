@@ -2,7 +2,7 @@
 商品页 / listing 文案标准模板。Agent 写新商品页时按此结构产出，整篇展示给用户确认后再写入 Base。
 - 文案语调：参考 <workspace>/BRAND.md
 - 政策段：引用 <workspace>/SHOP.md 原文，不要自己编
-- 平台规则：参考 <workspace>/COMMERCE_PLATFORM.md；Etsy 可使用 references/etsy-seo.md 内置 preset，小红书可使用 references/xiaohongshu-commerce.md 内置 preset
+- 平台规则：参考 <workspace>/COMMERCE_PLATFORM.md；Etsy 可使用 references/platforms/etsy.md 内置 preset，小红书可使用 references/platforms/xiaohongshu.md 内置 preset
 - 输出三块：(1) 文案预览  (2) 平台关键词 / 属性  (3) 类目与平台字段
 -->
 
@@ -17,35 +17,19 @@
 
 ### 描述 / Description
 
+> **不固定段序**——按商品自然成文，覆盖下面这些要素即可。原则：讲故事不堆参数；开头几句最吃 SEO 与转化，把最值钱的放前面；政策口径引 SHOP.md 原文、不自编。
+
 ```
-段 1（开场）：
-{{1-2 句。从品牌视角写"为什么这件东西存在"或"它解决什么"。语气：BRAND.md 的"应该说"}}
-
-段 2（物件本身）：
-{{3-5 句。材质、工艺特征、感官细节、手作差异说明}}
-
-段 3（使用场景）：
-{{2-3 句。具体使用场景、与什么搭配、给读者画一个画面}}
-
-段 4（规格）：
-- Dimensions: {{尺寸}}
-- Weight: {{重量}}
-- Capacity: {{容量}}
-- Material: {{材质摘要}}
-- {{其他相关规格}}
-
-段 5（注意事项）：
-- {{是否手洗 / 微波适用 / 烘干注意}}
-- {{手作差异说明：每件略有不同，烧窑色差等}}
-- {{定制规则：如果接受定制，加工时长、加价等}}
-
-段 6（政策——引用 SHOP.md 原文）：
-- Processing time: {{从 SHOP.md 取}}
-- Shipping: {{从 SHOP.md 取}}
-- Returns: {{从 SHOP.md 取}}
-
-段 7（可选 — 钩到 About）：
-{{1 句。引到关于主理人/品牌的故事，链接 About 页或邀请关注店铺}}
+{{
+- 开场：为什么这件东西存在 / 它解决什么（品牌视角，语气随 BRAND.md「应该说」）
+- 物件本身：材质、工艺特征、感官细节、手作差异说明
+- 使用语境：具体场景、与什么搭配，给读者画一个画面
+- 礼物语境（非自购品才写）：送给谁 / 什么场合 / 在收礼人手里产生什么微小的日常变化（具体，避免 "perfect gift" 这类空话）
+- 规格：尺寸 / 重量 / 容量 / 材质摘要（适合用 bullet）
+- 注意事项：手洗 / 微波 / 烘干 / 手作差异 / 定制规则
+- 政策：处理时间 / 运输 / 退换货 —— 引用 SHOP.md 原文
+- （可选）钩到 About：一句话引到主理人 / 品牌故事或邀请关注店铺
+}}
 ```
 
 ---
@@ -88,7 +72,7 @@
 
 ## SEO 自检
 
-Etsy：写完按 `references/etsy-seo.md` 末尾的"SEO 自检清单"逐条核对。
+Etsy：写完按 `references/platforms/etsy.md` 末尾的"SEO 自检清单"逐条核对。
 
 非 Etsy：按 COMMERCE_PLATFORM.md 的平台规则逐条核对；缺规则就标注未知，不能套 Etsy 规则。
 

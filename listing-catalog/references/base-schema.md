@@ -40,7 +40,7 @@
 
 ## 小红书字段（启用小红书平台时必建）
 
-> 依据 `references/xiaohongshu-commerce.md`。这些字段服务小红书 SPU / SPL / SPV / ITEM 分层。字段可以先为空，但建表时要预留，避免后续上新时把平台信息塞进备注。
+> 依据 `references/platforms/xiaohongshu.md`。这些字段服务小红书 SPU / SPL / SPV / ITEM 分层。字段可以先为空，但建表时要预留，避免后续上新时把平台信息塞进备注。
 
 ### 小红书 SPU / 类目 / 品牌
 

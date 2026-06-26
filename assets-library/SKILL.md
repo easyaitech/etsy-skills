@@ -27,10 +27,10 @@ layer: foundation
 | `<workspace>/BRAND.md` § 视觉原则 / 视觉禁区 | 整体气质 / 色彩 / 排版构图 / 视觉禁区 | **B2 promote 时**用作"是否合规"自检；自检结果写进 `Assets 素材池` 表的"BRAND 合规"字段。**模式 D 出 brief 时**作为 §B Mood 段抽取源。raw 不做合规检查 |
 | `<workspace>/SHOP.md` § 物料 / 礼盒服务 | 包装物料 / 感谢卡 / 礼盒服务字段 | **模式 D 出 brief 时**决定 §A 表第 9 行 packaging 计划该拍什么物料 |
 | `<workspace>/COMMERCE_PLATFORM.md` | 目标销售平台媒体规则（主图 / 详情图 / 视频 / 水印 / 文字限制） | **模式 D 出 brief 时**决定槽位、比例、分辨率和硬禁区；Etsy / 小红书可使用内置 preset |
-| 店铺总 Base 的 `Products 商品` 表 | SKU 列表 + 字段（title / 品类 / 变体 / SEO 关键词 / description 段 3） | `Assets 素材池` 的"关联 SKU"字段直接关联（B2 用）；**模式 D 读 SKU 行**作为输入；SKU 行通过反向查询能看到该 SKU 的全部素材 |
+| 店铺总 Base 的 `Products 商品` 表 | SKU 列表 + 字段（title / 品类 / 变体 / SEO 关键词 / description 礼物 / 使用语境） | `Assets 素材池` 的"关联 SKU"字段直接关联（B2 用）；**模式 D 读 SKU 行**作为输入；SKU 行通过反向查询能看到该 SKU 的全部素材 |
 | `Orders 订单` 表 | 订单号 | 客户拍摄 / 客户定制类素材通过"关联订单"字段挂上 |
 | `Customers 客户` 表 | 客户列表 | UGC 类素材通过"关联客户"字段溯源授权 |
-| listing-catalog 礼物词库 | 4 类礼物词库（受众 / 场景 / 节日 / 包装） | **模式 D 出 brief 时**喂入 §C Lifestyle 段；获取路径见模式 D §输入 |
+| listing-catalog 礼物词库 | 礼物词库（受众 / 场景 / 节日 / 包装等） | **模式 D 出 brief 时**喂入 §C Lifestyle 段；获取路径见模式 D §输入 |
 
 ---
 
@@ -150,7 +150,7 @@ layer: foundation
 |---|---|---|---|
 | 1 | `Products 商品` 表该 SKU 行 | 必需 | SKU 不在店铺总 Base：**阻塞** + 提示用户先回 listing-catalog 模式 A 建一行最小记录（至少 title + 品类），再回模式 D。本 skill 不偷偷建 SKU 行 |
 | 2 | `<workspace>/BRAND.md` § 视觉原则 + § 视觉禁区 | 必需但**降级可跑** | 缺失：§B Mood 段输出 "⚠️ BRAND.md 未建立——本段先留空，回 shop-foundation 建库后回头补"，brief 仍可出 §A/§C/§D/§E |
-| 3 | listing-catalog 礼物词库（4 类：受众 / 场景 / 节日 / 包装）| 强烈推荐**不阻塞** | 来源分两种：**(a) 反向触发** → listing-catalog 现传词库 in-memory；**(b) 主动触发** → 从该 SKU 的 Base description 段 3 + tags 礼物槽抽取已 fused 文本；提示用户"如想用最新结构化词库可回 listing-catalog 重跑 step 5.5" |
+| 3 | listing-catalog 礼物词库（受众 / 场景 / 节日 / 包装等）| 强烈推荐**不阻塞** | 来源分两种：**(a) 反向触发** → listing-catalog 现传词库 in-memory；**(b) 主动触发** → 从该 SKU 的 Base description 礼物 / 使用语境 + tags 礼物词抽取已 fused 文本；提示用户"如想用最新结构化词库可回 listing-catalog 重跑礼物维度调研" |
 | 4 | listing-catalog eRank 调研产物（如已存）| 可选 | 缺失：跳过，§B 不引用同类店铺风格 |
 | 5 | `<workspace>/SHOP.md` § 物料 / 礼盒服务 | 可选 | 缺失：§A 表第 9 行 packaging 计划写"未配置物料 → 拍裸品 + 简包装"，提示补 SHOP.md |
 | 6 | `<workspace>/COMMERCE_PLATFORM.md` 目标平台媒体规则 | 目标平台非 Etsy / 小红书时必需 | Etsy 缺失可用内置 10 槽位 preset；小红书缺失可用内置商品图 / 详情图规则；其他平台缺失则阻塞，提示先用 shop-foundation 补平台配置 |
@@ -158,9 +158,9 @@ layer: foundation
 **执行步骤**：
 1. **检查 SKU 是否在 `Products 商品` 表**——不在则阻塞，提示用户回 listing-catalog 模式 A 建一行最小记录后再回
 2. **检查 brief 是否已存在**（`商品/{SKU}_shoot-brief.md`）——已存在则强制问："覆盖 / 重命名旧版保留 / 仅补拍缺位（部分跑）"。重命名时旧版改为 `{SKU}_shoot-brief_{原生成日期 YYYY-MM-DD}.md`
-3. **若选"部分跑"**：用 `lark-base` 反查 `Assets 素材池` 表中该 SKU 已 promoted 素材的"用途标签"。目标平台是 Etsy 时，按 [etsy-listing-photo-slots.md § 槽位 ID 与 `Assets 素材池` 表 "用途标签"字段对齐](references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 推断已覆盖槽位；目标平台是小红书时，按 `listing-catalog/references/xiaohongshu-commerce.md` 的商品图 / 使用指南图 / 图文详情图规则推断；其他平台按 COMMERCE_PLATFORM.md 的媒体规则推断，配置缺失则阻塞。列给用户确认缺哪几位 → 仅填模板 §A 缺位行 + §C 对应镜头清单段；§B Mood 段沿用旧 brief
+3. **若选"部分跑"**：用 `lark-base` 反查 `Assets 素材池` 表中该 SKU 已 promoted 素材的"用途标签"。目标平台是 Etsy 时，按 [etsy-listing-photo-slots.md § 槽位 ID 与 `Assets 素材池` 表 "用途标签"字段对齐](references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 推断已覆盖槽位；目标平台是小红书时，按 `listing-catalog/references/platforms/xiaohongshu.md` 的商品图 / 使用指南图 / 图文详情图规则推断；其他平台按 COMMERCE_PLATFORM.md 的媒体规则推断，配置缺失则阻塞。列给用户确认缺哪几位 → 仅填模板 §A 缺位行 + §C 对应镜头清单段；§B Mood 段沿用旧 brief
 4. 读上述输入（按本节"输入"表 + 降级规则）
-5. 按目标平台读取媒体规则：Etsy 读 [references/etsy-listing-photo-slots.md](references/etsy-listing-photo-slots.md) 作为内置 10 槽位 preset；小红书读 `../listing-catalog/references/xiaohongshu-commerce.md` 的图片规则；其他平台只读 COMMERCE_PLATFORM.md 对应平台章节
+5. 按目标平台读取媒体规则：Etsy 读 [references/etsy-listing-photo-slots.md](references/etsy-listing-photo-slots.md) 作为内置 10 槽位 preset；小红书读 `../listing-catalog/references/platforms/xiaohongshu.md` 的图片规则；其他平台只读 COMMERCE_PLATFORM.md 对应平台章节
 6. 读 [references/shoot-brief-template.md](references/shoot-brief-template.md)：拿模板骨架
 7. 填三段式 brief（A 槽位映射 / B Mood / C 镜头清单 / D 参考图占位 / E 附注 / References 链接段）
 8. **展示给用户**等确认（不主动写盘）；用户调整后再写
@@ -202,7 +202,7 @@ layer: foundation
 - **shop-foundation**：每次归档后如果发现 BRAND.md 视觉原则需要补充（比如新增"自然光必拍"这种偏好），按 shop-foundation 的沉淀流程（`../shop-foundation/references/distillation-brand.md`）提议进 BRAND.md
 - **listing-catalog**：
   - `Products 商品` 表通过"关联 SKU"反向看到全部素材；详见 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)
-  - **模式 D 出 brief 时**消费 listing-catalog 模式 B step 5.5 的 4 类礼物词库——反向触发场景下 listing-catalog 现传 in-memory；主动触发场景下从该 SKU 的 Base description 段 3 + tags 礼物槽抽取已 fused 文本
+  - **模式 D 出 brief 时**消费 listing-catalog 模式 B step 5.5 的礼物词库——反向触发场景下 listing-catalog 现传 in-memory；主动触发场景下从该 SKU 的 Base description 礼物 / 使用语境 + tags 礼物词抽取已 fused 文本
 - **orders-customers**：客户定制参考图与 UGC 通过"关联订单 + 关联客户"挂上；UGC 授权流程（找客户沟通）由 orders-customers 完成，结果回写到 Base 的"公开授权"字段。目标平台是小红书时，客户素材仍必须先拿公开授权，才能勾 `小红书` 用途标签进入小红书候选视图
 - **image-synth**：
   - 本 skill 模式 D 出的 shoot-brief.md 是 image-synth 的**主输入源**——image-synth 解析 brief 的 §B Mood 段填 mood 词库 / §C 镜头清单填 shot-spec 词库

@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### 重构
+- `listing-catalog/references`：**Etsy preset 按平台分组 + 收敛为长期有效原则**。
+  - **分组**：原 `references/` 平铺混了引擎层与平台层，且 Etsy 一个平台铺了 4 个互相循环引用的文件（`etsy-seo.md` / `gift-scenario.md` / `holiday-calendar.md` / `erank-research.md` 共 733 行）。现新增 `references/platforms/` 一层，把平台 preset 与引擎层（`base-schema.md` / `business-knowledge-lookup.md` / `input-checklist.md`）分离；4 个 Etsy 文件合并为单文件 `platforms/etsy.md`，`xiaohongshu-commerce.md` → `platforms/xiaohongshu.md`。**新平台扩展 = 往 `platforms/` 丢一个 `{平台}.md`**。
+  - **精简**：`platforms/etsy.md` 进一步从合并后的 ~290 行收敛到 **~68 行的原则级文档**——只留「Etsy 是什么（搜索驱动的礼物市场等不变事实）+ 要填哪些参数 + 每个参数的总原则」。剔除所有随时间变化的内容（具体节日日期表、eRank 搜索量/竞争阈值与界面流程、当前热词）与固化套路（description 段 1-7 模板、客单价档分档表、13 tag 数字配额、礼物场景 5 问脚本 Q1-Q5、title 占位公式）。
+  - **联动**：`SKILL.md` step 5/5.5/7/9/10 同步从「客单价档 / 5 问 / title 公式 / 段 3 双小段 / eRank 节点编号」降为原则级表述；全仓 ~13 处指针更新到新路径与新小节名（input-checklist / base-schema / business-knowledge-lookup / listing-template + `shared/platform-config.md` / `assets-library` / `image-synth` / `shop-foundation` 模板 / `business-knowledge/seeds`）。grep 验证无旧文件名 / 旧小节名残留死链。
+  - **去固化（延伸）**：`assets/listing-template.md` 的描述段从固定「段 1-段 7 分别写什么」改为「不固定段序 + 要素清单」；跨 skill 的「4 类礼物词库 + description 段 3」交接措辞统一降为「礼物词库（受众/场景/节日/包装）+ description 礼物/使用语境」（动 `assets-library` SKILL.md / shoot-brief-template / etsy-listing-photo-slots、`image-synth` SKILL.md）。历史设计文档 `assets-library/PLAN-MODE.md` 按惯例保留原貌不改写。
+
 ### 新增
 - `orders-customers`：**重构为「平台中性核心 + 每平台 preset」的多平台架构**——把原本隐性当默认平台的 Etsy 抽成对等 preset，核心流程（SKILL 模式 / `order-handling.md` 客服骨架 / `order-fulfillment-sop.md` 履约阶段 / `base-schema.md` 通用字段 / `customer-tags.md` 标签体系）全部平台中性，平台差异（买家语言、订单号 / 买家标识解析、承诺发货时间来源、消息 / 售后入口、媒体限制、专属字段、价值标签阈值、自动化边界）下沉到 `references/<platform>-orders.md`。新增 [`platform-presets.md`](orders-customers/references/platform-presets.md)（11 项 preset 契约 + 解析顺序 + 「加亚马逊只新增一个 preset、不动核心」步骤）和 [`etsy-orders.md`](orders-customers/references/etsy-orders.md)（Etsy 从内联抽出）；`xiaohongshu-orders.md` 补契约对照表；`base-schema.md`「小红书字段」升级为通用「平台专属字段组」范式。`COMMERCE_PLATFORM_template.md` / `shared/platform-config.md` 的 Etsy 段补订单 preset 指针。
 

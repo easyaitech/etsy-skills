@@ -35,11 +35,11 @@ sku_context:
   price_range: < $20 / $20-$50 / >= $50
   gift_words: step 5.5 的受众词 / 场景词 / 节日词 / 包装服务词
   seo_keywords: 平台 SEO 词库（如 eRank / etsy-seo 候选）、`Products 商品` 表 SEO 关键词
-  target_audience: step 5.5 Q2 / Q5
+  target_audience: step 5.5 礼物维度调研收集的受众 / 关系
 marketing_context:
   channels: 目标平台 listing
   campaign_goal: write listing copy
-  season_or_event: step 5.5 Q4 或 holiday-calendar 命中节日
+  season_or_event: step 5.5 礼物维度调研命中的节日
 max_cards: 3
 ```
 
@@ -51,9 +51,9 @@ max_cards: 3
 
 ```text
 BRAND.md / SHOP.md
-  -> 平台政策与平台 SEO 规则（如 etsy-seo.md）
+  -> 平台政策与平台 SEO 规则（如 platforms/etsy.md）
   -> current user instruction
-  -> gift-scenario.md
+  -> platforms/etsy.md § 礼物维度
   -> Knowledge Cards
 ```
 
@@ -88,7 +88,7 @@ listing 正文只能使用 `yes` / `partial` 卡片。`no` 卡片只展示为 re
 2. **落到草稿（step 7）**：
    - **Title**：用 wiki 的标题自检清单当**审查闸**——草稿标题生成后逐条过；不通过就改写后再展示。
    - **Description**：用 wiki 的开头规则当**结构约束**（如先写场景 / 问题、参数后置），而不是把材质尺寸堆在开头。
-3. **冲突处理**：wiki 是运营启发，**不覆盖**本文件 § Conflict priority 里更高优先级的项（BRAND.md / SHOP.md / 平台 SEO 硬规则 / 用户当前明确要求）。当 wiki 写法与平台硬规则冲突（例如 wiki 倾向“收礼人 / 场景更靠前”，而 etsy-seo.md title 公式是品类词在前），以平台规则为准，把 wiki 写法作为 **A/B 候选**展示给用户判断，不擅自替换既有标题。
+3. **冲突处理**：wiki 是运营启发，**不覆盖**本文件 § Conflict priority 里更高优先级的项（BRAND.md / SHOP.md / 平台 SEO 硬规则 / 用户当前明确要求）。当 wiki 写法与平台硬规则冲突（例如 wiki 倾向“收礼人 / 场景更靠前”，而 platforms/etsy.md title 公式是品类词在前），以平台规则为准，把 wiki 写法作为 **A/B 候选**展示给用户判断，不擅自替换既有标题。
 4. **展示**：「可参考知识卡片」小节里，方法论卡要写出 `playbook_applied`——实际套用了哪些清单 / 模板 / 开头规则，让用户看到知识落进了产出。
 
 > 这是把 wiki 从“挂在卡片后面没人读”变成“真正驱动写作”的关键。趋势 / 选品 / 定位卡不走这套，一句话摘要够用。

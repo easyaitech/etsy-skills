@@ -141,7 +141,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 |---|---|---|---|
 | `assets-library` 模式 D step 11 | 用户选"不拍直接合成" | brief §A 槽位选项 + §B Mood + §C 镜头清单 + 用户挑的目标槽位 | **A** |
 | `pinterest-autopin` 模式 B step 3 | Pinterest 候选池空 + 用户选"AI 合成" | SKU + 目标 board + 已草拟 pin 文案 + 目标平台 = Pinterest 1000×1500 | **B** |
-| `listing-catalog` 模式 B step 10 | 用户选"不拍直接 AI 合成" | 4 类礼物词库 + description 段 3 + `Products 商品` 表中该 SKU 行 | **A** |
+| `listing-catalog` 模式 B step 10 | 用户选"不拍直接 AI 合成" | 礼物词库（受众 / 场景 / 节日 / 包装） + description 礼物 / 使用语境 + `Products 商品` 表中该 SKU 行 | **A** |
 
 **信任规则**：反向触发时**不重复盘点已现传输入**——调用方现传 = 信任。step 2 跳过对应字段；其余步骤照走（看图 anchor / 拼 prompt / 预览 / 生图 / QA / 落盘 / 三选一）。
 

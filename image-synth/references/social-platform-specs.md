@@ -77,7 +77,7 @@ Composition: vertical 9:16, subject centered in middle 70% of frame (avoid top 1
 | 文字密度 | ≤ 25%，商品主体和标题都要在缩略图可读 |
 | 安全区 | 顶 / 底 / 左 / 右各留 8%；底部不放关键信息 |
 | 视觉权重重心 | 中央偏上；首图承担封面角色 |
-| 特殊约束 | 商品型图片同时遵守 `listing-catalog/references/xiaohongshu-commerce.md` 的商品图 / 使用指南图 / 图文详情图规则 |
+| 特殊约束 | 商品型图片同时遵守 `listing-catalog/references/platforms/xiaohongshu.md` 的商品图 / 使用指南图 / 图文详情图规则 |
 
 **shot-spec 填法**：
 ```
