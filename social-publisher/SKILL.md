@@ -1,6 +1,6 @@
 ---
 name: social-publisher
-description: 社交媒体自动发布总控层：从 publish-composer 的跨平台 社媒发布队列 读取待发布任务，按平台适配器执行发布、定时自动发布巡检、失败重试和结果回写。当前真实发布适配器只支持 Pinterest（调用 pinterest-autopin adapter，再由 yanggedianzhang 服务器和现有浏览器插件执行）；小红书、Instagram、TikTok 等先登记为 planned/manual-only，能建任务和人工对账，但不能声称已自动发布。用于用户说“自动发布社媒 / 到点发布 / 跑发布队列 / 发 Pinterest / 以后接小红书自动发布 / 对账发布结果”等场景。
+description: 社交媒体自动发布总控层：从 publish-composer 的跨平台 社媒发布队列 读取待发布任务，按平台适配器执行发布、定时自动发布巡检、失败重试和结果回写。当前真实发布适配器支持 Pinterest（pinterest-autopin）和小红书（xiaohongshu-autopost），都经 yanggedianzhang 服务器 + 现有浏览器插件执行；Instagram、TikTok 等先登记为 planned/manual-only，能建任务和人工对账，但不能声称已自动发布。用于用户说“自动发布社媒 / 到点发布 / 跑发布队列 / 发 Pinterest / 发小红书 / 对账发布结果”等场景。
 ---
 
 # Social Publisher
@@ -33,7 +33,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 | 执行 / 自动发布 社媒发布队列 | [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md) |
 | 判断某个平台能不能自动发 | [`references/adapter-registry.md`](references/adapter-registry.md) |
 | Pinterest 发布 | `pinterest-autopin/SKILL.md` + `pinterest-autopin/references/publishing-flow.md` |
-| 小红书发布 | `publish-composer/references/platform-publishing-model.md` 的小红书段；当前只支持草稿 / 人工对账 |
+| 小红书发布 | `xiaohongshu-autopost/SKILL.md` + `xiaohongshu-autopost/references/publishing-flow.md`（enabled，同 pinterest 三层范式） |
 
 ---
 
@@ -52,7 +52,8 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 3. 如果发布任务表缺少以下字段，列出字段清单给用户确认后再补：`自动发布`、`发布适配器`、`外部队列 ID`、`发布尝试次数`、`最后尝试时间`、`执行锁`。
 4. 读 [`references/adapter-registry.md`](references/adapter-registry.md)，展示当前适配器状态：
    - Pinterest = enabled，真实发布走 `pinterest-autopin` adapter → 服务器工具 → 浏览器插件
-   - 小红书 = planned/manual-only，只允许建任务和人工回填
+   - 小红书 = enabled，真实发布走 `xiaohongshu-autopost` adapter → 服务器工具 → 浏览器插件（同 pinterest 三层范式）
+   - Instagram / TikTok = planned/manual-only，只允许建任务和人工回填
 5. 如用户要启用 Pinterest，按 `pinterest-autopin` 模式 A 检查服务器工具、浏览器插件和 `社媒发布队列`（Pinterest pin 即本表 `平台 = Pinterest` 的行）。
 6. 不创建任何真实定时任务，除非用户明确要求“帮我创建/更新自动任务”。如果需要创建 runtime 自动任务，必须使用当前环境提供的 automation / cron 工具，不手写不可见后台任务。
 
@@ -76,12 +77,13 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
    - `授权状态`、AI 清理、发布副本已在 `publish-composer` 完成
 3. 查 [`references/adapter-registry.md`](references/adapter-registry.md) 决定适配器。
 4. 如果 adapter 是 enabled 且本轮会真实发布，按 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md) §占用规则生成 `执行锁` 并把任务占用为 `发布中`。占用失败、无法确认唯一占用，或当前环境不允许并发安全更新时，停止，不调用平台 adapter。
-5. Pinterest：
-   - Pinterest 任务就是 社媒发布队列 里 `平台 = Pinterest` 的本行；`任务 ID`（`PIN-...`）即主键，无需映射到独立子队列表
-   - 调用 `pinterest-autopin` 模式 C 的 server test job → 用户确认 → server publish job 流程
-   - 成功后回写 社媒发布队列 本行：`状态 = 已发`、`发布时间`、`发布 URL`，并清空 `执行锁`
-   - 失败后回写：`状态 = 失败`、`失败原因`、`最后尝试时间`，并清空 `执行锁`；不要再次递增占用阶段已加过的 `发布尝试次数`
-6. planned/manual-only 平台（如小红书）：
+5. enabled 平台（Pinterest / 小红书）——调对应 adapter 的模式 C：
+   - 任务就是 社媒发布队列 里 `平台 = X` 的本行；`任务 ID`（`PIN-...` / `XHS-...`）即主键，无需映射独立子队列表
+   - Pinterest 调 `pinterest-autopin` 模式 C；小红书调 `xiaohongshu-autopost` 模式 C——都是 server test job → 用户目视确认 → server confirm-publish → final
+   - 成功后回写本行：`状态 = 已发`、`发布时间`、`发布 URL`（+ 小红书 `平台 post id`），清空 `执行锁`
+   - 失败后回写：`状态 = 失败`、`失败原因`（分类）、`最后尝试时间`，清空 `执行锁`；不重复递增占用阶段已加的 `发布尝试次数`
+   - 运行时若 adapter 返回 `BROWSER_TOOL_INSTALL/UPGRADE_REQUIRED`（该租户插件未就绪）→ 转述 `userMessage` + 降级人工清单，不算发布失败
+6. planned/manual-only 平台（Instagram / TikTok）：
    - 不登录、不上传、不点击发布
    - 只输出人工发布清单，或在用户给出公开 URL 后走模式 D 对账
 
@@ -138,7 +140,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 ## 禁区
 
 - 不把 `publish-composer` 的“已入任务”当成“已发布”。
-- 不为小红书、Instagram、TikTok 伪造自动发布能力；没有 enabled adapter 就只做草稿 / 人工对账。
+- 不为 Instagram、TikTok 伪造自动发布能力；没有 enabled adapter 就只做草稿 / 人工对账。Pinterest / 小红书已 enabled，但某租户插件未就绪时同样降级人工清单，不伪造已发。
 - 不替用户登录平台，不保存账号密码、cookie、token。
 - 不跳过 Pinterest 的 test → final 确认门，除非用户明确说明已经 test 过并要求 final。
 - 不对 `失败` 记录无限重试；默认最多两次，之后停在 `待复核`。

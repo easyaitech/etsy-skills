@@ -197,7 +197,7 @@ AI metadata / 水印清理**不再由本 skill 做**，已移交 `assets-library
 ### social-publisher（dispatch 执行层）
 
 - `social-publisher` 是 社媒发布队列 的执行层。用户说“自动发布 / 到点发布 / 发这条任务”时交给它。
-- 当前 enabled adapter 只有 Pinterest（调 `pinterest-autopin`）；小红书 adapter `xiaohongshu-autopost` 已建但执行 gated（出草稿 + 人工对账）；IG/TikTok 仍草稿。
+- 当前 enabled adapter：Pinterest（`pinterest-autopin`）+ 小红书（`xiaohongshu-autopost`，真发 test→confirm→final）；IG/TikTok 仍草稿/人工对账。
 - 执行状态列由 dispatch / adapter 按状态机转移权限回写，composer 不越权改。
 
 ### pinterest-autopin / xiaohongshu-autopost（平台适配器）

@@ -1,6 +1,6 @@
 ---
 name: xiaohongshu-autopost
-description: 把电商商品 + 素材库 + 品牌底座组装成小红书笔记（图文 / 视频），并作为 social-publisher 的小红书 adapter，通过 yanggedianzhang 服务器控制面 + 租户浏览器插件发布。Hermes 只负责判断、生成中文文案、调用服务器工具接口，不持有 Chrome profile、不跑 Playwright、不维护发布队列。三种触发：(1) "接小红书 / 配置小红书自动发 / 建小红书笔记流水线"——接通服务器工具 + 浏览器插件小红书 capability + 店铺总 Base 内 `社媒发布队列` 表；(2) "给 SKU 出小红书笔记 / 写小红书文案 / 排一条小红书笔记"——读 BRAND + `Products 商品` 表 + `Asset Variants 派生素材` 表，组装一条 `社媒发布队列`（平台=小红书）记录，平台专属字段走 `XiaohongshuExt` typed schema；(3) "发小红书 / 测试笔记 / publish"——服务器工具就绪时创建 test job、用户确认后转 final，未就绪时只出草稿 + 人工发布清单。每次只处理一条。
+description: 把电商商品 + 素材库 + 品牌底座组装成小红书笔记（图文 / 视频），并作为 social-publisher 的小红书 adapter，通过 yanggedianzhang 服务器控制面 + 租户浏览器插件发布。Hermes 只负责判断、生成中文文案、调用服务器工具接口，不持有 Chrome profile、不跑 Playwright、不维护发布队列。三种触发：(1) "接小红书 / 配置小红书自动发 / 建小红书笔记流水线"——接通服务器工具 + 浏览器插件小红书 capability + 店铺总 Base 内 `社媒发布队列` 表；(2) "给 SKU 出小红书笔记 / 写小红书文案 / 排一条小红书笔记"——读 BRAND + `Products 商品` 表 + `Asset Variants 派生素材` 表，组装一条 `社媒发布队列`（平台=小红书）记录，平台专属字段走 `XiaohongshuExt` typed schema；(3) "发小红书 / 测试笔记 / publish"——adapter 已 enabled：创建 test job → 用户目视确认 → confirm-publish 转 final → 回写公开笔记 URL（流程见 references/publishing-flow.md）；若该租户插件未装 / 缺 capability 则运行时降级人工发布清单。每次只处理一条。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
@@ -21,16 +21,11 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ---
 
-## ⚠️ 执行就绪状态（gated）
+## 执行就绪状态（enabled）
 
-**当前小红书真实自动发布尚未启用**——服务器工具 `/api/tools/xiaohongshu/jobs` 和浏览器插件的 `xiaohongshu` capability + 笔记 recipe **还没上线**。所以本 skill 现在能做的是：
+**小红书真实自动发布已启用**——后端三件就绪：服务器工具 `/api/tools/xiaohongshu/jobs`（+ `/confirm-publish`）、浏览器插件 `xiaohongshu` capability、服务端热下发笔记 recipe。Mode C 走真实 test → 用户目视确认 → confirm-publish → final 流程（与 Pinterest 同形），完整契约见 [`references/publishing-flow.md`](references/publishing-flow.md)。
 
-- ✅ 组装 `平台 = 小红书` 的 PublishIntent 草稿（含 `XiaohongshuExt` typed 字段）
-- ✅ 反向请求 assets-library 模式 E 派生小红书规格变体（3:4 封面 / 商品图）
-- ✅ 出**人工发布清单**，用户手动发布后回填公开笔记 URL 对账
-- ❌ **不能**声称已自动发布；不登录、不上传、不点发布
-
-服务器工具 + 插件 recipe 就绪后，把 [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书行改 `enabled`，本 skill 的 Mode C 即走真实 test → confirm → final 流程（与 Pinterest 同形）。
+**运行时仍可能降级**（不是设计缺位，是租户态）：某租户插件没装 / 版本低 / 没 `xiaohongshu` capability 时，服务器返回 `BROWSER_TOOL_INSTALL/UPGRADE_REQUIRED`，本 skill 把 `userMessage` 原样转述 + 降级人工发布清单——不是"未启用"，是该租户先装插件。
 
 ---
 
@@ -43,7 +38,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 | 1 | `社媒发布队列` 表已存在 | 读 `<workspace>/docs/store-base.md` 确认店铺总 Base 有 `publishing_queue` | 「`社媒发布队列` 还没建。小红书笔记就是这张表 `平台 = 小红书` 的行，要现在建吗？」 |
 | 2 | `BRAND_MARKETING.md` + `MARKETING_PLATFORM.md` 存在 | 检查工作区根 | 「营销 / 平台内容策略底座还没建，要用 shop-foundation 建吗？」 |
 | 3 | 小红书平台规则可读 | 读 [`../listing-catalog/references/platforms/xiaohongshu.md`](../listing-catalog/references/platforms/xiaohongshu.md)（商品结构）+ MARKETING_PLATFORM.md 的小红书笔记规范 | 「小红书内容规范缺失，先在 MARKETING_PLATFORM.md 补小红书笔记规则。」 |
-| 4 | 〔仅 Mode C〕服务器工具 + 插件 `xiaohongshu` capability 可用 | 调服务器工具若返回 `HERMES_TOOL_DISABLED` / `BROWSER_TOOL_INSTALL_REQUIRED` / `XHS_RECIPE_NOT_READY` | 「小红书自动发布还没在服务器侧启用（工具 / 插件 capability / 笔记 recipe 未就绪）。现在只能出草稿 + 人工发布清单。」→ 降级到 Mode B 草稿路径 |
+| 4 | 〔仅 Mode C〕该租户插件就绪 | 创建 job 时若返回 `BROWSER_TOOL_INSTALL_REQUIRED` / `BROWSER_TOOL_UPGRADE_REQUIRED`（该租户没装插件 / 版本低 / 缺 `xiaohongshu` capability）；`HERMES_TOOL_DISABLED` / `UNAUTHORIZED` = 管理员侧未配置 | 前者转述服务器 `userMessage`（装 / 升级插件）+ 降级人工清单；后者停下提示管理员配置。功能本身已 enabled，这是租户态检查 |
 
 ---
 
@@ -65,7 +60,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ### 模式 A：接入小红书适配器
 进入：用户「接小红书 / 配置小红书自动发」。
-步骤：① 定位店铺总 Base + `社媒发布队列` 表；② 确认 `XiaohongshuExt` 字段已在队列表 `平台扩展 (typed)` 列约定（note_type / topic_tags / cover_caption / related_item_id）；③ 检查服务器工具 + 插件 `xiaohongshu` capability 状态（见 gated 状态段）；④ 在 adapter-registry 标注小红书当前状态（未就绪则保持 planned/manual-only）；⑤ 不创建任何真实定时任务，除非用户明确要求。
+步骤：① 定位店铺总 Base + `社媒发布队列` 表；② 确认 `XiaohongshuExt` 字段已在队列表 `平台扩展 (typed)` 列约定（note_type / topic_tags / cover_caption / related_item_id）；③ 确认该租户插件带 `xiaohongshu` capability（创建 job 时按 references/publishing-flow.md 的错误码判，未装则转述安装提示）；④ adapter 全局已 enabled（见 adapter-registry）；⑤ 不创建任何真实定时任务，除非用户明确要求。
 
 ### 模式 B：组装小红书笔记 PublishIntent（每次一条）
 进入：用户「给 {SKU} 出小红书笔记 / 写小红书文案 / 排一条」。
@@ -79,10 +74,10 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 7. 组一条 `社媒发布队列`（`平台 = 小红书`，`任务 ID = XHS-YYYYMMDD-001`，状态 = `草稿`）；素材顺序显式写；封面素材指定。
 8. 列字段值给用户确认后写入（写入前硬约束）。状态进 `待审`。
 
-### 模式 C：发布（gated）
-进入：用户「发小红书 / 测试 / publish」。
-- **服务器工具 + 插件 recipe 就绪时**：创建 test job → 展示给用户确认 → 创建 final job（与 Pinterest 同形：test → confirm-publish → 回写 `发布 URL` + `平台 post id` + `发布时间`）。素材先变成服务器可授权下载的 asset，插件按服务端下发的笔记 recipe 上传，不传本地绝对路径。
-- **未就绪时**：输出**人工发布清单**（封面 + 图序 + 标题 + 正文 + 话题 + 链接），用户手动发布后回填公开笔记 URL，状态 → `手动已发`。不声称自动发布。
+### 模式 C：发布（enabled）
+进入：用户「发小红书 / 测试 / publish」。**完整执行手册见 [`references/publishing-flow.md`](references/publishing-flow.md)**（[0] 校验 → [1] 创建 test job → [2] 插件 test 填表 → [3] 用户目视确认 → [5] confirm-publish → [6] 回写）。
+- **正常路径**：`POST /api/tools/xiaohongshu/jobs` 建 test job → 展示给用户确认小红书发布页（封面 / 图序 / 文案 / 话题）→ 用户说"发" → `POST /api/tools/xiaohongshu/jobs/confirm-publish` 转 final → 插件回传公开笔记 URL → 回写 `发布 URL` + `平台 post id` + `发布时间`，状态 `发布中→已发`。素材先变服务器可授权下载的 asset，插件按服务端 recipe 上传，不传本地绝对路径。
+- **运行时降级**：服务器返回 `BROWSER_TOOL_INSTALL/UPGRADE_REQUIRED`（该租户插件没装 / 缺 capability）→ 转述 `userMessage` + 出**人工发布清单**，用户手动发后回填公开 URL，状态 `手动已发`。test 没过不进 final。
 
 ---
 
