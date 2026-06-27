@@ -38,3 +38,44 @@
 - 发布图只引用 `Asset Variants 派生素材` 的小红书规格变体（assets-library 模式 E 派生），不在 adapter 里裁切清理。
 - **未对外开放（staged）**：后端三件（服务器工具 `/api/tools/xiaohongshu/jobs` + 插件 `xiaohongshu` capability + 笔记 recipe）已就绪，发布契约见 [`xiaohongshu-autopost/references/publishing-flow.md`](../../xiaohongshu-autopost/references/publishing-flow.md)，**但 adapter 尚未对外开放**：当前只允许组草稿 + 人工发布清单 + 人工回填对账，**不得创建真实 server publish job、不得对真实租户跑真发**。对外放行（产品侧明确批准）后把上表状态和本节标题改 `enabled`，Mode C 才走真实 test → confirm-publish → final。
 - 〔放行后〕`发布 URL` 保存公开笔记 URL；拿不到公开 URL 不能标 `已发`。Hermes 不跑本地 Playwright，登录态只在租户插件中使用。
+
+---
+
+## 路由决策 + eval 场景（T8）
+
+> 给一条 PublishIntent，「该不该发、谁来发、怎么发」由下面的决策树定。运行时实现 + 测试在 ECS dispatch（yanggedianzhang，已有 78+291 单测）；本节是**可审计的 spec + eval 场景**，供 skill 侧路由对齐和后续真 eval 校验。
+
+### 路由决策树
+
+```
+PublishIntent（社媒发布队列 一行）
+  │
+  ├─ 平台 = X → 查本表 X 的「状态」
+  │     ├─ enabled            → 可真发：路由到 X 的 adapter（pinterest-autopin / …）
+  │     ├─ staged（未对外开放）→ 不真发：只组草稿 + 人工发布清单 + 人工回填对账
+  │     └─ planned/manual-only → 不真发：草稿 + 人工对账
+  │
+  ├─ 自动发布 = true 且 状态 = 已批准 且 到点 且未锁
+  │     → ECS dispatch 接管（仅 enabled 平台）；staged/planned 不进自动发布
+  │
+  └─ 用户手动「发这条」
+        ├─ enabled 平台 → adapter 模式 C：test → 用户目视确认 → confirm-publish → final
+        └─ 非 enabled    → 出人工发布清单，不创建真实 server publish job
+```
+
+### eval 场景（输入 → 期望路由 / 结果）
+
+| # | 输入 intent | 期望 |
+|---|---|---|
+| 1 | 平台=Pinterest, enabled, 自动发布=true, 已批准, 到点, 未锁 | ECS dispatch 建 test job → 回写发布中；**不自动 confirm-publish**（停待人工确认） |
+| 2 | 平台=Pinterest, enabled, 用户手动"发这条" | pinterest-autopin 模式 C：test → 目视确认 → confirm-publish → final |
+| 3 | 平台=小红书, **staged**, 用户"发" | **不创建真实 job**；出人工发布清单 + 提示 staged 未对外开放 |
+| 4 | 平台=Instagram, planned | 草稿 + 人工对账；不真发 |
+| 5 | 平台=Pinterest, 自动发布=true, 但行已被 dispatch 锁（发布中） | 人工发布让位（避让），不双写抢同一行 |
+| 6 | 平台=Pinterest, dispatch dormant（POLL_MS 未配） | 自动发布不发生；用户要发走手动模式 C，**不回退 Hermes 手搓巡检** |
+| 7 | 任意平台, `链接` 缺（商品型缺分享链接） | 阻塞建任务，回 listing-catalog 补 `分享链接`，不拼 URL |
+| 8 | 平台=X, 平台扩展 typed 校验不过（未注册字段 / 缺必填） | 阻塞，不写库；不塞自由 JSON |
+| 9 | 关联素材指向 canonical 原图而非变体 | 阻塞 / 提示引用 `Asset Variants 派生素材` 变体 |
+| 10 | enabled 平台, 但该租户插件未装（`BROWSER_TOOL_INSTALL_REQUIRED`） | 转述 `userMessage` + 降级人工清单；不算发布失败、不伪造已发 |
+
+> 这些场景是路由正确性的判据。新增平台 / 改状态时，先确认它在本表有明确「状态」，再对照决策树跑一遍上面的场景。
