@@ -44,7 +44,7 @@
 - `image-brief`：取商品 + 品牌 + 礼物词库 + 平台规则 → 出平台感知图片创意 brief，分叉到拍摄 / image-synth / 已有素材
 - `image-synth`：取 image-brief 的 brief + 品牌视觉 + 商品实拍图 → AI 合成图
 - `publish-composer`：取 assets-library 变体 + 商品 + 平台策略 → 组跨平台发布意图 PublishIntent，拥有 `社媒发布队列`（只引用变体，不收集/清理/裁切）
-- `social-publisher`：取 社媒发布队列 → 做任务校验、占用、适配器路由、自动发布巡检和结果回写
+- `social-publisher`（薄触发）：管 adapter registry + 人工/按需发布 + confirm-publish 人工闸 + 对账。自动发布的巡检/锁/重试/死信归 ECS dispatch（yanggedianzhang publish dispatch，T5），不在本 skill
 - `pinterest-autopin`：Pinterest adapter；取 社媒发布队列（`平台 = Pinterest` 行）+ 商品 + 素材 + 品牌 → 组 pin 发布
 - `xiaohongshu-autopost`：小红书 adapter（**staged 未对外开放**）；取 社媒发布队列（`平台 = 小红书` 行）+ 商品 + 变体 + 品牌 → 组笔记草稿 + 人工清单。后端 + 契约就绪，放行后改 enabled 才走 server test → confirm-publish → final
 
