@@ -187,10 +187,10 @@ layer: foundation
 
 ## 写入前的硬性约束
 
-通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有禁区：
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执含飞书链接）。本 skill 特有禁区：
 
 - **文件操作前列出动作清单** → 等用户确认 → 执行（lark-drive）
-- **Base 录入前列出字段值清单** → 等用户确认 → 写入（lark-base）
+- **Base 录入前列出字段值清单** → 等用户确认 → 写入（lark-base）→ 回执；不要只在对话里报录入而不写 Base，写完带可点击飞书链接
 - **不删除原始素材**：摄影原图（RAW / 高清 JPG）一旦归档，本 skill 不主动删除（容量管理由用户人工决策）
 - **不替用户做创意图片编辑**：调色 / 创意构图 / 新海报由用户人工或 `image-synth`。但**模式 E 的机械/模板化派生平台变体（裁切 / 缩放 / 压缩 / 缩略图 / AI metadata 清理 / 套定好的模板封面）是本 skill 的职责**——这是多平台发布的「变体工厂」能力（D-A7/D-A8）。所有派生**只作用在发布副本**，永不替换 / 覆盖原始 canonical 素材；需要全新创意构图的封面/海报委托 `image-synth`
 - **single source of truth**：每个文件在云空间只放一份——多归属靠 Base 多选字段表达，不要靠拷贝。详见 [asset-index-base-schema.md § 设计原则](references/asset-index-base-schema.md#设计原则)

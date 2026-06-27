@@ -108,7 +108,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
    - 小红书任务必须写 `封面素材` + `cover_caption`
 6. 组好后状态进 `待审`（半自动核心：用户在此批准 / 退回 / 跳过）。不要直接标“已发布”。
 
-写入前必须展示任务草稿和素材顺序，等用户确认。
+写入前必须展示任务草稿和素材顺序，等用户确认。确认后遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量：本 turn 内先把 `社媒发布队列` 草稿行真正写进 Base 拿到成功返回、再报"已组好任务"，写完带一句含可点击飞书链接的回执；只在对话里展示草稿而 Base 没落行 = 没做完。（执行状态列仍由 social-publisher / dispatch 回写，composer 不越权改。）
 
 ---
 

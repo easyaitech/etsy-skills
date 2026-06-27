@@ -46,7 +46,7 @@ weekly sources
 
 1. 读 `shared/preamble.md` 并执行版本检查、工作区解析规则。
 2. 如果任务会写 workspace 文件，使用本文件 §批量写入预览。
-3. 如果任务会写 Base，按 `lark-base` diff 风格预览，等用户确认后再写。
+3. 如果任务会写 Base（如 `Knowledge Cards 知识卡片` 表），按 `lark-base` diff 风格预览，等用户确认后再写——遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量：本 turn 内先落库拿到成功返回、再报"已写入"，写完带一句含可点击飞书链接的回执；只在对话里报录入而 Base 没动 = 没做完。
 
 ### First-run Base setup
 
