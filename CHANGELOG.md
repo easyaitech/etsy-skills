@@ -5,7 +5,7 @@
 ## [Unreleased]
 
 ### 新增
-- **小红书自动发布 enabled**：后端三件就绪（服务器工具 `/api/tools/xiaohongshu/jobs` + `/confirm-publish`、插件 `xiaohongshu` capability、服务端热下发笔记 recipe），`xiaohongshu-autopost` adapter 从 gated 翻成 **enabled**。新增 [`xiaohongshu-autopost/references/publishing-flow.md`](xiaohongshu-autopost/references/publishing-flow.md)（镜像 pinterest 三层契约，换笔记字段 title/body/topics/coverCaption/noteType/images/link）：Mode C 走 server test job → 用户目视确认 → confirm-publish → final → 回写公开笔记 URL。运行时若某租户插件未装 / 缺 capability，服务器返回 `BROWSER_TOOL_INSTALL/UPGRADE_REQUIRED`，转述 `userMessage` + 降级人工清单（非"未启用"）。adapter-registry / social-publisher（模式 A/B 路由）/ README / dependency-protocol / platform-config / publish-composer 的小红书状态同步更新为 enabled。
+- **小红书发布契约就绪（staged，未对外开放）**：后端三件就绪（服务器工具 `/api/tools/xiaohongshu/jobs` + `/confirm-publish`、插件 `xiaohongshu` capability、服务端热下发笔记 recipe），新增 [`xiaohongshu-autopost/references/publishing-flow.md`](xiaohongshu-autopost/references/publishing-flow.md)（镜像 pinterest 三层契约，换笔记字段 title/body/topics/coverCaption/noteType/images/link）。**但小红书自动发布尚未对外开放**：adapter 状态 = `staged`，**不 enabled、不对真实租户跑真发**，当前只组草稿 + 人工发布清单 + 人工回填对账；test → confirm-publish → final 真实路径契约就绪但"只读不跑"。对外放行（产品侧批准）后把 adapter-registry 小红书行改 `enabled` 一处开关即解锁。adapter-registry / social-publisher（模式 A/B 路由）/ README / dependency-protocol / platform-config / publish-composer 的小红书状态统一为 staged。
 
 ### 重构
 - **社媒发布栈目标态架构落地（plan-eng-review + Codex 敲定，D-A1~D-A8）**：把素材+生产+发布整理成「基座（名词 owner）/ 工作流（动词）/ 平台（唯一变动面）」三轴，干净支持多平台。
