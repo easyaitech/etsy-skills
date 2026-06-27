@@ -96,8 +96,8 @@ layer: foundation
    - 如果 step 5.6 命中卡片，先展示「可参考知识卡片」小节，再展示 listing 草稿；listing 正文只采用标为 yes / partial 的卡片，不采用 no 的卡片
    - **若 step 5.6 命中 `方法论` 卡**：按其 `知识页链接` wiki 正文把 SOP 真正落到草稿，而不只是展示卡片——把 wiki 的标题自检清单当作 title 的**审查闸**（草稿生成后逐条过，不过就改），把 wiki 的描述开头规则（如「先场景 / 问题切入、参数后置」）当作 description 的**开头结构**。与平台 SEO 硬规则冲突时按 [`references/business-knowledge-lookup.md`](references/business-knowledge-lookup.md) § Conflict priority：平台规则（本 title 公式、`platforms/etsy.md` 等）为准，方法论卡的差异写法（如「收礼人 / 场景更靠前」的词序）降为 **A/B 候选**展示给用户，不强行覆盖既有公式
 8. **整篇展示**给用户，等用户确认或调整。同时展示「过滤掉的候选词」清单，方便用户判断是否要纠正 BRAND.md
-9. 用户确认后：
-   - 把文案写入店铺总 Base 的 `Products 商品` 对应行（商品级与 SKU 级字段同表；通过 lark-base 更新）
+9. 用户确认后（**本 turn 内先落库、再报完成**——遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量；只把文案显示在对话里、Base 没更新 = 没做完）：
+   - 把文案写入店铺总 Base 的 `Products 商品` 对应行（商品级与 SKU 级字段同表；通过 lark-base 更新），拿到成功返回后才对用户说"已写入"；写完带一句回执，**回执必须含一条可点击的飞书 Base 链接**（优先深链到该 SKU 所在的表 / 记录，方便用户点进去核对改了什么；不暴露原始 ID）。写失败如实说明、不要按成功口吻收尾
    - 如果 step 5.6 有采用 yes / partial 的 Knowledge Cards，best-effort 回写 `引用次数 += 1` / `最后引用日期 = today`；失败不阻塞 listing 写入，但要简短告诉用户统计字段未能更新
    - 提醒用户去目标平台后台贴上线；若 COMMERCE_PLATFORM.md 明确允许 API / ERP 发布，也必须按对应平台 skill 或人工确认流程执行
    - 顺带提醒用户上架前再对标一次市场定价（按 `references/platforms/etsy.md` § 上架前调研的原则）
@@ -124,11 +124,11 @@ layer: foundation
 
 ## 写入前的硬性约束
 
-通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有禁区：
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执）。本 skill 特有禁区：
 
 - **不替用户上架或发买家消息**：只产文案 + 维护 Base；真实发布遵守 COMMERCE_PLATFORM.md 的自动化边界，默认由用户在平台后台手动复制
 - **新增 SKU 不要自动估价**：成本 / 售价让用户确认；可基于 Base 历史给"参考区间"，但不替用户拍板
-- **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘
+- **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘 → 回执；不要只在对话里报改动而不写 Base
 
 ---
 

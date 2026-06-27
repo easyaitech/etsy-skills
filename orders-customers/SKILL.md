@@ -70,7 +70,7 @@ layer: foundation
   - 目标平台是 Etsy / 小红书 → 用内置 preset，并说明这是内置 {平台} 规则
   - 目标平台不是内置 preset → 停止并提示用户先建立 COMMERCE_PLATFORM.md + 该平台 preset
 - 如果是新订单或订单状态进入 `待发货`，同时读 `references/order-fulfillment-sop.md`，输出当前 SOP 阶段、下一步、缺失证据和拟写回字段
-- 用 lark-base 写入或更新对应行
+- 用 lark-base 写入或更新对应行——**本 turn 内先落库拿到成功返回，再对用户说"已录入 / 已改"**（遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量；只在对话里答应、Base 没动 = 没做完）；写完带一句回执，**回执必须含一条可点击的飞书 Base 链接**（优先深链到该订单 / 客户记录，方便用户点进去核对；不暴露原始 ID），写失败如实说明
 - 涉及客户首次出现：先在 `Customers 客户` 表建行，再在 `Orders 订单` 表关联
 - 涉及客户标签：参考 `references/customer-tags.md`，按统一标签体系打标，**不要随手发明新标签**（标签膨胀会让分群失效）
 
@@ -87,8 +87,8 @@ layer: foundation
 3. 读 `references/order-handling.md`：按场景找 SOP（差评 / 退货 / 定制等）
 4. 输出客服回复草稿（买家语言按目标平台 preset 的「买家语言」，最终以 COMMERCE_PLATFORM.md 为准），整篇展示给用户
 5. 用户确认后，**用户自己**复制到目标平台后台 / 客服入口发送（本 skill 不替操作平台）
-6. 落地：
-   - 把回复要点 + 用户最终发出的版本回写到 `Orders 订单` 表的"客服记录"字段
+6. 落地（**回写要真正落进 Base，不是只在对话里记下**——遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量）：
+   - 把回复要点 + 用户最终发出的版本回写到 `Orders 订单` 表的"客服记录"字段；用 lark-base 写入拿到成功返回后带一句回执（**含可点击的飞书 Base 链接**，优先深链到该订单记录）
    - 如果该次互动反映客户特征（VIP、定制粉、投诉户），更新 `Customers 客户` 表标签
 
 ### 模式 D：订单履约 SOP 检查
@@ -117,11 +117,11 @@ layer: foundation
 
 ## 写入前的硬性约束
 
-通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有禁区：
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执）。本 skill 特有禁区：
 
 - **不替用户发平台消息 / 发货 / 退款 / 售后审核**：只产文案 + 维护 Base；真实操作由用户在平台后台、ERP 或专门平台 skill 执行
 - **客户隐私**：邮箱、地址、订单号属敏感数据——Agent 输出里用脱敏写法（如 `订单 #****1234`），不要大段重复
-- **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘
+- **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘 → 回执；不要只在对话里报改动而不写 Base
 - **客服回复**：用户自己复制到目标平台后台 / 客服入口发送；发出后用户最终版本回写到 `Orders 订单` 表的"客服记录"字段
 
 ---
