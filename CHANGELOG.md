@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+### 重构
+- **T6 social-publisher 收成薄触发（对齐 T5 ECS dispatch 已落地）**：发布编排硬核（自动巡检 / 单写者锁 / 重试退避 / 死信 / 结果回写）已落到 ECS 常驻控制面（yanggedianzhang publish dispatch，dormant-by-default），`social-publisher` 不再在 Hermes 手搓巡检 / 锁 / 定时器。skill 退成薄触发四件事：配置 adapter registry / 人工按需发布（模式 B）/ confirm-publish 人工闸 / 对账（模式 D）。模式 C「自动发布巡检」改写为「自动发布 = ECS dispatch，本 skill 不再手搓」；人工发布占用规则加「与 dispatch 避让」（行已锁 / 发布中则让位）；Mode A 去掉「Hermes 侧建 cron」、改为「运维开 ECS dispatch」。同步更新 description / publishing-queue-contract.md（占用规则 + 自动筛选归 dispatch）/ shared/tools-architecture.md 落地现状表（+发布编排已上收 ECS 行）。
+
 ### 新增
 - **小红书发布契约就绪（staged，未对外开放）**：后端三件就绪（服务器工具 `/api/tools/xiaohongshu/jobs` + `/confirm-publish`、插件 `xiaohongshu` capability、服务端热下发笔记 recipe），新增 [`xiaohongshu-autopost/references/publishing-flow.md`](xiaohongshu-autopost/references/publishing-flow.md)（镜像 pinterest 三层契约，换笔记字段 title/body/topics/coverCaption/noteType/images/link）。**但小红书自动发布尚未对外开放**：adapter 状态 = `staged`，**不 enabled、不对真实租户跑真发**，当前只组草稿 + 人工发布清单 + 人工回填对账；test → confirm-publish → final 真实路径契约就绪但"只读不跑"。对外放行（产品侧批准）后把 adapter-registry 小红书行改 `enabled` 一处开关即解锁。adapter-registry / social-publisher（模式 A/B 路由）/ README / dependency-protocol / platform-config / publish-composer 的小红书状态统一为 staged。
 
