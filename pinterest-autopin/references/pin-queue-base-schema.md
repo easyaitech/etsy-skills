@@ -31,7 +31,9 @@
 
 ## Pinterest 行专属字段
 
-`社媒发布队列` 通用字段之外，Pinterest 行额外需要下面这些列（非 Pinterest 行留空即可）：
+`社媒发布队列` 通用字段之外，Pinterest 行额外需要下面这些列（非 Pinterest 行留空即可）。
+
+> **与目标态对齐**：这些 Pinterest 专属列在目标态等价于 PublishIntent 的 `平台扩展 (typed)` 里的 **`PinterestExt`** schema（`board_id` ← `Board (Pinterest)`、`alt_text` ← `Alt Text (EN)`、`dominant_color?`），写入前过 PinterestExt validator；`发布素材` 引用 `Asset Variants 派生素材` 的变体（非 canonical 原图）。下表是这些字段在飞书 Base 里的具体列实现，不是另一套自由字段。PublishIntent 契约见 [`../../publish-composer/references/base-schema.md` 表 2](../../publish-composer/references/base-schema.md)。
 
 | 字段名 | 飞书字段类型 | 说明 |
 |---|---|---|

@@ -4,7 +4,12 @@
 
 ## [Unreleased]
 
+### 新增
+- **T9 publish-metrics（发布结果回收闭环 / 反馈层）**：新建 `publish-metrics` skill + `社媒发布队列` metrics 列分组（⑥：曝光/点击/保存/互动/转化/指标采集时间/数据来源，见 publish-metrics/references/metrics-schema.md）。三模式：建指标列 / 回收录入 / 复盘 rollup（按变体·文案·SKU·平台聚合喂回 publish-composer）。只读发布结果 + 写 metrics 列，不碰内容/执行状态列、不重新发布；**拿不到指标留空标待补、绝不编数字，每条标数据来源**。补上工作流轴「发布后」缺口，让 composer 不再盲选素材文案。注册 manifest + README + dependency-protocol；TODOS 该项标完成。
+
 ### 重构
+- **T7 pinterest-autopin 退纯 adapter（对齐目标态）**：老 skill 对齐到 xiaohongshu-autopost 同款 adapter 形态——平台专属字段走 `PinterestExt` typed schema（board_id/alt_text/dominant_color，对齐 pin-queue-base-schema 列）；发布图引用 `Asset Variants 派生素材`（2:3 变体）而非 raw `Assets 素材池`，**裁切/清理移交 assets-library 模式 E**（D-A8，去掉本 skill 的 image-processing 工具链）；删「自动发布 cron / backlog 恢复」（归 ECS dispatch T5）；description / 依赖表 / Mode B / 协作段 / 对外接口同步。
+- **T8 路由 eval（adapter-registry）**：新增「路由决策树 + 10 条 eval 场景」（输入 intent → 期望路由/结果），覆盖 enabled/staged/planned 分流、自动 vs 手动、dispatch 避让/dormant、typed 校验、变体引用、插件未装降级。运行时实现+测试在 ECS dispatch（78+291 单测）；本节是可审计 spec 供 skill 侧对齐 + 后续真 eval。
 - **T6 social-publisher 收成薄触发（对齐 T5 ECS dispatch 已落地）**：发布编排硬核（自动巡检 / 单写者锁 / 重试退避 / 死信 / 结果回写）已落到 ECS 常驻控制面（yanggedianzhang publish dispatch，dormant-by-default），`social-publisher` 不再在 Hermes 手搓巡检 / 锁 / 定时器。skill 退成薄触发四件事：配置 adapter registry / 人工按需发布（模式 B）/ confirm-publish 人工闸 / 对账（模式 D）。模式 C「自动发布巡检」改写为「自动发布 = ECS dispatch，本 skill 不再手搓」；人工发布占用规则加「与 dispatch 避让」（行已锁 / 发布中则让位）；Mode A 去掉「Hermes 侧建 cron」、改为「运维开 ECS dispatch」。同步更新 description / publishing-queue-contract.md（占用规则 + 自动筛选归 dispatch）/ shared/tools-architecture.md 落地现状表（+发布编排已上收 ECS 行）。
 
 ### 新增

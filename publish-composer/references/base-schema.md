@@ -102,7 +102,7 @@
 | `发布 URL` / `平台 post id` | URL / 文本 | 平台发布后链接 + post id |
 | `失败原因` | 多行文本 | 自动化失败的原始记录（分类见 ③） |
 
-> **metrics 列**（曝光 / 点击 / 保存 / 转化）由后续 `publish-metrics` phase 回写，本期不建。
+> **⑥ metrics 列**（曝光 / 点击 / 保存 / 互动 / 转化 / 指标采集时间 / 数据来源）= 反馈层 `publish-metrics` owner 的列分组，见 [`../../publish-metrics/references/metrics-schema.md`](../../publish-metrics/references/metrics-schema.md)。回写 metrics 不参与状态机、不改执行状态列；做发布复盘时才建。
 
 **⑤ 事件日志**（所有转移投影来源）
 

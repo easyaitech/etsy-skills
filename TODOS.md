@@ -10,7 +10,8 @@
 
 ## P3: 后续 phase
 
-- [ ] **publish-metrics 发布结果回收闭环** — 当前目标态只覆盖到「发布」，不覆盖发布后的结果回收。补一个反馈层 skill `publish-metrics`：回写每条 PublishIntent 的 `发布 URL / post id / 曝光 / 点击 / 保存 / 转化 / 失败原因分类`，喂回 publish-composer 让它学习哪些素材/文案有效。**Why**：没有 metrics，composer 永远在盲选素材和文案，发布是单向的而非闭环。**依赖/blocked by**：PublishIntent 契约定稿（带身份维度 + per-platform 语义）+ 各平台 adapter 具备结果回写能力（Pinterest 插件已回写发布 URL，曝光/互动需平台数据接口或插件抓取）。**起点**：先在 PublishIntent 加 metrics 列 + Pinterest adapter 回写基础 post id/URL，再逐平台补互动指标。来源：plan-eng-review Codex Outside Voice #16 (2026-06-26)
+- [x] **publish-metrics 发布结果回收闭环** — ✅ 已建（T9，2026-06-27）：`publish-metrics` skill（反馈层）+ `社媒发布队列` metrics 列分组（曝光/点击/保存/互动/转化/采集时间/数据来源）+ 复盘 rollup 喂回 composer。v1 落「基础 URL/post id（adapter 已回写）+ 可拿到的指标手录/平台数据，拿不到留空标待补不编数字」，逐平台补互动指标。来源：plan-eng-review Codex Outside Voice #16 (2026-06-26)
+  - 后续：互动指标的平台 API / 插件抓取自动化（当前 v1 靠手录 + 已有 URL/post id）。
 
 # TODOS — trend-radar
 
