@@ -46,7 +46,7 @@
 - `publish-composer`：取 assets-library 变体 + 商品 + 平台策略 → 组跨平台发布意图 PublishIntent，拥有 `社媒发布队列`（只引用变体，不收集/清理/裁切）
 - `social-publisher`：取 社媒发布队列 → 做任务校验、占用、适配器路由、自动发布巡检和结果回写
 - `pinterest-autopin`：Pinterest adapter；取 社媒发布队列（`平台 = Pinterest` 行）+ 商品 + 素材 + 品牌 → 组 pin 发布
-- `xiaohongshu-autopost`：小红书 adapter（enabled）；取 社媒发布队列（`平台 = 小红书` 行）+ 商品 + 变体 + 品牌 → 组笔记发布，server test → confirm-publish → final
+- `xiaohongshu-autopost`：小红书 adapter（**staged 未对外开放**）；取 社媒发布队列（`平台 = 小红书` 行）+ 商品 + 变体 + 品牌 → 组笔记草稿 + 人工清单。后端 + 契约就绪，放行后改 enabled 才走 server test → confirm-publish → final
 
 未来的推广、CRM 等 skill 同样围绕基座层运行。
 

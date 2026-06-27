@@ -1,5 +1,8 @@
 # Publishing Flow（模式 C 的执行手册）
 
+> 🚧 **当前小红书 adapter = `staged`，未对外开放。本手册描述的是「对外放行后」才走的真实发布路径，现在「只读不跑」**——
+> Mode C 当前只组草稿 + 人工发布清单，**不创建真实 server publish job**。对外放行（adapter-registry 小红书行改 `enabled`）后本手册才生效。
+>
 > 与 `pinterest-autopin/references/publishing-flow.md` 同款三层契约，把 `pinterest` 换成 `xiaohongshu`、pin 字段换成笔记字段。
 
 模式 C 从 `社媒发布队列` 表中 `平台 = 小红书` 的一行草稿出发，通过 yanggedianzhang 服务器创建小红书 browser tool job，再由现有浏览器插件在租户小红书登录态里执行。
