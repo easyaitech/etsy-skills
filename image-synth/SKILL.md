@@ -60,9 +60,9 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 
 ---
 
-## 共享执行流（11 步，模式 A / B 共用）
+## 共享执行流（12 步，模式 A / B 共用）
 
-模式 A / B 走同一套 11 步骤；差异见后面两节（输入表 + 模式差异表）。
+模式 A / B 走同一套 12 步骤；差异见后面两节（输入表 + 模式差异表）。
 
 1. **解析工作区根**（`ecommerce-stack workspace`，旧命令 `etsy-stack workspace` 兼容），得到 `<workspace>`
 2. **盘点输入**——必填项一次性问全（不要边走边追问）。**反向触发时已 in-memory 现传的字段不重复盘点**（见 § 反向触发条件）
@@ -77,11 +77,15 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
    - **失败显式报错，绝不静默**：`quota_exceeded` → 报「本租户配额用尽」停；`upstream`/网络（明确未计费）→ 退避重试**一次**（复用同一 idempotency key）；**超时（504）→ 报「生成超时，计费未知」，换一个新的 idempotency key 再试一次，或停下**（同 key 会返 409，因后端标 uncertain 防重复扣费）。任何失败都**不对缺失图跑 QA**，原因落 sidecar。
 8. **QA**——按 [qa-gates.md](references/qa-gates.md) 对应段（模式 A / 模式 B）走全部 checks。含自动重试 ≤ 2 次 + 第 3 轮失败用户三选一
 9. **落盘**——按 [output-layout.md](references/output-layout.md) 写到 `<workspace>/.cache/image-synth/ai_raw/{date}/` + 同名 sidecar `.json`。本地写入用 `mkdir -p` 一步建目录（`.cache/` 是本地 fs，不需要 image-brief 写 brief 时那种 `lark-drive` 逐层检查）
-10. **用户三选一**：
+10. **发图预览（必须，先于三选一）**——**禁止将本地路径作为回执**（用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，绝不使用）。必须走以下两步把图发到飞书：
+    1. 用 `lark-cli im images create --image-type message --file <本地图路径>` 上传图片，拿到 `image_key`（scope: `im:resource`，bot identity）
+    2. 用 `lark-cli im +messages-send --chat-id <当前对话 chat_id> --type image --image-key <image_key>` 发图片消息给用户（附一行说明：SKU / 槽位 / 尺寸 / 生成成本）
+    - 上传或发送失败 → 报错，不继续；不允许静默退化到打印路径
+11. **用户三选一**：
     - **入库** → 调用 `assets-library` 模式 B2 promote；按 [output-layout.md § promote 字段透传](references/output-layout.md#promote-入库时的字段透传) 现传 sidecar 元数据；如果用途是最终 listing 图或社媒发布图，由 assets-library 在 promote 时处理 AI metadata / AI watermark 发布副本
-    - **留 ai_raw** → 保留 `.cache/`，不入索引
+    - **留 ai_raw** → 保留 `.cache/`，不入索引（图已在飞书消息里，用户可以直接保存）
     - **丢弃** → 移到 `retired/`（详见 output-layout.md，给 7 天回滚窗口）
-11. 给用户回执：本地路径 / 入库后的飞书云空间链接 / "已丢弃"
+12. 给用户回执：图已在上方飞书消息 / 入库后的飞书云空间链接 / "已丢弃"。**绝不发本地路径。**
 
 ### 模式 A：电商图（销售平台商品图 / listing 槽位 / 商品级营销图）
 
@@ -151,6 +155,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有：
 
+- **生成结果绝不以本地路径发给用户**：用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，也禁止使用。生图后必须经 step 10「发图预览」走 `lark-cli im images create` + `+messages-send` 把图发到飞书对话，才算完成一次有效回执。
 - **prompt 展示给用户预览** → 等确认 → 才调生图（生图调用有成本）
 - **入库走 assets-library**：本 skill 不直接写 `Assets 素材池` 表 / 不直接上传飞书云空间——这是 assets-library 的职责边界
 - **生图走中心后端，skill 不持 key / 不直接调 OpenRouter**：`OPENROUTER_API_KEY` 只在后端；skill 经 `terminal` 调 `/image/generate`，**model 由后端 allowlist 决定**（默认 GPT Image 2），skill 不传任意 model slug（防点贵模型 / 绕安全）
