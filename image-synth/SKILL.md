@@ -154,7 +154,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有：
 
-- **生成结果绝不以本地路径发给用户**：用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，也禁止使用。生图后必须经 step 10「发图预览」走 `lark-cli im images create` + `+messages-send` 把图发到飞书对话，才算完成一次有效回执。
+- **生成结果绝不以本地路径发给用户**：用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，也禁止使用。生图后必须经 step 10「发图预览」走 `lark-cli im +messages-send --image <路径>` 把图发到飞书对话（`--image` 自动上传本地文件），才算完成一次有效回执。
 - **prompt 展示给用户预览** → 等确认 → 才调生图（生图调用有成本）
 - **入库走 assets-library**：本 skill 不直接写 `Assets 素材池` 表 / 不直接上传飞书云空间——这是 assets-library 的职责边界
 - **生图走中心后端，skill 不持 key / 不直接调 OpenRouter**：`OPENROUTER_API_KEY` 只在后端；skill 经 `terminal` 调 `/image/generate`，**model 由后端 allowlist 决定**（默认 GPT Image 2），skill 不传任意 model slug（防点贵模型 / 绕安全）
