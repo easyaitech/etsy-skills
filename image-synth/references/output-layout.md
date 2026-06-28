@@ -1,6 +1,6 @@
 # 输出落盘约定
 
-> SKILL.md step 9 / 10 引用本文档。生成的图先落本地 `.cache/`，**不**直接进飞书云空间——飞书云空间是 assets-library 的辖区。
+> SKILL.md step 9 / 11 引用本文档。生成的图先落本地 `.cache/`，**不**直接进飞书云空间——飞书云空间是 assets-library 的辖区。
 >
 > 与 pinterest-autopin runtime 落 `<workspace>/.cache/pinterest-autopin/runtime/` 同构：按工作区隔离 + 跟着工作区一起迁移。
 

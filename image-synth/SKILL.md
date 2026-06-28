@@ -77,10 +77,9 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
    - **失败显式报错，绝不静默**：`quota_exceeded` → 报「本租户配额用尽」停；`upstream`/网络（明确未计费）→ 退避重试**一次**（复用同一 idempotency key）；**超时（504）→ 报「生成超时，计费未知」，换一个新的 idempotency key 再试一次，或停下**（同 key 会返 409，因后端标 uncertain 防重复扣费）。任何失败都**不对缺失图跑 QA**，原因落 sidecar。
 8. **QA**——按 [qa-gates.md](references/qa-gates.md) 对应段（模式 A / 模式 B）走全部 checks。含自动重试 ≤ 2 次 + 第 3 轮失败用户三选一
 9. **落盘**——按 [output-layout.md](references/output-layout.md) 写到 `<workspace>/.cache/image-synth/ai_raw/{date}/` + 同名 sidecar `.json`。本地写入用 `mkdir -p` 一步建目录（`.cache/` 是本地 fs，不需要 image-brief 写 brief 时那种 `lark-drive` 逐层检查）
-10. **发图预览（必须，先于三选一）**——**禁止将本地路径作为回执**（用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，绝不使用）。必须走以下两步把图发到飞书：
-    1. 用 `lark-cli im images create --image-type message --file <本地图路径>` 上传图片，拿到 `image_key`（scope: `im:resource`，bot identity）
-    2. 用 `lark-cli im +messages-send --chat-id <当前对话 chat_id> --type image --image-key <image_key>` 发图片消息给用户（附一行说明：SKU / 槽位 / 尺寸 / 生成成本）
-    - 上传或发送失败 → 报错，不继续；不允许静默退化到打印路径
+10. **发图预览（必须，先于三选一）**——**禁止将本地路径作为回执**（用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，绝不使用）。用一条命令发图（`+messages-send --image` 自动上传本地文件再发消息，无需先单独调 `images create`）：
+    - `lark-cli im +messages-send --chat-id <当前对话 chat_id> --image <本地图绝对路径>` （附一行说明：SKU / 槽位 / 尺寸 / 生成成本）
+    - 发送失败 → 报错，不继续；不允许静默退化到打印路径
 11. **用户三选一**：
     - **入库** → 调用 `assets-library` 模式 B2 promote；按 [output-layout.md § promote 字段透传](references/output-layout.md#promote-入库时的字段透传) 现传 sidecar 元数据；如果用途是最终 listing 图或社媒发布图，由 assets-library 在 promote 时处理 AI metadata / AI watermark 发布副本
     - **留 ai_raw** → 保留 `.cache/`，不入索引（图已在飞书消息里，用户可以直接保存）
