@@ -25,7 +25,7 @@
 
 - 只通过 `pinterest-autopin` 这个 adapter 调服务器工具发布，不在 social-publisher 里复制 Pinterest 表单逻辑。
 - 单图和多图轮播都是 社媒发布队列 里 `平台 = Pinterest` 的行，由 `pinterest-autopin` 直接读写本行发布，不另建子队列表。
-- Pinterest 行的 `任务 ID`（`PIN-...`）就是本表主键，`外部队列 ID` 留空。
+- Pinterest 行的 `任务 ID`（`PIN-...`）就是本表主键；`ECS job ID` 仅在创建服务器 job 后写入返回的 `jobId`。
 - `发布 URL` 保存 Pinterest 返回的公开 Pin URL。
 - 如果发布器只创建了广告草稿或拿不到公开 Pin URL，不能标记 `已发`。
 - Hermes 不跑本地 Playwright / Chrome profile；浏览器登录态只在租户已安装的浏览器插件中使用。

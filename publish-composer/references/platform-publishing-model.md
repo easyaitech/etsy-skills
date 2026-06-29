@@ -21,10 +21,12 @@
 - `状态`
 - `自动发布`
 - `发布适配器`
-- `外部队列 ID`
+- `ECS job ID`
 - `发布 URL`
 
 平台专用字段走 社媒发布队列 的 `平台扩展 (typed)`——每平台注册自己的 typed extension schema + validator（见 [base-schema.md 表 2](base-schema.md)），不是自由 JSON，也不进入素材 schema。真实执行由 `social-publisher` 按 adapter registry 路由。
+
+> 下文示例里的 `关联素材 = ASSET-xxx` 只是占位 ID。按 [base-schema.md 表 2](base-schema.md)，`关联素材` 实际指向 assets-library `Asset Variants 派生素材` 的发布副本变体（**非 canonical 原图**）；canonical 与发布副本变体的分表见 assets-library。`状态` 走表 2 的状态机（草稿 / 待审 / 已批准 / 发布中 / 已发 / 失败 / 跳过 / 手动已发）。
 
 ---
 
@@ -169,7 +171,7 @@
 - 该 Pinterest 行的 `关联 SKU` 写 SKU + 商品 record_id + 平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
 - 该 Pinterest 行的 `链接` 使用 `Products 商品` 表的 `分享链接`，不临时拼任何平台商品 URL。
 - Pinterest 发布成功后在本行回写 `发布 URL`。
-- `发布适配器 = pinterest-autopin`；Pinterest 行的 `任务 ID`（`PIN-...`）就是本表主键，`外部队列 ID` 留空。
+- `发布适配器 = pinterest-autopin`；Pinterest 行的 `任务 ID`（`PIN-...`）就是本表主键；`ECS job ID` 仅在创建服务器 job 后写入返回的 `jobId`。
 
 ---
 

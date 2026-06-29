@@ -10,7 +10,7 @@
 - 轮播：`发布素材` 有 2-5 项，`发布类型 = 多图轮播`
 - 多张图不要拆成多条记录；它们属于同一行里的有序图片列表
 - 发布成功后只回写这一行的一个 `发布 URL`
-- 发布顺序以 `发布素材` 字段的行顺序为准，`关联素材` 只做素材来源追溯
+- 发布顺序以 `发布素材` 字段的行顺序为准（即跨平台 `素材顺序` 在 Pinterest 行的落地）；`关联素材` 关联派生素材变体记录，只做素材来源追溯，不作为排序来源
 
 ---
 
@@ -52,17 +52,20 @@
 |---|---|
 | `任务 ID`（主键） | 格式 `PIN-{YYYYMMDD}-{3 位序号}`，即旧 `pin_id` |
 | `平台` | `Pinterest` |
-| `状态` | 草稿 / 待发 / 发布中 / 已发 / 失败 / 待复核 / 重试 |
+| `状态` | 草稿 / 待审 / 已批准 / 发布中 / 已发 / 失败 / 跳过 / 手动已发（与 [`base-schema.md` 表 2 状态机](../../publish-composer/references/base-schema.md) 一致；旧 `待发 / 待复核 / 重试` 已废，`待发→已批准`、失败后待人工核对停 `失败`、重试是 `失败→发布中` 的转移而非状态） |
 | `发布类型` | `单图`（1 张）或 `多图轮播`（2-5 张，Pinterest carousel pin） |
 | `关联 SKU` | 关联 `Products 商品` 表；用于追溯 SKU + record_id + `平台商品 ID`（如 Etsy Listing ID / ASIN / item_id）；`链接` 另从 `Products 商品` 表 `分享链接` 读取 |
-| `关联素材` | 关联 `Assets 素材池` 表，**允许多值**；单图关联 1 条，轮播关联 2-5 条；发布顺序以 `发布素材` 行顺序为准 |
+| `关联素材` | 关联 `Asset Variants 派生素材` 表的 Pinterest 规格变体（**非 canonical 原图**），**允许多值**；单图关联 1 条，轮播关联 2-5 条；发布顺序以 `发布素材` 行顺序为准 |
 | `标题` | Pinterest 标题：英文，≤ 100 字符 |
 | `描述` | Pinterest 正文：英文，建议 200-500 字符 |
 | `链接` | 商品型 pin 必须 = `Products 商品` 表 `分享链接`；不要临时拼平台 listing URL |
 | `发布 URL` | 发布成功后的 Pinterest pin URL（旧 `pin_url`） |
 | `发布时间` | 状态变 `已发` 时填 |
 | `发布尝试次数` | 默认 0；每次 final 失败 +1（旧 `重试次数`） |
-| `失败原因` | 按 publishing-flow.md § 错误恢复 分类 + 简短原文 |
+| `最后尝试时间` | 每次真实发布 / 重试后更新 |
+| `失败原因分类` | 单选，结构化：`会话过期 / 插件未装 / 限速 / DOM漂移 / 平台拒绝 / 网络 / 其他`（与 [`base-schema.md` 表 2 执行状态列](../../publish-composer/references/base-schema.md) 对齐，喂重试与排查） |
+| `失败原因` | 原始失败记录的简短原文（截断到 100 字符）；分类走 `失败原因分类` |
+| `ECS job ID` | 后端 publish-service / 服务器返回的 `jobId`（旧称「外部队列 ID」，已统一为本名） |
 
 > 暂不把「同步 Board」列为发布必需字段。当前发布器一次只创建一个 Pinterest Pin，并回写一个 `发布 URL`；如果未来要同一内容同步多个 board，需要给每个发布目标单独记录结果。
 
@@ -138,8 +141,9 @@ if (assets.length > 1 && !serverSupportsMultiAssetPinterestJobs) {
 在 `社媒发布队列` 上为 Pinterest 建以下筛选视图：
 
 - **Pinterest** — `平台 = Pinterest`，按创建时间倒序（Pinterest 行总入口）
-- **Pinterest 草稿** — `平台 = Pinterest` 且 `状态 = 草稿`（模式 C 取候选）
-- **Pinterest 已发** — `平台 = Pinterest` 且 `状态 = 已发`，按发布时间倒序
+- **Pinterest 草稿** — `平台 = Pinterest` 且 `状态 = 草稿`
+- **Pinterest 待发** — `平台 = Pinterest` 且 `状态 IN (待审, 已批准)`（模式 C 取候选）
+- **Pinterest 已发** — `平台 = Pinterest` 且 `状态 IN (已发, 手动已发)`，按发布时间倒序
 - **Pinterest 失败** — `平台 = Pinterest` 且 `状态 = 失败`
 - **Pinterest 轮播** — `平台 = Pinterest` 且 `发布类型 = 多图轮播`（快速查看所有多图 pin）
 
@@ -147,7 +151,7 @@ if (assets.length > 1 && !serverSupportsMultiAssetPinterestJobs) {
 
 ## 录入约定（模式 B 写入草稿时）
 
-写入前列出字段值清单给用户确认，确认后才用 `lark-base` 写入。`发布 URL` / `发布时间` / `失败原因` 等在模式 C 才填。
+写入前列出字段值清单给用户确认，确认后才用 `lark-base` 写入。草稿组好进 `待审`；`ECS job ID` 在模式 C 创建 job 时写，`发布 URL` / `发布时间` / `失败原因分类` / `失败原因` 等在模式 C 才填。
 
 多图 pin 时额外展示：
 - 图片数量和顺序（编号列表）
@@ -160,8 +164,8 @@ if (assets.length > 1 && !serverSupportsMultiAssetPinterestJobs) {
 | 校验项 | 不通过时 |
 |---|---|
 | `关联 SKU` 状态 = 在售 | 中止，先上线 listing |
-| `关联素材` 每条记录的公开授权 = 已授权 | 中止（特别是客户 UGC） |
-| `关联素材` 每条记录的用途标签 ⊇ Pinterest | 警告，提示去加标签 |
+| `关联素材` 每条变体的源 canonical `公开授权` = 已授权 | 中止（特别是客户 UGC） |
+| `关联素材` 每条变体 `目标平台` ⊇ Pinterest | 警告，提示去 assets-library 加规格/标签 |
 | `标题` ≤ 100 字符 | 让用户改 |
 | `发布素材` 每行都能被服务器解析为授权下载 asset | 中止，先补服务器 asset 流程 |
 | `备注` 含 `aiSanitization` 记录 | 中止，先按 `image-processing.md` 生成发布副本 |

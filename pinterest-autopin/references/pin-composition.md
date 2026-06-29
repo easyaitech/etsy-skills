@@ -1,6 +1,6 @@
 # Pin Composition（怎么把 SKU + 素材 + BRAND 写成一条 pin）
 
-模式 B 的核心 reference。读完 BRAND.md / SHOP.md / 商品表 / `Assets 素材池` 表之后，按这里的规则产出 pin 内容。支持单图 pin 和轮播 pin（carousel，2-5 张图）。
+模式 B 的核心 reference。读完 BRAND.md / SHOP.md / 商品表 / `Asset Variants 派生素材` 表（Pinterest 规格变体）之后，按这里的规则产出 pin 内容。支持单图 pin 和轮播 pin（carousel，2-5 张图）。
 
 ---
 
@@ -10,7 +10,7 @@
 |---|---|---|
 | 目标 SKU | ✅ | 用户给 |
 | 目标 board | ✅ | 用户给（必须是 Pinterest 后台已建好的 board，且已加进 `社媒发布队列` 表的 `Board (Pinterest)` 单选选项） |
-| 指定素材 | ❌ | 用户给具体素材 ID；可给 1 张（单图 pin）或 2-5 张（轮播 pin）。不给就从 `Assets 素材池` 表的「Pinterest 候选」视图列出该 SKU 的候选让用户挑 |
+| 指定素材 | ❌ | 用户给具体变体 ID；可给 1 张（单图 pin）或 2-5 张（轮播 pin）。不给就从 `Asset Variants 派生素材` 表列出该 SKU `目标平台 ⊇ Pinterest` 的 2:3 规格变体让用户挑；**缺变体 → 反向请求 assets-library 模式 E 派生**（裁切 + 清理），不引用 canonical 原图 |
 | 创意主题（一句话） | ❌ | 用户给；不给就从 SKU 标题 + 素材文件名推一个，让用户改 |
 
 ### 多图选择要点
