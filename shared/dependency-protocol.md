@@ -76,17 +76,17 @@
 
 下表列出各 skill 对基座文件的依赖等级（按模式区分）。具体用法见各 skill 的「依赖关系」节。
 
-| 依赖 \ Skill | listing-catalog | orders-customers | supplier-foundation | business-knowledge | assets-library | publish-composer | social-publisher | pinterest-autopin | image-synth |
-|---|---|---|---|---|---|---|---|---|---|
-| BRAND.md | 写文案=**BLOCK**；查改=SKIP | 客服=**BLOCK**；录入=SKIP | SKIP | brief=**DEGRADE** | B2=**DEGRADE**；D=**DEGRADE** | SKIP | SKIP | 组 pin=**BLOCK** | **DEGRADE** |
-| SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | 建知识卡片表=**BLOCK**；brief=**DEGRADE** | D=SKIP | 建表=**BLOCK** | 发布表定位=**BLOCK** | 组 pin=**BLOCK** | SKIP |
-| BRAND_MARKETING.md | — | — | — | brief=**DEGRADE** | — | SKIP | SKIP | 组 pin=SKIP | — |
-| MARKETING_PLATFORM.md | — | — | — | brief=**DEGRADE** | — | 建任务=**DEGRADE** | SKIP | 组 pin=SKIP | — |
-| `Knowledge Cards 知识卡片` 表 | SKIP | SKIP | SKIP | 写卡片=**BLOCK**；读卡片=SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
-| `Products 商品` 表 | 写文案=**BLOCK** | 录入=SKIP | 有 SKU 上下文时=SKIP | brief=SKIP | D=**BLOCK** | 商品型任务=**BLOCK** | SKIP | 组 pin=**BLOCK** | SKIP |
-| `Suppliers 供应商` 表 | — | — | 录入/选型=**BLOCK** | SKIP | SKIP | SKIP | SKIP | — | — |
-| `Assets 素材池` 表（基础素材字段） | — | — | — | SKIP | B2=**BLOCK**；C=SKIP | 入队=**DEGRADE** | SKIP | 组 pin=**DEGRADE** | SKIP |
-| `Assets 素材池` 表（发布副本字段） | — | — | — | SKIP | SKIP | 建池/入队=**BLOCK** | 发布校验=**BLOCK** | SKIP | SKIP |
-| `社媒发布队列` 表 | — | — | — | SKIP | SKIP | 建任务=**BLOCK** | 发布=**BLOCK** | 发 pin=**BLOCK** | SKIP |
-| `Orders 订单` 表 | — | 录入=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — |
-| `Customers 客户` 表 | — | 客服=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — |
+| 依赖 \ Skill | listing-catalog | orders-customers | supplier-foundation | business-knowledge | assets-library | publish-composer | social-publisher | pinterest-autopin | image-brief | image-synth |
+|---|---|---|---|---|---|---|---|---|---|---|
+| BRAND.md | 写文案=**BLOCK**；查改=SKIP | 客服=**BLOCK**；录入=SKIP | SKIP | brief=**DEGRADE** | B2=**DEGRADE**；D=**DEGRADE** | 兜底写文案=**DEGRADE** | SKIP | 组 pin=**BLOCK** | 出 brief §B=**DEGRADE** | **DEGRADE** |
+| SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | 建知识卡片表=**BLOCK**；brief=**DEGRADE** | D=SKIP | 建表=**BLOCK** | 发布表定位=**BLOCK** | 组 pin=**BLOCK** | §A 物料=SKIP | SKIP |
+| BRAND_MARKETING.md | — | — | — | brief=**DEGRADE** | — | 兜底写文案=**DEGRADE** | SKIP | 组 pin=**BLOCK** | 出 brief §B/§C=**DEGRADE** | — |
+| MARKETING_PLATFORM.md | — | — | — | brief=**DEGRADE** | — | 兜底写文案=**DEGRADE** | SKIP | 组 pin=**BLOCK** | 非内置平台=**BLOCK**；Etsy/小红书走 preset=SKIP | — |
+| `Knowledge Cards 知识卡片` 表 | SKIP | SKIP | SKIP | 写卡片=**BLOCK**；读卡片=SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
+| `Products 商品` 表 | 写文案=**BLOCK** | 录入=SKIP | 有 SKU 上下文时=SKIP | brief=SKIP | D=**BLOCK** | 商品型任务=**BLOCK** | SKIP | 组 pin=**BLOCK** | 出 brief=**BLOCK** | SKIP |
+| `Suppliers 供应商` 表 | — | — | 录入/选型=**BLOCK** | SKIP | SKIP | SKIP | SKIP | — | — | — |
+| `Assets 素材池` 表（基础素材字段） | — | — | — | SKIP | B2=**BLOCK**；C=SKIP | 入队=**DEGRADE** | SKIP | 组 pin=**DEGRADE** | 部分跑反查=SKIP | SKIP |
+| `Assets 素材池` 表（发布副本字段） | — | — | — | SKIP | SKIP | 建池/入队=**BLOCK** | 发布校验=**BLOCK** | SKIP | SKIP | SKIP |
+| `社媒发布队列` 表 | — | — | — | SKIP | SKIP | 建任务=**BLOCK** | 发布=**BLOCK** | 发 pin=**BLOCK** | SKIP | SKIP |
+| `Orders 订单` 表 | — | 录入=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — | — |
+| `Customers 客户` 表 | — | 客服=**BLOCK** | — | SKIP | SKIP | SKIP | SKIP | — | — | — |
