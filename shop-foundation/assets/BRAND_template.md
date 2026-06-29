@@ -10,7 +10,7 @@
 # {{品牌名}} · 品牌底座
 
 > 这是 {{品牌名}} Agent 的元基础设施。所有设计、文案、客服、规划相关的行动都应以本文件为准。
-> 本文件由 brand-foundation skill 维护。
+> 本文件由 shop-foundation skill 维护。
 > 最后更新：{{YYYY-MM-DD}}
 
 ---
