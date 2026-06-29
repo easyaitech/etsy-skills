@@ -2,7 +2,7 @@
 name: publish-composer
 description: 发布编排（旧名 content-asset-pool）：把已归档的素材变体 + 商品事实 + 品牌底座组装成跨平台发布意图 PublishIntent，并拥有店铺总 Base 内 `社媒发布队列` 表。把单图、多图轮播、视频、图文笔记组合成 Pinterest、Instagram、小红书、TikTok、Etsy Listing 等平台发布任务，平台专属字段走每平台 typed extension（如 XiaohongshuExt / PinterestExt）。触发：用户说"组发布任务 / 排一条 pin / 出小红书笔记草稿 / 这组图发哪些平台 / 这张图发过哪些平台 / 跨平台复用素材 / 对账发布结果"。**只引用 assets-library 已产出的发布副本变体，自己不收集素材、不清理、不裁切**（那些归 assets-library）；真实发布交 social-publisher 路由到平台适配器。所有真实写入经用户确认。
 layer: application
-depends-on: [assets-library, listing-catalog, social-publisher]
+depends-on: [shop-foundation, assets-library, listing-catalog, social-publisher]
 ---
 
 # Publish Composer（发布编排，旧名 content-asset-pool）
@@ -49,6 +49,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 5. **商品型发布链接来自 `Products 商品` 表的 `分享链接` 字段**。不要临时拼任何平台 URL（包括 Etsy listing URL）。`分享链接` 缺失时阻塞发布任务创建并引导回 `listing-catalog` 补齐。
 6. **按写者分组 + 状态机转移权限**。composer 写内容列；dispatch 写执行状态列；adapter 写平台结果列；状态走事件日志投影，越权转移即拒（schema 见 [`references/base-schema.md` 表 2](references/base-schema.md)）。
 7. **只定义和准备，不直接发布**。真实飞书写入、平台发布、自动发布任务修改都必须用户明确确认；发布执行交给 `social-publisher` 路由到适配器。
+8. **品牌接地气文案主权归 adapter，composer 只兜底**。pin / 笔记的 title / description / 正文 / `cover_caption` 等品牌接地气文案，由对应平台 adapter 读 `BRAND.md` + `BRAND_MARKETING.md` + `MARKETING_PLATFORM.md` 撰写（如 `pinterest-autopin`）。**仅当目标平台暂无 live adapter（小红书 staged、IG/TikTok 未接）**，composer 在 Workflow D 兜底撰写，此时必须先读这三份品牌文档，文案才不脱离人群 / 情感触点 / 红线；adapter 上线后文案主权交回 adapter，避免 composer 与 adapter 两处各写一份漂移。有 live adapter 的平台（Pinterest），composer 不重复写品牌文案。
 
 ---
 
@@ -105,7 +106,8 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
    - `发布类型 = 单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合`
    - `关联素材` 指向 `Asset Variants 派生素材`（变体，不是 canonical 原图）；`素材顺序` 编号列表
    - 平台专属字段写 `平台扩展 (typed)`（如 `XiaohongshuExt` / `PinterestExt`），过该平台 validator，不塞自由 JSON
-   - 小红书任务必须写 `封面素材` + `cover_caption`
+   - **品牌接地气文案**（title / description / 正文 / `cover_caption` 等）：有 live adapter 的平台（Pinterest）由 adapter 写，composer 不碰；**目标平台无 live adapter 时（小红书 / IG / TikTok）由 composer 兜底**——先读 `BRAND.md` + `BRAND_MARKETING.md` + `MARKETING_PLATFORM.md` 目标平台章节，再写 typed-ext 文案字段（见 Core Principle 8）。缺品牌文档 → DEGRADE：先按 BRAND.md 出，相应文案段标 ⚠️，回复末尾提示补 BRAND_MARKETING / MARKETING_PLATFORM
+   - 小红书任务必须写 `封面素材` + `cover_caption`（cover_caption 即上一条兜底文案路径，小红书 adapter 未上线期间由 composer 读品牌文档撰写）
 6. 组好后状态进 `待审`（半自动核心：用户在此批准 / 退回 / 跳过）。不要直接标“已发布”。
 
 写入前必须展示任务草稿和素材顺序，等用户确认。确认后遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量：本 turn 内先把 `社媒发布队列` 草稿行真正写进 Base 拿到成功返回、再报"已组好任务"，写完带一句含可点击飞书链接的回执；只在对话里展示草稿而 Base 没落行 = 没做完。（执行状态列仍由 social-publisher / dispatch 回写，composer 不越权改。）
@@ -212,6 +214,12 @@ AI metadata / 水印清理**不再由本 skill 做**，已移交 `assets-library
 - 商品型素材必须能关联 SKU。
 - 发布链接必须优先从 `Products 商品` 表的 `分享链接` 字段读取。
 - `分享链接` 缺失时，回到 `listing-catalog` 补字段；不要用平台商品 ID 临时拼链接。
+
+### shop-foundation（品牌 / 营销 / 平台策略底座）
+
+- 品牌语调 + 视觉红线（`BRAND.md`）、营销人群 / 情感触点 / 场景 / 红线（`BRAND_MARKETING.md`）、各平台内容规范 / 配比（`MARKETING_PLATFORM.md`）由 shop-foundation 维护。
+- composer **仅在目标平台无 live adapter 时兜底写文案**才读这三份（见 Core Principle 8）；有 live adapter 的平台由 adapter 读，composer 不重复。
+- 用户组任务时纠正文案口径 → 判断是 `BRAND.md` 语调补充还是平台特有手感，按 shop-foundation 沉淀流程提议回写对应文件。
 
 ### Future Platforms
 

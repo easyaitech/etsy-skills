@@ -31,15 +31,29 @@ image-brief  产出平台感知 brief（§A 槽位 / §B Mood / §C 镜头清单
 
 | # | 输入 | 是否必需 | 缺失时怎么办 |
 |---|---|---|---|
-| 1 | `Products 商品` 表该 SKU 行 | 必需 | SKU 不在店铺总 Base：**阻塞** + 提示先回 listing-catalog 模式 A 建一行最小记录（至少 title + 品类）。本 skill 不偷偷建 SKU 行 |
-| 2 | `<workspace>/BRAND.md` § 视觉原则 + § 视觉禁区 | 必需但**降级可跑** | 缺失：§B Mood 段输出 "⚠️ BRAND.md 未建立——本段先留空，回 shop-foundation 建库后回头补"，brief 仍可出 §A/§C/§D/§E |
-| 3 | **目标平台 + 用途**（必需） | 必需 | 缺：问用户"这组图发哪个平台、什么用途（listing 主图 / 详情 / 小红书笔记 / Pinterest pin / 营销）" |
-| 4 | `<workspace>/COMMERCE_PLATFORM.md` / `MARKETING_PLATFORM.md` 目标平台媒体规则 | 目标平台非 Etsy / 小红书时必需 | Etsy 用内置 10 槽位 preset；小红书用内置商品图 / 详情图 / 笔记图规则；其他平台缺配置则阻塞，提示先用 shop-foundation 补 |
-| 5 | listing-catalog 礼物词库（受众 / 场景 / 节日 / 包装）| 强烈推荐**不阻塞** | (a) 反向触发 → listing-catalog 现传 in-memory；(b) 主动触发 → 从该 SKU 的 Base description 礼物 / 使用语境 + tags 礼物词抽取已 fused 文本；喂 §C Lifestyle 段 |
-| 6 | `<workspace>/SHOP.md` § 物料 / 礼盒服务 | 可选 | 缺失：§A packaging 计划写"未配置物料 → 拍裸品 + 简包装" |
-| 7 | `Assets 素材池` 表该 SKU 已 promoted 素材 | 可选 | 部分跑（补拍补槽位）时反查已覆盖槽位，只补缺位 |
+| 1 | `Products 商品` 表该 SKU 行 | 必需（BLOCK）| SKU 不在店铺总 Base：**阻塞** + 提示先回 listing-catalog 模式 A 建一行最小记录（至少 title + 品类）。本 skill 不偷偷建 SKU 行 |
+| 2 | `<workspace>/BRAND.md` § 视觉原则 + § 视觉禁区 | 必需但**降级可跑**（DEGRADE）| 缺失：§B Mood 段输出 "⚠️ BRAND.md 未建立——本段先留空，回 shop-foundation 建库后回头补"，brief 仍可出 §A/§C/§D/§E |
+| 3 | `<workspace>/BRAND_MARKETING.md` 第 4 章视觉调性铁律 / 第 5 章红线（喂 §B Mood）+ 第 1/2/3 章 人群优先级 / 情感触点 / 场景表（喂 §C Lifestyle）| 推荐但**降级可跑**（DEGRADE）| 缺失：§B 视觉铁律层 + §C 跨平台场景层标 "⚠️ BRAND_MARKETING.md 未建立——§B 仅按 BRAND.md 视觉原则、§C 仅按礼物词库 / 用户口述出图"，brief 仍可出。回复末尾提示补建（只说一次）|
+| 4 | **目标平台 + 用途**（必需） | 必需（BLOCK）| 缺：问用户"这组图发哪个平台、什么用途（listing 主图 / 详情 / 小红书笔记 / Pinterest pin / 营销）" |
+| 5 | `<workspace>/COMMERCE_PLATFORM.md` / `MARKETING_PLATFORM.md` § 1.2 视觉规范（画幅 / 构图 / 背景 / 光线 / 元素密度 / 文字位置 / 字体）+ 平台红线 | 目标平台非 Etsy / 小红书时必需（非内置平台 BLOCK；Etsy / 小红书走 preset 故 SKIP）| Etsy 用内置 10 槽位 preset；小红书用内置商品图 / 详情图 / 笔记图规则；其他平台缺配置则阻塞，提示先用 shop-foundation 补。喂 §A 槽位（比例 / 文字位置）+ §B 平台执行层 |
+| 6 | listing-catalog 礼物词库（受众 / 场景 / 节日 / 包装）| 强烈推荐**不阻塞**（DEGRADE）| (a) 反向触发 → listing-catalog 现传 in-memory；(b) 主动触发 → 从该 SKU 的 Base description 礼物 / 使用语境 + tags 礼物词抽取已 fused 文本；喂 §C Lifestyle 段。**Etsy 专属**——非 Etsy 平台礼物词库不存在，§C 改由 BRAND_MARKETING（依赖 3）驱动 |
+| 7 | `<workspace>/SHOP.md` § 物料 / 礼盒服务 | 可选（SKIP）| 缺失：§A packaging 计划写"未配置物料 → 拍裸品 + 简包装" |
+| 8 | `Assets 素材池` 表该 SKU 已 promoted 素材 | 可选（SKIP）| 部分跑（补拍补槽位）时反查已覆盖槽位，只补缺位 |
 
 **平台感知（D-A3）**：§A 槽位映射按**目标平台**展开——Etsy 走 [`../assets-library/references/etsy-listing-photo-slots.md`](../assets-library/references/etsy-listing-photo-slots.md) 的 10 槽位 preset；小红书走商品图 / 使用指南图 / 图文详情图 / 笔记封面规则；其他平台按 COMMERCE/MARKETING_PLATFORM.md。不同平台的槽位、比例、文字叠层策略不同，brief 早平台化，不出"平台中立"的通用 brief。
+
+**视觉规则分层 + 冲突裁决阶梯（§A / §B 必读）**：填 §A 槽位、§B Mood 时，视觉规则有三个来源会重叠（BRAND.md 视觉宪法 / BRAND_MARKETING.md 营销宪法 / MARKETING_PLATFORM.md 平台执行手册）。**冲突时按下列优先级裁决，高层永远压低层**（"宪法不变，语言变"——下层只能在不违反上层的前提下适配平台表达）：
+
+```text
+1. BRAND.md § 视觉禁区               ← 绝对 veto，任何下层不可触碰（原文复制进 §B）
+2. BRAND_MARKETING.md 第 5 章红线 / 第 4 章视觉调性铁律   ← 营销宪法（品牌级形象铁律）
+3. MARKETING_PLATFORM.md 平台红线 / § 1.2 视觉规范        ← 平台执行（适配画幅/密度/文字位置，不破上层）
+4. 平台 preset（Etsy 10 槽位 / 小红书图片规则）           ← 槽位结构层
+```
+
+- **§A 槽位**：比例 / 文字叠层位置 / 字体主要由第 3 层（MARKETING_PLATFORM § 1.2）+ 第 4 层 preset 定。
+- **§B Mood**：气质 / 配色 / 光线 / 构图 / 道具同时读三源——第 1 层禁区是硬底线，第 2 层视觉铁律叠加品牌形象要求，第 3 层 § 1.2（元素密度 / 背景 / 光线）做平台执行细则。三者冲突按上表裁决，不由 agent 拍脑袋。
+- BRAND_MARKETING / MARKETING_PLATFORM 缺失时按依赖表 DEGRADE，对应层留 ⚠️ 占位，brief 仍可出。
 
 ---
 
@@ -56,7 +70,7 @@ image-brief  产出平台感知 brief（§A 槽位 / §B Mood / §C 镜头清单
 2. **检查 brief 是否已存在**（`商品/{SKU}_shoot-brief.md`）——已存在则强制问："覆盖 / 重命名旧版保留 / 仅补拍缺位（部分跑）"。重命名时旧版改为 `{SKU}_shoot-brief_{原生成日期}.md`
 3. **若选"部分跑"**：用 `lark-base` 反查 `Assets 素材池` 表该 SKU 已 promoted 素材的"用途标签"。Etsy 按 [etsy-listing-photo-slots.md § 3](../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 推断已覆盖槽位；小红书按 `../listing-catalog/references/platforms/xiaohongshu.md` 商品图 / 详情图规则推断；其他平台按 COMMERCE_PLATFORM.md。列给用户确认缺哪几位 → 仅填 §A 缺位行 + §C 对应镜头段；§B 沿用旧 brief
 4. 读上述输入（依赖表 + 降级规则）
-5. 按**目标平台**读媒体规则：Etsy 读 [etsy-listing-photo-slots.md](../assets-library/references/etsy-listing-photo-slots.md) 内置 10 槽位 preset；小红书读 `../listing-catalog/references/platforms/xiaohongshu.md` 图片规则；其他平台读 COMMERCE/MARKETING_PLATFORM.md 对应章节
+5. 按**目标平台**读媒体规则：Etsy 读 [etsy-listing-photo-slots.md](../assets-library/references/etsy-listing-photo-slots.md) 内置 10 槽位 preset；小红书读 `../listing-catalog/references/platforms/xiaohongshu.md` 图片规则；其他平台**定向读** `MARKETING_PLATFORM.md § 1.2 视觉规范`（画幅 / 构图 / 背景 / 光线 / 元素密度 / 文字位置 / 字体）+ 平台红线（不整文件吞，只读目标平台那一节）。同时读 `BRAND_MARKETING.md`（存在才读）：第 4/5 章喂 §B 视觉铁律层、第 1/2/3 章喂 §C 跨平台场景层。三源冲突按上文「视觉规则分层 + 冲突裁决阶梯」裁决
 6. 读 [references/brief-template.md](references/brief-template.md)：拿模板骨架
 7. 填 brief（§A 槽位映射 / §B Mood / §C 镜头清单 / §D 参考图占位 / §E 附注 / References）
 8. **展示给用户**等确认（不主动写盘）；用户调整后再写
@@ -97,7 +111,7 @@ image-brief  产出平台感知 brief（§A 槽位 / §B Mood / §C 镜头清单
 - **assets-library**：素材生命周期 owner。brief 写盘用其 `商品/` 文件夹（lark-drive）；拍摄/合成的成品入库走 assets-library 模式 B / promote；部分跑反查走其 `Assets 素材池` 表。本 skill 不归档、不写 Base。
 - **image-synth**：本 skill 的 brief 是 image-synth 的**主输入源**——模式 B 分叉时现传 brief 词库 in-memory，或 image-synth 直接读 `商品/{SKU}_shoot-brief.md`。本 skill 不生图。
 - **listing-catalog**：消费其礼物词库喂 §C Lifestyle 段（反向触发现传 / 主动触发从 Base 抽）；其模式 B step 10 反向触发本 skill。
-- **shop-foundation**：每次出 brief 后如发现 BRAND.md 视觉原则需补充，按其沉淀流程提议进 BRAND.md。
+- **shop-foundation**：消费其四份基座文件——`BRAND.md`（§B 视觉宪法）、`BRAND_MARKETING.md`（§B 视觉铁律层 + §C 人群/情感/场景）、`MARKETING_PLATFORM.md § 1.2`（§A/§B 平台执行层）、`SHOP.md`（§A packaging）。每次出 brief 后如发现 BRAND.md 视觉原则 / BRAND_MARKETING 视觉铁律需补充，按其沉淀流程提议回写对应文件。
 
 ---
 
