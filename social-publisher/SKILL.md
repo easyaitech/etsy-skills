@@ -49,7 +49,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 
 1. 解析工作区根，读取 `COMMERCE_PLATFORM.md` 和 `MARKETING_PLATFORM.md`（如存在），并按 `shared/store-base-architecture.md` 定位店铺总 Base。
 2. 读 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md)，确认店铺总 Base 内的 `社媒发布队列` 表是否存在。
-3. 如果发布任务表缺少以下字段，列出字段清单给用户确认后再补：`自动发布`、`发布适配器`、`外部队列 ID`、`发布尝试次数`、`最后尝试时间`、`执行锁`。
+3. 如果发布任务表缺少以下字段，列出字段清单给用户确认后再补：`自动发布`、`发布适配器`、`ECS job ID`、`发布尝试次数`、`最后尝试时间`、`执行锁 (lock_token)`、`失败原因分类`。
 4. 读 [`references/adapter-registry.md`](references/adapter-registry.md)，展示当前适配器状态：
    - Pinterest = enabled，真实发布走 `pinterest-autopin` adapter → 服务器工具 → 浏览器插件
    - 小红书 = staged（后端 + 契约就绪，但**未对外开放**），adapter `xiaohongshu-autopost` 已建；当前只允许建草稿 + 人工发布清单 + 人工回填，**不跑真发**。对外放行后改 `enabled`
@@ -71,7 +71,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 
 1. 读 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md)。
 2. 从店铺总 Base 内 `社媒发布队列` 表读取目标行，校验：
-   - `状态` 是 `待发` / `重试` / 用户明确确认的 `草稿`
+   - `状态` 是 `已批准`，或用户明确确认要发的 `草稿` / `待审` / `失败`（手动重试，`失败→发布中`）
    - `平台` 在 adapter registry 中有明确状态
    - `关联素材`、`素材顺序`、`标题`、`描述`、`链接` 等必填字段满足该平台要求
    - `授权状态`、AI 清理、发布副本已在 `publish-composer` 完成
@@ -81,7 +81,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
    - 任务就是 社媒发布队列 里 `平台 = Pinterest` 的本行；`任务 ID`（`PIN-...`）即主键，无需映射独立子队列表
    - 调 `pinterest-autopin` 模式 C：server test job → 用户目视确认 → server confirm-publish → final
    - 成功后回写本行：`状态 = 已发`、`发布时间`、`发布 URL`，清空 `执行锁`
-   - 失败后回写：`状态 = 失败`、`失败原因`、`最后尝试时间`，清空 `执行锁`；不重复递增占用阶段已加的 `发布尝试次数`
+   - 失败后回写：`状态 = 失败`、`失败原因分类` + `失败原因`、`最后尝试时间`，清空 `执行锁`；不重复递增占用阶段已加的 `发布尝试次数`
 6. staged / planned/manual-only 平台（小红书 staged；Instagram / TikTok planned）：
    - 不登录、不上传、不点击发布；**不创建真实 server publish job**（小红书后端虽就绪但未对外开放）
    - 只输出人工发布清单，或在用户给出公开 URL 后走模式 D 对账
@@ -125,7 +125,7 @@ ECS dispatch 的行为（本 skill 只需知道、不实现）：
    - `发布时间`
    - `发布 URL`
    - `失败原因` 清空或追加“人工对账成功”
-4. 如果不匹配，保持 `待复核`，不要为了消除失败状态而回填错 URL。
+4. 如果不匹配，保持 `失败`（待人工核对），不要为了消除失败状态而回填错 URL。
 
 ---
 
@@ -135,7 +135,7 @@ ECS dispatch 的行为（本 skill 只需知道、不实现）：
 - 不为小红书（staged 未对外开放）、Instagram、TikTok 伪造自动发布能力；只有 Pinterest 是 enabled。未 enabled 的平台一律只做草稿 / 人工对账，不伪造已发——小红书后端虽就绪，未对外开放前一样不跑真发。
 - 不替用户登录平台，不保存账号密码、cookie、token。
 - 不跳过 Pinterest 的 test → final 确认门，除非用户明确说明已经 test 过并要求 final。
-- 不对 `失败` 记录无限重试；默认最多两次，之后停在 `待复核`。
+- 不对 `失败` 记录无限重试；默认最多两次，之后停在 `失败`（待人工核对）。
 - 不批量补发 backlog（每平台每轮只发一条的节流由 ECS dispatch 负责，本 skill 人工发布也一次一条，不一口气清队列）。
 
 ---

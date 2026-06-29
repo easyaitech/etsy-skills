@@ -64,7 +64,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 | `<workspace>/MARKETING_PLATFORM.md` | Pinterest 章节：内容规范 / 配比 / 红线 | pin 视觉规范、文字规范、内容配比按 Pinterest 章节执行 |
 | `Products 商品` 表（listing-catalog）| `分享链接` / `平台商品 ID` / 标题 / SEO 关键词 / 上线状态 | `链接` 优先读取 `Products 商品` 表的 `分享链接`；SKU、record_id 与 `平台商品 ID` 用于追溯；**未上线或缺分享链接的 SKU 不允许排队** |
 | `Asset Variants 派生素材` 表（assets-library）| Pinterest 规格发布副本（2:3 已清理变体） | pin 图只引用变体文件链接；**缺变体 → 反向请求 assets-library 模式 E 派生**（裁切 + 清理），本 skill 不自己裁切清理。客户 UGC 没拿到授权的**绝不发** |
-| `社媒发布队列` 表（owner=publish-composer）| 待发 / 已发 / 失败状态 + pin URL | 模式 B 组 `平台=Pinterest` 行（与 composer 同表，平台专属走 `PinterestExt`）；模式 C 创建服务器 job 并回写结果。**自动发布的巡检/锁/重试归 ECS dispatch（T5），本 skill 不持队列** |
+| `社媒发布队列` 表（owner=publish-composer）| 草稿 / 待审 / 已批准 / 发布中 / 已发 / 失败状态 + pin URL（状态机见 base-schema 表 2）| 模式 B 组 `平台=Pinterest` 行（与 composer 同表，平台专属走 `PinterestExt`）；模式 C 创建服务器 job 并回写结果。**自动发布的巡检/锁/重试归 ECS dispatch（T5），本 skill 不持队列** |
 
 如 BRAND.md / SHOP.md 缺失，组 pin 前主动提示用户先用 shop-foundation 建立。
 
@@ -120,13 +120,13 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **前置就绪检查全部通过**；未通过则停下引导，不继续
 
 **执行步骤**：
-1. 用 `lark-base` 从 `社媒发布队列` 表取目标行（用户指定 ID，或筛 `状态 = 草稿 / 待发` 让用户挑一条）。
+1. 用 `lark-base` 从 `社媒发布队列` 表取目标行（用户指定 ID，或筛 `状态 = 草稿 / 待审 / 已批准` 让用户挑一条）。
 2. 校验 `标题`、`描述`、`链接`、`Board (Pinterest)`、`Alt Text (EN)`、授权和 AI 清理记录。素材必须已经能由服务器提供给插件下载；否则停在草稿，提示先补服务器 asset 流程。
 3. 按 `references/publishing-flow.md` § 创建 test job 调用服务器：
    - `POST /api/tools/pinterest/jobs`
    - body 至少包含 `tenantId`、`title`、`description`、`altText`、`link`、`board`
 4. 处理服务器响应：
-   - `201`：记录 `jobId`，把队列表状态改为 `测试中` / `待测试确认`。
+   - `201`：把 `jobId` 写入 `ECS job ID`，状态改为 `发布中`（test 阶段），备注 `待测试确认`（不要写 `测试中` 这种枚举外的值）。
    - `409 BROWSER_TOOL_INSTALL_REQUIRED`：把 `userMessage` 转述给用户，状态保持草稿。
    - `426 BROWSER_TOOL_UPGRADE_REQUIRED`：把 `userMessage` 转述给用户，状态保持草稿。
    - 其他错误：按错误类型写入 `失败原因` 或保持草稿待修。
@@ -135,8 +135,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
    - `POST /api/tools/pinterest/jobs/confirm-publish`
 7. 插件领取 publish job 后执行 final。若当前插件版本仍需要人工点击 Pinterest 页面或人工回报，按插件 UI 指引执行；不要在 Hermes 里假装已经无人值守发布。
 8. 服务器收到 final 结果后，Hermes 用结果回写 `社媒发布队列`：
-   - 成功：`状态 = 已发`、`发布 URL = resultUrl`、`发布时间 = 现在`、清空失败原因。
-   - 失败：`状态 = 失败`、`失败原因 = ...`、`发布尝试次数 += 1`。
+   - 成功：`状态 = 已发`、`发布 URL = resultUrl`、`发布时间 = 现在`、清空 `失败原因分类` / `失败原因`。
+   - 失败：`状态 = 失败`、`失败原因分类 = {会话过期/插件未装/限速/DOM漂移/平台拒绝/网络/其他}`、`失败原因 = 原文`、`发布尝试次数 += 1`、`最后尝试时间 = 现在`。
 
 > **不替用户跳过 test 阶段**——首次发某 board / 首次用某素材尺寸时，test 阶段的目视检查能拦下裁切错位、文案截断、board 选错等问题。用户明确说"已经测过了，直接 final"才能跳。
 

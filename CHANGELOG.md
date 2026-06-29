@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+### 修复
+- **统一 `社媒发布队列` schema（跨 5 个 skill 对齐到 publish-composer 目标态）**：审计发现 Pinterest + social-publisher 落后于已部署的 ECS dispatch 实际契约（dispatch 真扫 `状态 = 已批准`），且 Pinterest 自身三处自相矛盾。统一全栈：(1) 状态枚举一律用 `草稿 / 待审 / 已批准 / 发布中 / 已发 / 失败 / 跳过 / 手动已发`，废弃旧 `待发 / 待复核 / 重试`（重试改为 `失败→发布中` 转移）；(2) `关联素材` 一律指向 `Asset Variants 派生素材` 变体（非 canonical 原图），修正 pin-queue-base-schema 与 pin-composition 旧指向；(3) `外部队列 ID` → `ECS job ID`（含 publish-composer/platform-publishing-model 遗漏处）；(4) 补结构化 `失败原因分类`；(5) 去掉 Pinterest 枚举外的 `测试中` 状态值，改 `发布中` + 备注 `待测试确认`；(6) social-publisher 状态机整段重写为 owner 同款 + 补人工「发这条」快路说明。改动文件：pinterest-autopin（SKILL + pin-composition + pin-queue-base-schema + publishing-flow）/ social-publisher（SKILL + adapter-registry + publishing-queue-contract）/ publish-composer（platform-publishing-model）。纯文档对齐，无运行时代码改动。
+
 ### 新增
 - **Base 写穿不变量（single source of truth + 飞书链接回执）**：在 `shared/store-base-architecture.md` 新增「Base 写穿不变量」契约——任何对店铺总 Base 承载对象的新增/改/删，在真正写进 Base 前都算「未完成」；落库与用户确认同一 turn 收口，写完必须带一条可点击飞书 Base 链接的回执（拿不到深链退店铺总 Base 链接，彻底拿不到则如实标「已写入但暂无链接」+提示补 `docs/store-base.md`），写失败如实说、不许用「已写入」口吻收尾；附反模式清单 + 「对话 vs Base 分歧以 Base 为准」。`shared/preamble.md` §写入前的通用约束同步把约束从 workspace 文件扩展到 Base 记录并指向该契约。6 个直接写 Base 的 skill（listing-catalog / orders-customers / supplier-foundation / assets-library / business-knowledge / publish-composer）写入约束段 + 收口步骤行内加固，杜绝「对话里答应了改动、Base 没动」。
 - **T9 publish-metrics（发布结果回收闭环 / 反馈层）**：新建 `publish-metrics` skill + `社媒发布队列` metrics 列分组（⑥：曝光/点击/保存/互动/转化/指标采集时间/数据来源，见 publish-metrics/references/metrics-schema.md）。三模式：建指标列 / 回收录入 / 复盘 rollup（按变体·文案·SKU·平台聚合喂回 publish-composer）。只读发布结果 + 写 metrics 列，不碰内容/执行状态列、不重新发布；**拿不到指标留空标待补、绝不编数字，每条标数据来源**。补上工作流轴「发布后」缺口，让 composer 不再盲选素材文案。注册 manifest + README + dependency-protocol；TODOS 该项标完成。
