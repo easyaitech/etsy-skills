@@ -12,7 +12,7 @@
 # {SKU} 拍摄 Brief — {YYYY-MM-DD}
 
 > Etsy listing 槽位、风格 mood、镜头清单
-> 输入来源：[x] `Products 商品` 表 [x] BRAND.md [{x|-}] listing-catalog 礼物词库（来源：反向传入 / Base 反推 / 未跑过）[{x|-}] eRank [{x|-}] SHOP.md 物料
+> 输入来源：[x] `Products 商品` 表 [x] BRAND.md [{x|-}] BRAND_MARKETING.md（§B 视觉铁律 + §C 人群/触点/场景）[{x|-}] MARKETING_PLATFORM.md § 1.2（§A/§B 平台执行）[{x|-}] listing-catalog 礼物词库（来源：反向传入 / Base 反推 / 未跑过）[{x|-}] SHOP.md 物料
 > 适用 shoot 节奏：[ ] 集中 shoot（与 X/Y/Z 同批）  [ ] 零散补拍
 
 ---
@@ -42,14 +42,19 @@
 
 > 抽取规则：每行从 BRAND.md `§ 视觉原则` 抽 ≤ 20 字 = 主观点 + 1 个具象修饰；多原则并存时取首条+矛盾时给最严的一条。
 >
+> **三源分层（冲突按阶梯裁决，高层压低层）**：① BRAND.md § 视觉禁区（绝对 veto）> ② BRAND_MARKETING.md 第 5 章红线 / 第 4 章视觉调性铁律（营销宪法）> ③ MARKETING_PLATFORM.md 平台红线 / § 1.2 视觉规范（平台执行，适配不破上层）。详见 SKILL.md「视觉规则分层 + 冲突裁决阶梯」。
+>
 > ⚠️ 若 BRAND.md 缺失，本段输出 "⚠️ BRAND.md 未建立——本段先留空，回 shop-foundation 建库后回头补"，brief 仍可出 §A/§C/§D/§E。
+> ⚠️ 若 BRAND_MARKETING.md 缺失，「视觉铁律层」行标 "⚠️ BRAND_MARKETING.md 未建立——本行留空"；若 MARKETING_PLATFORM.md 缺失（非内置平台），「平台视觉规范」行同样留 ⚠️ 占位。
 
 - **整体气质**：{1 句 ≤ 20 字，取 BRAND § 视觉原则首条}
 - **配色**：{BRAND 主色（hex 值如有）+ 视觉禁区色清单}
-- **光线**：{自然光 / 影棚光 + 时段建议}
+- **光线**：{自然光 / 影棚光 + 时段建议；平台执行层（MARKETING_PLATFORM § 1.2 光线）做细则}
 - **构图**：{留白 / 黄金分割 / 平铺；从 BRAND § 视觉原则取}
 - **道具集**：{符合 BRAND 的道具白名单 ≤ 5 个名词}
-- **视觉禁区**：{原文复制 BRAND.md § 视觉禁区清单}
+- **视觉铁律层**：{BRAND_MARKETING 第 4 章视觉调性铁律——品牌形象级正面要求 + 反面禁止；缺则留 ⚠️ 占位}
+- **平台视觉规范**：{MARKETING_PLATFORM § 1.2——目标平台的画幅 / 背景 / 元素密度 / 文字位置 / 字体；Etsy / 小红书走内置 preset；缺则留 ⚠️ 占位}
+- **视觉禁区（硬底线）**：{原文复制 BRAND.md § 视觉禁区清单 + BRAND_MARKETING 第 5 章红线；任何下层不可触碰}
 
 ## C. 镜头清单（按图位展开）
 
@@ -77,11 +82,14 @@
 - **Detail-2（工艺）**：{工艺过程或细节}
 - **Detail-3（纹理 / Logo）**：{品牌标识或独特纹理}
 
-### Lifestyle（{N} 张）— 来自 listing-catalog 礼物场景词库
-> 词库来源标记：[ ] 反向触发 in-memory 现传 / [ ] Base description 礼物 / 使用语境反推 / [ ] 用户口述
+### Lifestyle（{N} 张）— 场景来源按目标平台分流
+> **Etsy**：礼物场景词库（受众 / 场景 / 节日）⊕ BRAND_MARKETING 第 1/2/3 章（人群优先级 / 情感触点 / 场景表）并用——词库定节日/受众细节，BRAND_MARKETING 定人群基调/情感触点。
+> **非 Etsy（小红书 / Pinterest 等）**：礼物词库不存在，**以 BRAND_MARKETING 第 1/2/3 章为主来源**——人群优先级（这组图为谁拍）× 情感触点（击中哪个情绪瞬间）× 场景表（场景母题）。
+> 场景来源标记：[ ] 礼物词库 反向触发 in-memory 现传 / [ ] 礼物词库 Base 反推 / [ ] BRAND_MARKETING 人群×触点×场景 / [ ] 用户口述
+> ⚠️ 若两者皆缺（无 BRAND_MARKETING 且非 Etsy / 未跑 listing）：本段标 "⚠️ 无结构化场景来源——按用户口述出图"。
 
-- **场景 1：{母亲节早茶}** → 画面：{母亲手握杯，窗边晨光} → 道具：{花束、贺卡、热茶}
-- **场景 2：{婚礼伴娘礼物}** → 画面：{...} → 道具：{...}
+- **场景 1：{母亲节早茶}** → 服务人群：{P1 代号} → 情感触点：{被记得} → 画面：{母亲手握杯，窗边晨光} → 道具：{花束、贺卡、热茶}
+- **场景 2：{婚礼伴娘礼物}** → 服务人群：{P?} → 情感触点：{...} → 画面：{...} → 道具：{...}
 - **场景 N**：...
 
 ### Packaging（1-2 张）
@@ -114,6 +122,8 @@
 
 - BRAND.md § 视觉原则
 - BRAND.md § 视觉禁区
+- {BRAND_MARKETING.md 第 1/2/3 章（人群/触点/场景）+ 第 4/5 章（视觉铁律/红线），如已建立}
+- {MARKETING_PLATFORM.md § 1.2 视觉规范 + 平台红线（目标平台章节），非 Etsy/小红书时}
 - `Products 商品` 表中该 SKU 行（链接）
 - listing description 礼物 / 使用语境（如已生成）
 - references/etsy-listing-photo-slots.md（10 槽位社区 SOP）
@@ -136,15 +146,17 @@
 
 - 每行 ≤ 20 字
 - 抽取 BRAND.md § 视觉原则时，遵循"首条+矛盾时给最严"
-- 视觉禁区段**原文复制**，不要 paraphrase（避免漏关键禁区元素）
-- BRAND.md 缺失：整段输出 ⚠️ 占位，不强行编
+- **三源冲突按阶梯裁决**：BRAND 视觉禁区（veto）> BRAND_MARKETING 红线/视觉铁律 > MARKETING_PLATFORM 平台视觉规范。下层只能在不违反上层前提下适配平台表达，不由 agent 拍脑袋。典型冲突：BRAND_MARKETING 铁律要留白 vs 平台 § 1.2 要高元素密度 → 留白赢（高层压低层），平台密度只在留白允许的范围内调
+- 视觉禁区段 + BRAND_MARKETING 红线**原文复制**，不要 paraphrase（避免漏关键禁区元素）
+- BRAND.md 缺失：整段输出 ⚠️ 占位，不强行编；BRAND_MARKETING / MARKETING_PLATFORM 缺失：对应行单独留 ⚠️ 占位，其余行照填
 
 ### C 段填写规则
 
 - Hero 一定要有
 - Variation grid: 看 `Products 商品` 表的变体字段；无变体时整段省略
 - Detail: 至少 3 张（材质 / 工艺 / 纹理 Logo 三选三）
-- Lifestyle 段 "词库来源标记"勾选必须如实——反向触发 = in-memory 现传；主动触发 = Base description 反推；都没跑过 listing 流程 = 用户口述
+- Lifestyle 段 "场景来源标记"勾选必须如实——Etsy 下礼物词库（反向触发 = in-memory 现传 / 主动触发 = Base 反推）⊕ BRAND_MARKETING；非 Etsy 平台以 BRAND_MARKETING 人群×触点×场景为主；两者皆缺才标用户口述
+- 每个 Lifestyle 场景必须标「服务人群 + 情感触点」（来自 BRAND_MARKETING 第 1/2 章）——避免出脱离品牌策略的泛场景；BRAND_MARKETING 缺失时这两栏留空，场景仍按礼物词库 / 口述填
 - 老 SKU 部分跑场景：仅填 §A 表缺位行 + §C 对应镜头清单段；§B 沿用旧 brief，不重写
 
 ### D 段填写规则
