@@ -27,7 +27,7 @@
 
 | Skill | 管什么 |
 |---|---|
-| shop-foundation | 品牌原则 + 店铺事实 + 营销策略 + 平台策略（四份 .md 基座文件） |
+| shop-foundation | 品牌原则 + 店铺事实 + 销售平台配置 + 营销策略 + 内容平台策略（五份 .md 基座文件） |
 | listing-catalog | 店铺总 Base 内商品表 + listing 文案 |
 | assets-library | 视觉与素材资产（飞书云空间 + `Assets 素材池` 表） |
 | orders-customers | 店铺总 Base 内订单 / 客户表 + 客服 SOP |
@@ -80,6 +80,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | BRAND.md | 写文案=**BLOCK**；查改=SKIP | 客服=**BLOCK**；录入=SKIP | SKIP | brief=**DEGRADE** | B2=**DEGRADE**；D=**DEGRADE** | SKIP | SKIP | 组 pin=**BLOCK** | **DEGRADE** |
 | SHOP.md | 写文案=**BLOCK** | 客服=**BLOCK** | 建库=**BLOCK**；现有链接=SKIP | 建知识卡片表=**BLOCK**；brief=**DEGRADE** | D=SKIP | 建表=**BLOCK** | 发布表定位=**BLOCK** | 组 pin=**BLOCK** | SKIP |
+| COMMERCE_PLATFORM.md | 非 Etsy / 小红书写文案=**BLOCK**；Etsy / 小红书可用内置 preset **DEGRADE** | 非 Etsy / 小红书客服=**BLOCK**；Etsy / 小红书可用内置 preset **DEGRADE** | SKIP | SKIP | 平台规格变体=**BLOCK**；Etsy / 小红书可用内置 preset **DEGRADE** | 商品型任务=**BLOCK** | 路由/发布边界=**DEGRADE** | 组商品型 pin=**DEGRADE** | 模式 A 非 Etsy / 小红书=**BLOCK**；Etsy / 小红书可用内置 preset **DEGRADE** |
 | BRAND_MARKETING.md | — | — | — | brief=**DEGRADE** | — | SKIP | SKIP | 组 pin=SKIP | — |
 | MARKETING_PLATFORM.md | — | — | — | brief=**DEGRADE** | — | 建任务=**DEGRADE** | SKIP | 组 pin=SKIP | — |
 | `Knowledge Cards 知识卡片` 表 | SKIP | SKIP | SKIP | 写卡片=**BLOCK**；读卡片=SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
