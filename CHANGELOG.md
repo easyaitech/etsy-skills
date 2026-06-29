@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 修复
+- **统一 `Orders 订单` / `Customers 客户` 字段名（跨 orders-customers / logistics-tracking / 小红书 preset 对齐到 base-schema canonical）**：审计发现 `logistics-tracking` 回写订单表用的是自造的 `物流状态` / `物流签收日期`（还带「字段不存在就先建」），而 canonical schema 只有 `状态`（含 `已签收` 枚举值）+ `跟踪号` / `快递公司` / `发货日期`，且压根没有「实际签收日期」字段——SOP §5 算 `30天复购跟进日期 = 签收日 + 30天` 引用的「签收日」无处落库。修法：(1) `base-schema.md` 新增 canonical `签收日期`（实际 delivered 日，以 `track query` 签收事实回填、同步置 `状态=已签收`）；(2) `logistics-tracking/SKILL.md` 回写收口到 `状态`+`签收日期`，删自造字段名与「先建」；(3) `order-fulfillment-sop.md` §5「签收日」指向 `签收日期` 字段；(4) 小红书 preset `售后记录 JSON` → `小红书售后记录 JSON`（补前缀对齐 schema 定义）；(5) `30天复购跟进日期` 描述改为 `= 签收日期 + 30 天`。纯文档对齐，无运行时代码改动。
 - **统一 `社媒发布队列` schema（跨 5 个 skill 对齐到 publish-composer 目标态）**：审计发现 Pinterest + social-publisher 落后于已部署的 ECS dispatch 实际契约（dispatch 真扫 `状态 = 已批准`），且 Pinterest 自身三处自相矛盾。统一全栈：(1) 状态枚举一律用 `草稿 / 待审 / 已批准 / 发布中 / 已发 / 失败 / 跳过 / 手动已发`，废弃旧 `待发 / 待复核 / 重试`（重试改为 `失败→发布中` 转移）；(2) `关联素材` 一律指向 `Asset Variants 派生素材` 变体（非 canonical 原图），修正 pin-queue-base-schema 与 pin-composition 旧指向；(3) `外部队列 ID` → `ECS job ID`（含 publish-composer/platform-publishing-model 遗漏处）；(4) 补结构化 `失败原因分类`；(5) 去掉 Pinterest 枚举外的 `测试中` 状态值，改 `发布中` + 备注 `待测试确认`；(6) social-publisher 状态机整段重写为 owner 同款 + 补人工「发这条」快路说明。改动文件：pinterest-autopin（SKILL + pin-composition + pin-queue-base-schema + publishing-flow）/ social-publisher（SKILL + adapter-registry + publishing-queue-contract）/ publish-composer（platform-publishing-model）。纯文档对齐，无运行时代码改动。
 
 ### 新增

@@ -65,7 +65,7 @@ Hermes cron 每天触发本流程（cron 用 `--skill logistics-tracking --deliv
 ## 运营者回复"确认"后才写 Base（人在环里）
 
 运营者针对某条物流推送回复确认（"确认/对/没错"）时：
-- 把该订单写进店铺总 Base `Orders 订单` 表：`物流状态`（=对应状态），已签收再填 `物流签收日期`；字段不存在就先建。
+- 把物流状态回写到店铺总 Base `Orders 订单` 表的 **canonical 字段**（以 `orders-customers/references/base-schema.md` 为准，不要自造 `物流状态` / `物流签收日期`）：映射到通用 `状态`（已签收 → `状态 = 已签收`），已签收再回填 `签收日期`（实际 delivered 日期）。
 - 已签收可按 `orders-customers` 的签收评价引导 SOP 跟进。
 - 运营者说"不对 / 先别动" → 不写 Base。
 
