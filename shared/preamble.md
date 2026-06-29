@@ -71,7 +71,7 @@ ecommerce-stack workspace
 
 1. 若 `<workspace>/skill-prefs/<本skill名>.md` 存在，读入作为本客户覆盖，**优先级高于默认行为**；
 2. 但覆盖**不得越过**红线：安全 / 合规 / 平台硬规则、§写入前的通用约束、QA 闸、BLOCK 级依赖——这些一律不可被 skill-prefs 改写；
-3. 品牌语气、店铺事实、平台规则**不走这里**——它们是 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md，由 `shop-foundation` 沉淀；skill-prefs 只管"本 skill 怎么干活"的工作流 / 风格旋钮；
+3. 品牌语气、店铺事实、销售平台规则、营销策略、内容平台规则**不走这里**——它们是 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md，由 `shop-foundation` 沉淀；skill-prefs 只管"本 skill 怎么干活"的工作流 / 风格旋钮；
 4. 若某条偏好引用了当前版本已不支持的东西，按 [`dependency-protocol.md`](dependency-protocol.md) 报一条 `⚠️ DEGRADE` 提示用户确认，**不要静默忽略**。
 
 ---

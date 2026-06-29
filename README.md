@@ -2,7 +2,7 @@
 
 通用电商运营 skill bundle，跑在 [Hermes Agent](https://hermes-agent.nousresearch.com/) 上（Mac mini 本地），用 [larksuite/cli](https://github.com/larksuite/cli) 操作飞书 Base / 文档 / 云空间。
 
-每个 skill 各管一摊：品牌底座、销售平台配置、商品目录、订单客服、供应商管理、业务知识库、素材库、社交媒体发布、Pinterest 自动 pin、AI 图片合成、趋势热词采集（完整列表见下面 §Skills）。默认数据架构是 **一个店铺 = 一个飞书多维表格 Base；一个业务对象 = Base 内一张表**，下游都引用 `BRAND.md` / `SHOP.md` / `COMMERCE_PLATFORM.md`，从 `shop-foundation` 开始建是推荐顺序。
+每个 skill 各管一摊：品牌底座、销售平台配置、商品目录、订单客服、供应商管理、业务知识库、素材库、社交媒体发布、Pinterest 自动 pin、AI 图片合成、趋势热词采集（完整列表见下面 §Skills）。默认数据架构是 **一个店铺 = 一个飞书多维表格 Base；一个业务对象 = Base 内一张表**，下游都引用 `BRAND.md` / `SHOP.md` / `COMMERCE_PLATFORM.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`，从 `shop-foundation` 开始建是推荐顺序。
 
 仓库历史上叫 `etsy-skills`，Etsy 和小红书继续作为内置平台 preset。新的通用入口是 `ecommerce-stack`，旧命令 `etsy-stack` 保留兼容。
 
@@ -29,7 +29,7 @@ bash install.sh
 
 | Skill | 干啥 |
 |---|---|
-| [`shop-foundation`](shop-foundation/SKILL.md) | 维护 BRAND.md（品牌原则）+ SHOP.md（店铺事实）+ COMMERCE_PLATFORM.md（销售平台配置）等元基础 |
+| [`shop-foundation`](shop-foundation/SKILL.md) | 维护 BRAND.md（品牌原则）+ SHOP.md（店铺事实）+ COMMERCE_PLATFORM.md（销售平台配置）+ BRAND_MARKETING.md（品牌营销策略）+ MARKETING_PLATFORM.md（内容平台策略）五份元基础 |
 | [`listing-catalog`](listing-catalog/SKILL.md) | 店铺总 Base 内 `Products 商品` 表 + 按目标电商平台配置撰写商品页 / listing 文案 |
 | [`orders-customers`](orders-customers/SKILL.md) | 店铺总 Base 内 `Orders 订单` / `Customers 客户` 表 + 按平台配置支撑客服/履约 SOP + 客户标签 |
 | [`logistics-tracking`](logistics-tracking/SKILL.md) | 跨境物流状态跟踪（薄 skill）：让 agent 调 `track` 命令查/录物流，接后端常驻的 17TRACK 跟踪服务（每天自动轮询到签收）；正确性在后端服务，不写飞书 Base |
@@ -47,7 +47,7 @@ bash install.sh
 
 ## 工作区初始化（首次使用必读）
 
-stack 中所有 skill 都会把 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md / 社媒发布队列辅助文件等数据落到统一的「工作区」。Hermes profile 隔离环境下 `$HOME` 不是系统用户 HOME，靠 `~/` 推路径会让数据落到 profile sandbox。**必须**显式声明工作区位置：
+stack 中所有 skill 都会把 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md / 社媒发布队列辅助文件等数据落到统一的「工作区」。Hermes profile 隔离环境下 `$HOME` 不是系统用户 HOME，靠 `~/` 推路径会让数据落到 profile sandbox。**必须**显式声明工作区位置：
 
 ```bash
 # 进到希望放数据的目录
@@ -74,7 +74,7 @@ ecommerce-stack workspace
 
 skill 是**共享只读、会持续升级**的产品引擎，不为单个客户改动。客户要让某个 skill 贴合自己的习惯时，**不改 skill 本体、不 fork**，而是叠一层每客户隔离的覆盖：
 
-- **品牌语气 / 店铺事实 / 平台规则** → `BRAND.md` / `SHOP.md` / `COMMERCE_PLATFORM.md`（用 `shop-foundation` 维护，被多个 skill 读取）。
+- **品牌语气 / 店铺事实 / 销售平台规则 / 营销策略 / 内容平台规则** → `BRAND.md` / `SHOP.md` / `COMMERCE_PLATFORM.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`（用 `shop-foundation` 维护，被多个 skill 读取）。
 - **某个 skill 的工作流 / 风格旋钮** → `<workspace>/skill-prefs/<skill-name>.md`（`ecommerce-stack init` 会建好这个目录）。
 - **安全 / 合规 / QA 闸 / 写入确认** → 不可被覆盖。
 

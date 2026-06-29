@@ -528,7 +528,7 @@ EOF
 每个文件 `<skill-name>.md` 覆盖对应 skill 的工作流 / 风格旋钮，升级不冲突。
 完整契约见 stack 的 `shared/skill-prefs.md`。
 
-- 品牌语气 / 店铺事实 / 平台规则 → 走 shop-foundation 写进 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md，不是这里。
+- 品牌语气 / 店铺事实 / 销售平台规则 / 营销策略 / 内容平台规则 → 走 shop-foundation 写进 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md，不是这里。
 - 安全 / 合规 / QA / 写入确认 → 不可被覆盖。
 PREFS
       echo "✓ 已创建 skill-prefs/（客户偏好覆盖层，见 shared/skill-prefs.md）"
@@ -584,7 +584,7 @@ if copied:
         print(f"     • {sid} → {rel}")
     print("  下次跑 business-knowledge 会提议把方法论种子登记成 Knowledge Card（diff 预览 + 确认）；登记后 listing 才能引用。")
 SEEDPY
-    echo "下一步：用 shop-foundation 建 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md"
+    echo "下一步：用 shop-foundation 建 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md"
     ;;
 
   help|-h|--help|"")
