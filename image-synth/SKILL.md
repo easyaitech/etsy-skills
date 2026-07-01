@@ -19,6 +19,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 - 工作区根目录的 BRAND.md（视觉原则 + 视觉禁区）+ SHOP.md（仅 packaging / brand-story 类用到）+ COMMERCE_PLATFORM.md（销售平台媒体规则）
 - `assets-library` 模式 B2 promote 流程（用户选"入库"时调用，本 skill 不重新实现归档）
 
+**运行时工具 gate**：进入生图 / 去背景 / 改图前，先确认当前 Hermes profile 真的有可调用的 `terminal`/`execute_code` 或等价后端图片工具，并且中心后端 `/image/generate` 已接入。若当前环境只暴露文本回复、没有这些工具，必须停在"收集需求 / 生成 prompt / 等管理员接入工具"这一级；不要声称正在处理图片、不要反复要求用户重传同一张图，也不要把 `image_generate`/`FAL_KEY` 之类未配置错误包装成用户输入问题。
+
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)，工具架构见 [`shared/tools-architecture.md`](../shared/tools-architecture.md)（生图走中心后端 `/image/generate`、key 在后端 skill 不持，已符合约束）。
 
 ---
@@ -74,6 +76,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 5. **拼最终 prompt**——按 [prompt-vocabulary.md § 最终 prompt 拼装](references/prompt-vocabulary.md#最终-prompt-拼装) 合成 1 段英文 prompt + negative prompt
 6. **完整性自检 + 展示预览**——展示前自检：anchor.subject 与 format.aspect_ratio 必须非空；mood 段允许全空但显式标 `(degraded — BRAND.md 缺失)`。任意硬必填空 → 不展示，回 step 3 补输入。自检过 → 用代码块展示给用户确认 / 调整。**不偷跑**——生图调用有成本
 7. **生图**——经 `terminal` 调**中心后端** `POST /image/generate`（契约见 [references/backend-image-gen-contract.md](references/backend-image-gen-contract.md)）：传 prompt + 实拍图（base64，受大小/数量上限约束）+ aspect/resolution + **idempotency key**（本次请求唯一；重试复用同一个 → 后端去重，不重复扣费）。**严格 1 张**。**不传 model slug**——模型由后端 allowlist 决定（默认 GPT Image 2）。
+   - **工具缺失硬停**：如果当前运行环境没有 `terminal`/`execute_code` 或后端图片工具，不能执行本步骤；只给用户一个明确状态（"当前 profile 尚未接入图片生成/编辑工具"）和下一步（管理员接入中心后端工具，或先保存 prompt/brief）。不要多轮重复同一免责声明。
    - **失败显式报错，绝不静默**：`quota_exceeded` → 报「本租户配额用尽」停；`upstream`/网络（明确未计费）→ 退避重试**一次**（复用同一 idempotency key）；**超时（504）→ 报「生成超时，计费未知」，换一个新的 idempotency key 再试一次，或停下**（同 key 会返 409，因后端标 uncertain 防重复扣费）。任何失败都**不对缺失图跑 QA**，原因落 sidecar。
 8. **QA**——按 [qa-gates.md](references/qa-gates.md) 对应段（模式 A / 模式 B）走全部 checks。含自动重试 ≤ 2 次 + 第 3 轮失败用户三选一
 9. **落盘**——按 [output-layout.md](references/output-layout.md) 写到 `<workspace>/.cache/image-synth/ai_raw/{date}/` + 同名 sidecar `.json`。本地写入用 `mkdir -p` 一步建目录（`.cache/` 是本地 fs，不需要 image-brief 写 brief 时那种 `lark-drive` 逐层检查）
