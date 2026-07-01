@@ -8,7 +8,7 @@ layer: foundation
 
 这个 skill 维护电商商品目录（结构化数据 → 店铺总 Base 内商品 / SKU 表）+ 按目标销售平台撰写商品页 / listing 文案。
 
-**对外的实操接口**：店铺总 Base 内的 `Products 商品` 表（用 `lark-base` skill 操作；架构见 `../shared/store-base-architecture.md`）+ 工作区根目录的 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md（用 `shop-foundation` skill 维护）。
+**对外的实操接口**：店铺总 Base 内的 `Products 商品` 表（通常用 `lark-base` skill 操作；在养个店长 Hermes 飞书直聊里，优先用后端只读工具 `POST /api/hermes/bitable/record-search` 查询；架构见 `../shared/store-base-architecture.md`）+ 工作区根目录的 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md（用 `shop-foundation` skill 维护）。
 
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
@@ -116,7 +116,13 @@ layer: foundation
 - 或要批量查询（"哪些 SKU 缺货"、"哪些是上新预备")
 
 **执行步骤**：
-直接调用 `lark-base` skill 操作。本 skill 不重复实现 Base CRUD，只在以下场景介入：
+1. **先判断当前运行环境是否有 Base 工具**：
+   - 在完整 Codex / Lark 环境中：直接调用 `lark-base` skill 操作。本 skill 不重复实现 Base CRUD。
+   - 在养个店长 Hermes 飞书直聊中：如果已注入后端只读 Base 工具，查询单个 SKU 时先调用 `POST /api/hermes/bitable/record-search`；店铺上下文 / `tenantId` 由当前 Hermes profile 或后端工具注入，不向用户索要、不自行编造。模型侧查询条件至少包含 `logicalTable=products`、`fieldName=SKU`、`value=<SKU>`；只有工具 schema 明确要求时才传 `tenantId`。`attachments[].assetUrl` 是可用的短期签名图片链接，可直接作为图片输入，不要让用户重复上传。
+2. 如果 Base 工具返回未配置、无权限、表不存在、字段不存在或当前运行环境没有任何可调用 Base 工具：如实说明这一条真实卡点和下一步（让管理员接入/补配置，或请用户点机器人菜单打开资料表/发截图），**不要连续多轮换句式重复“我无法确认是否读到表”**。
+3. 只有读到真实 Base 记录后，才基于字段值回答或继续写 listing / 做发布；不要用用户口述的 SKU 名称假装已查表。
+
+本 skill 只在以下场景介入：
 - 字段语义不清时引用 `references/base-schema.md`
 - 需要按品牌一致性校验改动（如改标题/描述）时，按"模式 B"流程跑
 

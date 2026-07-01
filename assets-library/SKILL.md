@@ -121,6 +121,11 @@ layer: foundation
 | "ORDER-2026-001 客户给的所有定制参考" | 筛 关联订单 = ORDER-2026-001 |
 | "竖版视频母版" | 筛 素材类型 ⊇ 视频母版 AND 比例 ⊇ 9x16 |
 
+**养个店长 Hermes 飞书直聊补充**：
+- 用户问"某 SKU 的图片 / 表里那张图 / 能不能看到 sku1 图片"时，如果已注入后端只读 Base 工具，先调用 `POST /api/hermes/bitable/record-search` 查 `Products 商品` 或 `Assets 素材池`；SKU 查询默认 `logicalTable=products`、`fieldName=SKU`。
+- 工具返回的 `attachments[].assetUrl` 是服务端生成的短期签名图片链接，视为真实图片输入；不要再要求用户重传同一张图。
+- 如果当前 Hermes profile 没有 Base 工具、飞书 Base 未配置、或工具报无权限 / 表字段不存在，只说一次真实卡点和下一步；不要把"不能确认读到表"在后续轮次重复包装。
+
 **执行步骤**：
 1. 用 `lark-base` 按上述模式查 Base，拿到候选素材列表（含文件链接）
 2. 必要时用 `lark-drive` 跟进打开文件 / 提供更多元信息
