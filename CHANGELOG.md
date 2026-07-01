@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 修复
+- **Hermes 飞书直聊 Base / 图片工具边界对齐**：`listing-catalog` 与 `assets-library` 明确在 Hermes 飞书直聊中优先走后端只读 `record-search` 查店铺总 Base，`attachments[].assetUrl` 可直接作为真实图片输入，不再要求用户重复上传；`tenantId` 由当前 profile / 后端工具注入，不向用户索要或自行编造。`image-synth` 增加运行时工具 gate：未接入 `terminal` / `execute_code` / 后端图片工具时硬停在 prompt/brief，不假装生图或把工具缺失包装成用户输入问题。
 - **`listing-catalog` 字段名对齐为 `SEO 关键词`**：商品表 schema 与 listing 模板统一使用 `SEO 关键词`，小红书录入说明也改指向同名字段，避免同一列在不同文档里出现 `SEO / 搜索关键词` 和 `SEO 关键词` 两种写法。
 - **清理退休 `video-assembly` 残留引用**：历史发布说明里与当前 stack 不再匹配的 `video-assembly` 计数和能力引用已移除，避免读者误以为该模块仍在当前 skill bundle 中。
 - **统一 `Orders 订单` / `Customers 客户` 字段名（跨 orders-customers / logistics-tracking / 小红书 preset 对齐到 base-schema canonical）**：审计发现 `logistics-tracking` 回写订单表用的是自造的 `物流状态` / `物流签收日期`（还带「字段不存在就先建」），而 canonical schema 只有 `状态`（含 `已签收` 枚举值）+ `跟踪号` / `快递公司` / `发货日期`，且压根没有「实际签收日期」字段——SOP §5 算 `30天复购跟进日期 = 签收日 + 30天` 引用的「签收日」无处落库。修法：(1) `base-schema.md` 新增 canonical `签收日期`（实际 delivered 日，以 `track query` 签收事实回填、同步置 `状态=已签收`）；(2) `logistics-tracking/SKILL.md` 回写收口到 `状态`+`签收日期`，删自造字段名与「先建」；(3) `order-fulfillment-sop.md` §5「签收日」指向 `签收日期` 字段；(4) 小红书 preset `售后记录 JSON` → `小红书售后记录 JSON`（补前缀对齐 schema 定义）；(5) `30天复购跟进日期` 描述改为 `= 签收日期 + 30 天`。纯文档对齐，无运行时代码改动。
