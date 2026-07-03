@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Etsy DM 助手 (v0.4.2)",
+  "version": "0.4.2",
+  "description": "读 Etsy 私信 → yanggedianzhang 后端按租户 token 出客服草稿 → 回填回复框(不发送)。",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.etsy.com/*",
+    "https://yanggedianzhang.com/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.etsy.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
