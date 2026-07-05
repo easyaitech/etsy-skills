@@ -2,6 +2,7 @@
 // 同步 endpoint:POST https://fal.run/<slug>;参照图走 image_urls(收 base64 data URI)。
 // fal 返回的是图片 URL,需再 GET 一次拿字节。
 const FAL_HOST = "https://fal.run";
+const DEFAULT_TIMEOUT_MS = 180_000;
 
 export class FalError extends Error {
   constructor(
@@ -33,6 +34,36 @@ export interface FalGenerateOutput {
   raw: unknown;
 }
 
+function dataUriPayload(dataUri: string): string {
+  const comma = dataUri.indexOf(",");
+  return comma >= 0 ? dataUri.slice(comma + 1) : "";
+}
+
+async function downloadImageAsBase64(url: string, timeoutMs: number): Promise<string> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new FalError("生成图 URL 不是合法 URL");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new FalError("生成图 URL 必须是 https");
+  }
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  let imgRes: Response;
+  try {
+    imgRes = await fetch(parsed.toString(), { signal: ctrl.signal });
+  } catch (e) {
+    throw new FalError(`下载生成图网络错误 / 超时: ${e instanceof Error ? e.message : String(e)}`);
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!imgRes.ok) throw new FalError(`下载生成图失败 HTTP ${imgRes.status}`, imgRes.status);
+  return Buffer.from(await imgRes.arrayBuffer()).toString("base64");
+}
+
 export async function falGenerate(opts: FalGenerateOpts): Promise<FalGenerateOutput> {
   const body = {
     prompt: opts.prompt,
@@ -43,7 +74,8 @@ export async function falGenerate(opts: FalGenerateOpts): Promise<FalGenerateOut
   };
 
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? 180_000);
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   let res: Response;
   try {
     res = await fetch(`${FAL_HOST}/${opts.slug}`, {
@@ -82,11 +114,9 @@ export async function falGenerate(opts: FalGenerateOpts): Promise<FalGenerateOut
   // fal 通常回 https URL;偶尔回 data URI
   let b64: string;
   if (url.startsWith("data:")) {
-    b64 = url.split(",")[1] ?? "";
+    b64 = dataUriPayload(url);
   } else {
-    const imgRes = await fetch(url);
-    if (!imgRes.ok) throw new FalError(`下载生成图失败 HTTP ${imgRes.status}`, imgRes.status);
-    b64 = Buffer.from(await imgRes.arrayBuffer()).toString("base64");
+    b64 = await downloadImageAsBase64(url, timeoutMs);
   }
   if (!b64) throw new FalError(`生成图为空（${opts.slug}）`, res.status);
 

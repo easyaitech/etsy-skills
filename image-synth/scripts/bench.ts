@@ -28,6 +28,7 @@ import type { CasesConfig, GenResult, ModelsConfig, Provider } from "./types.js"
 
 const EXIT_USAGE = 1;
 const EXIT_CONFIG = 2;
+const EXIT_NO_SUCCESS = 3;
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -38,7 +39,10 @@ function fail(code: number, msg: string): never {
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
-  return i >= 0 ? process.argv[i + 1] : undefined;
+  if (i < 0) return undefined;
+  const value = process.argv[i + 1];
+  if (!value || value.startsWith("--")) fail(EXIT_USAGE, `--${name} 必须带值`);
+  return value;
 }
 function flag(name: string): boolean {
   return process.argv.includes(`--${name}`);
@@ -63,7 +67,9 @@ async function main(): Promise<void> {
   const modelsPath = resolve(HERE, arg("models") ?? "models.json");
   const outRoot = resolve(HERE, arg("out") ?? "bench-out");
   const resolutionOverride = arg("resolution");
-  const seed = arg("seed") ? Number(arg("seed")) : undefined;
+  const seedArg = arg("seed");
+  const seed = seedArg == null ? undefined : Number(seedArg);
+  if (seed != null && !Number.isFinite(seed)) fail(EXIT_USAGE, "--seed 必须是数字");
   const only = arg("only")?.split(",").map((s) => s.trim());
   const onlyModel = arg("model")?.split(",").map((s) => s.trim());
   const doRun = flag("run");
@@ -79,7 +85,7 @@ async function main(): Promise<void> {
   if (!models.length) fail(EXIT_CONFIG, "models.json 里没有模型");
   if (!cases.length) fail(EXIT_CONFIG, "没有要跑的 case(检查 cases.json 或 --only)");
 
-  const productByKey = new Map(casesCfg.products.map((p) => [p.key, p]));
+  const productByKey = new Map((casesCfg.products ?? []).map((p) => [p.key, p]));
   const caseRefs: Record<string, string[]> = {};
   for (const c of cases) {
     const keys = c.products ?? (c.product ? [c.product] : []);
@@ -230,7 +236,7 @@ async function main(): Promise<void> {
   console.log(`\n✅ 完成:${okCount}/${results.length} 成功,真实花费 $${realCost.toFixed(3)}`);
   console.log(`   对比图:   ${join(outDir, "comparison.html")}`);
   console.log(`   评分表:   ${join(outDir, "scores.csv")}`);
-  if (okCount === 0) process.exit(EXIT_USAGE);
+  if (okCount === 0) process.exit(EXIT_NO_SUCCESS);
 }
 
 main().catch((e) => fail(EXIT_USAGE, (e as Error).message));

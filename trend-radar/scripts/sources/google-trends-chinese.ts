@@ -24,6 +24,7 @@ const EXIT_NETWORK = 3;
 const EXIT_PARSE = 4;
 const TARGET_RELATED_COUNT = 50;
 const RELATED_QUERY = "Chinese";
+const SERPAPI_TIMEOUT_MS = 30_000;
 
 type SerpApiRelatedQuery = {
   query?: string;
@@ -78,10 +79,31 @@ function buildSerpApiUrl(geo: string, dataType: "RELATED_QUERIES" | "RELATED_TOP
   return `https://serpapi.com/search.json?${params.toString()}`;
 }
 
+function redactSerpApiKey(message: string): string {
+  return message.replace(/([?&]api_key=)[^&\s]+/g, "$1[redacted]");
+}
+
+function safeTrendUrl(link: string | undefined, keyword: string, geo: string): string {
+  if (link) {
+    try {
+      const url = new URL(link);
+      if (url.protocol === "https:" && url.hostname === "trends.google.com") {
+        return url.toString();
+      }
+    } catch {
+      // Fall back to a deterministic Google Trends URL below.
+    }
+  }
+  return `https://trends.google.com/trends/explore?q=${encodeURIComponent(keyword)}&geo=${encodeURIComponent(geo)}&date=now%207-d`;
+}
+
 async function fetchSerpApi(geo: string, dataType: "RELATED_QUERIES" | "RELATED_TOPICS"): Promise<SerpApiResponse> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), SERPAPI_TIMEOUT_MS);
   try {
     const res = await fetch(buildSerpApiUrl(geo, dataType), {
       headers: { Accept: "application/json" },
+      signal: ctrl.signal,
     });
     if (!res.ok) {
       throw new TrendFetchError(
@@ -96,10 +118,13 @@ async function fetchSerpApi(geo: string, dataType: "RELATED_QUERIES" | "RELATED_
     return data;
   } catch (err) {
     if (err instanceof TrendFetchError) throw err;
+    const message = err instanceof Error ? err.message : String(err);
     throw new TrendFetchError(
-      `SerpApi ${dataType} 请求失败：${err instanceof Error ? err.message : String(err)}`,
+      `SerpApi ${dataType} 请求失败：${redactSerpApiKey(message)}`,
       EXIT_NETWORK
     );
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -180,8 +205,7 @@ const googleTrendsChinese = {
       category: item.category,
       captured_at: capturedAt,
       trend_url:
-        item.link ||
-        `https://trends.google.com/trends/explore?q=${encodeURIComponent(item.keyword)}&geo=${encodeURIComponent(geo)}&date=now%207-d`,
+        safeTrendUrl(item.link, item.keyword, geo),
     }));
 
     if (items.length === 0) {

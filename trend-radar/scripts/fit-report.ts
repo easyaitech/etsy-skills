@@ -9,6 +9,7 @@ import {
 import { join } from "node:path";
 
 export const EXIT_PARSE = 4;
+const UNKNOWN_RANK = Number.MAX_SAFE_INTEGER;
 
 type Decision = "可做" | "观察" | "不做";
 type Confidence = "high" | "medium" | "low";
@@ -172,7 +173,17 @@ function assertTrendRun(value: unknown, filepath: string): TrendRunOutput {
   ) {
     throw new FitReportError(`趋势源文件缺少必要字段: ${filepath}`);
   }
-  return candidate as TrendRunOutput;
+  return {
+    ...candidate,
+    items: candidate.items.map((item) => {
+      const record = item as Partial<TrendItem>;
+      const rank = Number(record.rank);
+      return {
+        ...record,
+        rank: Number.isFinite(rank) ? rank : UNKNOWN_RANK,
+      } as TrendItem;
+    }),
+  } as TrendRunOutput;
 }
 
 export function loadTrendRuns(

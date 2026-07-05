@@ -2,6 +2,7 @@
 // 同步 endpoint:POST {base}/images/generations;参照图走 image(收 base64 data URL);Bearer 鉴权。
 // base 默认中国区 cn-beijing,可用 ARK_BASE_URL 覆盖(如 BytePlus 国际区)。
 const DEFAULT_BASE = "https://ark.cn-beijing.volces.com/api/v3";
+const DEFAULT_TIMEOUT_MS = 180_000;
 
 export class ArkError extends Error {
   constructor(
@@ -35,6 +36,31 @@ export interface ArkGenerateOutput {
   raw: unknown;
 }
 
+async function downloadImageAsBase64(url: string, timeoutMs: number): Promise<string> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new ArkError("生成图 URL 不是合法 URL");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new ArkError("生成图 URL 必须是 https");
+  }
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  let imgRes: Response;
+  try {
+    imgRes = await fetch(parsed.toString(), { signal: ctrl.signal });
+  } catch (e) {
+    throw new ArkError(`下载生成图网络错误 / 超时: ${e instanceof Error ? e.message : String(e)}`);
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!imgRes.ok) throw new ArkError(`下载生成图失败 HTTP ${imgRes.status}`, imgRes.status);
+  return Buffer.from(await imgRes.arrayBuffer()).toString("base64");
+}
+
 /** 纯函数:拼方舟请求体。watermark 必须 false,否则方舟默认给图加"AI生成"水印,对比不公平 */
 export function buildArkBody(opts: Pick<ArkGenerateOpts, "slug" | "prompt" | "references" | "width" | "height" | "seed">) {
   return {
@@ -55,7 +81,8 @@ export async function arkGenerate(opts: ArkGenerateOpts): Promise<ArkGenerateOut
   const body = buildArkBody(opts);
 
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? 180_000);
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   let res: Response;
   try {
     res = await fetch(`${base}/images/generations`, {
@@ -89,9 +116,7 @@ export async function arkGenerate(opts: ArkGenerateOpts): Promise<ArkGenerateOut
   let b64: string | undefined = item?.b64_json;
   // 兜底:若返的是 url 而非 b64,再 GET 一次拿字节
   if (!b64 && typeof item?.url === "string") {
-    const imgRes = await fetch(item.url);
-    if (!imgRes.ok) throw new ArkError(`下载生成图失败 HTTP ${imgRes.status}`, imgRes.status);
-    b64 = Buffer.from(await imgRes.arrayBuffer()).toString("base64");
+    b64 = await downloadImageAsBase64(item.url, timeoutMs);
   }
   if (!b64) {
     throw new ArkError(`响应里没拿到图（${opts.slug}）`, res.status, JSON.stringify(json).slice(0, 400));
