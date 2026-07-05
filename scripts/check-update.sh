@@ -15,7 +15,21 @@ LATEST_TAG="$CACHE_DIR/latest-tag"
 LATEST_MAIN="$CACHE_DIR/latest-main"
 TTL_SECONDS=86400  # 24h
 
-mkdir -p "$CACHE_DIR" 2>/dev/null || exit 0
+mkdir -p -m 0700 "$CACHE_DIR" 2>/dev/null || exit 0
+
+write_cache_file() {
+  local path="$1"
+  local value="$2"
+  local tmp="${path}.$$.$RANDOM.tmp"
+  printf '%s\n' "$value" > "$tmp" 2>/dev/null || {
+    rm -f "$tmp" 2>/dev/null || true
+    return 1
+  }
+  mv "$tmp" "$path" 2>/dev/null || {
+    rm -f "$tmp" 2>/dev/null || true
+    return 1
+  }
+}
 
 emit_if_behind() {
   local latest_tag="$1"
@@ -82,9 +96,10 @@ if git -C "$INSTALL_DIR" fetch --quiet origin main 2>/dev/null; then
   latest_main=$(git -C "$INSTALL_DIR" rev-parse origin/main 2>/dev/null || echo "")
 fi
 
-# 写缓存（即使 latest_tag / latest_main 都为空也写时间戳，避免反复重试网络）
-touch "$LAST_CHECK"
-echo "$latest_tag"  > "$LATEST_TAG"
-echo "$latest_main" > "$LATEST_MAIN"
+# 写缓存（即使 latest_tag / latest_main 都为空也写时间戳，避免反复重试网络）。
+# 先写内容，最后更新时间戳；中途被打断时不会留下"新时间戳 + 旧内容"。
+write_cache_file "$LATEST_TAG" "$latest_tag" || exit 0
+write_cache_file "$LATEST_MAIN" "$latest_main" || exit 0
+write_cache_file "$LAST_CHECK" "$(date +%s)" || exit 0
 
 emit_if_behind "$latest_tag" "$latest_main"

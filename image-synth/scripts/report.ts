@@ -140,7 +140,7 @@ export function buildComparisonHtml(opts: HtmlOpts): string {
     .map((c) => {
       const keys = caseRefs[c.id] ?? [];
       const thumbs = keys
-        .map((k, i) => (productThumbs[k] ? `<img class="ref" title="图${i + 1}: ${escapeAttr(k)}" src="${productThumbs[k]}">` : ""))
+        .map((k, i) => (productThumbs[k] ? `<img class="ref" title="图${i + 1}: ${escapeAttr(k)}" src="${escapeAttr(productThumbs[k])}">` : ""))
         .filter(Boolean)
         .join("");
       const ref = thumbs || `<div class="noref">无实拍图</div>`;
@@ -192,5 +192,5 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string);
 }
 function escapeAttr(s: string): string {
-  return s.replace(/"/g, "&quot;");
+  return escapeHtml(s).replace(/"/g, "&quot;");
 }

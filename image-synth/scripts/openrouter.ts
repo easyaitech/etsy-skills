@@ -46,6 +46,11 @@ export interface GenerateOutput {
   raw: unknown;
 }
 
+function dataUriPayload(dataUri: string): string {
+  const comma = dataUri.indexOf(",");
+  return comma >= 0 ? dataUri.slice(comma + 1) : "";
+}
+
 export async function generateImage(opts: GenerateOpts): Promise<GenerateOutput> {
   const body = {
     model: opts.slug,
@@ -94,7 +99,7 @@ export async function generateImage(opts: GenerateOpts): Promise<GenerateOutput>
   const chatUrl = json?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
   let b64: string | undefined = b64Json;
   if (!b64 && typeof chatUrl === "string") {
-    b64 = chatUrl.startsWith("data:") ? chatUrl.split(",")[1] : undefined;
+    b64 = chatUrl.startsWith("data:") ? dataUriPayload(chatUrl) : undefined;
   }
   if (!b64) {
     throw new OpenRouterError(

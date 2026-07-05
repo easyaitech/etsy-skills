@@ -2,6 +2,7 @@
 //   npm run models
 // 不需要 key 也能列(models 列表是公开的);有 key 会更稳。
 const ENDPOINT = "https://openrouter.ai/api/v1/models";
+const REQUEST_TIMEOUT_MS = 30_000;
 
 interface ORModel {
   id: string;
@@ -14,7 +15,16 @@ async function main(): Promise<void> {
   const headers: Record<string, string> = {};
   if (process.env.OPENROUTER_API_KEY) headers.Authorization = `Bearer ${process.env.OPENROUTER_API_KEY}`;
 
-  const res = await fetch(ENDPOINT, { headers });
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(ENDPOINT, { headers, signal: ctrl.signal });
+  } catch (e) {
+    throw new Error(`拉 models 列表网络错误 / 超时: ${e instanceof Error ? e.message : String(e)}`);
+  } finally {
+    clearTimeout(timer);
+  }
   if (!res.ok) {
     console.error(`✗ HTTP ${res.status} 拉 models 列表失败`);
     process.exit(1);

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync, copyFileSync } from "node:fs";
+import { existsSync, mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { FitReportError, generateFitReport } from "./fit-report.js";
 
@@ -55,6 +55,12 @@ const GEO_ALLOWLIST: Record<string, string[]> = {
   "pinterest-chinese": ["US", "GB", "CA", "AU", "DE", "FR", "IT", "ES", "BR", "MX"],
   "erank-trend-buzz": ["US", "GB", "CA", "AU", "DE", "FR", "IN"],
 };
+
+function writeAtomic(path: string, content: string): void {
+  const tmpPath = `${path}.${process.pid}.tmp`;
+  writeFileSync(tmpPath, content);
+  renameSync(tmpPath, path);
+}
 
 function resolveWorkspace(): string | null {
   const envWs = process.env.ETSY_WORKSPACE;
@@ -248,11 +254,12 @@ async function main(): Promise<void> {
   };
 
   const datedPath = join(outDir, `${source}-${geo}.json`);
-  writeFileSync(datedPath, JSON.stringify(output, null, 2) + "\n");
+  const outputJson = JSON.stringify(output, null, 2) + "\n";
+  writeAtomic(datedPath, outputJson);
 
   const latestDir = join(workspace, "outputs", "trend-radar");
   const latestPath = join(latestDir, "latest.json");
-  copyFileSync(datedPath, latestPath);
+  writeAtomic(latestPath, outputJson);
 
   process.stdout.write(datedPath + "\n");
 }
