@@ -67,7 +67,7 @@ PublishIntent（社媒发布队列 一行）
 
 | # | 输入 intent | 期望 |
 |---|---|---|
-| 1 | 平台=Pinterest, enabled, 自动发布=true, 已批准, 到点, 未锁 | ECS dispatch 建 test job → 回写发布中；**不自动 confirm-publish**（停待人工确认） |
+| 1 | 平台=Pinterest, enabled, 自动发布=true, 已批准, 到点, 未锁 | ECS dispatch **直接建 publish job**（`ready_for_publish`）→ 回写发布中 → 插件真发，**无逐条人工确认闸**（人工把关点在标 `自动发布=true` 那一下） |
 | 2 | 平台=Pinterest, enabled, 用户手动"发这条" | pinterest-autopin 模式 C：test → 目视确认 → confirm-publish → final |
 | 3 | 平台=小红书, **staged**, 用户"发" | **不创建真实 job**；出人工发布清单 + 提示 staged 未对外开放 |
 | 4 | 平台=Instagram, planned | 草稿 + 人工对账；不真发 |
