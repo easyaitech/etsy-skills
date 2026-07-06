@@ -1,6 +1,6 @@
 ---
 name: pinterest-autopin
-description: Pinterest 发布**适配器**：把电商商品 + 素材变体 + 品牌底座组装成 Pinterest pin，并通过 yanggedianzhang 服务器控制面 + 浏览器插件执行。Hermes 只负责判断、生成文案、调服务器工具接口、把队列行标记成自动发布，不持 Chrome profile、不跑 Playwright、不持队列、不自己跑巡检定时器（自动发布的巡检/锁/重试循环归 ECS dispatch，T5；Hermes 只负责组 pin、手动发某条、以及把行标成 `自动发布=true` 交给 dispatch）。四种触发：(1) "接 Pinterest / 配置 pin 流水线"——接通服务器工具 + 浏览器插件 + 店铺总 Base 内 `社媒发布队列` 表；(2) "给 SKU 出 pin / 写 pin 文案 / 排一条 pin"——读 BRAND + `Products 商品` 表 + `Asset Variants 派生素材` 表（Pinterest 2:3 变体，缺则反向请求 assets-library 模式 E 派生），组一条 `社媒发布队列`（平台=Pinterest）记录，平台专属字段走 `PinterestExt` typed schema；(3) "发 pin / 测试 pin / publish"——创建 test job，用户目视确认后 confirm-publish 转 final，回写状态；(4) "开启自动发布 / 自动发这几条 / 到点自动发"——把已审核的行标成 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给已在生产运行的 ECS dispatch 无人值守发布（dispatch 直发、无逐条人工确认闸）。每次只处理一条。
+description: Pinterest 发布**适配器**：把电商商品 + 素材变体 + 品牌底座组装成 Pinterest pin，并通过 yanggedianzhang 服务器控制面 + 浏览器插件执行。Hermes 只负责判断、生成文案、调服务器工具接口、把队列行标记成自动发布，不持 Chrome profile、不跑 Playwright、不持队列、不自己跑巡检定时器（自动发布的巡检/锁/重试循环归 ECS dispatch，T5；Hermes 只负责组 pin、手动发某条、以及把行标成 `自动发布=true` 交给 dispatch）。四种触发：(1) "接 Pinterest / 配置 pin 流水线"——接通服务器工具 + 浏览器插件 + 店铺总 Base 内 `社媒发布队列` 表；(2) "给 SKU 出 pin / 写 pin 文案 / 排一条 pin"——读 BRAND + `Products 商品` 表 + `Asset Variants 派生素材` 表（Pinterest 2:3 变体，缺则反向请求 assets-library 模式 E 派生），组一条 `社媒发布队列`（平台=Pinterest）记录，平台专属字段走 `PinterestExt` typed schema；(3) "发 pin / 测试 pin / publish"——创建 test job，用户目视确认后 confirm-publish 转 final，回写状态；(4) "开启自动发布 / 自动发这几条 / 到点自动发"——把已审核的行标成 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给已在生产运行的 ECS dispatch 无人值守发布（dispatch 直发、无逐条人工确认闸）；(5) "发成功没 / 这条发了吗 / 为什么没发 / 队列什么情况"——**只读店铺总 Base `社媒发布队列` 行**（`状态` / `自动发布` / `计划发布时间` / `发布 URL` / `事件日志`）判读状态，**绝不用 Mac mini cron 或本地定时器推断**（自动发布跑在 Hermes 看不到的 ECS dispatch）。每次只处理一条。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
@@ -74,7 +74,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ---
 
-## 四种执行模式
+## 五种执行模式
 
 ### 模式 A：接入服务器工具 + 浏览器插件（首次接入 Pinterest）
 
@@ -171,6 +171,35 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 > **一次只标一条**——和模式 B/C 一致，不批量勾选。批量让用户重复触发。
 
+### 模式 E：状态查询与排障（"发成功没 / 为什么没发"）
+
+**进入条件**：
+- 用户问自动发布/某条 pin 的状态："发成功没 / 这条发了吗 / 最近发得怎么样 / 队列什么情况 / 为什么没发 / 到点了怎么还没发"
+
+**三条铁律（回答前先内化，违反即会误导用户）**：
+1. **自动发布状态的唯一真相源 = 店铺总 Base `社媒发布队列` 表的行本身**（`状态` / `自动发布` / `计划发布时间` / `发布 URL` / `事件日志` / `失败原因分类` / `失败原因`）。dispatch 的每一次动作（建 job / 发布中 / 成功 / 失败 / 跳过 / 租约回收）都写在该行 `事件日志` 列——**要判断发没发、为什么，只读这里**。
+2. **绝不用 Mac mini 上的 cron / launchd job / Hermes 本地定时器来推断自动发布是否成功。** 无人值守自动发布跑在 **ECS dispatch**（yanggedianzhang 生产常驻），Hermes / Mac mini **看不到**它的运行状态。Mac mini 上那些旧的发布 cron 在切换到 ECS 时**已被有意暂停**，与自动发布是否工作**完全无关**——看到它们 `paused` 不代表发布停了，**别拿它当证据、别据此说"某天被暂停了 / 在等恢复"**。
+3. **拿不准就读 Base，不编因果。** 没有 Base 证据支持的结论一律不说。计划发布时间在未来 = 还没到点，"没发"是正常的，不是故障。
+
+**执行步骤**：
+1. 用 `lark-base` 读 `社媒发布队列` 表 `平台 = Pinterest` 的行，按下表逐状态判读后回答：
+
+   | 行状态 + 字段 | 含义 | 怎么跟用户说 |
+   |---|---|---|
+   | `待发` / `已批准` + `自动发布=true` | 已在自动发布通道排队等到点（`待发` 是 dispatch 合法入口状态，等价 `已批准`） | 看 `计划发布时间`：**在未来 = 还没到点，没发是正常的**；已过去仍没发 → 走下方核查 |
+   | `草稿` / `待审` / `待发` + `自动发布=false` | **没进**自动发布通道，dispatch 不会碰它 | 要自动发得先走模式 D 标 `自动发布=true` |
+   | `发布中` + `执行锁` 非空 | dispatch 已建 job、浏览器插件正在发 | 稍等，进度看该行 `状态` / `事件日志` |
+   | `已发` + `发布 URL` | 发成功 | 给出 `发布 URL` |
+   | `失败` | 发布失败 | 读 `失败原因分类` / `失败原因` / `事件日志` 告知真因；dispatch 默认**不自动重排失败行**，要补发得人工改回 `待发` |
+
+2. 用户报"到点了还没发"时，按此顺序核查（全部有 Base / 服务器凭据可查，**不猜**）：
+   - a. 行是不是 `自动发布=true` 且 `状态 ∈ {待发, 已批准}`？否 → 没进通道（模式 D 没标或被撤回）。
+   - b. `计划发布时间` 是不是已过去？未来 = 没到点。若填了自然语言（"下周一"）→ dispatch 解析不了，会在 `事件日志` 记「计划发布时间无法解析」并跳过——提示用户改成带时区的 ISO 或飞书日期时间字段。
+   - c. `事件日志` 有没有 dispatch 的失败 / 跳过记录（缺字段 fail-closed、素材未解析、插件租约超时、发布后未确认 Pin URL）？照它说，这些多是**浏览器插件侧**问题（插件离线 / 会话过期 / DOM 漂移），不是调度停了。
+   - d. 以上都正常但仍不发 → 可能是 ECS dispatch 未开启或插件离线，这**归运维 / 管理员在服务器侧排查**（Hermes 看不到 ECS）。如实说"需要管理员确认服务器侧 dispatch 与插件状态"，**不要自己下"被暂停"的结论**。
+
+3. **不要基于"以为发布停了"去改排期。** 发现过期未发的行，先按第 2 步用 Base 证据确认原因；确需补发就**问用户**要不要把行改回近几天（走模式 D），而不是默默把 pin 往后顺延（那只会把本该补发的越推越远）。
+
 ---
 
 ## 写入前的硬性约束
@@ -190,6 +219,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **标自动发布前内容必须审核完**：模式 D 的 `自动发布=true` 是"授权无人值守发到真 Pinterest"，dispatch 到点直发、无逐条确认闸。字段不全 / 素材未授权 / 文案没定稿的行**绝不标自动发布**。
 - **Pinterest 库存提醒必须分库存独立触发**：品牌/内容型 pin 库存、商品/礼物型 pin 库存是两个不同库存。
 - **多图轮播不拆成多个单图 pin 发**：服务器 / 插件未支持多素材 final 时只能停在草稿或人工发布，不得拆分冒充轮播。
+- **不用 Mac mini cron / Hermes 本地定时器推断自动发布状态**：无人值守自动发布跑在 ECS dispatch，Hermes / Mac mini 看不到它；旧 Mac mini 发布 cron 已在切 ECS 时**有意暂停**，与发布是否工作无关。回答"发成功没 / 为什么没发"只能读 `社媒发布队列` 行 + `事件日志`（模式 E）；无 Base 证据不下因果结论（尤其不说"某天被暂停了 / 在等恢复"）、不据此改排期。
 
 ---
 
