@@ -141,13 +141,12 @@ if [[ -L "$_retired_photo_style" ]]; then
   esac
 fi
 
-# trend-radar: 安装 Node 依赖 + Playwright chromium + CLI 链接
+# trend-radar: 安装 Node 依赖 + CLI 链接（采集已迁 ECS 只读拉取，本机不再需要 Playwright chromium）
 _TR_SCRIPTS="$INSTALL_DIR/trend-radar/scripts"
 if [[ -f "$_TR_SCRIPTS/package.json" ]]; then
   log "安装 trend-radar 依赖…"
   if command -v npm >/dev/null; then
     ( cd "$_TR_SCRIPTS" && npm install --no-fund --no-audit --quiet 2>&1 ) || warn "trend-radar npm install 失败"
-    ( cd "$_TR_SCRIPTS" && npx playwright install --with-deps chromium 2>&1 ) || warn "Playwright chromium 安装失败"
     chmod +x "$_TR_SCRIPTS/trend-fetch"
     ln -sfn "$_TR_SCRIPTS/trend-fetch" "$BIN_DIR/trend-fetch"
     ok "trend-fetch 命令安装到：$BIN_DIR/trend-fetch"
