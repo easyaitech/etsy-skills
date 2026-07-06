@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+### 变更
+- **`trend-radar` 采集上收到管理员浏览器插件，skill 不再本机 Chrome 抓取**：热词采集统一由「管理员趋势采集插件」（`admin-trend-extension`，装在运营方登录态浏览器）完成、回传 ECS 上的 trend-radar 服务；`trend-radar` skill 改为**只从服务读取**。彻底删除本机 Playwright 抓取（`scripts/sources/` 全部数据源、`sources` DataSource 合约、`SERPAPI_KEY` / `*_PROFILE` / `*_CDP_PORT` 登录态依赖、截图/HTML 快照证据、parser / url-builder 单测与 fixtures），移除 `playwright` 依赖。新命令：`trend-fetch pull [--geo]` 从服务 `/latest` 拉回各平台已采热词、落成同结构 per-source JSON（`fit-report` 完全不变，继续读当天目录的 per-source JSON）；旧的 `trend-fetch <source>`（`google-trends` / `pinterest-trends` / `erank-trend-buzz` …）已移除。新增环境变量 `TREND_RADAR_TOKEN`（必需）/ `TREND_RADAR_BASE_URL`（默认公网代理 `https://yanggedianzhang.com/trend-radar`）。`latest.json` 语义从「最后一个 source 的副本」变为「服务端合并总览（revision / runs / 跨平台合并 items）」；同步更新 `business-knowledge/references/trend-radar-intake.md` 对 latest.json 的描述（消费逻辑不变：仍只用 `generated_at` 做新鲜度闸、建卡走 fit-report）。SKILL.md / output-schema.md 同步重写，删除 `source-guide.md`。
+
 ### 修复
 - **Hermes 飞书直聊 Base / 图片工具边界对齐**：`listing-catalog` 与 `assets-library` 明确在 Hermes 飞书直聊中优先走后端只读 `record-search` 查店铺总 Base，`attachments[].assetUrl` 可直接作为真实图片输入，不再要求用户重复上传；`tenantId` 由当前 profile / 后端工具注入，不向用户索要或自行编造。`image-synth` 增加运行时工具 gate：未接入 `terminal` / `execute_code` / 后端图片工具时硬停在 prompt/brief，不假装生图或把工具缺失包装成用户输入问题。
 - **`listing-catalog` 字段名对齐为 `SEO 关键词`**：商品表 schema 与 listing 模板统一使用 `SEO 关键词`，小红书录入说明也改指向同名字段，避免同一列在不同文档里出现 `SEO / 搜索关键词` 和 `SEO 关键词` 两种写法。

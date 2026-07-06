@@ -2,61 +2,30 @@ import { describe, it, expect } from "vitest";
 import { parseArgs } from "../runner.js";
 
 describe("parseArgs", () => {
-  it("parses source with default geo", () => {
-    const result = parseArgs(["node", "runner.ts", "google-trends"]);
-    expect(result).toEqual({
-      command: "fetch",
-      source: "google-trends",
-      geo: "US",
-    });
+  it("parses pull with default geo", () => {
+    const result = parseArgs(["node", "runner.ts", "pull"]);
+    expect(result).toEqual({ command: "pull", geo: "US" });
   });
 
-  it("parses source with explicit geo", () => {
-    const result = parseArgs([
-      "node",
-      "runner.ts",
-      "google-trends",
-      "--geo",
-      "GB",
-    ]);
-    expect(result).toEqual({
-      command: "fetch",
-      source: "google-trends",
-      geo: "GB",
-    });
-  });
-
-  it("parses pinterest source", () => {
-    const result = parseArgs(["node", "runner.ts", "pinterest-chinese"]);
-    expect(result).toEqual({
-      command: "fetch",
-      source: "pinterest-chinese",
-      geo: "US",
-    });
-  });
-
-  it("parses eRank Trend Buzz source", () => {
-    const result = parseArgs(["node", "runner.ts", "erank-trend-buzz"]);
-    expect(result).toEqual({
-      command: "fetch",
-      source: "erank-trend-buzz",
-      geo: "US",
-    });
+  it("parses pull with explicit geo", () => {
+    const result = parseArgs(["node", "runner.ts", "pull", "--geo", "GB"]);
+    expect(result).toEqual({ command: "pull", geo: "GB" });
   });
 
   it("uppercases geo", () => {
-    const result = parseArgs([
-      "node",
-      "runner.ts",
-      "google-trends",
-      "--geo",
-      "gb",
-    ]);
-    expect(result).toEqual({
-      command: "fetch",
-      source: "google-trends",
-      geo: "GB",
-    });
+    const result = parseArgs(["node", "runner.ts", "pull", "--geo", "gb"]);
+    expect(result).toEqual({ command: "pull", geo: "GB" });
+  });
+
+  it("rejects unknown command (old per-source fetch is gone)", () => {
+    expect(parseArgs(["node", "runner.ts", "google-trends"])).toBeNull();
+    expect(parseArgs(["node", "runner.ts", "pinterest-trends"])).toBeNull();
+    expect(parseArgs(["node", "runner.ts", "erank-trend-buzz"])).toBeNull();
+  });
+
+  it("rejects pull with fit-report-only flags", () => {
+    expect(parseArgs(["node", "runner.ts", "pull", "--date", "2026-05-18"])).toBeNull();
+    expect(parseArgs(["node", "runner.ts", "pull", "--max-items", "25"])).toBeNull();
   });
 
   it("parses fit-report with date and max items", () => {
@@ -73,7 +42,6 @@ describe("parseArgs", () => {
     ]);
     expect(result).toEqual({
       command: "fit-report",
-      source: "fit-report",
       geo: "GB",
       date: "2026-05-18",
       maxItems: 25,
@@ -84,17 +52,12 @@ describe("parseArgs", () => {
     const result = parseArgs(["node", "runner.ts", "fit-report"]);
     expect(result).toMatchObject({
       command: "fit-report",
-      source: "fit-report",
       geo: "US",
       maxItems: 200,
     });
     expect(result && "date" in result ? result.date : "").toMatch(
       /^\d{4}-\d{2}-\d{2}$/
     );
-  });
-
-  it("rejects unknown flags", () => {
-    expect(parseArgs(["node", "runner.ts", "google-trends", "--date", "2026-05-18"])).toBeNull();
   });
 
   it("rejects invalid fit-report date", () => {

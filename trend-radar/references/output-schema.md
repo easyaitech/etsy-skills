@@ -1,19 +1,20 @@
 # 输出 Schema — trend-radar
 
-## Run Output（`latest.json` / `YYYY-MM-DD/<source>.json`）
+## Run Output（`YYYY-MM-DD/<source>-<GEO>.json`）
 
-每次运行输出一个 JSON 文件，包含 run 元数据和 items 数组。
+`trend-fetch pull` 为每个平台输出一个 JSON 文件，包含 run 元数据和 items 数组。数据由管理员采集插件采集、经 trend-radar 服务 `/latest` 拉取而来（不再本机抓取，故 evidence 里不再有截图/快照路径）。
 
 ```jsonc
 {
-  "generated_at": "2026-05-18T12:00:00.000Z",  // ISO 8601，运行时间
-  "source": "google-trends",                     // 数据源名称
+  "generated_at": "2026-05-18T12:00:00.000Z",  // ISO 8601，该平台在服务端的采集时间
+  "source": "erank-trend-buzz",                  // 数据源名称
   "geo": "US",                                   // 地区代码
   "item_count": 20,                              // items 数组长度
   "schema_version": "1.0",                       // schema 版本号
   "evidence": {
-    "screenshot": "/path/to/google-trends-screenshot.png",
-    "html_snapshot": "/path/to/google-trends-snapshot.html"
+    "collected_by": "admin-trend-extension",     // 采集方（管理员趋势采集插件）
+    "via": "trend-radar-service /latest",         // 拉取来源
+    "revision": "47626f29746da71d"                // 服务端本轮数据 revision
   },
   "items": [
     // TrendItem[]，见下方
@@ -41,18 +42,16 @@
 ```
 <workspace>/outputs/trend-radar/
   2026-05-18/
-    google-trends-US.json       # 当天数据（带 run 元数据包装）
-    google-trends-chinese-US.json
-    pinterest-trends-US.json
-    pinterest-chinese-US.json
+    pinterest-trends-US.json    # 当天各平台数据（带 run 元数据包装），由 pull 落盘
     erank-trend-buzz-US.json
-    google-trends-screenshot.png
-    google-trends-snapshot.html
+    google-trends-US.json
     fit-report.md               # 当天趋势结合点人工判断报告
     fit-report.json             # 结构化报告，供后续 handoff
-  latest.json                   # 最后一个 source 的副本（逐 source 覆盖，非完整周报）
+  latest.json                   # pull 落的服务端合并总览（revision / runs / 跨平台合并 items）
   latest-fit-report.md          # 最新人工判断报告副本
 ```
+
+> 具体有哪几个 `<source>-<GEO>.json` 取决于管理员采集插件本周实际采到的平台（以服务端 `/latest` 的 `runs[]` 为准），不是固定五个。
 
 ## 下游消费
 
@@ -60,7 +59,7 @@
 
 - **新鲜度闸**：`latest.json.generated_at` 在本周内 → 纳入；缺失或过期 → SKIP，不阻塞。
 - **选词主依据**：`latest-fit-report.md`（+ 同日 `{date}/fit-report.json` 的结构化 `items[]`，有则优先）里 `decision ∈ {可做, 观察}` 且有 `candidate_products` 结合点的热词 → 映射成 `Knowledge Cards`（`适用场景=listing`、热词进 `关键词标签`、设 `过期提醒日期`）。沉淀后 listing-catalog step 5.6 按现有 lookup 自动浮出作参考。
-- **证据**：每个词的 `growth_label` / `rank` / `trend_url` 从 fit-report item 的 `evidence[]` 取（**不要**读 `latest.json`——它只是最后一个 source 的副本，非完整周报）。
+- **证据**：每个词的 `growth_label` / `rank` / `trend_url` 从 fit-report item 的 `evidence[]` 取。`latest.json` 现为服务端合并总览（含跨平台合并 `items[].evidence[]`），可作参考，但选词证据仍以 fit-report 为准。
 
 `fit-report.json` 不自动进入 Marketing Brief / Base。人工确认后（或在 business-knowledge 写卡前的 diff 预览处确认），后续流程再把确认项交给 `business-knowledge`。
 
@@ -134,7 +133,7 @@
 | Code | 含义 | 场景 |
 |------|------|------|
 | 0 | 成功 | 正常输出 |
-| 1 | 用法错误 | 参数缺失、未知数据源、不支持的 geo |
-| 2 | 配置/工作区错误 | 找不到工作区 |
-| 3 | 网络错误 | 浏览器启动失败、页面加载超时 |
-| 4 | 解析错误 | CAPTCHA、selector 失败、0 条结果 |
+| 1 | 用法错误 | 参数缺失、未知命令 |
+| 2 | 配置/工作区错误 | 找不到工作区、未配置 `TREND_RADAR_TOKEN` |
+| 3 | 网络/服务错误 | 连不上 trend-radar 服务、鉴权失败（401/403）、非 2xx |
+| 4 | 无数据 | 服务端本周暂无该 geo 的热词（采集插件还没跑成） |
