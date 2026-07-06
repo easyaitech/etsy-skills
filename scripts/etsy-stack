@@ -3,9 +3,18 @@
 set -uo pipefail
 
 CMD_NAME="$(basename "$0")"
-INSTALL_DIR="${ECOMMERCE_SKILLS_HOME:-${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}}"
-CACHE_DIR="${ECOMMERCE_STACK_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ecommerce-skills}"
-HERMES_SKILLS_DIR="${HERMES_SKILLS_DIR:-${HERMES_HOME:-$HOME/.hermes}/skills}"
+
+# 本命令通过 BIN_DIR 里的软链调用；顺着软链找到真实脚本目录，source 共享环境解析
+_src="${BASH_SOURCE[0]}"
+while [[ -L "$_src" ]]; do
+  _dir="$(cd -P "$(dirname "$_src")" && pwd)"
+  _src="$(readlink "$_src")"
+  [[ "$_src" != /* ]] && _src="$_dir/$_src"
+done
+_SCRIPT_DIR="$(cd -P "$(dirname "$_src")" && pwd)"
+# shellcheck source=lib/env.sh
+source "$_SCRIPT_DIR/lib/env.sh"   # INSTALL_DIR / CACHE_DIR / HERMES_SKILLS_DIR
+
 PINTEREST_AUTOPIN_REPO="${PINTEREST_AUTOPIN_REPO:-}"
 PINTEREST_AUTOPIN_DIR="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
 PINTEREST_AUTOPIN_MIN_VERSION="1.4.0"
@@ -282,13 +291,14 @@ case "$cmd" in
 
   list|ls)
     require_install
-    INSTALL_DIR="$INSTALL_DIR" HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" CMD_NAME="$CMD_NAME" python3 -c '
-import json, os
+    INSTALL_DIR="$INSTALL_DIR" HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" CMD_NAME="$CMD_NAME" \
+      PYTHONPATH="$INSTALL_DIR/scripts/lib" python3 -c '
+import os
+from stack_common import load_manifest, managed_set, find_extras
 install_dir = os.environ["INSTALL_DIR"]
 hermes_dir = os.environ["HERMES_SKILLS_DIR"]
 cmd_name = os.environ["CMD_NAME"]
-with open(os.path.join(install_dir, "etsy-stack.json")) as f:
-    manifest = json.load(f)
+manifest = load_manifest(install_dir)
 for skill in manifest["skills"]:
     link = os.path.join(hermes_dir, skill)
     if os.path.islink(link):
@@ -298,13 +308,7 @@ for skill in manifest["skills"]:
     else:
         status = "✗ 未安装"
     print(f"  {status}  {skill}")
-managed = set(manifest["skills"]) | {"shared"}
-extras = []
-if os.path.isdir(hermes_dir):
-    for name in sorted(os.listdir(hermes_dir)):
-        if name in managed or name.startswith("."):
-            continue
-        extras.append(name)
+extras = find_extras(hermes_dir, managed_set(manifest))
 if extras:
     print("")
     print("  非 stack 管理的条目（manifest 之外，可能是 agent 自建或历史遗留）：")
@@ -322,8 +326,10 @@ if extras:
     [[ "${1:-}" == "--quarantine" ]] && quarantine=1
     ws="$(resolve_workspace 2>/dev/null)" || ws=""
     INSTALL_DIR="$INSTALL_DIR" HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" CMD_NAME="$CMD_NAME" \
-      WORKSPACE="$ws" QUARANTINE="$quarantine" python3 - <<'PY'
+      WORKSPACE="$ws" QUARANTINE="$quarantine" \
+      PYTHONPATH="$INSTALL_DIR/scripts/lib" python3 - <<'PY'
 import json, os, shutil, time, sys, hashlib
+from stack_common import load_manifest, managed_set, find_extras
 
 install_dir = os.environ["INSTALL_DIR"]
 hermes_dir = os.environ["HERMES_SKILLS_DIR"]
@@ -331,17 +337,10 @@ cmd_name = os.environ["CMD_NAME"]
 workspace = os.environ.get("WORKSPACE", "")
 quarantine = os.environ.get("QUARANTINE") == "1"
 
-with open(os.path.join(install_dir, "etsy-stack.json")) as f:
-    manifest = json.load(f)
-managed = set(manifest["skills"]) | {"shared"}
+manifest = load_manifest(install_dir)
 
 # 1) 技能目录：找 manifest 之外的非托管条目（agent 自建写入会落在这里）
-extras = []
-if os.path.isdir(hermes_dir):
-    for name in sorted(os.listdir(hermes_dir)):
-        if name in managed or name.startswith("."):
-            continue
-        extras.append(name)
+extras = find_extras(hermes_dir, managed_set(manifest))
 
 print(f"技能目录：{hermes_dir}")
 if not extras:
