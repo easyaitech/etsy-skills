@@ -1,6 +1,6 @@
 ---
 name: pinterest-autopin
-description: Pinterest 发布**适配器**：把电商商品 + 素材变体 + 品牌底座组装成 Pinterest pin，并通过 yanggedianzhang 服务器控制面 + 浏览器插件执行。Hermes 只负责判断、生成文案、调服务器工具接口，不持 Chrome profile、不跑 Playwright、不持队列、不跑自动巡检（自动发布的巡检/锁/重试归 ECS dispatch，T5；本 skill 只做组 pin + 用户手动发某条）。三种触发：(1) "接 Pinterest / 配置 pin 流水线"——接通服务器工具 + 浏览器插件 + 店铺总 Base 内 `社媒发布队列` 表；(2) "给 SKU 出 pin / 写 pin 文案 / 排一条 pin"——读 BRAND + `Products 商品` 表 + `Asset Variants 派生素材` 表（Pinterest 2:3 变体，缺则反向请求 assets-library 模式 E 派生），组一条 `社媒发布队列`（平台=Pinterest）记录，平台专属字段走 `PinterestExt` typed schema；(3) "发 pin / 测试 pin / publish"——创建 test job，用户目视确认后 confirm-publish 转 final，回写状态。每次只处理一条。
+description: Pinterest 发布**适配器**：把电商商品 + 素材变体 + 品牌底座组装成 Pinterest pin，并通过 yanggedianzhang 服务器控制面 + 浏览器插件执行。Hermes 只负责判断、生成文案、调服务器工具接口、把队列行标记成自动发布，不持 Chrome profile、不跑 Playwright、不持队列、不自己跑巡检定时器（自动发布的巡检/锁/重试循环归 ECS dispatch，T5；Hermes 只负责组 pin、手动发某条、以及把行标成 `自动发布=true` 交给 dispatch）。四种触发：(1) "接 Pinterest / 配置 pin 流水线"——接通服务器工具 + 浏览器插件 + 店铺总 Base 内 `社媒发布队列` 表；(2) "给 SKU 出 pin / 写 pin 文案 / 排一条 pin"——读 BRAND + `Products 商品` 表 + `Asset Variants 派生素材` 表（Pinterest 2:3 变体，缺则反向请求 assets-library 模式 E 派生），组一条 `社媒发布队列`（平台=Pinterest）记录，平台专属字段走 `PinterestExt` typed schema；(3) "发 pin / 测试 pin / publish"——创建 test job，用户目视确认后 confirm-publish 转 final，回写状态；(4) "开启自动发布 / 自动发这几条 / 到点自动发"——把已审核的行标成 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给已在生产运行的 ECS dispatch 无人值守发布（dispatch 直发、无逐条人工确认闸）。每次只处理一条。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
@@ -14,6 +14,10 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 3. **现有浏览器插件**：在租户自己的 Chrome 登录态里打开 Pinterest、填表、上传服务器给的素材，并把结果回传服务器。
 
 它可以被用户直接触发，也可以作为 `social-publisher` 的 Pinterest adapter 被调用。跨平台 `社媒发布队列` 的 source of truth 仍在 `publish-composer` / `social-publisher`；本 skill 只负责 `平台 = Pinterest` 行的语义准备、服务器 job 创建和结果回写。
+
+**两种发布路径（Hermes 都能走，机器不同）**：
+- **手动发某条（模式 C）**：Hermes 亲自调 `POST /api/tools/pinterest/jobs` 建 test job → 用户目视确认 → `confirm-publish` 转 final。逐条人工把关，适合首发 / 拿不准的内容。
+- **无人值守自动发布（模式 D）**：Hermes **不亲自调发布端点**，只把已审核的行标成 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给**已在 yanggedianzhang 生产常驻运行的 ECS dispatch**（约每分钟扫一轮）自动建 publish job、浏览器插件真发、结果回写。**dispatch 到点直发、没有逐条人工确认闸**——所以只在内容确定无误后才标 `自动发布=true`（详见模式 D 的红线）。Hermes 依然不跑定时器、不持队列，只负责「把料放上传送带」。
 
 支持的队列模型：
 - **单图 pin**：当前服务器工具接口的推荐路径。
@@ -34,9 +38,9 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ---
 
-## 前置就绪检查（Mode B / C 入口守卫）
+## 前置就绪检查（Mode B / C / D 入口守卫）
 
-用户触发 Mode B 或 Mode C 时，在执行任何业务逻辑之前，**静默**按编号顺序逐项检查。任何一项失败即停止后续检查，按失败话术回复，并提议进入 Mode A 或让服务器返回安装 / 升级提示。
+用户触发 Mode B、Mode C 或 Mode D 时，在执行任何业务逻辑之前，**静默**按编号顺序逐项检查。任何一项失败即停止后续检查，按失败话术回复，并提议进入 Mode A 或让服务器返回安装 / 升级提示。Mode D（开启自动发布）额外依赖 ECS dispatch 已开启 + 队列表含 dispatch 必需列，见模式 D 的「前提」清单。
 
 | # | 检查项 | 怎么检查 | 失败时怎么说 |
 |---|--------|----------|-------------|
@@ -70,7 +74,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ---
 
-## 三种执行模式
+## 四种执行模式
 
 ### 模式 A：接入服务器工具 + 浏览器插件（首次接入 Pinterest）
 
@@ -140,6 +144,33 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 > **不替用户跳过 test 阶段**——首次发某 board / 首次用某素材尺寸时，test 阶段的目视检查能拦下裁切错位、文案截断、board 选错等问题。用户明确说"已经测过了，直接 final"才能跳。
 
+### 模式 D：开启自动发布（把行交给 ECS dispatch 无人值守发）
+
+**进入条件**：
+- 用户说"开启自动发布 / 自动发这几条 / 到点自动发 / 排好了就自动发布"
+- **前置就绪检查全部通过**；未通过则停下引导，不继续
+- 目标行已是 `平台 = Pinterest` 且**内容已审核**（`标题` / `链接` / `Board (Pinterest)` / `Alt Text (EN)` 齐全、`关联素材` 已授权且能被服务器解析为真实图 file token）
+
+**这条路和模式 C 的根本区别**：模式 C 是 Hermes 亲自调服务器发布端点、逐条人工确认；模式 D 是 Hermes **只改 Base 字段**，把行标成 dispatch 的合格候选，**之后不再经手**——ECS dispatch（yanggedianzhang 生产已常驻运行，约每分钟一轮）会自动建 publish job、浏览器插件真发、结果回写。**dispatch 到点直发、不停在任何人工确认闸**（当前部署无逐条目视确认）。所以标记 = 授权无人值守发到真 Pinterest，务必内容确定无误才标。
+
+**执行步骤**：
+1. 用 `lark-base` 取目标行，按模式 C §0 校验清单确认内容与素材授权齐全。**内容没审核完不要标自动发布**——dispatch 不会替你把关。
+2. **整篇展示**给用户「即将标记为自动发布的行 + 计划发布时间」，明确告诉用户"标记后约 1 分钟内会自动发到真实 Pinterest，中途不再问你"，等用户确认。
+3. 用户确认后，用 `lark-base` 把这一行改成 dispatch 的合格候选（三个字段，diff 预览 → 落盘）：
+   - `自动发布` = **勾选（true，复选框字段）**
+   - `状态` = `已批准`（dispatch 的入口状态；`草稿 / 待审` 不会被自动发）
+   - `计划发布时间` = **留空 = 尽快发**（下一轮 tick 就发）；要排期就填未来时间（飞书**日期时间**字段最稳，或文本用带时区的 ISO 如 `2026-07-08T21:30:00+08:00`）。**不要填 dispatch 解析不了的自然语言**（如"下周一"）——解析失败它会记事件日志跳过、不发。
+   - 其余（`外部队列 ID` / `执行锁` / `发布尝试次数` 等执行列）**留空不填**，dispatch 自己写。
+4. 落盘后告诉用户：已排入自动发布，dispatch 会在到点后自动发；进度看该行 `状态`（已批准→发布中→已发）和 `事件日志` 列。**Hermes 到此为止，不再轮询、不再确认**。
+5. 若用户想撤回：在 dispatch 领取前（`状态` 仍是 `已批准` 且 `执行锁` 为空）把 `自动发布` 取消勾选或 `状态` 改回 `待审` 即可；已进 `发布中`（`执行锁` 非空）说明 dispatch 正在处理，让位不抢。
+
+**模式 D 的前提（缺一不发，要如实告诉用户）**：
+- **ECS dispatch 已由运维开启**（服务端配了 `PUBLISH_DISPATCH_POLL_MS`）。yanggedianzhang 生产当前**已开启**；若换部署没开，标了也不会自动发，得让运维开。
+- **浏览器插件在线**：插件带 `pinterest` capability、租户 Chrome 开着且已登录 Pinterest。dispatch 只建 job，真正点发布的是插件——插件离线则 job 排着发不出，最终按租约判死。
+- **该租户 `社媒发布队列` 表含 dispatch 要求的全部执行列**（尤其 `外部队列 ID` / `执行锁` / `下次重试时间` / `事件日志` / `失败原因分类`，逐字对齐）。缺列 dispatch 会 fail-closed 跳过**整个租户**且不报错到对话——见 `references/publishing-flow.md` § 自动发布路径的建表校验。
+
+> **一次只标一条**——和模式 B/C 一致，不批量勾选。批量让用户重复触发。
+
 ---
 
 ## 写入前的硬性约束
@@ -155,7 +186,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **`社媒发布队列` 表写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘。
 - **final 发布前必须经过 test**：除非用户明确豁免。
 - **发布失败不盲目重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入。
-- **不在本 skill / Hermes 跑自动发布 cron**：自动发布的巡检 / backlog 恢复 / 重试 / 单写者锁归 ECS 常驻 dispatch（T5，dormant-by-default）。本 skill 是 Pinterest **adapter**：只做"组一条 pin（模式 B）"和"用户手动发某条（模式 C）"，不持队列、不跑定时器。
+- **不在本 skill / Hermes 跑自动发布 cron / 定时器**：自动发布的巡检 / backlog 恢复 / 重试 / 单写者锁归 ECS 常驻 dispatch（T5，需运维显式开启 `PUBLISH_DISPATCH_POLL_MS`；yanggedianzhang 生产已开启）。Hermes 在自动发布里的**唯一职责是模式 D 的标记**（把行标成 `自动发布=true`+`已批准`+`计划发布时间`），标完就交出去——绝不在 Hermes 侧模拟巡检、重试、锁或轮询发布结果。本 skill 是 Pinterest **adapter**：组 pin（模式 B）、手动发某条（模式 C）、开启自动发布（模式 D），不持队列、不跑定时器。
+- **标自动发布前内容必须审核完**：模式 D 的 `自动发布=true` 是"授权无人值守发到真 Pinterest"，dispatch 到点直发、无逐条确认闸。字段不全 / 素材未授权 / 文案没定稿的行**绝不标自动发布**。
 - **Pinterest 库存提醒必须分库存独立触发**：品牌/内容型 pin 库存、商品/礼物型 pin 库存是两个不同库存。
 - **多图轮播不拆成多个单图 pin 发**：服务器 / 插件未支持多素材 final 时只能停在草稿或人工发布，不得拆分冒充轮播。
 
@@ -166,7 +198,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **shop-foundation**：组 pin 时用户纠正文案，先判断是 BRAND.md 的语调补充，还是 Pinterest 渠道特有手感；渠道特有内容暂记到 `references/pin-composition.md`。
 - **listing-catalog**：本 skill 只读 `Products 商品` 表，不改商品事实。商品型 pin 的 `链接` 必须来自 `Products 商品` 表 `分享链接`。
 - **publish-composer**（发布队列 owner）：跨平台 `社媒发布队列` 的 source of truth 在 composer。本 skill 作为 Pinterest adapter，组 / 消费 `平台 = Pinterest` 行；composition 与 composer 同一张表、平台专属字段走 `PinterestExt`。
-- **social-publisher / ECS dispatch**：自动发布（到点 / 巡检 / 重试）归 ECS dispatch（T5，dormant-by-default），social-publisher 是薄触发。本 skill 不被 cron 唤醒；用户手动发某条走模式 C。Pinterest pin 即 `平台 = Pinterest` 行，成功/失败一次回写本行。
+- **social-publisher / ECS dispatch**：自动发布的循环（到点 / 巡检 / 重试 / 锁）归 ECS dispatch（T5，需运维开 `PUBLISH_DISPATCH_POLL_MS`；yanggedianzhang 生产已开），social-publisher 是薄触发。本 skill 不被 cron 唤醒；手动发某条走模式 C，开启无人值守自动发布走模式 D（只标行、不经手发布）。Pinterest pin 即 `平台 = Pinterest` 行，成功/失败由 dispatch / adapter 一次回写本行。
 - **assets-library**：本 skill 只引用 `Asset Variants 派生素材` 的 Pinterest 规格变体；缺变体反向请求模式 E 派生（裁切+清理）。**本 skill 不裁切/不清理图片**。未授权 UGC 提示先回 assets-library / orders-customers 拿授权。
 - **orders-customers**：UGC 类素材的「公开授权」由 orders-customers 走客户沟通完成；本 skill 只消费已授权的结果。
 - **image-synth**：模式 B 候选池空时反向触发 image-synth 模式 B；目标平台 Pinterest 1000x1500；image-synth 出图 + QA + 入库后回到本 skill 继续。

@@ -67,11 +67,12 @@ ECS dispatch 常驻 tick 选择的记录条件（本 skill 只需了解、不实
 
 - `自动发布 = true`
 - `状态 = 已批准`
-- `计划发布时间 <= 当前时间`
+- `计划发布时间 <= 当前时间`（留空解析成 0 = 已到点）
 - 未锁（`执行锁` 空）
+- `下次重试时间 <= 当前时间`（不在退避窗口内）
 - 平台 adapter 在 `adapter-registry.md` 中是 `enabled`
 
-dispatch 默认 dormant（`PUBLISH_DISPATCH_POLL_MS` 未配 = 关），且 v1 不自动 confirm-publish（建好 test job 停在待人工确认）。**本 skill 不再实现这套筛选 / 巡检**——写在这里只为说明队列字段语义。
+dispatch 默认 dormant（`PUBLISH_DISPATCH_POLL_MS` 未配 = 关；yanggedianzhang 生产已开启，约 60s 一轮）。合格行 dispatch **直接建 publish job 无人值守发布，无逐条人工确认闸**——人工把关点在「标 `自动发布=true`」那一步（内容审核完才标）。**本 skill 不再实现这套筛选 / 巡检**——写在这里只为说明队列字段语义。
 
 ## Pinterest 行（`平台 = Pinterest`）
 

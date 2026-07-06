@@ -1,6 +1,6 @@
 ---
 name: social-publisher
-description: 社交媒体发布总控层（薄触发）：管 adapter registry + 人工/按需发布 + confirm-publish 人工闸 + 对账。**自动发布的巡检 / 锁 / 重试 / 死信归 ECS 常驻 dispatch（yanggedianzhang publish dispatch，T5），本 skill 不再手搓巡检 / 定时器**。当前真实发布适配器只有 Pinterest（pinterest-autopin，经 yanggedianzhang 服务器 + 浏览器插件执行）；小红书 adapter（xiaohongshu-autopost）后端 + 契约已就绪但 **staged 未对外开放**（只草稿 + 人工对账，不跑真发）；Instagram、TikTok 等 planned/manual-only。未 enabled 的平台不能声称已自动发布。用于用户说“发这条 / 发 Pinterest / publish / 对账发布结果 / 接发布器”等场景。
+description: 社交媒体发布总控层（薄触发）：管 adapter registry + 人工/按需发布（模式 B）+ 开启无人值守自动发布（标 `自动发布=true` 交给 ECS dispatch 直发，标记即人工把关点）+ confirm-publish（手动路径）+ 对账。**自动发布的巡检 / 锁 / 重试 / 死信归 ECS 常驻 dispatch（yanggedianzhang publish dispatch，T5），本 skill 不再手搓巡检 / 定时器**。当前真实发布适配器只有 Pinterest（pinterest-autopin，经 yanggedianzhang 服务器 + 浏览器插件执行）；小红书 adapter（xiaohongshu-autopost）后端 + 契约已就绪但 **staged 未对外开放**（只草稿 + 人工对账，不跑真发）；Instagram、TikTok 等 planned/manual-only。未 enabled 的平台不能声称已自动发布。用于用户说“发这条 / 发 Pinterest / publish / 对账发布结果 / 接发布器”等场景。
 ---
 
 # Social Publisher
@@ -20,7 +20,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，平台配置见 [`shared/platform-config.md`](../shared/platform-config.md)。
 
-> **工具架构**（见 [`shared/tools-architecture.md`](../shared/tools-architecture.md)）：**自动发布的编排硬核（队列巡检 / 单写者锁 / 重试退避 / 死信 / 结果回写）已落到 ECS 常驻控制面（yanggedianzhang 的 publish dispatch，T5）**——本 skill **不再在 Hermes 上手搓巡检 / 锁 / 定时器**。ECS dispatch 默认 dormant（`PUBLISH_DISPATCH_POLL_MS` 未配 = 关），只处理 `自动发布 = true` 的行，且 **v1 不自动 confirm-publish**（保留人工目视确认闸）。本 skill 退成薄触发，只剩四件事：① 配置 adapter registry / 建队列表字段；② **人工 / 按需发布**（用户"发这条"，模式 B）；③ **confirm-publish 人工闸**（dispatch 建好 test job 停在待确认，用户说"发吧"才推进）；④ 对账（模式 D）。Base 是 SoT；`执行锁` 字段现由 ECS dispatch 持有，skill 侧人工发布前要避让（见模式 B）。登录 / 凭据红线见 §禁区。
+> **工具架构**（见 [`shared/tools-architecture.md`](../shared/tools-architecture.md)）：**自动发布的编排硬核（队列巡检 / 单写者锁 / 重试退避 / 死信 / 结果回写）已落到 ECS 常驻控制面（yanggedianzhang 的 publish dispatch，T5）**——本 skill **不再在 Hermes 上手搓巡检 / 锁 / 定时器**。ECS dispatch 默认 dormant（`PUBLISH_DISPATCH_POLL_MS` 未配 = 关；**yanggedianzhang 生产已开启，约 60s 一轮**），只处理 `自动发布 = true` 的行，合格行**直接建 publish job 无人值守直发、无逐条人工确认闸**（人工把关点前移到「标 `自动发布=true`」那一下）。本 skill 退成薄触发，只剩四件事：① 配置 adapter registry / 建队列表字段；② **人工 / 按需发布**（用户"发这条"，模式 B）；③ **开启自动发布**：内容审核完把行标 `自动发布=true` + `已批准` + `计划发布时间` 交给 dispatch 直发（对 Pinterest 走 `pinterest-autopin` 模式 D）；手动路径的 test → confirm-publish 仍在模式 B；④ 对账。Base 是 SoT；`执行锁` 字段现由 ECS dispatch 持有，skill 侧人工发布前要避让（见模式 B）。登录 / 凭据红线见 §禁区。
 
 ---
 
@@ -96,15 +96,15 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 **自动发布的巡检 / 单写者锁 / 重试退避 / 死信 / 结果回写已归 ECS 常驻控制面**（yanggedianzhang 的 publish dispatch，T5 落地，commit 经 PR 合并）。**本 skill 不再跑巡检、不再被定时任务唤醒做发布、不再手搓 `执行锁` / 重试。**
 
 ECS dispatch 的行为（本 skill 只需知道、不实现）：
-- 常驻 tick 扫 `社媒发布队列`：`自动发布 = true` AND `状态 = 已批准` AND `计划发布时间 ≤ now` AND 未锁。
-- 抢单写者锁 → 建 test job（幂等键 `tenantId:intentId#aN` 去重，跨重启防重复发）→ 回写 `状态 = 发布中`。
-- **v1 不自动 confirm-publish**：test 建好后停在待人工确认（保留 publishing-flow.md 的目视确认闸）。
+- 常驻 tick 扫 `社媒发布队列`：`自动发布 = true` AND `状态 = 已批准` AND `计划发布时间 ≤ now`（留空=已到点）AND 未锁 AND `下次重试时间 ≤ now`。
+- 抢单写者锁 → **直接建 publish job**（`stage=publish` / `ready_for_publish`，幂等键 `tenantId:intentId#aN#内容hash` 去重，跨重启防重复发）→ 回写 `状态 = 发布中`、`外部队列 ID = jobId`。
+- **无逐条人工确认闸**：dispatch 建的是 publish job，浏览器插件领到即真发到平台，**不停在 test / 待确认**。人工把关点前移到「标 `自动发布=true`」那一下——标记 = 授权无人值守直发（当前 yanggedianzhang 部署的实际行为）。
 - 失败按分类退避重试 / 死信；插件掉线租约回收。
-- **默认 dormant**：`PUBLISH_DISPATCH_POLL_MS` 未配 = 关。要真跑自动发布，由运维显式开启 ECS dispatch，不在本 skill 侧配定时器。
+- **默认 dormant**：`PUBLISH_DISPATCH_POLL_MS` 未配 = 关；**yanggedianzhang 生产已配（约 60s 一轮）= 开启**。换部署要真跑自动发布，由运维显式开启，不在本 skill 侧配定时器。
 
-**本 skill 在自动路径里的唯一职责 = confirm-publish 人工闸**：dispatch 建好的 test job 停在待确认时，用户目视小红书 / Pinterest 发布页后说“发吧 / publish” → 本 skill（或用户）触发对应 adapter 的 confirm-publish（见模式 B 的 confirm 步骤），dispatch 不替用户拍这一下。
+**本 skill 在自动路径里的职责 = 帮用户把行标成 dispatch 合格候选（人工把关点）**：内容审核完后，用户说“开启自动发布 / 到点自动发” → 本 skill（对 Pinterest 走 `pinterest-autopin` 模式 D）把行标 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给 dispatch 直发。**标记即授权直发，标前必须确认内容无误**——dispatch 不会再问。
 
-> 不要在本 skill 里重新实现巡检 / 定时器 / 锁——那会和 ECS dispatch 抢同一批行、双写冲突。自动发布没开启（dispatch dormant）时，就是没有自动发布，**不回退手搓巡检**；用户要发就走模式 B 人工发布。
+> 不要在本 skill 里重新实现巡检 / 定时器 / 锁——那会和 ECS dispatch 抢同一批行、双写冲突。dispatch 未开启（dormant）时就是没有自动发布，**不回退手搓巡检**；用户要发就走模式 B 人工发布。
 
 ---
 

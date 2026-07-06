@@ -53,6 +53,8 @@
 | `任务 ID`（主键） | 格式 `PIN-{YYYYMMDD}-{3 位序号}`，即旧 `pin_id` |
 | `平台` | `Pinterest` |
 | `状态` | 草稿 / 待审 / 已批准 / 发布中 / 已发 / 失败 / 跳过 / 手动已发（与 [`base-schema.md` 表 2 状态机](../../publish-composer/references/base-schema.md) 一致；旧 `待发 / 待复核 / 重试` 已废，`待发→已批准`、失败后待人工核对停 `失败`、重试是 `失败→发布中` 的转移而非状态） |
+| `自动发布` | 复选框，默认 false。勾选（true）= 授权 ECS dispatch 无人值守发布该行（模式 D）。只在内容审核完、素材已授权时勾——dispatch 到点直发、无逐条人工确认闸。非自动发布行留 false，走模式 C 手动发 |
+| `计划发布时间` | 自动发布行的到点闸。**留空 = 尽快发**（服务端把空解析成 0 = 已到点，下一轮 tick 就发）；排期填未来时间（飞书日期时间字段最稳，或文本带时区 ISO `...+08:00`）。**非空但格式解析不了**（自然语言）→ dispatch 跳过不发，等人工改格式 |
 | `发布类型` | `单图`（1 张）或 `多图轮播`（2-5 张，Pinterest carousel pin） |
 | `关联 SKU` | 关联 `Products 商品` 表；用于追溯 SKU + record_id + `平台商品 ID`（如 Etsy Listing ID / ASIN / item_id）；`链接` 另从 `Products 商品` 表 `分享链接` 读取 |
 | `关联素材` | 关联 `Asset Variants 派生素材` 表的 Pinterest 规格变体（**非 canonical 原图**），**允许多值**；单图关联 1 条，轮播关联 2-5 条；发布顺序以 `发布素材` 行顺序为准 |
@@ -65,7 +67,7 @@
 | `最后尝试时间` | 每次真实发布 / 重试后更新 |
 | `失败原因分类` | 单选，结构化：`会话过期 / 插件未装 / 限速 / DOM漂移 / 平台拒绝 / 网络 / 其他`（与 [`base-schema.md` 表 2 执行状态列](../../publish-composer/references/base-schema.md) 对齐，喂重试与排查） |
 | `失败原因` | 原始失败记录的简短原文（截断到 100 字符）；分类走 `失败原因分类` |
-| `ECS job ID` | 后端 publish-service / 服务器返回的 `jobId`（旧称「外部队列 ID」，已统一为本名） |
+| `ECS job ID` | 后端 publish-service / 服务器返回的 `jobId`。⚠️ **ECS dispatch 运行时读写的实际列名是 `外部队列 ID`**（非本名）——启用自动发布（模式 D）的租户，其表这一列必须叫 `外部队列 ID`，否则 dispatch 的 schema 守卫认为缺列、fail-closed 跳过整个租户。手动模式 C 由 Hermes 自己写此列、名称影响小；自动发布务必对齐 `外部队列 ID`。文档名与运行时名的漂移是已知遗留，见 CHANGELOG |
 
 > 暂不把「同步 Board」列为发布必需字段。当前发布器一次只创建一个 Pinterest Pin，并回写一个 `发布 URL`；如果未来要同一内容同步多个 board，需要给每个发布目标单独记录结果。
 
@@ -143,6 +145,7 @@ if (assets.length > 1 && !serverSupportsMultiAssetPinterestJobs) {
 - **Pinterest** — `平台 = Pinterest`，按创建时间倒序（Pinterest 行总入口）
 - **Pinterest 草稿** — `平台 = Pinterest` 且 `状态 = 草稿`
 - **Pinterest 待发** — `平台 = Pinterest` 且 `状态 IN (待审, 已批准)`（模式 C 取候选）
+- **Pinterest 自动发布** — `平台 = Pinterest` 且 `自动发布 = true` 且 `状态 IN (已批准, 发布中, 失败)`，按 `计划发布时间` 升序（模式 D 已交给 dispatch 的行；盯这个视图看无人值守发布进度）
 - **Pinterest 已发** — `平台 = Pinterest` 且 `状态 IN (已发, 手动已发)`，按发布时间倒序
 - **Pinterest 失败** — `平台 = Pinterest` 且 `状态 = 失败`
 - **Pinterest 轮播** — `平台 = Pinterest` 且 `发布类型 = 多图轮播`（快速查看所有多图 pin）

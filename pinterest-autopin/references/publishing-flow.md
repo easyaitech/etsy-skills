@@ -61,9 +61,11 @@ Hermes 调用服务器工具接口：
 
 ```http
 POST https://yanggedianzhang.com/api/tools/pinterest/jobs
-Authorization: Bearer <HERMES_TOOL_SECRET>
+Authorization: Bearer <Hermes 工具令牌（本租户派生令牌，provisioning 时注入网关，Hermes 不手写/不回显）>
 Content-Type: application/json
 ```
+
+> **鉴权**：`Authorization` 用的是**按租户派生的 Hermes 工具令牌**（服务端 `HMAC(master, "hermes-tool:"+tenantId)`），provisioning 时只把「本租户」那一份注入 Hermes 网关，master 仅服务端持有。skill 不硬编码、不读取、不回显这个令牌——按 [`shared/tools-architecture.md`](../../shared/tools-architecture.md) §接口形态，鉴权由运行时/网关处理，skill 只写「调哪个入口、传什么」。若返回 `401 UNAUTHORIZED` / `503 HERMES_TOOL_DISABLED`，是服务端配置问题，提示管理员，别自行编造令牌。
 
 请求体：
 
@@ -176,7 +178,7 @@ Hermes 调用：
 
 ```http
 POST https://yanggedianzhang.com/api/tools/pinterest/jobs/confirm-publish
-Authorization: Bearer <HERMES_TOOL_SECRET>
+Authorization: Bearer <Hermes 工具令牌（同 [1]，本租户派生令牌）>
 Content-Type: application/json
 ```
 
@@ -246,6 +248,61 @@ Authorization: Bearer <browserToolToken>
 > `状态` 是事件日志的投影（见 [`../../publish-composer/references/base-schema.md` § 表 2 状态机](../../publish-composer/references/base-schema.md)）；回写 `状态` 时如该行有 `事件日志` 列，追加一条 `who=adapter / from→to / ts / reason` 转移记录，不裸改状态。
 
 回写前按通用协议列出改动让用户确认。
+
+---
+
+## 自动发布路径（模式 D：Hermes 只标行，dispatch 无人值守发）
+
+上面 [1]–[6] 是**手动路径**（模式 C）：Hermes 亲自调 `POST /api/tools/pinterest/jobs`、逐条人工 confirm-publish。**自动发布路径不走这些端点**——Hermes 一个发布端点都不调，只用 `lark-base` 改 3 个字段，剩下全由 **ECS dispatch** 接管。
+
+### 谁在做什么
+
+```text
+Hermes（模式 D）              ECS dispatch（yanggedianzhang 常驻，约 60s 一轮）         浏览器插件
+   │                              │                                                    │
+   ├─ lark-base 标行：            │                                                    │
+   │   自动发布=true              │                                                    │
+   │   状态=已批准                │                                                    │
+   │   计划发布时间=空/未来        │                                                    │
+   │                              ├─ 扫到合格行 → 抢锁(执行锁) → 建 publish job         │
+   │  （到此交出，不再经手）       │   状态→发布中、外部队列 ID=jobId                    │
+   │                              │                                     GET jobs/next?stage=publish
+   │                              │                                     打开 Pinterest 真发 → 回传 resultUrl
+   │                              ├─ 对账：按 job 结果回写 状态=已发/失败、发布 URL      │
+```
+
+### dispatch 的合格条件（Hermes 标行时要凑齐）
+
+dispatch 每轮只挑同时满足以下条件的行（对应服务端 `intentEligibleForDispatch`）：
+
+| 条件 | Hermes 要保证 |
+|---|---|
+| `平台 = Pinterest` | 组 pin 时已定 |
+| `自动发布 = true` | 复选框勾选（服务端按 boolean/`"true"`/`1` 认） |
+| `状态 = 已批准`（入口状态） | 从 `草稿/待审` 推进到 `已批准`；`草稿/待审` 不会被自动发 |
+| `计划发布时间 ≤ 当前` | **留空 = 立即合格**（服务端把空解析成 0 = 已到点）；填未来时间则到点才发 |
+| `执行锁` 为空 | 新行本就空；已被 dispatch 锁（`发布中`）时让位不抢 |
+| `下次重试时间 ≤ 当前` | 新行本就空/为 0；重试退避窗口内的行 dispatch 会等 |
+| 内容齐全：`标题`/`链接`/`Board (Pinterest)`/`Alt Text (EN)` 非空 | 缺字段 dispatch 记事件日志跳过、不发残缺 pin |
+| `关联素材` 能解析出真实图 file token | 素材没进 `Assets 素材池` / 无 file token → dispatch 记「素材解析失败」跳过，绝不发桩图 |
+
+> **`计划发布时间` 格式坑**：留空 = 尽快发。要排期，用飞书**日期时间**字段（直接存 epoch，最稳），或文本用带时区的 ISO（`2026-07-08T21:30:00+08:00`）/ 服务端支持的 `YYYY-MM-DD HH:mm:ss CST`。填了**非空但解析不了**的文本（如"下周一"、"明早"）→ dispatch 记「计划发布时间无法解析」跳过、**不发**，等人工改格式。绝不会把解析失败当"现在就发"。
+
+### 建表校验（启用自动发布前，务必确认表结构）
+
+dispatch 启用前有一道 **schema 守卫**：该租户 `社媒发布队列` 表缺任一必需列，就 **fail-closed 跳过整个租户**（且不会报错到对话，表现为"标了也不发"）。必需列（逐字对齐，服务端 `PUBLISH_REQUIRED_FIELDS`）：
+
+```
+任务 ID · 平台 · 状态 · 计划发布时间 · 自动发布 · 外部队列 ID · 发布尝试次数 ·
+最后尝试时间 · 下次重试时间 · 执行锁 · 失败原因分类 · 发布 URL · 发布时间 ·
+事件日志 · 标题 · 描述 · 链接 · Alt Text (EN) · Board (Pinterest) · 关联素材
+```
+
+> ⚠️ **命名坑（现存漂移）**：dispatch 运行时读的 job id 列名是 **`外部队列 ID`**，不是本 skill schema 文档里写的 `ECS job ID`；执行锁列是 **`执行锁`**（不带 `(lock_token)` 后缀）。**建表 / 补列时必须用 dispatch 的运行时列名**，否则 schema 守卫认为缺列、跳过该租户。已在生产跑通 dispatch 的租户其表已经是对的；新开通 / 手工补表时特别注意。（这个文档命名与运行时的漂移是已知遗留，跟踪见 CHANGELOG。）
+
+### Hermes 标行后不再经手
+
+标完 3 个字段就结束。**不要**再调发布端点、不要轮询 job、不要模拟重试——那些 dispatch 全包了。用户问进度就看该行 `状态`（已批准→发布中→已发/失败）和 `事件日志` 列。撤回：dispatch 领取前（`状态=已批准` 且 `执行锁` 空）取消 `自动发布` 或把 `状态` 改回 `待审` 即可；已 `发布中` 就让位。
 
 ---
 
