@@ -15,5 +15,9 @@
 # Node.js (trend-radar scripts)
 node_modules/
 
+# Python bytecode (scripts/lib import cache)
+__pycache__/
+*.pyc
+
 # Claude Code local session state
 .claude/

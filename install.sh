@@ -27,6 +27,9 @@
 
 set -euo pipefail
 
+# 引导脚本经 `curl … | bash` 在 clone 之前运行，磁盘上还没有 scripts/lib/env.sh，
+# 因此这里保留 INSTALL_DIR / HERMES_SKILLS_DIR 的旧变量兼容映射副本（不能 source）。
+# ⚠️ 改这几行的映射时，请同步 scripts/lib/env.sh（etsy-stack / check-update.sh 的单一事实源）。
 REPO_URL="${ECOMMERCE_SKILLS_REPO:-${ETSY_SKILLS_REPO:-https://github.com/easyaitech/etsy-skills.git}}"
 REF="${ECOMMERCE_SKILLS_REF:-${ETSY_SKILLS_REF:-main}}"
 INSTALL_DIR="${ECOMMERCE_SKILLS_HOME:-${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}}"

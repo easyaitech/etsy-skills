@@ -8,8 +8,11 @@
 
 set -uo pipefail
 
-INSTALL_DIR="${ECOMMERCE_SKILLS_HOME:-${ETSY_SKILLS_HOME:-$HOME/.local/share/etsy-skills}}"
-CACHE_DIR="${ECOMMERCE_STACK_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ecommerce-skills}"
+# 本脚本总以 `bash "$INSTALL_DIR/scripts/check-update.sh"` 真实路径调用，直接取脚本目录 source 共享环境解析
+_SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/env.sh
+source "$_SCRIPT_DIR/lib/env.sh"   # INSTALL_DIR / CACHE_DIR / HERMES_SKILLS_DIR
+
 LAST_CHECK="$CACHE_DIR/last-check"
 LATEST_TAG="$CACHE_DIR/latest-tag"
 LATEST_MAIN="$CACHE_DIR/latest-main"
