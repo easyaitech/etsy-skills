@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### 重构
+- **CLI 脚本去重：抽出 `scripts/lib/env.sh` + `scripts/lib/stack_common.py`**（架构评审候选 C4）。旧 `etsy-* → ecommerce-*` 环境变量兼容映射此前逐字复制在 `install.sh` / `scripts/etsy-stack` / `scripts/check-update.sh` 三处；现由 `scripts/lib/env.sh` 作单一事实源，`etsy-stack` 与 `check-update.sh` 顺软链定位真实脚本目录后 source 之（`install.sh` 是 `curl|bash` 引导、clone 前运行无法 source，保留同款副本 + 同步提示注释）。`list` 与 `doctor` 子命令此前各自内联「加载 manifest + `managed = skills ∪ {shared}` + 枚举非托管条目」的 Python，现统一 import `scripts/lib/stack_common.py`（经 `PYTHONPATH=$INSTALL_DIR/scripts/lib`），消除两者对「什么算托管」产生分歧的隐患。纯脚本重构，行为不变。
+- **删除 `shared/ethos.md`，4 条经营原则内联进 `shared/preamble.md` §经营原则**（架构评审候选 C6）。ethos.md 仅 35 行、且 preamble 已有一行悬空指针；内联后经营原则随每个 skill 都读的 bootstrap 到达，少一次运行时跳转。`shared/tools-architecture.md` 两处引用改指 `preamble.md §经营原则`，README 文件树同步删行（CHANGELOG 历史条目保留不改）。
+
 ### 变更
 - **`trend-radar` 采集上收到管理员浏览器插件，skill 不再本机 Chrome 抓取**：热词采集统一由「管理员趋势采集插件」（`admin-trend-extension`，装在运营方登录态浏览器）完成、回传 ECS 上的 trend-radar 服务；`trend-radar` skill 改为**只从服务读取**。彻底删除本机 Playwright 抓取（`scripts/sources/` 全部数据源、`sources` DataSource 合约、`SERPAPI_KEY` / `*_PROFILE` / `*_CDP_PORT` 登录态依赖、截图/HTML 快照证据、parser / url-builder 单测与 fixtures），移除 `playwright` 依赖。新命令：`trend-fetch pull [--geo]` 从服务 `/latest` 拉回各平台已采热词、落成同结构 per-source JSON（`fit-report` 完全不变，继续读当天目录的 per-source JSON）；旧的 `trend-fetch <source>`（`google-trends` / `pinterest-trends` / `erank-trend-buzz` …）已移除。新增环境变量 `TREND_RADAR_TOKEN`（必需）/ `TREND_RADAR_BASE_URL`（默认公网代理 `https://yanggedianzhang.com/trend-radar`）。`latest.json` 语义从「最后一个 source 的副本」变为「服务端合并总览（revision / runs / 跨平台合并 items）」；同步更新 `business-knowledge/references/trend-radar-intake.md` 对 latest.json 的描述（消费逻辑不变：仍只用 `generated_at` 做新鲜度闸、建卡走 fit-report）。SKILL.md / output-schema.md 同步重写，删除 `source-guide.md`。
 
