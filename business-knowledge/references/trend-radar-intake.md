@@ -18,7 +18,7 @@
 |---|---|---|
 | `<workspace>/outputs/trend-radar/{date}/fit-report.json` | 同一天的**结构化结合点**（`items[]` 带 `decision` / `human_decision` / `candidate_products` / `suggested_angle` / `boundaries` / `evidence`）；`{date}` 取自 `latest.json` 的 `generated_at`。**建卡只用这个**——选词、字段、证据全来自这里 | 建卡主依据（缺则不建卡）|
 | `<workspace>/outputs/trend-radar/latest-fit-report.md` | 最新结合点的人工判断报告（markdown，always-latest 副本）| `{date}/fit-report.json` 取不到时的人读 fallback |
-| `<workspace>/outputs/trend-radar/latest.json` | 原始 run 元数据；**仅用 `generated_at` 做新鲜度闸**。⚠️ latest.json 只是「最后一个 source」的副本（runner 逐 source 覆盖），不是完整周报，**不要**拿它的 items 当完整热词或逐词证据 | 仅新鲜度闸 |
+| `<workspace>/outputs/trend-radar/latest.json` | trend-radar 服务合并总览（`trend-fetch pull` 落盘，含 revision / runs / 跨平台合并 items）；**仅用 `generated_at` 做新鲜度闸**。⚠️ 它的 items 是无店铺结合点的通用热词，**不要**拿来当选词依据或逐词证据——建卡一律走 fit-report | 仅新鲜度闸 |
 
 **新鲜度闸**（承 trend-radar `output-schema.md`）：
 
