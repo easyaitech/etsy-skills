@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+### 新增
+- **上游 Mac mini 本地热修：过期未发 pin 不许自己顺延（pinterest-autopin 硬约束）**：fublessings 部署机上曾就地（未提交）加过一条红线——过期未发的 pin（`自动发布=true`+`状态∈{待发,已批准}`+计划时间<now）**先问用户要不要改回近几天补发，不主动往后推一两周**，并记了用户偏好「积压过期 pin 应尽快补发」。该热修本地未进 git、下次 `ecommerce-stack update` 会被覆盖丢失，现固化进 canonical SKILL.md 硬约束（含"读 `事件日志` 排除租约超时/失败重复行"），与模式 E 第 3 步互为强调。
+
 ### 重构
 - **CLI 脚本去重：抽出 `scripts/lib/env.sh` + `scripts/lib/stack_common.py`**（架构评审候选 C4）。旧 `etsy-* → ecommerce-*` 环境变量兼容映射此前逐字复制在 `install.sh` / `scripts/etsy-stack` / `scripts/check-update.sh` 三处；现由 `scripts/lib/env.sh` 作单一事实源，`etsy-stack` 与 `check-update.sh` 顺软链定位真实脚本目录后 source 之（`install.sh` 是 `curl|bash` 引导、clone 前运行无法 source，保留同款副本 + 同步提示注释）。`list` 与 `doctor` 子命令此前各自内联「加载 manifest + `managed = skills ∪ {shared}` + 枚举非托管条目」的 Python，现统一 import `scripts/lib/stack_common.py`（经 `PYTHONPATH=$INSTALL_DIR/scripts/lib`），消除两者对「什么算托管」产生分歧的隐患。纯脚本重构，行为不变。
 - **删除 `shared/ethos.md`，4 条经营原则内联进 `shared/preamble.md` §经营原则**（架构评审候选 C6）。ethos.md 仅 35 行、且 preamble 已有一行悬空指针；内联后经营原则随每个 skill 都读的 bootstrap 到达，少一次运行时跳转。`shared/tools-architecture.md` 两处引用改指 `preamble.md §经营原则`，README 文件树同步删行（CHANGELOG 历史条目保留不改）。
