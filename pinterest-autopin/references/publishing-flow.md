@@ -51,7 +51,7 @@ Hermes 不运行 Playwright，不打开本地 Chrome profile，不写 `request.j
 8. 关联素材公开授权为 `已授权`，并完成 AI metadata / watermark 清理记录。
 9. 素材已经能由服务器提供给浏览器插件下载。不要把本地绝对路径当成浏览器上传源。
 
-当前已上线的最小服务器接口只接收单条 pin 的 `title` / `description` / `altText` / `link` / `board`。如果目标行是多图轮播，必须先确认服务器和插件已支持多素材 job；否则停在草稿或转人工发布，不要拆成多个单图冒充轮播。
+服务器接口把 `title` / `description` / `altText` / `link` / `board` 当作 Hermes 已确认内容，只校验、保存和传递，不生成或补全文案。多图轮播用有序 `assetFileTokens` / `altTexts` 创建 job；如果目标行素材无法解析为服务器 file token，停在草稿或失败排查，不要拆成多个单图冒充轮播。
 
 ---
 
@@ -80,6 +80,24 @@ Content-Type: application/json
 }
 ```
 
+多图轮播额外带有序素材和 alt text：
+
+```json
+{
+  "tenantId": "tenant_xxx",
+  "title": "A calm gift idea",
+  "description": "A test Pinterest pin.",
+  "altText": "Front view of a handmade ceramic cup on linen.",
+  "altTexts": [
+    "Front view of a handmade ceramic cup on linen.",
+    "Side view showing the glaze and handle."
+  ],
+  "link": "https://example.com/listing/1",
+  "board": "Gift Ideas",
+  "assetFileTokens": ["file_front", "file_side"]
+}
+```
+
 成功响应：
 
 ```json
@@ -93,9 +111,11 @@ Content-Type: application/json
     "title": "...",
     "description": "...",
     "altText": "...",
+    "altTexts": ["..."],
     "link": "...",
     "board": "...",
-    "assetUrl": "/api/browser-tools/jobs/asset?jobId=pin_test_..."
+    "assetUrl": "/api/browser-tools/jobs/asset?jobId=pin_test_...",
+    "assetUrls": ["/api/browser-tools/jobs/asset?jobId=pin_test_...&index=0"]
   }
 }
 ```
@@ -265,7 +285,7 @@ Hermes（模式 D）              ECS dispatch（yanggedianzhang 常驻，约 60
    │   状态=已批准                │                                                    │
    │   计划发布时间=空/未来        │                                                    │
    │                              ├─ 扫到合格行 → 抢锁(执行锁) → 建 publish job         │
-   │  （到此交出，不再经手）       │   状态→发布中、外部队列 ID=jobId                    │
+   │  （到此交出，不再经手）       │   状态→发布中、job id 列=jobId                    │
    │                              │                                     GET jobs/next?stage=publish
    │                              │                                     打开 Pinterest 真发 → 回传 resultUrl
    │                              ├─ 对账：按 job 结果回写 状态=已发/失败、发布 URL      │
@@ -283,22 +303,22 @@ dispatch 每轮只挑同时满足以下条件的行（对应服务端 `intentEli
 | `计划发布时间 ≤ 当前` | **留空 = 立即合格**（服务端把空解析成 0 = 已到点）；填未来时间则到点才发 |
 | `执行锁` 为空 | 新行本就空；已被 dispatch 锁（`发布中`）时让位不抢 |
 | `下次重试时间 ≤ 当前` | 新行本就空/为 0；重试退避窗口内的行 dispatch 会等 |
-| 内容齐全：`标题`/`链接`/`Board (Pinterest)`/`Alt Text (EN)` 非空 | 缺字段 dispatch 记事件日志跳过、不发残缺 pin |
+| 内容齐全：`标题`/`描述`/`链接`/`Board (Pinterest)`/`Alt Text (EN)` 非空 | 缺字段 dispatch 记事件日志跳过、不发残缺 pin |
 | `关联素材` 能解析出真实图 file token | 素材没进 `Assets 素材池` / 无 file token → dispatch 记「素材解析失败」跳过，绝不发桩图 |
 
 > **`计划发布时间` 格式坑**：留空 = 尽快发。要排期，用飞书**日期时间**字段（直接存 epoch，最稳），或文本用带时区的 ISO（`2026-07-08T21:30:00+08:00`）/ 服务端支持的 `YYYY-MM-DD HH:mm:ss CST`。填了**非空但解析不了**的文本（如"下周一"、"明早"）→ dispatch 记「计划发布时间无法解析」跳过、**不发**，等人工改格式。绝不会把解析失败当"现在就发"。
 
 ### 建表校验（启用自动发布前，务必确认表结构）
 
-dispatch 启用前有一道 **schema 守卫**：该租户 `社媒发布队列` 表缺任一必需列，就 **fail-closed 跳过整个租户**（且不会报错到对话，表现为"标了也不发"）。必需列（逐字对齐，服务端 `PUBLISH_REQUIRED_FIELDS`）：
+dispatch 启用前有一道 **schema 守卫**：该租户 `社媒发布队列` 表缺任一必需列，就 **fail-closed 跳过整个租户**（且不会报错到对话，表现为"标了也不发"）。必需列如下；除下面标出的别名列外，其他列名逐字对齐服务端 `PUBLISH_REQUIRED_FIELDS`：
 
 ```
-任务 ID · 平台 · 状态 · 计划发布时间 · 自动发布 · 外部队列 ID · 发布尝试次数 ·
-最后尝试时间 · 下次重试时间 · 执行锁 · 失败原因分类 · 发布 URL · 发布时间 ·
+任务 ID · 平台 · 状态 · 计划发布时间 · 自动发布 · 外部队列 ID 或 ECS job ID · 发布尝试次数 ·
+最后尝试时间 · 下次重试时间 · 执行锁 或 执行锁 (lock_token) · 失败原因分类 · 发布 URL · 发布时间 ·
 事件日志 · 标题 · 描述 · 链接 · Alt Text (EN) · Board (Pinterest) · 关联素材
 ```
 
-> ⚠️ **命名坑（现存漂移）**：dispatch 运行时读的 job id 列名是 **`外部队列 ID`**，不是本 skill schema 文档里写的 `ECS job ID`；执行锁列是 **`执行锁`**（不带 `(lock_token)` 后缀）。**建表 / 补列时必须用 dispatch 的运行时列名**，否则 schema 守卫认为缺列、跳过该租户。已在生产跑通 dispatch 的租户其表已经是对的；新开通 / 手工补表时特别注意。（这个文档命名与运行时的漂移是已知遗留，跟踪见 CHANGELOG。）
+> **字段别名**：job id 列可以叫 `外部队列 ID` 或 `ECS job ID`；执行锁列可以叫 `执行锁` 或 `执行锁 (lock_token)`。dispatch schema 守卫只要求每组别名至少存在一个，并会写回表里实际存在的列。历史表不需要为了改名迁移；新建表按当前 schema 用 `ECS job ID` / `执行锁 (lock_token)` 即可。
 
 ### Hermes 标行后不再经手
 

@@ -9,7 +9,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成 Pinterest pin。发布动作不再由 Hermes 本机的 Playwright / Chrome profile 完成，而是分三层：
 
-1. **Hermes**：读商品、素材、品牌规则，生成 title / description / alt text，调用服务器工具接口。
+1. **Hermes**：读商品、素材、品牌规则，生成 title / description / alt text；模式 B 只写 `社媒发布队列` 草稿，模式 C/D 才把已确定内容交给服务器执行。
 2. **yanggedianzhang 服务器**：校验租户、保存 Pinterest job 状态、加锁、发放素材下载地址、记录 test / final 结果。
 3. **现有浏览器插件**：在租户自己的 Chrome 登录态里打开 Pinterest、填表、上传服务器给的素材，并把结果回传服务器。
 
@@ -19,9 +19,11 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **手动发某条（模式 C）**：Hermes 亲自调 `POST /api/tools/pinterest/jobs` 建 test job → 用户目视确认 → `confirm-publish` 转 final。逐条人工把关，适合首发 / 拿不准的内容。
 - **无人值守自动发布（模式 D）**：Hermes **不亲自调发布端点**，只把已审核的行标成 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给**已在 yanggedianzhang 生产常驻运行的 ECS dispatch**（约每分钟扫一轮）自动建 publish job、浏览器插件真发、结果回写。**dispatch 到点直发、没有逐条人工确认闸**——所以只在内容确定无误后才标 `自动发布=true`（详见模式 D 的红线）。Hermes 依然不跑定时器、不持队列，只负责「把料放上传送带」。
 
+**模式 B 是内容合同，不是后端发布功能**：后端把 `标题` / `描述` / `Alt Text (EN)` / `链接` / `Board (Pinterest)` 当作已确认输入，只校验、传递和记录；缺字段时 fail-closed，不生成、不改写、不补全文案。
+
 支持的队列模型：
-- **单图 pin**：当前服务器工具接口的推荐路径。
-- **多图轮播 pin**：队列表可以表达 2-5 张图，但只有当服务器工具和浏览器插件明确支持多素材 job 时才能进入 final；否则只建草稿，不声称已经自动发布。
+- **单图 pin**：1 张服务器可授权下载的素材。
+- **多图轮播 pin**：2-5 张服务器可授权下载的素材，按 `发布素材` / `关联素材` 顺序发布；每张图的 alt text 通过 `Alt Text (EN)` 的 `---` 分段对应。
 
 **`社媒发布队列` 表核心模型**：一条 Base 记录 = 一个 Pinterest Pin。发布成功后这一行只回写一个 `发布 URL`。
 
@@ -112,6 +114,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 4. 读 BRAND.md + SHOP.md + BRAND_MARKETING.md + MARKETING_PLATFORM.md，按 `references/pin-composition.md` 输出草稿（平台专属字段走 `PinterestExt`）：
    - 通用列：title（description）、link、关联变体 + 素材顺序
    - `平台扩展 (typed)` = `PinterestExt{ board_id, alt_text, dominant_color? }`，过 validator，不塞自由 JSON
+   - 这些内容字段由 Hermes 一次性生成和沟通确认；后端不会替缺失字段补文案
 5. **整篇展示**给用户，等用户确认或调整。
 6. 用户确认后，按 `references/pin-queue-base-schema.md` § 录入约定，用 `lark-base` 在 `社媒发布队列` 表写一行（状态 = `草稿`，组好后进 `待审`），`关联素材` 指向变体（非 canonical 原图）。不要把本地绝对路径当发布输入；图片由服务器 asset 流程提供下载。
 
@@ -149,7 +152,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **进入条件**：
 - 用户说"开启自动发布 / 自动发这几条 / 到点自动发 / 排好了就自动发布"
 - **前置就绪检查全部通过**；未通过则停下引导，不继续
-- 目标行已是 `平台 = Pinterest` 且**内容已审核**（`标题` / `链接` / `Board (Pinterest)` / `Alt Text (EN)` 齐全、`关联素材` 已授权且能被服务器解析为真实图 file token）
+- 目标行已是 `平台 = Pinterest` 且**内容已审核**（`标题` / `描述` / `链接` / `Board (Pinterest)` / `Alt Text (EN)` 齐全、`关联素材` 已授权且能被服务器解析为真实图 file token）
 
 **这条路和模式 C 的根本区别**：模式 C 是 Hermes 亲自调服务器发布端点、逐条人工确认；模式 D 是 Hermes **只改 Base 字段**，把行标成 dispatch 的合格候选，**之后不再经手**——ECS dispatch（yanggedianzhang 生产已常驻运行，约每分钟一轮）会自动建 publish job、浏览器插件真发、结果回写。**dispatch 到点直发、不停在任何人工确认闸**（当前部署无逐条目视确认）。所以标记 = 授权无人值守发到真 Pinterest，务必内容确定无误才标。
 
@@ -167,7 +170,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **模式 D 的前提（缺一不发，要如实告诉用户）**：
 - **ECS dispatch 已由运维开启**（服务端配了 `PUBLISH_DISPATCH_POLL_MS`）。yanggedianzhang 生产当前**已开启**；若换部署没开，标了也不会自动发，得让运维开。
 - **浏览器插件在线**：插件带 `pinterest` capability、租户 Chrome 开着且已登录 Pinterest。dispatch 只建 job，真正点发布的是插件——插件离线则 job 排着发不出，最终按租约判死。
-- **该租户 `社媒发布队列` 表含 dispatch 要求的全部执行列**（尤其 `外部队列 ID` / `执行锁` / `下次重试时间` / `事件日志` / `失败原因分类`，逐字对齐）。缺列 dispatch 会 fail-closed 跳过**整个租户**且不报错到对话——见 `references/publishing-flow.md` § 自动发布路径的建表校验。
+- **该租户 `社媒发布队列` 表含 dispatch 要求的全部执行列**（尤其 job id 列 `外部队列 ID` 或 `ECS job ID`、锁列 `执行锁` 或 `执行锁 (lock_token)`、`下次重试时间`、`事件日志`、`失败原因分类`）。缺列 dispatch 会 fail-closed 跳过**整个租户**且不报错到对话——见 `references/publishing-flow.md` § 自动发布路径的建表校验。
 
 > **一次只标一条**——和模式 B/C 一致，不批量勾选。批量让用户重复触发。
 
@@ -218,7 +221,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **不在本 skill / Hermes 跑自动发布 cron / 定时器**：自动发布的巡检 / backlog 恢复 / 重试 / 单写者锁归 ECS 常驻 dispatch（T5，需运维显式开启 `PUBLISH_DISPATCH_POLL_MS`；yanggedianzhang 生产已开启）。Hermes 在自动发布里的**唯一职责是模式 D 的标记**（把行标成 `自动发布=true`+`已批准`+`计划发布时间`），标完就交出去——绝不在 Hermes 侧模拟巡检、重试、锁或轮询发布结果。本 skill 是 Pinterest **adapter**：组 pin（模式 B）、手动发某条（模式 C）、开启自动发布（模式 D），不持队列、不跑定时器。
 - **标自动发布前内容必须审核完**：模式 D 的 `自动发布=true` 是"授权无人值守发到真 Pinterest"，dispatch 到点直发、无逐条确认闸。字段不全 / 素材未授权 / 文案没定稿的行**绝不标自动发布**。
 - **Pinterest 库存提醒必须分库存独立触发**：品牌/内容型 pin 库存、商品/礼物型 pin 库存是两个不同库存。
-- **多图轮播不拆成多个单图 pin 发**：服务器 / 插件未支持多素材 final 时只能停在草稿或人工发布，不得拆分冒充轮播。
+- **多图轮播不拆成多个单图 pin 发**：服务器 / 插件按多素材 job 发布轮播；如果某个租户素材无法解析或插件不满足版本要求，就停在草稿/失败排查，不得拆分冒充轮播。
 - **不用 Mac mini cron / Hermes 本地定时器推断自动发布状态**：无人值守自动发布跑在 ECS dispatch，Hermes / Mac mini 看不到它；旧 Mac mini 发布 cron 已在切 ECS 时**有意暂停**，与发布是否工作无关。回答"发成功没 / 为什么没发"只能读 `社媒发布队列` 行 + `事件日志`（模式 E）；无 Base 证据不下因果结论（尤其不说"某天被暂停了 / 在等恢复"）、不据此改排期。
 - **过期未发的 pin 不许自己顺延**：发现已过计划时间仍没发的 pin（`自动发布=true` + `状态 ∈ {待发, 已批准}` + `计划发布时间 < now(CST)`），**先问用户要不要改回近几天补发，等用户定**——绝不主动把过期 pin 改到一两周后（那只会把积压越推越远）。**用户偏好：积压的过期 pin 应尽快补发，不是往后拖。** 排查前先读 `事件日志` 排除 dispatch 已判租约超时 / 失败重复的行，别把这些当"待补发"。完整判读与核查步骤见模式 E。
 
