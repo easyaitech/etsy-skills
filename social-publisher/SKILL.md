@@ -49,7 +49,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 
 1. 解析工作区根，读取 `COMMERCE_PLATFORM.md` 和 `MARKETING_PLATFORM.md`（如存在），并按 `shared/store-base-architecture.md` 定位店铺总 Base。
 2. 读 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md)，确认店铺总 Base 内的 `社媒发布队列` 表是否存在。
-3. 如果发布任务表缺少以下字段，列出字段清单给用户确认后再补：`自动发布`、`发布适配器`、`ECS job ID`、`发布尝试次数`、`最后尝试时间`、`执行锁 (lock_token)`、`失败原因分类`。
+3. 如果发布任务表缺少自动发布运行字段，列出字段清单给用户确认后再补：`自动发布`、`发布适配器`、`外部队列 ID`（或 `ECS job ID`，二选一）、`发布尝试次数`、`最后尝试时间`、`下次重试时间`、`执行锁`（或 `执行锁 (lock_token)`，二选一）、`失败原因分类`、`事件日志`。不要默认补 `素材顺序` / `封面素材` / `标签` / `备注` / 平台扩展类字段；补完后按 `publish-composer` 的默认视图字段隐藏锁、重试、外部队列 ID、事件日志等技术列。
 4. 读 [`references/adapter-registry.md`](references/adapter-registry.md)，展示当前适配器状态：
    - Pinterest = enabled，真实发布走 `pinterest-autopin` adapter → 服务器工具 → 浏览器插件
    - 小红书 = staged（后端 + 契约就绪，但**未对外开放**），adapter `xiaohongshu-autopost` 已建；当前只允许建草稿 + 人工发布清单 + 人工回填，**不跑真发**。对外放行后改 `enabled`
@@ -73,7 +73,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 2. 从店铺总 Base 内 `社媒发布队列` 表读取目标行，校验：
    - `状态` 是 `已批准`，或用户明确确认要发的 `草稿` / `待审` / `失败`（手动重试，`失败→发布中`）
    - `平台` 在 adapter registry 中有明确状态
-   - `关联素材`、`素材顺序`、`标题`、`描述`、`链接` 等必填字段满足该平台要求
+   - `关联素材`、`标题`、`描述`、`链接` 等必填字段满足该平台要求
    - `授权状态`、AI 清理、发布副本已在 `publish-composer` 完成
 3. 查 [`references/adapter-registry.md`](references/adapter-registry.md) 决定适配器。
 4. **与 ECS dispatch 避让**：人工发布前先读该行——若 `状态 = 发布中` 或 `执行锁` 已被持有（ECS dispatch 正在处理这条 `自动发布 = true` 的行），**让位、不抢**，提示用户"这条已在自动发布流程中"。仅当行空闲（未锁、状态可发）时，本 skill 才按 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md) §人工发布占用 取 `执行锁` 占为 `发布中`。占用失败或无法证明唯一占用，停止，不调用 adapter。（注：常规自动发布交 ECS dispatch，本 skill 的人工占用只用于"用户主动发某条"。）

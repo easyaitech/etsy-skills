@@ -2,33 +2,34 @@
 
 social-publisher 消费店铺总 Base 内的 `社媒发布队列` 表。发布状态只以这张表为跨平台 source of truth；所有平台（含 Pinterest pin）都是这张表里的行，用 `平台` 字段区分，不再有独立的平台子队列表。
 
-## 必填字段
+## 最小必填字段
 
 | 字段 | 说明 |
 |---|---|
 | `任务 ID` | `PIN-...` / `XHS-...` / `IG-...` 等 |
 | `平台` | Pinterest / 小红书 / Instagram / TikTok / Etsy |
+| `状态` | 发布状态 |
 | `发布类型` | 单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合 |
 | `关联素材` | 一条或多条 `Asset Variants 派生素材` 变体记录（发布副本，非 canonical 原图） |
-| `素材顺序` | 多素材任务的唯一顺序来源（Pinterest 行用 `发布素材` 行顺序落地，见 §Pinterest 行） |
-| `封面素材` | 多图 / 视频 / 图文笔记必须填 |
 | `标题` | 平台标题 |
 | `描述` | 平台正文 / caption |
 | `链接` | 商品型发布必须来自 `Products 商品` 表的 `分享链接`；非商品型可空 |
-| `状态` | 发布状态 |
 | `计划发布时间` | 自动发布筛选依据 |
 | `自动发布` | true 才允许无人值守自动执行 |
+
+不要默认创建 `素材顺序` / `封面素材` / `标签` / `备注` / `平台字段 JSON` / `平台扩展 (typed)`。这些只在某个平台的真实发布器明确读取时再补；已有历史列可以隐藏，不要为“完整感”继续扩表。
 
 ## 发布器字段
 
 | 字段 | 类型建议 | 说明 |
 |---|---|---|
 | `发布适配器` | 单选 / 文本 | 如 `pinterest-autopin`、`manual-xiaohongshu` |
-| `ECS job ID` | 单行文本 | 后端 publish-service / 服务器返回的 `jobId`（统一名，替代旧「外部队列 ID」语义）。Pinterest 不再单独建表，pin 的 `任务 ID`（`PIN-...`）就是本表主键 |
+| `外部队列 ID` / `ECS job ID` | 单行文本 | 后端 publish-service / 服务器返回的 `jobId`。当前运行表常用 `外部队列 ID`；新表只需二选一，不要两列都建 |
 | `发布尝试次数` | 数字 | 每次进入真实发布前累加；默认 0 |
 | `最后尝试时间` / `下次重试时间` | 日期时间 | 每次自动 / 手动执行后更新；重试调度 |
-| `执行锁 (lock_token)` | 单行文本 | 真实发布前写入本轮唯一令牌；完成、失败或放弃后清空 |
+| `执行锁` / `执行锁 (lock_token)` | 单行文本 | 真实发布前写入本轮唯一令牌；完成、失败或放弃后清空。当前运行表常用 `执行锁`；新表只需二选一 |
 | `失败原因分类` | 单选 | 结构化：`会话过期 / 插件未装 / 限速 / DOM漂移 / 平台拒绝 / 网络 / 其他`，喂重试与排查；原文走 `失败原因` |
+| `事件日志` | 多行文本 | 状态转移审计；dispatch 跳过/失败原因也写这里 |
 
 ## 状态机
 
@@ -79,8 +80,8 @@ dispatch 默认 dormant（`PUBLISH_DISPATCH_POLL_MS` 未配 = 关；yanggedianzh
 Pinterest pin 不再单独建表，就是 `社媒发布队列` 里 `平台 = Pinterest` 的行。`pinterest-autopin` 作为 adapter 直接读写这一行，不做跨表映射：
 
 - `任务 ID`（`PIN-...`）即旧 `pin_id`，是本表主键。
-- `发布类型` = `单图` / `多图轮播`；轮播图片顺序以 `发布素材` 行顺序为准（`素材顺序` 仅作素材追溯）。
-- Pinterest 专属字段（`Board (Pinterest)`、`发布素材`、`Alt Text (EN)`）写在同一行；字段细节与轮播校验见 [`pinterest-autopin/references/pin-queue-base-schema.md`](../../pinterest-autopin/references/pin-queue-base-schema.md)。
+- `发布类型` = `单图` / `多图轮播`；图片来源走通用 `关联素材`，不要默认另建 `发布素材`。
+- Pinterest 专属最小字段只有 `Board (Pinterest)`、`Alt Text (EN)`；字段细节与轮播校验见 [`pinterest-autopin/references/pin-queue-base-schema.md`](../../pinterest-autopin/references/pin-queue-base-schema.md)。
 - 发布成功后回写本行：`状态 = 已发`、`发布 URL`（pin_url）、`发布时间`。
 - 发布失败回写本行：`状态 = 失败` + `失败原因`。一行就是唯一真相，不存在“两边都要记录”的问题。
 

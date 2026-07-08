@@ -52,20 +52,18 @@
 
 默认建在店铺总 Base 内。迁移期可与旧独立发布任务数据源或旧的 Pinterest 队列并存，但新写入优先进入本表。无论哪种方式，都保持跨平台字段模型。
 
-**语义定死**：一条记录 = **一个平台目标的一次发布任务**（per-platform）。同一素材发多平台 = **多条**记录；失败重发 = **同一条** `发布尝试次数++`，不新建。需要跨平台聚合一次活动时，用可选的 `Campaign ID` 关联，不把多平台塞进一行。
+**语义定死**：一条记录 = **一个平台目标的一次发布任务**（per-platform）。同一素材发多平台 = **多条**记录；失败重发 = **同一条** `发布尝试次数++`，不新建。
 
-**字段按写者分四组**（每组只有标注的 owner 能写；越权写 = 拒绝并记 `事件日志`）：
+**默认只建最小可运行字段**：不要为了未来平台预留 `Campaign ID` / `账号` / `品牌线` / `地区 / 语言` / `平台 post id` / metrics 等列；不要为了“看起来完整”提前建 `平台扩展 (typed)`。字段用到时再由对应 skill 补。历史字段有数据时可以保留或隐藏，但新建 / 补齐时不再默认创建。
 
-**① 身份维度**（composer 建后只读——多平台 ≠ 只有 platform）
+**字段按写者分组**（每组只有标注的 owner 能写；越权写 = 拒绝并记 `事件日志`）：
+
+**① 身份维度**（composer owner）
 
 | 字段 | 类型建议 | 说明 |
 |---|---|---|
 | `任务 ID` | 单行文本（主键） | `PIN-xxx` / `IG-xxx` / `XHS-xxx` / `TT-xxx` / `ETSY-xxx` |
-| `Campaign ID` | 文本 / 关联 | 选填；跨平台同一活动聚合用，缺省单条独立 |
 | `平台` | 单选 | Pinterest / Instagram / 小红书 / TikTok / Etsy |
-| `账号` | 单选 / 文本 | 同平台多账号时必填（哪个店铺账号发） |
-| `品牌线` | 单选 / 文本 | 多品牌线店铺用 |
-| `地区 / 语言` | 单选 | 决定文案语言和地域策略；缺省取 COMMERCE/MARKETING_PLATFORM 默认 |
 
 **② 内容**（composer owner；`待审` 前可改，`已批准` 后改需先退回 `草稿`）
 
@@ -73,12 +71,10 @@
 |---|---|---|
 | `发布类型` | 单选 | 单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合 |
 | `关联素材` | 关联 | 指向 assets-library `Asset Variants 派生素材`（发布副本），不是 canonical 原图 |
-| `素材顺序` | 多行文本 | 明确顺序，不能依赖 relation 返回顺序 |
-| `封面素材` | 文本 / 关联 | 多图或视频封面 |
-| `关联 SKU` | 文本 | SKU + 商品 record_id + 平台商品 ID（Etsy Listing ID / ASIN / item_id） |
-| `标题` / `描述` / `标签` | 文本 / 多行文本 | 平台文案（composer 按平台策略生成，见 platform_ext） |
+| `标题` / `描述` | 文本 / 多行文本 | 平台文案；Pinterest 由 adapter 写，其他未 enabled 平台由 composer 兜底 |
 | `链接` | URL / 文本 | 商品型发布必须来自 `Products 商品` 表的 `分享链接`，不拼 |
-| `平台扩展 (typed)` | 多行文本（JSON，按平台 schema 校验） | **替代旧 `平台字段 JSON` 自由块**。每个平台注册自己的 typed extension schema + validator（如 `PinterestExt{board_id,alt_text,dominant_color}` / `XiaohongshuExt{topic_tags,note_type,cover_caption,related_item_id}`）。composer 按平台策略填，写入前过该平台 validator；不接受任意未注册字段。 |
+
+可选内容列：`关联 SKU`、`标签`、`素材顺序`、`封面素材`、`备注`、`平台字段 JSON` / `平台扩展 (typed)`。只有真实工作流会读取或写入时才补；仅作历史迁移说明或人工注释时优先隐藏，不默认建。
 
 **③ 执行状态**（dispatch owner；按状态机转移，见下）
 
@@ -88,10 +84,10 @@
 | `计划发布时间` | 日期时间 / 文本 | 排期 |
 | `自动发布` | 复选框 | 默认 false；用户明确确认无人值守才勾 |
 | `发布适配器` | 单选 / 文本 | 如 `pinterest-autopin` / `manual-xiaohongshu`；dispatch 路由用 |
-| `ECS job ID` | 单行文本 | 后端 publish-service 的 job 标识（替代旧"外部队列 ID"语义） |
+| `外部队列 ID` | 单行文本 | 当前生产 dispatch 写入的 job 标识；新后端兼容 `ECS job ID` 时可用别名，但不要为了改名迁移历史表 |
 | `发布尝试次数` | 数字 | 默认 0；每次真实尝试前累加 |
 | `最后尝试时间` / `下次重试时间` | 日期时间 | 重试调度 |
-| `执行锁 (lock_token)` | 单行文本 | 后端租约令牌；占用时写入，成功/失败/回收后清空 |
+| `执行锁` | 单行文本 | 后端租约令牌；占用时写入，成功/失败/回收后清空 |
 | `失败原因分类` | 单选 | `会话过期 / 插件未装 / 限速 / DOM漂移 / 平台拒绝 / 网络 / 其他`（结构化，喂重试与排查） |
 
 **④ 平台结果**（adapter owner，回写）
@@ -99,7 +95,7 @@
 | 字段 | 类型建议 | 说明 |
 |---|---|---|
 | `发布时间` | 日期时间 | 实际发布时间 |
-| `发布 URL` / `平台 post id` | URL / 文本 | 平台发布后链接 + post id |
+| `发布 URL` | URL / 文本 | 平台发布后的公开链接 |
 | `失败原因` | 多行文本 | 自动化失败的原始记录（分类见 ③） |
 
 > **⑥ metrics 列**（曝光 / 点击 / 保存 / 互动 / 转化 / 指标采集时间 / 数据来源）= 反馈层 `publish-metrics` owner 的列分组，见 [`../../publish-metrics/references/metrics-schema.md`](../../publish-metrics/references/metrics-schema.md)。回写 metrics 不参与状态机、不改执行状态列；做发布复盘时才建。
@@ -145,8 +141,8 @@ SKU: FUB-001
 当 `平台 = Pinterest` 时，本表行就是一条 Pinterest pin，单图和轮播（2-5 张）共用一行：
 
 - `任务 ID` 用 `PIN-YYYYMMDD-001`，即旧 `pin_id`。
-- `发布类型` 为 `单图` 或 `多图轮播`；轮播的图片顺序以 `发布素材` 行顺序为准（`素材顺序` 仅作素材追溯）。
-- Pinterest 行另需 `Board (Pinterest)`、`发布素材`（每行一个服务器 asset 标识 / 授权下载 URL / 可由服务器解析的附件引用）、`Alt Text (EN)`（每张图用 `---` 独占一行分隔）等专属字段，以及发布结果 `发布 URL`（pin_url）。完整 Pinterest 字段、轮播校验和服务器 job 结构见 [`pinterest-autopin/references/pin-queue-base-schema.md`](../../pinterest-autopin/references/pin-queue-base-schema.md)。
+- `发布类型` 为 `单图` 或 `多图轮播`。
+- Pinterest 行最小额外字段只需要 `Board (Pinterest)`、`Alt Text (EN)`。图片来源走通用 `关联素材`；如果历史表已有 `素材顺序` / `封面素材` / `平台字段 JSON`，保留作历史数据或人工检查，不作为新建必需列。
 - 这些 Pinterest 专属字段对非 Pinterest 行留空即可，不影响跨平台字段模型。
 
 ### 小红书发布任务字段约定
@@ -154,9 +150,9 @@ SKU: FUB-001
 当 `平台 = 小红书` 时：
 
 - `任务 ID` 建议使用 `XHS-YYYYMMDD-001`。
-- `发布类型` 只能从 `单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合` 中选；图文笔记必须显式写 `素材顺序` 和 `封面素材`。
+- `发布类型` 只能从 `单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合` 中选；图文笔记的顺序和封面可先写进 `关联素材` / 正文草稿，只有真实发布器需要结构化读取时再补 `素材顺序` / `封面素材`。
 - `标题`、`描述`、`标签` 使用中文；如果 COMMERCE_PLATFORM.md 或 MARKETING_PLATFORM.md 要求双语，再按配置输出。
-- `平台扩展 (typed)` 用小红书的 `XiaohongshuExt` schema：`note_type`、`topic_tags`、`cover_caption`（封面可读性）、`related_item_id` 等；写入前过 `XiaohongshuExt` validator，不知道的字段留空标 `待后台确认`，不要编造，也不接受 schema 外的任意字段。
+- 小红书仍 staged 时不默认加专属列；对外放行后再按 `XiaohongshuExt` 的真实读取需求补字段或 `平台扩展 (typed)`，不知道的字段留空标 `待后台确认`，不要编造。
 - 商品型笔记如果没有 `Products 商品` 表的 `分享链接`，`链接` 可以为空并标记为待补；不要临时拼小红书商品 URL。
 
 ---

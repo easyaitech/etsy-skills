@@ -11,20 +11,16 @@
 - `平台`
 - `发布类型`
 - `关联素材`
-- `素材顺序`
-- `封面素材`
-- `关联 SKU`
 - `标题`
 - `描述`
 - `链接`
-- `标签`
 - `状态`
 - `自动发布`
 - `发布适配器`
-- `ECS job ID`
+- `外部队列 ID`（或 `ECS job ID`，二选一）
 - `发布 URL`
 
-平台专用字段走 社媒发布队列 的 `平台扩展 (typed)`——每平台注册自己的 typed extension schema + validator（见 [base-schema.md 表 2](base-schema.md)），不是自由 JSON，也不进入素材 schema。真实执行由 `social-publisher` 按 adapter registry 路由。
+`关联 SKU`、`标签`、`素材顺序`、`封面素材`、平台专属扩展字段都不是默认必建字段。只有真实工作流读取或写入时再补；当前 staged / manual-only 平台先把这些放进草稿或人工清单。
 
 > 下文示例里的 `关联素材 = ASSET-xxx` 只是占位 ID。按 [base-schema.md 表 2](base-schema.md)，`关联素材` 实际指向 assets-library `Asset Variants 派生素材` 的发布副本变体（**非 canonical 原图**）；canonical 与发布副本变体的分表见 assets-library。`状态` 走表 2 的状态机（草稿 / 待审 / 已批准 / 发布中 / 已发 / 失败 / 跳过 / 手动已发）。
 
@@ -37,15 +33,13 @@
 ```text
 发布类型 = 单图
 关联素材 = ASSET-001
-素材顺序 =
-1. ASSET-001
-封面素材 = ASSET-001
+封面 = ASSET-001（草稿展示；不默认建字段）
 ```
 
 规则：
 
 - 关联素材数量必须是 1。
-- `素材顺序` 仍然要写，避免未来转成多图时丢顺序。
+- 默认在草稿里展示编号顺序；只有真实发布器读取时才写 `素材顺序` / `封面素材` 字段。
 
 ---
 
@@ -55,18 +49,16 @@
 
 ```text
 发布类型 = 多图轮播
-关联素材 = ASSET-001, ASSET-002, ASSET-003
-素材顺序 =
+关联素材 =
 1. ASSET-001
 2. ASSET-002
 3. ASSET-003
-封面素材 = ASSET-001
+封面 = ASSET-001（草稿展示；不默认建字段）
 ```
 
 规则：
 
-- `关联素材` 可多值，但不代表顺序。
-- 顺序只看 `素材顺序`。
+- `关联素材` 用编号列表写清顺序。
 - 封面默认第一张，但可人工指定。
 - 如果平台有数量限制，由平台发布 skill 校验。例如 Pinterest carousel 可限制 2-5 张。
 
@@ -79,9 +71,7 @@
 ```text
 发布类型 = 视频
 关联素材 = ASSET-VIDEO-001
-封面素材 = ASSET-COVER-001
-素材顺序 =
-1. ASSET-VIDEO-001
+封面 = ASSET-COVER-001（草稿展示；不默认建字段）
 ```
 
 规则：
@@ -97,21 +87,20 @@
 ```text
 发布类型 = 图文笔记
 平台 = 小红书
-关联素材 = ASSET-001, ASSET-002, ASSET-003
-封面素材 = ASSET-001
-素材顺序 =
+关联素材 =
 1. ASSET-001
 2. ASSET-002
 3. ASSET-003
+封面 = ASSET-001（草稿展示；不默认建字段）
 ```
 
 规则：
 
-- 首图通常承担封面角色，但必须显式写 `封面素材`。
+- 首图通常承担封面角色；在草稿里显式展示即可，真实发布器读取时再补 `封面素材`。
 - 正文、标签、话题和标题属于 社媒发布队列，不写回素材池。
 - 标题 / 正文 / 标签默认中文；如果 MARKETING_PLATFORM.md 要求双语，再按配置输出。
 - 如一篇笔记复用商品素材，`链接` 可为空或填站外允许的落地页；商品型发布仍优先`Products 商品` 表 `分享链接`。
-- `平台扩展 (typed)` 按 `XiaohongshuExt` schema 保存 `note_type`、`topic_tags`、`cover_caption`、`related_item_id` 等，过 validator；不知道的后台字段留空标 `待后台确认`，不接受 schema 外字段。
+- 小红书未 enabled 时，`note_type`、`topic_tags`、`cover_caption`、`related_item_id` 等放进人工发布清单；对外放行后再按 `XiaohongshuExt` schema 写结构化字段。
 - 当前 `social-publisher` 尚未启用小红书 adapter，本 skill 只生成小红书发布任务草稿，不登录、不上传、不发布。人工发布后可回填公开笔记 URL 做对账。
 
 ## 小红书视频
@@ -120,9 +109,7 @@
 发布类型 = 视频
 平台 = 小红书
 关联素材 = ASSET-VIDEO-001
-封面素材 = ASSET-COVER-001
-素材顺序 =
-1. ASSET-VIDEO-001
+封面 = ASSET-COVER-001（草稿展示；不默认建字段）
 ```
 
 规则：
@@ -139,8 +126,7 @@
 ```text
 发布类型 = 多图轮播
 平台 = Instagram
-关联素材 = ASSET-001, ASSET-002, ASSET-003
-素材顺序 =
+关联素材 =
 1. ASSET-001
 2. ASSET-002
 3. ASSET-003
@@ -158,8 +144,7 @@
 ```text
 发布类型 = 多图轮播
 平台 = Pinterest
-关联素材 = ASSET-001, ASSET-002, ASSET-003
-素材顺序 =
+关联素材 =
 1. ASSET-001
 2. ASSET-002
 3. ASSET-003
@@ -171,7 +156,7 @@
 - 该 Pinterest 行的 `关联 SKU` 写 SKU + 商品 record_id + 平台商品 ID（如 Etsy Listing ID / ASIN / item_id）。
 - 该 Pinterest 行的 `链接` 使用 `Products 商品` 表的 `分享链接`，不临时拼任何平台商品 URL。
 - Pinterest 发布成功后在本行回写 `发布 URL`。
-- `发布适配器 = pinterest-autopin`；Pinterest 行的 `任务 ID`（`PIN-...`）就是本表主键；`ECS job ID` 仅在创建服务器 job 后写入返回的 `jobId`。
+- `发布适配器 = pinterest-autopin`；Pinterest 行的 `任务 ID`（`PIN-...`）就是本表主键；`外部队列 ID`（或表里已有的 `ECS job ID`）仅在创建服务器 job 后写入返回的 `jobId`。
 
 ---
 
@@ -180,8 +165,7 @@
 ```text
 发布类型 = 图文混合
 平台 = Etsy
-关联素材 = ASSET-001, ASSET-002, ASSET-003, ASSET-VIDEO-001
-素材顺序 =
+关联素材 =
 1. ASSET-001
 2. ASSET-002
 3. ASSET-003

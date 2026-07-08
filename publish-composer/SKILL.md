@@ -1,6 +1,6 @@
 ---
 name: publish-composer
-description: 发布编排（旧名 content-asset-pool）：把已归档的素材变体 + 商品事实 + 品牌底座组装成跨平台发布意图 PublishIntent，并拥有店铺总 Base 内 `社媒发布队列` 表。把单图、多图轮播、视频、图文笔记组合成 Pinterest、Instagram、小红书、TikTok、Etsy Listing 等平台发布任务，平台专属字段走每平台 typed extension（如 XiaohongshuExt / PinterestExt）。触发：用户说"组发布任务 / 排一条 pin / 出小红书笔记草稿 / 这组图发哪些平台 / 这张图发过哪些平台 / 跨平台复用素材 / 对账发布结果"。**只引用 assets-library 已产出的发布副本变体，自己不收集素材、不清理、不裁切**（那些归 assets-library）；真实发布交 social-publisher 路由到平台适配器。所有真实写入经用户确认。
+description: 发布编排（旧名 content-asset-pool）：把已归档的素材变体 + 商品事实 + 品牌底座组装成跨平台发布意图 PublishIntent，并拥有店铺总 Base 内 `社媒发布队列` 表。把单图、多图轮播、视频、图文笔记组合成 Pinterest、Instagram、小红书、TikTok、Etsy Listing 等平台发布任务；平台专属字段只有在对应 adapter 已启用且真实读取时才补 typed extension 或显式列。触发：用户说"组发布任务 / 排一条 pin / 出小红书笔记草稿 / 这组图发哪些平台 / 这张图发过哪些平台 / 跨平台复用素材 / 对账发布结果"。**只引用 assets-library 已产出的发布副本变体，自己不收集素材、不清理、不裁切**（那些归 assets-library）；真实发布交 social-publisher 路由到平台适配器。所有真实写入经用户确认。
 layer: application
 depends-on: [shop-foundation, assets-library, listing-catalog, social-publisher]
 ---
@@ -44,8 +44,8 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 
 1. **只引用变体，不动素材**。发布图只引用 `assets-library` 的 `Asset Variants 派生素材`（已清理、已按平台规格派生）。本 skill **不收集、不清理、不裁切**——缺某平台规格变体时反向请求 assets-library 模式 E 派生，不自己处理像素。
 2. **PublishIntent = per-platform**。一条记录 = 一个平台一次发布；同素材发多平台 = 多条；失败重发 = 同条 attempt++，不新建。不要用单个“已发布”表达所有平台状态。
-3. **平台专属走 typed extension**。平台专属字段（小红书话题/封面文案、Pinterest board/alt）走每平台注册的 `XxxExt` schema + validator，**不塞自由 JSON**、不污染核心字段。
-4. **多图顺序必须显式记录**。多图 / 多素材发布用 `素材顺序` 字段决定顺序，不依赖飞书 relation / multi-select 的显示顺序。
+3. **平台专属按需结构化**。平台专属字段只有在对应 adapter 已启用且真实读取时，才走每平台注册的 `XxxExt` schema + validator；默认不提前扩表、不塞自由 JSON、不污染核心字段。
+4. **多图顺序必须显式记录**。默认把顺序写进 `关联素材` 的列表顺序；只有真实发布器明确读取时才补 `素材顺序` 字段，不依赖飞书 relation / multi-select 的显示顺序。
 5. **商品型发布链接来自 `Products 商品` 表的 `分享链接` 字段**。不要临时拼任何平台 URL（包括 Etsy listing URL）。`分享链接` 缺失时阻塞发布任务创建并引导回 `listing-catalog` 补齐。
 6. **按写者分组 + 状态机转移权限**。composer 写内容列；dispatch 写执行状态列；adapter 写平台结果列；状态走事件日志投影，越权转移即拒（schema 见 [`references/base-schema.md` 表 2](references/base-schema.md)）。
 7. **只定义和准备，不直接发布**。真实飞书写入、平台发布、自动发布任务修改都必须用户明确确认；发布执行交给 `social-publisher` 路由到适配器。
@@ -56,12 +56,21 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 ## Data Model
 
 本 skill **只 own 一张表**：`社媒发布队列 / PublishIntent`（店铺总 Base 内）。schema + 字段分组 +
-状态机 + typed extension 见 [`references/base-schema.md` § 表 2](references/base-schema.md)。
+状态机 + 最小字段集见 [`references/base-schema.md` § 表 2](references/base-schema.md)。
 
 - **素材侧**（`Assets 素材池` canonical + `Asset Variants 派生素材`）的 schema owner 是 `assets-library`，
   本 skill 只读引用，**不建、不写其结构**。
-- **`社媒发布队列`**：一个平台一次发布 = 一条记录，按 `平台` + typed extension 区分。即使先只做
-  Pinterest + 小红书，也按跨平台模型保留身份维度（平台/账号/品牌线/地区语言）、内容列、执行状态列。
+- **`社媒发布队列`**：一个平台一次发布 = 一条记录，按 `平台` 区分。默认只保留当前运行需要的身份、内容、执行状态列；账号、品牌线、地区语言和平台扩展字段用到时再补。
+
+---
+
+## 默认视图字段（社媒发布队列）
+
+建表、补字段或整理字段时，默认 Grid View 只展示人会读、会判断、会手动修的字段；执行 / 同步 / 锁字段保留但隐藏。
+
+- 默认人读视图：`任务 ID`、`平台`、`状态`、`发布类型`、`关联 SKU`、`关联素材`、`标题`、`描述`、`链接`、`自动发布`、`计划发布时间`、`发布适配器`、`发布 URL`、`发布时间`、`失败原因分类`、`失败原因`、`Board (Pinterest)`、`Alt Text (EN)`。
+- 默认隐藏但保留：`外部队列 ID`、`发布尝试次数`、`最后尝试时间`、`下次重试时间`、`执行锁`、`事件日志`、`平台字段 JSON`、`素材顺序`、`封面素材`、`标签`、`备注`，以及未启用平台的扩展字段。
+- 平台专属字段只有在该平台 enabled 且运营需要核对时进入默认视图；当前 Pinterest 只展示 `Board (Pinterest)` 和 `Alt Text (EN)`，小红书 / Instagram / TikTok 仍按草稿或人工清单处理，不提前展示空字段。
 
 ---
 
@@ -101,13 +110,12 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
    - `链接` 必须取 `Products 商品` 表的 `分享链接` 字段。
    - `分享链接` 缺失时阻塞，不临时拼任何平台 URL。
 5. 写入 社媒发布队列 草稿（字段分组 + typed extension 见 [`references/base-schema.md` 表 2](references/base-schema.md)）：
-   - 身份维度：`平台` / `账号` / `品牌线` / `地区语言`
+   - 身份维度：默认只写 `平台`；多账号 / 多品牌线 / 多地区真的启用时再补对应字段
    - `状态 = 草稿`；`自动发布 = false`（除非用户明确确认排期 + 无人值守）
    - `发布类型 = 单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合`
-   - `关联素材` 指向 `Asset Variants 派生素材`（变体，不是 canonical 原图）；`素材顺序` 编号列表
-   - 平台专属字段写 `平台扩展 (typed)`（如 `XiaohongshuExt` / `PinterestExt`），过该平台 validator，不塞自由 JSON
-   - **品牌接地气文案**（title / description / 正文 / `cover_caption` 等）：有 live adapter 的平台（Pinterest）由 adapter 写，composer 不碰；**目标平台无 live adapter 时（小红书 / IG / TikTok）由 composer 兜底**——先读 `BRAND.md` + `BRAND_MARKETING.md` + `MARKETING_PLATFORM.md` 目标平台章节，再写 typed-ext 文案字段（见 Core Principle 8）。缺品牌文档 → DEGRADE：先按 BRAND.md 出，相应文案段标 ⚠️，回复末尾提示补 BRAND_MARKETING / MARKETING_PLATFORM
-   - 小红书任务必须写 `封面素材` + `cover_caption`（cover_caption 即上一条兜底文案路径，小红书 adapter 未上线期间由 composer 读品牌文档撰写）
+   - `关联素材` 指向 `Asset Variants 派生素材`（变体，不是 canonical 原图），并在草稿里展示编号顺序
+   - 平台专属字段只在真实发布器已读取时写；不要为了预留默认创建 `平台扩展 (typed)` 或自由 JSON
+   - **品牌接地气文案**（title / description / 正文 / `cover_caption` 等）：有 live adapter 的平台（Pinterest）由 adapter 写，composer 不碰；**目标平台无 live adapter 时（小红书 / IG / TikTok）由 composer 兜底**——先读 `BRAND.md` + `BRAND_MARKETING.md` + `MARKETING_PLATFORM.md` 目标平台章节，再把文案放进草稿/人工清单；等 adapter enabled 且真实读取时才写结构化平台扩展字段。缺品牌文档 → DEGRADE：先按 BRAND.md 出，相应文案段标 ⚠️，回复末尾提示补 BRAND_MARKETING / MARKETING_PLATFORM
 6. 组好后状态进 `待审`（半自动核心：用户在此批准 / 退回 / 跳过）。不要直接标“已发布”。
 
 写入前必须展示任务草稿和素材顺序，等用户确认。确认后遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量：本 turn 内先把 `社媒发布队列` 草稿行真正写进 Base 拿到成功返回、再报"已组好任务"，写完带一句含可点击飞书链接的回执；只在对话里展示草稿而 Base 没落行 = 没做完。（执行状态列仍由 social-publisher / dispatch 回写，composer 不越权改。）
@@ -143,16 +151,13 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 ```text
 发布类型 = 单图
 关联素材 = ASSET-001
-素材顺序 =
-1. ASSET-001
 ```
 
 ### 多图轮播
 
 ```text
 发布类型 = 多图轮播
-关联素材 = ASSET-001, ASSET-002, ASSET-003
-素材顺序 =
+关联素材 =
 1. ASSET-001
 2. ASSET-002
 3. ASSET-003
@@ -163,22 +168,21 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 ```text
 发布类型 = 视频
 关联素材 = ASSET-VIDEO-001
-封面素材 = ASSET-COVER-001
+封面 = ASSET-COVER-001（草稿展示；不默认建字段）
 ```
 
 ### 小红书图文
 
 ```text
 发布类型 = 图文笔记
-关联素材 = ASSET-001, ASSET-002, ASSET-003
-封面素材 = ASSET-001
-素材顺序 =
+关联素材 =
 1. ASSET-001
 2. ASSET-002
 3. ASSET-003
+封面 = ASSET-001（草稿展示；不默认建字段）
 ```
 
-关键规则：多图 / 多素材发布必须用 `素材顺序` 字段决定顺序，不依赖飞书 relation / multi-select 的显示顺序。
+关键规则：多图 / 多素材发布必须在草稿里给出清晰编号顺序；默认用 `关联素材` 的列表顺序承载，只有真实发布器明确读取时才补 `素材顺序` 字段。
 
 ---
 
@@ -205,7 +209,7 @@ AI metadata / 水印清理**不再由本 skill 做**，已移交 `assets-library
 ### pinterest-autopin / xiaohongshu-autopost（平台适配器）
 
 - Pinterest pin = 社媒发布队列 `平台 = Pinterest` 行（`PIN-xxx`）；小红书笔记 = `平台 = 小红书` 行（`XHS-xxx`）。
-- 平台专属字段由对应 adapter 的 typed extension（`PinterestExt` / `XiaohongshuExt`）约定；composer 按平台策略填、过 validator。
+- 平台专属字段只在对应 adapter 已启用且真实读取时补；staged / manual-only 平台先放进草稿或人工发布清单。
 - 商品型发布行的 `链接` 必须用 `Products 商品` 表的 `分享链接`，不临时拼平台商品 URL。
 - 发布图引用 `Asset Variants 派生素材` 的对应平台规格变体，不引用 canonical 原图。
 
@@ -223,7 +227,7 @@ AI metadata / 水印清理**不再由本 skill 做**，已移交 `assets-library
 
 ### Future Platforms
 
-预留 Instagram、小红书、TikTok、Reels、电商平台商品页 / listing 和未来平台。平台专用字段走 社媒发布队列 的 `平台扩展 (typed)`——每平台注册 typed extension schema + validator（见 [references/base-schema.md 表 2](references/base-schema.md)），不是自由 JSON。未来新增真实发布能力时，只扩 `social-publisher` adapter + 注册该平台 typed schema。
+预留 Instagram、小红书、TikTok、Reels、电商平台商品页 / listing 和未来平台时，不提前扩表。平台专用字段只有在对应 adapter enabled 且真实读取时才补 `平台扩展 (typed)` 或显式列；未来新增真实发布能力时，只扩 `social-publisher` adapter + 注册该平台 typed schema。
 
 ---
 
@@ -232,8 +236,8 @@ AI metadata / 水印清理**不再由本 skill 做**，已移交 `assets-library
 1. **不要自己收集 / 清理 / 裁切素材**——那是 assets-library 的活，本 skill 只引用变体。
 2. **不要引用 canonical 原图当发布图**，要引用 `Asset Variants 派生素材` 的平台规格变体。
 3. **不要用一条 intent 表达多平台**——一个平台一条 PublishIntent（per-platform）。
-4. **不要把平台专属字段塞自由 JSON**，走每平台 typed extension + validator。
-5. **不要依赖飞书关联字段顺序作为多图发布顺序**，用 `素材顺序`。
+4. **不要把平台专属字段塞自由 JSON**；adapter 未 enabled 前先放草稿 / 人工清单，enabled 后才走对应 typed extension + validator。
+5. **不要依赖飞书关联字段的隐式显示顺序**；默认在 `关联素材` 值里写编号顺序，必要时再补 `素材顺序`。
 6. **不要临时拼平台商品链接**，应从 `Products 商品` 表 `分享链接` 取。
 7. **不要越权改执行状态列**——执行状态由 dispatch / adapter 按状态机转移权限写。
 8. **不要在本 skill 中执行真实平台发布**，交给 social-publisher。

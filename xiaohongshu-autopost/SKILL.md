@@ -1,6 +1,6 @@
 ---
 name: xiaohongshu-autopost
-description: 把电商商品 + 素材库 + 品牌底座组装成小红书笔记（图文 / 视频），并作为 social-publisher 的小红书 adapter，通过 yanggedianzhang 服务器控制面 + 租户浏览器插件发布。Hermes 只负责判断、生成中文文案、调用服务器工具接口，不持有 Chrome profile、不跑 Playwright、不维护发布队列。三种触发：(1) "接小红书 / 配置小红书自动发 / 建小红书笔记流水线"——接通服务器工具 + 浏览器插件小红书 capability + 店铺总 Base 内 `社媒发布队列` 表；(2) "给 SKU 出小红书笔记 / 写小红书文案 / 排一条小红书笔记"——读 BRAND + `Products 商品` 表 + `Asset Variants 派生素材` 表，组装一条 `社媒发布队列`（平台=小红书）记录，平台专属字段走 `XiaohongshuExt` typed schema；(3) "发小红书 / 测试笔记 / publish"——adapter 当前 **staged（后端就绪但未对外开放）**：只出草稿 + 人工发布清单，**不创建真实 server publish job**；对外放行（adapter-registry 改 enabled）后才走真发 test → confirm-publish → final（契约见 references/publishing-flow.md）。每次只处理一条。
+description: 把电商商品 + 素材库 + 品牌底座组装成小红书笔记（图文 / 视频），并作为 social-publisher 的小红书 adapter。当前小红书 adapter **staged（后端就绪但未对外开放）**：Hermes 只负责判断、生成中文文案、组草稿和人工发布清单，不持 Chrome profile、不跑 Playwright、不维护发布队列、不创建真实 server publish job。三种触发：(1) "接小红书 / 配置小红书自动发 / 建小红书笔记流水线"——定位店铺总 Base 内 `社媒发布队列` 表并说明 staged 边界；(2) "给 SKU 出小红书笔记 / 写小红书文案 / 排一条小红书笔记"——读 BRAND + `Products 商品` 表 + `Asset Variants 派生素材` 表，组装一条 `社媒发布队列`（平台=小红书）草稿，专属字段先进入人工发布清单，不默认扩 `XiaohongshuExt` / typed JSON；(3) "发小红书 / 测试笔记 / publish"——当前只出草稿 + 人工发布清单；对外放行（adapter-registry 改 enabled）后才走真发 test → confirm-publish → final（契约见 references/publishing-flow.md）。每次只处理一条。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
@@ -9,13 +9,13 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成**小红书笔记**（图文笔记 / 视频笔记），并作为 `social-publisher` 的**小红书输出适配器**。它和 `pinterest-autopin` 是同一套三层范式的兄弟 adapter：
 
-1. **Hermes**：读商品、派生变体、品牌规则，生成中文 title / 正文 / 话题 / 封面文案，组装 `平台 = 小红书` 的 PublishIntent，调用服务器工具接口。
-2. **yanggedianzhang 服务器**：校验租户、保存小红书 job 状态、加锁、发放素材下载地址、**热下发小红书笔记 recipe**、记录 test / final 结果。
-3. **租户浏览器插件**：在租户自己的小红书登录态里打开发布页、按服务器下发的 recipe 填表上传、回传结果。
+1. **Hermes**：读商品、派生变体、品牌规则，生成中文 title / 正文 / 话题 / 封面文案；当前只组 `平台 = 小红书` 的草稿和人工发布清单。
+2. **yanggedianzhang 服务器**：后端能力 staged 待放行；放行后才校验租户、保存小红书 job 状态、加锁、发放素材下载地址、热下发小红书笔记 recipe、记录 test / final 结果。
+3. **租户浏览器插件**：对外放行后，在租户自己的小红书登录态里打开发布页、按服务器下发的 recipe 填表上传、回传结果。
 
-跨平台 `社媒发布队列` 的 source of truth 在 `publish-composer`；本 skill 只负责 `平台 = 小红书` 行的语义准备、服务器 job 创建和结果回写。
+跨平台 `社媒发布队列` 的 source of truth 在 `publish-composer`；本 skill 当前只负责 `平台 = 小红书` 行的语义准备和人工发布清单。对外放行后才负责服务器 job 创建和结果回写。
 
-> **架构定位**：本 skill 是「平台层」的小红书适配器。平台专属字段走 PublishIntent 的 `平台扩展 (typed)` —— `XiaohongshuExt` schema + validator（定义见 [`../publish-composer/references/base-schema.md` § 表 2](../publish-composer/references/base-schema.md)），**不是自由 JSON**。底层执行模型见 [`../shared/tools-architecture.md`](../shared/tools-architecture.md) 与 design doc 的 D-A4（插件稳定原语 + 服务端热下发 recipe）。
+> **架构定位**：本 skill 是「平台层」的小红书适配器。小红书当前 staged 未对外开放，默认不在 `社媒发布队列` 额外建平台专属列；对外放行后，才按真实发布器读取需求补 `平台扩展 (typed)` / `XiaohongshuExt` 或显式字段。底层执行模型见 [`../shared/tools-architecture.md`](../shared/tools-architecture.md) 与 design doc 的 D-A4（插件稳定原语 + 服务端热下发 recipe）。
 
 > 共享引导见 [`../shared/preamble.md`](../shared/preamble.md)，降级协议见 [`../shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
 
@@ -25,7 +25,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 **小红书真实自动发布尚未对外开放。** 后端三件已就绪（服务器工具 `/api/tools/xiaohongshu/jobs` + `/confirm-publish`、插件 `xiaohongshu` capability、服务端热下发笔记 recipe），发布契约也写好了（见 [`references/publishing-flow.md`](references/publishing-flow.md）），**但还没上线放行**。所以现在本 skill 能做的是：
 
-- ✅ 组装 `平台 = 小红书` 的 PublishIntent 草稿（含 `XiaohongshuExt` typed 字段）
+- ✅ 组装 `平台 = 小红书` 的 PublishIntent 草稿和人工发布清单；专属字段先留在草稿文本里，不默认扩表
 - ✅ 反向请求 assets-library 模式 E 派生小红书规格变体（3:4 封面 / 商品图）
 - ✅ 出**人工发布清单**，用户手动发布后回填公开笔记 URL 对账
 - ❌ **不得**创建真实 server publish job、不得对真实租户跑真发、不得声称已自动发布
@@ -65,7 +65,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ### 模式 A：接入小红书适配器
 进入：用户「接小红书 / 配置小红书自动发」。
-步骤：① 定位店铺总 Base + `社媒发布队列` 表；② 确认 `XiaohongshuExt` 字段已在队列表 `平台扩展 (typed)` 列约定（note_type / topic_tags / cover_caption / related_item_id）；③ 确认该租户插件带 `xiaohongshu` capability（创建 job 时按 references/publishing-flow.md 的错误码判，未装则转述安装提示）；④ adapter 当前 **staged（未对外开放）**，见 adapter-registry；放行后才改 enabled；⑤ 不创建任何真实定时任务，除非用户明确要求。
+步骤：① 定位店铺总 Base + `社媒发布队列` 表；② adapter 当前 **staged（未对外开放）**，不新增小红书专属字段、不创建真实定时任务；③ 对外放行后才确认该租户插件带 `xiaohongshu` capability，并按真实读取需求补 `XiaohongshuExt` / `平台扩展 (typed)`。
 
 ### 模式 B：组装小红书笔记 PublishIntent（每次一条）
 进入：用户「给 {SKU} 出小红书笔记 / 写小红书文案 / 排一条」。
@@ -74,9 +74,9 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 2. 判定 `note_type`（图文笔记 / 视频笔记）。
 3. 取小红书规格发布副本：查 `Asset Variants 派生素材` 表该 SKU `目标平台 ⊇ 小红书` 的变体；**缺 → 反向请求 assets-library 模式 E** 派生 3:4 封面 / 商品图（机械/模板化派生），拿回变体文件链接。
 4. 生成中文文案：`标题` / `正文` / `话题标签`（topic_tags）/ `封面文案`（cover_caption，封面可读性关键）。
-5. 填 `平台扩展 (typed)` = `XiaohongshuExt{ note_type, topic_tags[], cover_caption, related_item_id? }`，**过 validator**，不写 schema 外字段；不确定的留空标 `待后台确认`。
+5. 小红书 staged 期间，把 `note_type` / `topic_tags` / `cover_caption` / `related_item_id?` 放在人工发布清单里；不默认写 `平台扩展 (typed)`。对外放行后再按 `XiaohongshuExt` validator 写结构化字段。
 6. 商品型笔记 `链接` 从 `Products 商品.分享链接` 读；缺则留空标待补，不拼小红书商品 URL。
-7. 组一条 `社媒发布队列`（`平台 = 小红书`，`任务 ID = XHS-YYYYMMDD-001`，状态 = `草稿`）；素材顺序显式写；封面素材指定。
+7. 组一条 `社媒发布队列`（`平台 = 小红书`，`任务 ID = XHS-YYYYMMDD-001`，状态 = `草稿`）；素材顺序和封面在草稿/人工清单里显式展示，只有真实发布器读取时才补 `素材顺序` / `封面素材` 字段。
 8. 列字段值给用户确认后写入（写入前硬约束）。状态进 `待审`。
 
 ### 模式 C：发布（staged — 当前只走草稿 + 人工清单）
@@ -91,7 +91,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **Hermes 不直接读浏览器登录态、不点击小红书、不存 cookie / token / 密码、不传本地绝对图片路径**给浏览器。素材先变服务器可授权下载的 asset，插件再拉取上传。
 - 队列写入前列字段值清单 → 用户确认 → 写（lark-base）。
 - 一条记录 = 一个平台一次发布（per-platform 语义）；失败重发 = 同条 attempt++，不新建。
-- 平台专属字段**只走** `XiaohongshuExt` typed schema，不塞自由 JSON、不编造后台字段。
+- 平台专属字段在 staged 期间只进人工清单；对外放行后只走 `XiaohongshuExt` typed schema，不塞自由 JSON、不编造后台字段。
 - 不自己裁切 / 清理图片——发布副本由 assets-library 模式 E 派生；本 skill 只引用变体链接。
 - 未就绪不声称自动发布；登录 / 凭据红线同 pinterest-autopin。
 

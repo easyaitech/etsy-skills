@@ -94,6 +94,11 @@ COMMERCE_PLATFORM.md（销售平台规则）
 - 若目标是 **MARKETING_PLATFORM.md** → 读 `references/interview-marketing-platform.md`，按平台优先级逐个过（前置条件：BRAND_MARKETING.md 须已存在）
 
 五者共同要求：
+- **访谈体验参考 office-hours，但不照搬其产品诊断内容**：一轮访谈 = 先框定当前维度和目标产物 → 只问一个主问题 → 根据用户回答追问 1-2 个具体例子 / 反面边界 / 取舍原因 → 回放总结并等用户校准 → 再进入下一维度。不要一次把参考问题全抛给用户。
+- **单轮只保留一个用户输入点**：即使目标产物缺三块信息，也不要用"先回答 1/2/3"或连续问号压给用户。先问最容易回答的一个问题，等用户开口后再按缺口追问下一块。
+- **问题要有推进感**：每轮都说明这个问题会决定文档里的哪一段，用户才知道自己在帮什么东西定型。
+- **追问有上限**：主观文件（BRAND / BRAND_MARKETING / MARKETING_PLATFORM）可以像 office-hours 一样追具体、追反例、追取舍；用户仍答得浅时留 TODO，后续真实任务再沉淀。事实文件（SHOP / COMMERCE_PLATFORM）只核对字段和来源，不把事实强行抽象成原则。
+- **回放必须暴露取舍**：总结时同时说清楚"这意味着我们会写 X，不写 Y / 避免 Z"；如果出现冲突，列出冲突让用户选，不替用户拍板。
 - 全部访谈完成后，按对应模板（`assets/BRAND_template.md` / `assets/SHOP_template.md` / `assets/COMMERCE_PLATFORM_template.md` / `assets/BRAND_MARKETING_template.md` / `assets/MARKETING_PLATFORM_template.md`）渲染成完整草稿
 - **整篇展示**给用户，等待确认后再落盘
 - 落盘时初始化"修订日志"第一条：`{date}: 初始建立（来源：完整访谈）`

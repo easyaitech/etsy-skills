@@ -25,7 +25,7 @@
 
 - 只通过 `pinterest-autopin` 这个 adapter 调服务器工具发布，不在 social-publisher 里复制 Pinterest 表单逻辑。
 - 单图和多图轮播都是 社媒发布队列 里 `平台 = Pinterest` 的行，由 `pinterest-autopin` 直接读写本行发布，不另建子队列表。
-- Pinterest 行的 `任务 ID`（`PIN-...`）就是本表主键；`ECS job ID` 仅在创建服务器 job 后写入返回的 `jobId`。
+- Pinterest 行的 `任务 ID`（`PIN-...`）就是本表主键；`外部队列 ID`（或表里已有的 `ECS job ID`）仅在创建服务器 job 后写入返回的 `jobId`。
 - `发布 URL` 保存 Pinterest 返回的公开 Pin URL。
 - 如果发布器只创建了广告草稿或拿不到公开 Pin URL，不能标记 `已发`。
 - Hermes 不跑本地 Playwright / Chrome profile；浏览器登录态只在租户已安装的浏览器插件中使用。
@@ -34,7 +34,7 @@
 
 - adapter skill = `xiaohongshu-autopost`（同 pinterest-autopin 三层范式）。social-publisher 只通过它路由小红书行，不复制小红书表单逻辑。
 - 小红书行 = `社媒发布队列` 里 `平台 = 小红书` 的行，`任务 ID` = `XHS-...`，是本表主键。
-- 平台专属字段走 `平台扩展 (typed)` 的 `XiaohongshuExt` schema（note_type / topic_tags / cover_caption / related_item_id），过 validator，不塞自由 JSON。
+- 小红书 staged 期间不默认写平台专属字段；note_type / topic_tags / cover_caption / related_item_id 先进入人工发布清单。对外放行后再按 `XiaohongshuExt` schema 写结构化字段，不塞自由 JSON。
 - 发布图只引用 `Asset Variants 派生素材` 的小红书规格变体（assets-library 模式 E 派生），不在 adapter 里裁切清理。
 - **未对外开放（staged）**：后端三件（服务器工具 `/api/tools/xiaohongshu/jobs` + 插件 `xiaohongshu` capability + 笔记 recipe）已就绪，发布契约见 [`xiaohongshu-autopost/references/publishing-flow.md`](../../xiaohongshu-autopost/references/publishing-flow.md)，**但 adapter 尚未对外开放**：当前只允许组草稿 + 人工发布清单 + 人工回填对账，**不得创建真实 server publish job、不得对真实租户跑真发**。对外放行（产品侧明确批准）后把上表状态和本节标题改 `enabled`，Mode C 才走真实 test → confirm-publish → final。
 - 〔放行后〕`发布 URL` 保存公开笔记 URL；拿不到公开 URL 不能标 `已发`。Hermes 不跑本地 Playwright，登录态只在租户插件中使用。
