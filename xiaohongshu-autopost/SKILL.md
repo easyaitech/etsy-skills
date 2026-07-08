@@ -88,8 +88,10 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ## 写入前的硬性约束
 
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执含飞书链接）。本 skill 特有禁区：
+
 - **Hermes 不直接读浏览器登录态、不点击小红书、不存 cookie / token / 密码、不传本地绝对图片路径**给浏览器。素材先变服务器可授权下载的 asset，插件再拉取上传。
-- 队列写入前列字段值清单 → 用户确认 → 写（lark-base）。
+- 队列写入前列字段值清单 → 用户确认 → 写（lark-base）→ **回执必须含一条可点击的飞书 Base 链接**（优先深链到 `社媒发布队列` 改动的那张表 / 行，按 §Base 写穿不变量的链接构造配方拼）；不要只在对话里报写入而不写 Base。
 - 一条记录 = 一个平台一次发布（per-platform 语义）；失败重发 = 同条 attempt++，不新建。
 - 平台专属字段在 staged 期间只进人工清单；对外放行后只走 `XiaohongshuExt` typed schema，不塞自由 JSON、不编造后台字段。
 - 不自己裁切 / 清理图片——发布副本由 assets-library 模式 E 派生；本 skill 只引用变体链接。

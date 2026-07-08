@@ -84,12 +84,12 @@ layer: foundation
 
 ## 写入前的硬性约束
 
-通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执）。本 skill 特有禁区：
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执含飞书链接）。本 skill 特有禁区：
 
 - 不把“便宜”单独作为主用理由；主用理由至少同时说明质量、稳定性、参数或交付中的一项
 - 淘汰来源必须写清可复盘原因，避免未来重复踩坑
 - 不在 Base 里保存平台账号密码、供应商私聊记录、支付凭证等敏感信息；这里只存采购决策需要的摘要和链接
-- 改 Base 用 `lark-base` 的 diff 风格预览 → 等确认 → 落盘 → 回执；不要只在对话里报改动而不写 Base。用户已明确要求“自动创建/补齐”时，可直接按 schema 执行低风险建表、建字段、建视图操作
+- 改 Base 用 `lark-base` 的 diff 风格预览 → 等确认 → 落盘 → **回执必须含一条可点击的飞书 Base 链接**（优先深链到改动的供应商表 / 记录，按 §Base 写穿不变量的链接构造配方拼）；不要只在对话里报改动而不写 Base。用户已明确要求“自动创建/补齐”时，可直接按 schema 执行低风险建表、建字段、建视图操作
 
 ---
 

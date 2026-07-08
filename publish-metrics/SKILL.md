@@ -94,10 +94,12 @@ publish-composer 选素材+文案 → … → 平台发布（已发，有公开 
 
 ## 写入前的硬性约束
 
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执含飞书链接）。本 skill 特有禁区：
+
 - 只写 metrics 列 + `指标采集时间` / `数据来源`；不改 `状态` / `执行锁` / 内容列。
 - 不重新发布、不读登录态、不抓取未授权数据。
 - 拿不到指标留空标 `待补`，**绝不编数字**；每条指标标来源。
-- Base 写入前列清单 → 用户确认 → 落盘。
+- Base 写入前列清单 → 用户确认 → 落盘 → **回执必须含一条可点击的飞书 Base 链接**（优先深链到回写了 metrics 的 `社媒发布队列` 行，按 §Base 写穿不变量的链接构造配方拼）。
 
 ---
 

@@ -207,7 +207,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ## 写入前的硬性约束
 
-通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有禁区：
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执含飞书链接）。本 skill 特有禁区：
 
 - **不在 Hermes/Mac mini 上跑 Playwright 发布 Pinterest**：旧本地工具只作为历史迁移材料，不是推荐路径。
 - **不保存浏览器登录态**：登录态只在租户自己的 Chrome / 浏览器插件里。
@@ -215,7 +215,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **不替用户建 board**：board 在 Pinterest 后台由用户手建；本 skill 只引用名称。
 - **未授权的 UGC 绝不发**：`Assets 素材池` 表的 `公开授权` 不是 `已授权` 的素材不进入排队流程。
 - **未上线 listing 不出 pin**：`Products 商品` 表中 `状态 ≠ 在售` 的 SKU 不允许排队。
-- **`社媒发布队列` 表写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘。
+- **`社媒发布队列` 表写入用 lark-base 的 diff 风格预览** → 等确认 → 落盘 → **回执必须含一条可点击的飞书 Base 链接**（组 pin 写草稿、模式 C 回写状态、模式 D 标自动发布，凡改了 `社媒发布队列` 行都适用；优先深链到改动的那张表 / 行，按 §Base 写穿不变量的链接构造配方拼）。仅状态查询（模式 E）等只读操作不涉及。
 - **final 发布前必须经过 test**：除非用户明确豁免。
 - **发布失败不盲目重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入。
 - **不在本 skill / Hermes 跑自动发布 cron / 定时器**：自动发布的巡检 / backlog 恢复 / 重试 / 单写者锁归 ECS 常驻 dispatch（T5，需运维显式开启 `PUBLISH_DISPATCH_POLL_MS`；yanggedianzhang 生产已开启）。Hermes 在自动发布里的**唯一职责是模式 D 的标记**（把行标成 `自动发布=true`+`已批准`+`计划发布时间`），标完就交出去——绝不在 Hermes 侧模拟巡检、重试、锁或轮询发布结果。本 skill 是 Pinterest **adapter**：组 pin（模式 B）、手动发某条（模式 C）、开启自动发布（模式 D），不持队列、不跑定时器。
