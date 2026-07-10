@@ -26,6 +26,7 @@ layer: foundation
 | `references/platforms/platform-presets.md` | 多平台架构与 preset 契约 | 决定读哪个平台 preset、加新平台怎么扩；核心流程平台中性，差异都在 preset |
 | `references/order-fulfillment-sop.md` | 新订单到发货、签收跟进的阶段清单 | 新订单 / 待发货订单必须用它判断下一步、缺失证据和要写回的字段 |
 | `references/order-handling.md` | 客服回复场景 SOP（平台中性骨架） | 只用于买家消息、差评、退换货、感谢信等话术，不替代履约 SOP；买家语言 / 措辞 / 平台特例看目标平台 preset |
+| `references/etsy-reply-draft-tool.md` | Etsy 站内信「飞书定稿 → 插件填入回复框」服务器工具 | 仅目标平台 Etsy、且在飞书对话里给店主定稿站内信回复时读；读会话上下文 + 定稿后暂存草稿由插件填入，**只填入不发送** |
 | `references/platforms/<platform>.md` | 目标平台 preset（订单号 / 买家语言 / 承诺发货来源 / 消息边界 / 标签阈值） | 每次处理订单 / 客服前读对应平台 preset；内置 `platforms/etsy.md` / `platforms/xiaohongshu.md`，其他平台缺 preset 时阻塞 |
 
 ---
@@ -103,7 +104,7 @@ layer: foundation
 2. 读 BRAND.md（客服姿态 / 文案语调）+ SHOP.md（政策原文）+ COMMERCE_PLATFORM.md（平台买家语言 / 消息渠道 / 自动化边界）
 3. 读 `references/order-handling.md`：按场景找 SOP（差评 / 退货 / 定制等）
 4. 输出客服回复草稿（买家语言按目标平台 preset 的「买家语言」，最终以 COMMERCE_PLATFORM.md 为准），整篇展示给用户
-5. 用户确认后，**用户自己**复制到目标平台后台 / 客服入口发送（本 skill 不替操作平台）
+5. 用户确认后，**用户自己**复制到目标平台后台 / 客服入口发送（本 skill 不替操作平台）。**Etsy 站内信在飞书对话里定稿时的例外**：可按 [`references/etsy-reply-draft-tool.md`](references/etsy-reply-draft-tool.md) 调服务器工具把定稿草稿自动填进 Etsy 回复框，省掉复制粘贴——但**发送仍由用户在 Etsy 页面手动点击**，未定稿不得暂存
 6. 落地（**回写要真正落进 Base，不是只在对话里记下**——遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量）：
    - 把回复要点 + 用户最终发出的版本回写到 `Orders 订单` 表的"客服记录"字段；用 lark-base 写入拿到成功返回后带一句回执（**含可点击的飞书 Base 链接**，优先深链到该订单记录）
    - 如果该次互动反映客户特征（VIP、定制粉、投诉户），更新 `Customers 客户` 表标签
@@ -136,7 +137,7 @@ layer: foundation
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执）。本 skill 特有禁区：
 
-- **不替用户发平台消息 / 发货 / 退款 / 售后审核**：只产文案 + 维护 Base；真实操作由用户在平台后台、ERP 或专门平台 skill 执行
+- **不替用户发平台消息 / 发货 / 退款 / 售后审核**：只产文案 + 维护 Base；真实操作由用户在平台后台、ERP 或专门平台 skill 执行。（Etsy 站内信的「填入回复框」工具不是发送——见 `references/etsy-reply-draft-tool.md`，发送动作永远归用户）
 - **客户隐私**：邮箱、地址、订单号属敏感数据——Agent 输出里用脱敏写法（如 `订单 #****1234`），不要大段重复
 - **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘 → 回执；不要只在对话里报改动而不写 Base
 - **客服回复**：用户自己复制到目标平台后台 / 客服入口发送；发出后用户最终版本回写到 `Orders 订单` 表的"客服记录"字段
