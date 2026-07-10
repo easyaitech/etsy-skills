@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 新增
+- **Etsy 站内信「飞书定稿 → 插件填入回复框」工具接入 `orders-customers`**：新增 [`orders-customers/references/etsy-reply-draft-tool.md`](orders-customers/references/etsy-reply-draft-tool.md)——店主在飞书里跟店长讨论定稿站内信回复后，Hermes 调服务器工具（`POST /api/hermes/etsy-dm/conversations` 读会话上下文 + `POST /api/hermes/etsy-dm/reply-draft` 暂存草稿，per-tenant 派生令牌），店主机器上的浏览器插件（≥0.5.45）自动打开对应会话把草稿填进回复框，**发送仍由店主手动点击**。SKILL.md 模式 C 第 5 步与 `platforms/etsy.md` §自动化边界同步放宽为「可填入、不发送」（服务端 yanggedianzhang v0.6.10.8）。定稿才暂存、同会话重投即修订、错误码（多命中 409 / 未同步 404 / 插件版本 426）逐条给了处置。
 - **上游 Mac mini 本地热修：过期未发 pin 不许自己顺延（pinterest-autopin 硬约束）**：fublessings 部署机上曾就地（未提交）加过一条红线——过期未发的 pin（`自动发布=true`+`状态∈{待发,已批准}`+计划时间<now）**先问用户要不要改回近几天补发，不主动往后推一两周**，并记了用户偏好「积压过期 pin 应尽快补发」。该热修本地未进 git、下次 `ecommerce-stack update` 会被覆盖丢失，现固化进 canonical SKILL.md 硬约束（含"读 `事件日志` 排除租约超时/失败重复行"），与模式 E 第 3 步互为强调。
 
 ### 重构
