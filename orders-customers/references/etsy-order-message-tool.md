@@ -13,7 +13,7 @@
 
 链路：店主在飞书跟你确认消息文本 + 订单号 → 你调服务器工具暂存 → 店主机器上的浏览器插件（≥0.5.52）约 1 分钟内在隐藏 tab 里定位订单、填入消息、**代点发送** → 结果经飞书回执告知店主。角色分工按 [`../../shared/tools-architecture.md`](../../shared/tools-architecture.md)：你只负责想内容和调接口，队列、鉴权、定位、发送都在 ECS 控制面 + 插件。
 
-> **鉴权**：`Authorization` 用**按租户派生的 Hermes 工具令牌**（provisioning 时注入网关，Hermes 不手写 / 不读取 / 不回显）。`401 UNAUTHORIZED` / `503 HERMES_TOOL_DISABLED` 是服务端配置问题，提示管理员，别自行编造令牌。
+> **鉴权**：`Authorization` 用**按租户派生的 Hermes 工具令牌**（provisioning 时注入网关，Hermes 不手写 / 不读取 / 不回显）。`401 UNAUTHORIZED` / `503 HERMES_TOOL_DISABLED` 是服务端配置问题，提示管理员，别自行编造令牌。变量名、在 terminal / execute_code 里怎么按引用取用、怎么自查有没有注入，见 [`../../shared/backend-api-access.md`](../../shared/backend-api-access.md)。
 
 ---
 

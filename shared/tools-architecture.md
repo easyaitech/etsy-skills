@@ -70,7 +70,7 @@
 1. 先把能力写成**核心库 / 纯函数**；CLI、HTTP endpoint、MCP 都只是它外面的薄壳。
 2. **默认 CLI**：单个、无状态、单一职责的能力。
 3. **才上 MCP**：一组共享同一份 auth / 有状态会话的工具族（如浏览器 / CDP 连接）。
-4. **agent 调工具的真实路径** = Hermes skill → 调 ECS 的 HTTP endpoint（薄、无密钥、带租户 session key）。
+4. **agent 调工具的真实路径** = Hermes skill → 调 ECS 的 HTTP endpoint（薄、无密钥、带租户 session key）。落地细节（注入哪三个环境变量、terminal / execute_code 里怎么拿、怎么调、怎么判断成没成）见 [`shared/backend-api-access.md`](backend-api-access.md)。
 
 skill 侧只写「调哪个入口、传什么、怎么解释返回」；不写鉴权、不写重试编排、不写密钥读取——那些在 ECS。
 
