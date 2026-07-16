@@ -4,7 +4,7 @@
 
 链路：店主在飞书跟你讨论定稿 → 你调服务器工具暂存草稿 → 店主机器上的浏览器插件（≥0.5.45）约 1 分钟内自动打开对应会话、填入回复框 → 插件回执经飞书告知店主去点发送。角色分工按 [`../../shared/tools-architecture.md`](../../shared/tools-architecture.md)：你只负责想内容和调接口，队列、鉴权、填入都在 ECS 控制面 + 插件。
 
-> **鉴权**：两个接口的 `Authorization` 都用**按租户派生的 Hermes 工具令牌**（provisioning 时注入网关，Hermes 不手写 / 不读取 / 不回显）。`401 UNAUTHORIZED` / `503 HERMES_TOOL_DISABLED` 是服务端配置问题，提示管理员，别自行编造令牌。
+> **鉴权**：两个接口的 `Authorization` 都用**按租户派生的 Hermes 工具令牌**（provisioning 时注入网关，Hermes 不手写 / 不读取 / 不回显）。`401 UNAUTHORIZED` / `503 HERMES_TOOL_DISABLED` 是服务端配置问题，提示管理员，别自行编造令牌。变量名、在 terminal / execute_code 里怎么按引用取用、怎么自查有没有注入，见 [`../../shared/backend-api-access.md`](../../shared/backend-api-access.md)。
 
 ---
 
