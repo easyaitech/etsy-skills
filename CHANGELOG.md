@@ -2,6 +2,11 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 2026-07-17
+
+- **skill-prefs 契约全面改写为服务端「我的偏好」设置层**（对应主仓 v0.6.11.x，架构定稿见主仓 docs/skill-prefs-architecture-plan.md）：agent 只能 propose（无任何直接写入方法），生效必须由店主点飞书确认卡；当前偏好由后端每轮注入上下文。`shared/skill-prefs.md` 重写为端点契约（propose / propose-removal / list + 幂等键 + 错误码判据 + 话术红线）；`shared/preamble.md` §店主偏好、`tools-architecture.md`、`knowledge-seeds.md`、README 同步。
+- **废除旧「工作区 `skill-prefs/<skill>.md` 自由覆盖层」**（经架构评审否决：自由文本对长期注入 = 无确认闸的软指令通道；实测从未在任何租户落地）：`ecommerce-stack init` 不再创建该目录，`doctor` 的 skill-prefs 检查改为遗留残留检测。
+
 ## [Unreleased]
 
 ### 新增

@@ -74,6 +74,21 @@ curl -sS -X POST "$YANGGEDIANZHANG_API_BASE/api/hermes/<endpoint>" \
 - ❌ 没调通就不要给用户一个看起来像实测的结论。**本文不列举失败响应样例，就是为了不让它被当成实测结果转述。**
 - ✅ 请求根本没发出去（变量缺失、命令报错）→ 如实说「没调成，卡在哪一步」，不要把它翻译成某个后端错误码。
 
+### 公共闸门错误的判据（全 Hermes 工具端点共用）
+
+**只有真的读到了返回 JSON 里的这些码才作数**（上面的判据原则不变；本表是"读到之后怎么办"，不是可转述的样例）。
+
+| error | 含义 | 你该做什么 |
+|---|---|---|
+| `METHOD_NOT_ALLOWED` / `INVALID_JSON` | 调用方式错（非 POST / body 不是合法 JSON） | 按该端点 reference 修正请求重发 |
+| `TENANT_ID_REQUIRED` | body 漏了 `tenantId` | 补 `$YANGGEDIANZHANG_TENANT_ID` 重发 |
+| `UNAUTHORIZED` | 令牌与 tenantId 不匹配 | 多半是变量注入问题：按上文自查命令核对（只看长度），缺失/不符 → 如实告知需管理员补配置，停 |
+| `HERMES_TOOL_DISABLED` | 服务端未启用工具通道 | 管理员配置问题，如实告知后停 |
+| `TENANT_BINDING_NOT_FOUND` | 租户绑定不存在 | 管理员配置问题，如实告知后停 |
+| `SERVICE_NOT_ACTIVE` | 订阅未生效/已停用（带 reason） | 如实告知店主服务状态，引导联系管理员或续费；不要重试绕过 |
+
+以上只是**读到对应 JSON 错误码之后**的处置判据；未实际读到时，不得引用本表向用户转述任何具体错误。各端点自己的领域错误码见该 skill 的 reference。
+
 各端点该怎么处置它自己的错误码，写在该端点的 reference 里；照那里的处置表走，别自己发挥。
 
 ---
