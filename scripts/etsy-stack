@@ -29,7 +29,7 @@ $CMD_NAME — 电商 skill bundle 管理工具（兼容旧 etsy-stack 名称）
   $CMD_NAME check              立即检查更新（绕过 24h 缓存）
   $CMD_NAME update             拉最新版本并刷新软链
   $CMD_NAME list               列出 manifest 中的 skill 及链接状态
-  $CMD_NAME doctor [--quarantine]  体检：非托管 skill 目录 + 校验工作区 skill-prefs
+  $CMD_NAME doctor [--quarantine]  体检：非托管 skill 目录 + 检测旧版工作区 skill-prefs 残留
   $CMD_NAME pinterest-tool     查看旧本地 Pinterest-autopin 工具（已废弃，仅迁移排查）
   $CMD_NAME ai-cleaner         查看 / 安装 AI 发布图清理工具
   $CMD_NAME where              打印源码安装目录
@@ -361,24 +361,22 @@ else:
     else:
         print(f"  → 确认要清理就跑：{cmd_name} doctor --quarantine")
 
-# 2) 工作区 skill-prefs：校验目标 skill 是否还在 manifest
+# 2) 工作区 skill-prefs：遗留检测。工作区覆盖层已废除（店主偏好走服务端「我的偏好」设置层，
+#    见 shared/skill-prefs.md）；发现残留目录只提示评估清理，agent 不会读取。
 print("")
-valid = set(manifest["skills"])
 if not workspace:
     print("skill-prefs：未解析到工作区（在工作区目录内运行 doctor 可校验）")
 else:
     prefs_dir = os.path.join(workspace, "skill-prefs")
     if not os.path.isdir(prefs_dir):
-        print(f"skill-prefs：{prefs_dir}（无，跳过）")
+        print(f"skill-prefs：{prefs_dir}（无——符合预期，偏好在服务端）")
     else:
-        files = [f for f in sorted(os.listdir(prefs_dir)) if f.endswith(".md") and f != "README.md"]
-        print(f"skill-prefs：{prefs_dir}")
+        files = [f for f in sorted(os.listdir(prefs_dir)) if f != "README.md"]
         if not files:
-            print("  （空）")
-        for f in files:
-            skill = f[:-3]
-            mark = "✓" if skill in valid else "⚠️ 目标 skill 不在 manifest"
-            print(f"  {mark}  {f}")
+            print(f"skill-prefs：{prefs_dir}（空目录，属旧版 init 残留，可直接删除）")
+        else:
+            print(f"⚠️ skill-prefs：{prefs_dir} 非空——该覆盖层已废除（偏好走服务端设置层），")
+            print("   agent 不会读取这些文件；请管理员评估内容后清理。")
 
 # 3) 知识种子：去品牌护栏（包自检，命中即 fail）+ 工作区采纳情况（只读上报，不写盘）
 print("")
@@ -519,19 +517,8 @@ EOF
       echo "  # .ecommerce-workspace   # 标记文件本身建议提交，便于团队成员从 cwd 自动定位"
       echo ""
     fi
-    mkdir -p "$target/skill-prefs"
-    if [[ ! -f "$target/skill-prefs/README.md" ]]; then
-      cat > "$target/skill-prefs/README.md" <<'PREFS'
-# 客户偏好覆盖（skill-prefs）
-
-每个文件 `<skill-name>.md` 覆盖对应 skill 的工作流 / 风格旋钮，升级不冲突。
-完整契约见 stack 的 `shared/skill-prefs.md`。
-
-- 品牌语气 / 店铺事实 / 销售平台规则 / 营销策略 / 内容平台规则 → 走 shop-foundation 写进 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md，不是这里。
-- 安全 / 合规 / QA / 写入确认 → 不可被覆盖。
-PREFS
-      echo "✓ 已创建 skill-prefs/（客户偏好覆盖层，见 shared/skill-prefs.md）"
-    fi
+    # 工作区 skill-prefs/ 目录不再创建：店主偏好已迁移到服务端「我的偏好」设置层
+    # （propose → 店主点飞书确认卡），见 shared/skill-prefs.md。
     # 知识种子：把公共包 seeds/ 拷进 workspace（拷完归租户、可随意改；按 seed_id 幂等；best-effort，无种子或无 python3 则静默跳过，不阻塞 init）
     INSTALL_DIR="$INSTALL_DIR" TARGET="$target" python3 - <<'SEEDPY' 2>/dev/null || true
 import json, os, shutil, datetime
