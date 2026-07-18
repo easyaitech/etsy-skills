@@ -16,8 +16,9 @@ description: 跨境物流状态跟踪——用 `track` 命令查/录包裹物流
 
 ## 何时用哪条
 
-- **拿到运单号 / 发货**：`~/.local/bin/track add <运单号> <租户ID> <order_ref> [carrier]` —— 纳入后台跟踪。
-- **用户问“这单到哪了 / 到货没 / 查快递 / 签收了吗”**：`~/.local/bin/track query <运单号> [carrier]` —— 据返回 JSON 的 `awaiting_data` + `status` + `latest_event` + `note` 用中文口语化回答（别把原始 JSON 甩给用户）。
+- **拿到运单号 / 发货**：`~/.local/bin/track add <运单号> <租户ID> <order_ref> [carrier]` —— 纳入后台跟踪。**租户ID 和 order_ref 要填**（巡检报告靠 order_ref 关联订单号，漏填就只能显示「—」）。
+- **用户问“这单到哪了 / 到货没 / 查快递 / 签收了吗”**（问单个包裹）：`~/.local/bin/track query <运单号> [carrier]` —— 据返回 JSON 的 `awaiting_data` + `status` + `latest_event` + `note` 用中文口语化回答（别把原始 JSON 甩给用户）。
+- **盘点“现在有哪些在途包裹”（巡检/汇总）**：`~/.local/bin/track list` —— 返回全部在途 job（服务端每日已自动轮询的快照，含近 3 条轨迹），不打 17TRACK、不耗配额。**不要**为盘点逐单 `track query` 刷新（那会逐单强制实时查询、白耗配额）。
 
 ## 关键规则
 
