@@ -3,7 +3,7 @@
 > 🚧 **当前小红书 adapter = `staged`，未对外开放。本手册描述的是「对外放行后」才走的真实发布路径，现在「只读不跑」**——
 > Mode C 当前只组草稿 + 人工发布清单，**不创建真实 server publish job**。对外放行（adapter-registry 小红书行改 `enabled`）后本手册才生效。
 >
-> 与 `pinterest-autopin/references/publishing-flow.md` 同款三层契约，把 `pinterest` 换成 `xiaohongshu`、pin 字段换成笔记字段。
+> 与 `pinterest-autopin/references/publishing-flow.md` 同款三层契约（公共骨架见 [`../../shared/social-adapter-paradigm.md`](../../shared/social-adapter-paradigm.md)），把 `pinterest` 换成 `xiaohongshu`、pin 字段换成笔记字段。
 
 模式 C 从 `社媒发布队列` 表中 `平台 = 小红书` 的一行草稿出发，通过 yanggedianzhang 服务器创建小红书 browser tool job，再由现有浏览器插件在租户小红书登录态里执行。
 
@@ -105,13 +105,7 @@ Content-Type: application/json
 
 ## 创建 Job 的错误处理
 
-| HTTP / error | 含义 | Hermes 怎么处理 |
-|---|---|---|
-| `401 UNAUTHORIZED` | Hermes 工具密钥错误或缺失 | 停止，提示管理员修服务器配置 |
-| `404 TENANT_BINDING_NOT_FOUND` | 租户没有 server binding | 停止，提示管理员先绑定租户 |
-| `409 BROWSER_TOOL_INSTALL_REQUIRED` | 服务器还没看到该租户插件上线 | 把响应里的 `userMessage` 原样转述给用户，不编 token |
-| `426 BROWSER_TOOL_UPGRADE_REQUIRED` | 插件版本低或缺 `xiaohongshu` capability | 把响应里的 `userMessage` 原样转述给用户 |
-| `503 HERMES_TOOL_DISABLED` | 服务器未启用 Hermes tool | 停止，提示管理员配置服务端 |
+公共错误表（`401` / `404` / `409` / `426` / `503`）见 [`../../shared/social-adapter-paradigm.md`](../../shared/social-adapter-paradigm.md) § 创建 Job 的公共错误处理；本平台 capability 名为 `xiaohongshu`（`426` 即插件版本低或缺 `xiaohongshu` capability）。
 
 安装 / 升级类错误不算发布失败；队列表保持草稿 / 待审，降级走人工发布清单。
 
@@ -144,11 +138,7 @@ test 安全边界：填表 + 预览，不点发布。用户必须目视确认小
 
 ## [3] Test 结果处理
 
-| 状态 | 含义 | Hermes 怎么处理 |
-|---|---|---|
-| `test_succeeded` | 插件已完成 test 填表 | 让用户确认页面是否正确 |
-| `test_failed` | 插件未能完成 test | 读失败 note → 写 `失败原因分类`（DOM漂移 / 平台拒绝 / …），修正后重建 test job |
-| `claimed_for_test` 长时间不变 | 插件领取后掉线 / 浏览器关闭 | 等 lease 过期后可重新领取；不要创建重复 job |
+服务器 job 状态判读表（`test_succeeded` / `test_failed` / `claimed_for_test` 长时间不变）见 [`../../shared/social-adapter-paradigm.md`](../../shared/social-adapter-paradigm.md) § Test 结果处理。
 
 用户说封面 / 文案 / 话题 / 链接不对 → 回 Base 改源字段（或回 assets-library 模式 E 改变体）→ 重建 test job。
 

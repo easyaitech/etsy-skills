@@ -35,6 +35,8 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 | Pinterest 发布 | `pinterest-autopin/SKILL.md` + `pinterest-autopin/references/publishing-flow.md` |
 | 小红书发布 | `xiaohongshu-autopost/SKILL.md` + `xiaohongshu-autopost/references/publishing-flow.md`（**staged 未对外开放**：契约就绪，当前只草稿 + 人工对账） |
 
+> 养个店长 Hermes 飞书直聊 runtime 无 lark-cli 时，`社媒发布队列` 等 Base 表的只读查询走后端 `POST /api/hermes/bitable/record-search` 端点，访问约定见 [`../shared/backend-api-access.md`](../shared/backend-api-access.md)。
+
 ---
 
 ## 模式 A：接入发布器

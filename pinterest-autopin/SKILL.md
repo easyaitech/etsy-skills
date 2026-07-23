@@ -7,11 +7,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 # Pinterest AutoPin
 
-这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成 Pinterest pin。发布动作不再由 Hermes 本机的 Playwright / Chrome profile 完成，而是分三层：
-
-1. **Hermes**：读商品、素材、品牌规则，生成 title / description / alt text；模式 B 只写 `社媒发布队列` 草稿，模式 C/D 才把已确定内容交给服务器执行。
-2. **yanggedianzhang 服务器**：校验租户、保存 Pinterest job 状态、加锁、发放素材下载地址、记录 test / final 结果。
-3. **现有浏览器插件**：在租户自己的 Chrome 登录态里打开 Pinterest、填表、上传服务器给的素材，并把结果回传服务器。
+这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成 Pinterest pin。三层架构（Hermes 大脑 / yanggedianzhang 服务器控制面 / 租户浏览器插件）、job 生命周期（test → confirm-publish → final）、模式分类与队列表模型见 [`../shared/social-adapter-paradigm.md`](../shared/social-adapter-paradigm.md)——本 skill 是该范式的 **Pinterest adapter**，Hermes 侧产出为英文 title / description / alt text。
 
 它可以被用户直接触发，也可以作为 `social-publisher` 的 Pinterest adapter 被调用。跨平台 `社媒发布队列` 的 source of truth 仍在 `publish-composer` / `social-publisher`；本 skill 只负责 `平台 = Pinterest` 行的语义准备、服务器 job 创建和结果回写。
 
@@ -19,18 +15,18 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **手动发某条（模式 C）**：Hermes 亲自调 `POST /api/tools/pinterest/jobs` 建 test job → 用户目视确认 → `confirm-publish` 转 final。逐条人工把关，适合首发 / 拿不准的内容。
 - **无人值守自动发布（模式 D）**：Hermes **不亲自调发布端点**，只把已审核的行标成 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给**已在 yanggedianzhang 生产常驻运行的 ECS dispatch**（约每分钟扫一轮）自动建 publish job、浏览器插件真发、结果回写。**dispatch 到点直发、没有逐条人工确认闸**——所以只在内容确定无误后才标 `自动发布=true`（详见模式 D 的红线）。Hermes 依然不跑定时器、不持队列，只负责「把料放上传送带」。
 
-**模式 B 是内容合同，不是后端发布功能**：后端把 `标题` / `描述` / `Alt Text (EN)` / `链接` / `Board (Pinterest)` 当作已确认输入，只校验、传递和记录；缺字段时 fail-closed，不生成、不改写、不补全文案。
+**模式 B 是内容合同，不是后端发布功能**（语义见 [`../shared/social-adapter-paradigm.md`](../shared/social-adapter-paradigm.md) §模式分类）：后端把 `标题` / `描述` / `Alt Text (EN)` / `链接` / `Board (Pinterest)` 当作已确认输入，缺字段时 fail-closed。
 
 支持的队列模型：
 - **单图 pin**：1 张服务器可授权下载的素材。
 - **多图轮播 pin**：2-5 张服务器可授权下载的素材，按 `关联素材` 的编号顺序发布；每张图的 alt text 通过 `Alt Text (EN)` 的 `---` 分段对应。历史表若已有 `发布素材`，只作兼容读取，不默认新建。
 
-**`社媒发布队列` 表核心模型**：一条 Base 记录 = 一个 Pinterest Pin。发布成功后这一行只回写一个 `发布 URL`。
+**`社媒发布队列` 表核心模型**（通用模型见 [`../shared/social-adapter-paradigm.md`](../shared/social-adapter-paradigm.md) §队列表模型）：一条 Base 记录 = 一个 Pinterest Pin。
 
-**架构边界**：Hermes 不直接读浏览器登录态，不直接点击 Pinterest，不保存 cookie / token / 密码，不把本地绝对图片路径传给浏览器。素材必须先变成服务器能授权下载的 asset，插件再从服务器拉取 Blob/File 上传。
+**架构边界**：见 [`../shared/social-adapter-paradigm.md`](../shared/social-adapter-paradigm.md) §架构边界——Hermes 不持登录态 / cookie / token，不把本地绝对图片路径传给浏览器；素材必须先进服务器 asset 流程，插件再从服务器拉取 Blob/File 上传。
 
 **对外的实操接口**：
-- 飞书 Base：用 `lark-base` 操作店铺总 Base 内的 `社媒发布队列` 表，并反查 `Products 商品` / `Asset Variants 派生素材` 表；架构见 `../shared/store-base-architecture.md`。
+- 飞书 Base：用 `lark-base` 操作店铺总 Base 内的 `社媒发布队列` 表，并反查 `Products 商品` / `Asset Variants 派生素材` 表；架构见 `../shared/store-base-architecture.md`。养个店长 Hermes 飞书直聊 runtime 无 lark-cli 时，Base 只读查询走后端 `POST /api/hermes/bitable/record-search` 端点，访问约定见 [`../shared/backend-api-access.md`](../shared/backend-api-access.md)。
 - 工作区根目录的 BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md（用 `shop-foundation` 维护）。
 - 服务器工具：`POST /api/tools/pinterest/jobs` 创建 test job；`POST /api/tools/pinterest/jobs/confirm-publish` 在 test 通过且用户确认后转 final。详见 `references/publishing-flow.md`。
 - 浏览器执行器：沿用现有 Etsy DM 浏览器插件，插件版本必须带 `pinterest` capability。安装 / 升级提示由服务器返回，Hermes 只把 `userMessage` 原样转述给用户。

@@ -7,11 +7,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 # Xiaohongshu AutoPost（小红书笔记发布适配器）
 
-这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成**小红书笔记**（图文笔记 / 视频笔记），并作为 `social-publisher` 的**小红书输出适配器**。它和 `pinterest-autopin` 是同一套三层范式的兄弟 adapter：
-
-1. **Hermes**：读商品、派生变体、品牌规则，生成中文 title / 正文 / 话题 / 封面文案；当前只组 `平台 = 小红书` 的草稿和人工发布清单。
-2. **yanggedianzhang 服务器**：后端能力 staged 待放行；放行后才校验租户、保存小红书 job 状态、加锁、发放素材下载地址、热下发小红书笔记 recipe、记录 test / final 结果。
-3. **租户浏览器插件**：对外放行后，在租户自己的小红书登录态里打开发布页、按服务器下发的 recipe 填表上传、回传结果。
+这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成**小红书笔记**（图文笔记 / 视频笔记），并作为 `social-publisher` 的**小红书输出适配器**。它和 `pinterest-autopin` 是同一套三层范式的兄弟 adapter——三层架构（Hermes 大脑 / yanggedianzhang 服务器控制面 / 租户浏览器插件）、job 生命周期与队列表模型见 [`../shared/social-adapter-paradigm.md`](../shared/social-adapter-paradigm.md)。小红书侧的差异：Hermes 产出**中文** title / 正文 / 话题 / 封面文案，当前只组 `平台 = 小红书` 的草稿和人工发布清单；服务器能力 staged 待放行，放行后才建 job 并**热下发小红书笔记 recipe**；插件对外放行后才按 recipe 在租户自己的小红书登录态里填表上传、回传结果。
 
 跨平台 `社媒发布队列` 的 source of truth 在 `publish-composer`；本 skill 当前只负责 `平台 = 小红书` 行的语义准备和人工发布清单。对外放行后才负责服务器 job 创建和结果回写。
 
@@ -104,7 +100,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **publish-composer / social-publisher**：跨平台队列 source of truth 在 composer；本 skill 只读写 `平台 = 小红书` 行 + 作为 dispatch 路由到的小红书 adapter。dispatch 在 `已批准→发布中` 前按本 adapter 的 capability 校验。
 - **assets-library**：模式 E 派生小红书规格变体（3:4 封面 / 商品图）；本 skill 只引用，不自己裁切清理。
 - **listing-catalog**：商品事实 + `分享链接` + 小红书商品 ID；商品型笔记链接来源。
-- **pinterest-autopin**：兄弟 adapter，同三层范式 + 同 PublishIntent 契约；新增字段 / 能力时对齐两边。
+- **pinterest-autopin**：兄弟 adapter，同三层范式 + 同 PublishIntent 契约（共享骨架见 [`../shared/social-adapter-paradigm.md`](../shared/social-adapter-paradigm.md)）；新增字段 / 能力时对齐两边。
 
 ---
 

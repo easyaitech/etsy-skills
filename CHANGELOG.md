@@ -2,6 +2,13 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 2026-07-24
+
+- **技能层底层化改造初稿（只做结构去重与指针收敛，不改任何触发路由 / 模式语义 / 红线 / 守卫）**，三项：
+  - **社媒发布 adapter 共享范式单点化**：新增 [`shared/social-adapter-paradigm.md`](shared/social-adapter-paradigm.md)，把 `pinterest-autopin` 与 `xiaohongshu-autopost` 两份 SKILL.md / publishing-flow.md 里逐字或近逐字重复的平台无关共性（三层架构 Hermes 大脑 / yanggedianzhang 服务器控制面 / 租户浏览器插件、job 生命周期 test → confirm-publish → final、模式分类 B 内容合同 / C 手动发布 / D 自动发布、`社媒发布队列` 表模型、架构边界、创建 job 公共错误表 401/404/409/426/503、test 结果判读表、结果回写骨架）提炼成单一事实源，末尾附「新平台 adapter 写作清单」（平台字段 / 素材规格 / 端点对 / capability 名 / staged→enabled 放行流程等最小差异集）。两份 SKILL.md 的重复正文段落与两份 publishing-flow.md 的重复错误表 / test 判读表替换为指针，只保留各自平台差异（Pinterest 的 Board / Alt Text (EN) / 2:3 变体 / 模式 D dispatch 细节；小红书的 staged 红线 / 中文文案 / 3:4 变体 / 笔记 recipe）；frontmatter description、模式编号、就绪检查表、红线段落一字未动。
+  - **record-search 只读原语采纳补齐**：`orders-customers` / `supplier-foundation` / `business-knowledge` / `publish-composer` / `social-publisher` / `pinterest-autopin` / `publish-metrics` 七个写 Base 的 skill 在数据访问段各加一句与 `listing-catalog` / `assets-library` 同款指针——养个店长 Hermes 飞书直聊 runtime 无 lark-cli 时，Base 只读查询走后端 `POST /api/hermes/bitable/record-search` 端点，访问约定见 [`shared/backend-api-access.md`](shared/backend-api-access.md)；不复制端点细节，保持单一事实源。
+  - **listing-catalog 礼物维度调研下沉平台 preset**：模式 B step 5.5 的 Etsy 专属完整内容（gate + 收集原则 + 礼物词库与过滤候选词产出 + 非 Etsy 跳过路由）挪进 [`listing-catalog/references/platforms/etsy.md`](listing-catalog/references/platforms/etsy.md) 新增 § 附加调研环节；主流程 5.5 改为平台中性的一句「平台 preset 若声明附加调研环节，在此步执行（Etsy：礼物维度调研）」。内容无丢失、语义不变，只改归属位置（对齐 orders-customers 的平台 preset 模式）；step 1 / 5 / 5.6 / 10 对 step 5.5 的既有引用继续成立。
+
 ## 2026-07-17
 
 - **skill-prefs 契约全面改写为服务端「我的偏好」设置层**（对应主仓 v0.6.11.x，架构定稿见主仓 docs/skill-prefs-architecture-plan.md）：agent 只能 propose（无任何直接写入方法），生效必须由店主点飞书确认卡；当前偏好由后端每轮注入上下文。`shared/skill-prefs.md` 重写为端点契约（propose / propose-removal / list + 幂等键 + 错误码判据 + 话术红线）；`shared/preamble.md` §店主偏好、`tools-architecture.md`、`knowledge-seeds.md`、README 同步。

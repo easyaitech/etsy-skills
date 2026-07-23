@@ -61,6 +61,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 - **素材侧**（`Assets 素材池` canonical + `Asset Variants 派生素材`）的 schema owner 是 `assets-library`，
   本 skill 只读引用，**不建、不写其结构**。
 - **`社媒发布队列`**：一个平台一次发布 = 一条记录，按 `平台` 区分。默认只保留当前运行需要的身份、内容、执行状态列；账号、品牌线、地区语言和平台扩展字段用到时再补。
+- 养个店长 Hermes 飞书直聊 runtime 无 lark-cli 时，上述表的只读查询走后端 `POST /api/hermes/bitable/record-search` 端点，访问约定见 [`../shared/backend-api-access.md`](../shared/backend-api-access.md)。
 
 ---
 

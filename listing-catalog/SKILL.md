@@ -86,9 +86,7 @@ layer: foundation
    - **其他已配置平台**：只使用 COMMERCE_PLATFORM.md 对应平台章节里的标题、描述、关键词、属性、媒体和合规规则；配置没写的限制视为未知，向用户确认，不自行补全
    - **其他未配置平台**：停止，引导用户先用 `shop-foundation` 建立该平台配置
 5. **(可选) 上架前调研** — 任一命中即主动提示用户去做需求 / 竞品 / 定价调研（用 eRank 等第三方工具）：① 用户提到有调研工具账号；② 新品类首品；③ 主推 SKU；④ 高客单品；⑤ 用户主动要求"调研 / 看竞品 / 做 SEO"。读 `references/platforms/etsy.md` § 上架前调研，按其原则（验证需求与竞争、对标市场定价）引导用户。低价值 SKU 或用户跳过 → 直接进 step 5.5（沿用 step 1 的"可选项缺失不必停下"规则）
-5.5. **(Etsy 专属，Etsy 下才跑；非 Etsy 平台整段跳过) 礼物维度调研** — **仅当目标平台是 Etsy 时执行**。礼物 / 节日维度是 Etsy 搜索流量大头、是 Etsy SEO 的输入，不套用到小红书或其他无礼物槽位的平台。注册见 [`../shared/platform-config.md`](../shared/platform-config.md) § 内置平台 preset · Etsy。读 `references/platforms/etsy.md` § 礼物维度，按其原则收集：先判断自购 / 送礼，送礼则明确受众 / 关系、场合、是否贴近节日；投入与商品价值匹配（低价轻量、高价值 / 主推品深挖）。
-   - 产出一个礼物词库（驱动 step 7 的 title 礼物位 / tags 礼物词 / description 礼物语境）+ 经 BRAND.md 语调过滤后的「过滤掉的候选词」清单
-   - **非 Etsy 平台**：跳过本环节——不收集礼物倾向、不产礼物词库，直接进 step 5.6
+5.5. **平台 preset 附加调研环节** — 平台 preset 若声明附加调研环节，在此步执行（Etsy：礼物维度调研，见 [`references/platforms/etsy.md`](references/platforms/etsy.md) § 附加调研环节：礼物维度调研——仅 Etsy 执行，产出礼物词库 + 「过滤掉的候选词」清单）。当前平台的 preset 未声明附加环节时整段跳过，直接进 step 5.6
 5.6. **(可选) Knowledge Cards 检索** — 读 [`references/business-knowledge-lookup.md`](references/business-knowledge-lookup.md) 和 [`../business-knowledge/references/knowledge-card-lookup.md`](../business-knowledge/references/knowledge-card-lookup.md)，按 `scenario: listing` 检索店铺总 Base 内 `Knowledge Cards 知识卡片` 表：
    - 输入只使用已知事实：SKU、品类、材质、价格档、SEO 关键词、目标受众；**Etsy 平台**还含 step 5.5 生成的礼物词库 / 节日 / 场景（非 Etsy 平台 step 5.5 未运行，无此项）；不要为了检索补编 SKU 信息
    - `max_cards: 3`
