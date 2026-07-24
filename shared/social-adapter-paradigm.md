@@ -39,6 +39,8 @@
 
 ## Job 生命周期（test → confirm-publish → final）
 
+> 下图与本节出现的端点形状均为**范式示意**；真实 URL、鉴权与请求体一律以各 adapter 的 publishing-flow 契约为准。
+
 ```text
 `社媒发布队列` 草稿（平台 = <本平台>）
    │
@@ -75,31 +77,14 @@
 | 状态 | 含义 | Hermes 怎么处理 |
 |---|---|---|
 | `test_succeeded` | 插件已完成 test 填表 | 让用户确认页面是否正确 |
-| `test_failed` | 插件未能完成 test | 读取失败 note → 按该平台 publishing-flow 的要求回写失败原因字段（至少 `失败原因分类`：DOM漂移 / 平台拒绝 / …），修正后重建 test job |
+| `test_failed` | 插件未能完成 test | 读取失败 note → 按该平台 publishing-flow 的失败列合同回写，修正后重建 test job |
 | `claimed_for_test` 长时间不变 | 插件领取后掉线或浏览器关闭 | 等 lease 过期后可重新领取；不要创建重复 job |
 
 用户说内容 / 素材 / 链接不对时，回到 Base 修改源字段（必要时回 assets-library 模式 E 改变体），再重新创建 test job。
 
 ### 结果回写（[6]）
 
-成功时（状态机 `发布中→已发`）：
-
-```text
-- 状态: 已发
-- 发布 URL: {resultUrl}      # 拿不到公开 URL 不能标已发
-- 发布时间: {now in YYYY-MM-DD HH:mm}
-- 失败原因分类 / 失败原因: 清空
-```
-
-失败时（`发布中→失败`）：
-
-```text
-- 状态: 失败
-- 失败原因分类: {会话过期 / 插件未装 / 限速 / DOM漂移 / 平台拒绝 / 网络 / 其他}
-- 失败原因: {原文截断到 100 字符}
-- 发布尝试次数: +1
-- 最后尝试时间: {now}
-```
+发布结果由 adapter（执行状态列 owner）回写 `社媒发布队列`：成功 = 状态推进到「已发」+ 回写公开 `发布 URL`（拿不到公开 URL 不能标已发）；失败 = 状态推进到「失败」+ 按各平台 publishing-flow 的失败列合同回写。**具体列名、失败分类枚举、尝试计数 / 清空规则等合同细节完全归各平台的 publishing-flow.md**，本文不作统一断言。
 
 平台结果列（如 `平台 post id`）按各 adapter 自己的 publishing-flow 补。`状态` 是事件日志的投影（状态机见 [`../publish-composer/references/base-schema.md`](../publish-composer/references/base-schema.md) § 表 2）；回写 `状态` 时如该行有 `事件日志` 列，追加一条 `who=adapter / from→to / ts / reason` 转移记录，不裸改状态。幂等：插件迟到上报不得造成重复发布（同 `jobId` 只回写一次）。回写前按通用协议列出改动让用户确认，回执遵守 [`store-base-architecture.md`](store-base-architecture.md) §Base 写穿不变量。
 
