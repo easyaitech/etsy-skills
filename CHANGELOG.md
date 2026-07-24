@@ -2,6 +2,10 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 2026-07-24 (小红书封存)
+
+- **小红书 adapter 整体封存（产品决策：现阶段专注 Etsy，小红书不对用户开放，文档保留待未来解封）。** `xiaohongshu-autopost` 从 `staged`（后端就绪 / 只组草稿）转为 `封存 shelved`：frontmatter description 与就绪状态改为「用户提任何小红书请求时只说明封存边界并引导回 Etsy，连草稿都不组、不建发布队列行、不创建 server publish job」；`social-publisher/references/adapter-registry.md` 小红书行状态改 `封存 shelved`。组笔记 / 三层范式 / 发布契约文档原样保留供未来解封复用（解封需产品侧批准 + 后端 `XHS_PLATFORM_ENABLED=1` + adapter-registry 改 `enabled`）。触发路由保留（仍路由到本 skill 以正确拒绝），只改动作语义。
+
 ## 2026-07-24
 
 - **技能层底层化改造初稿（只做结构去重与指针收敛，不改任何触发路由 / 模式语义 / 红线 / 守卫）**，三项：

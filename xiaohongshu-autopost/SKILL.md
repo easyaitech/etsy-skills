@@ -1,6 +1,6 @@
 ---
 name: xiaohongshu-autopost
-description: 把电商商品 + 素材库 + 品牌底座组装成小红书笔记（图文 / 视频），并作为 social-publisher 的小红书 adapter。当前小红书 adapter **staged（后端就绪但未对外开放）**：Hermes 只负责判断、生成中文文案、组草稿和人工发布清单，不持 Chrome profile、不跑 Playwright、不维护发布队列、不创建真实 server publish job。三种触发：(1) "接小红书 / 配置小红书自动发 / 建小红书笔记流水线"——定位店铺总 Base 内 `社媒发布队列` 表并说明 staged 边界；(2) "给 SKU 出小红书笔记 / 写小红书文案 / 排一条小红书笔记"——读 BRAND + `Products 商品` 表 + `Asset Variants 派生素材` 表，组装一条 `社媒发布队列`（平台=小红书）草稿，专属字段先进入人工发布清单，不默认扩 `XiaohongshuExt` / typed JSON；(3) "发小红书 / 测试笔记 / publish"——当前只出草稿 + 人工发布清单；对外放行（adapter-registry 改 enabled）后才走真发 test → confirm-publish → final（契约见 references/publishing-flow.md）。每次只处理一条。
+description: 小红书笔记发布 adapter，当前**封存（shelved，产品决策 2026-07-24：现阶段专注 Etsy，小红书不对用户开放）**。用户提出任何小红书相关请求（"接小红书 / 配置小红书自动发 / 建小红书笔记流水线"、"给 SKU 出小红书笔记 / 写小红书文案 / 排一条小红书笔记"、"发小红书 / 测试笔记 / publish 小红书"）时，触发本 skill 只为**统一说明封存边界并引导回 Etsy**：告知"当前版本专注 Etsy，小红书功能暂未开放，请等后续版本"，不组草稿、不建发布队列行、不创建 server publish job、不出人工发布清单。后端配套已用 XHS_PLATFORM_ENABLED 开关封存（默认关，XHS 端点返回 410）。本 adapter 的组笔记 / 三层范式 / 发布契约文档原样保留供未来版本解封复用（解封需产品侧批准 + 后端开关 + adapter-registry 改 enabled）。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
@@ -17,16 +17,15 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ---
 
-## ⚠️ 执行就绪状态（staged — 后端就绪，**未对外开放**）
+## ⛔ 执行就绪状态（封存 shelved — 产品决策 2026-07-24：现阶段专注 Etsy，小红书不对用户开放）
 
-**小红书真实自动发布尚未对外开放。** 后端三件已就绪（服务器工具 `/api/tools/xiaohongshu/jobs` + `/confirm-publish`、插件 `xiaohongshu` capability、服务端热下发笔记 recipe），发布契约也写好了（见 [`references/publishing-flow.md`](references/publishing-flow.md）），**但还没上线放行**。所以现在本 skill 能做的是：
+**小红书业务已整体封存，本 adapter 现阶段不对用户提供任何小红书能力。** 产品侧（2026-07-24）决定当前版本只做 Etsy，小红书连组草稿都不做——用户要小红书相关帮助时，说明「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」并引导回 Etsy 经营，不进入本 skill 的任何模式。
 
-- ✅ 组装 `平台 = 小红书` 的 PublishIntent 草稿和人工发布清单；专属字段先留在草稿文本里，不默认扩表
-- ✅ 反向请求 assets-library 模式 E 派生小红书规格变体（3:4 封面 / 商品图）
-- ✅ 出**人工发布清单**，用户手动发布后回填公开笔记 URL 对账
-- ❌ **不得**创建真实 server publish job、不得对真实租户跑真发、不得声称已自动发布
+后端配套已用 `XHS_PLATFORM_ENABLED` 开关封存（默认关，四个 XHS 端点返回 `410 XHS_PLATFORM_SUSPENDED`）；本 adapter 文档与流程契约**原样保留**，供未来版本重新启用时直接复用，不删。
 
-`references/publishing-flow.md` 里的 test → confirm-publish → final 流程是**对外放行后**才走的真实路径，现在只读不跑。**放行**（产品侧明确批准对外开放）后，把 [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书行改 `enabled`，Mode C 才解锁真发。
+**未来解封路径**（需产品侧明确批准）：① 后端设 `XHS_PLATFORM_ENABLED=1`；② 把 [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书行改 `enabled`；③ 本节改回下方保留的 staged/enabled 就绪说明。解封前，下面这段是**未来态说明、当前不适用**：
+
+> （未来态，封存期不执行）后端三件已就绪（服务器工具 `/api/tools/xiaohongshu/jobs` + `/confirm-publish`、插件 `xiaohongshu` capability、服务端热下发笔记 recipe），发布契约见 [`references/publishing-flow.md`](references/publishing-flow.md）。解封后本 skill 能做：组装 `平台 = 小红书` 的 PublishIntent 草稿和人工发布清单（专属字段先留草稿文本，不默认扩表）；反向请求 assets-library 模式 E 派生小红书规格变体（3:4 封面 / 商品图）；出人工发布清单供用户手动发布后回填公开笔记 URL 对账。`references/publishing-flow.md` 的 test → confirm-publish → final 是 adapter-registry 改 `enabled` 后才走的真实路径。
 
 ---
 
