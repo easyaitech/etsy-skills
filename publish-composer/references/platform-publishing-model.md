@@ -82,7 +82,9 @@
 
 ---
 
-## 小红书图文
+## 小红书图文（⛔ 封存 shelved — 未来解封资料，封存期不组装）
+
+> **小红书当前封存**（产品决策 2026-07-24：专注 Etsy，不对用户开放）。判据 = [`../../social-publisher/references/adapter-registry.md`](../../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`。封存期收到小红书请求，**不组任何草稿 / 队列行 / 人工清单**，只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP。以下结构示意仅供未来解封复用。
 
 ```text
 发布类型 = 图文笔记
@@ -100,10 +102,12 @@
 - 正文、标签、话题和标题属于 社媒发布队列，不写回素材池。
 - 标题 / 正文 / 标签默认中文；如果 MARKETING_PLATFORM.md 要求双语，再按配置输出。
 - 如一篇笔记复用商品素材，`链接` 可为空或填站外允许的落地页；商品型发布仍优先`Products 商品` 表 `分享链接`。
-- 小红书未 enabled 时，`note_type`、`topic_tags`、`cover_caption`、`related_item_id` 等放进人工发布清单；对外放行后再按 `XiaohongshuExt` schema 写结构化字段。
-- 当前 `social-publisher` 尚未启用小红书 adapter，本 skill 只生成小红书发布任务草稿，不登录、不上传、不发布。人工发布后可回填公开笔记 URL 做对账。
+- 〔解封后〕小红书未 enabled 时，`note_type`、`topic_tags`、`cover_caption`、`related_item_id` 等放进人工发布清单；对外放行后再按 `XiaohongshuExt` schema 写结构化字段。
+- **封存期**：小红书 = `封存 shelved`，`social-publisher` 不路由、composer 不组草稿——按封存边界回复并 STOP，不登录、不上传、不发布、不做对账。
 
-## 小红书视频
+## 小红书视频（⛔ 封存 shelved — 未来解封资料，封存期不组装）
+
+> 小红书当前封存（专注 Etsy，不对用户开放）：**不组任何草稿 / 队列行**，按封存边界回复并 STOP。以下仅供未来解封复用。
 
 ```text
 发布类型 = 视频
@@ -117,7 +121,7 @@
 - 视频本体和封面分开记录；封面可以是视频代表帧，也可以是独立图片素材。
 - 标题、正文、标签和话题写在 社媒发布队列；视频文件和封面文件仍只作为素材引用。
 - 平台尺寸、安全区和脚本模板以 MARKETING_PLATFORM.md 为准；缺配置时只建草稿，不声称已满足平台最佳实践。
-- 当前 `social-publisher` 尚未启用小红书 adapter，发布动作交给未来小红书 adapter 或用户手动后台处理。
+- **封存期**：小红书 = `封存 shelved`，composer 不组草稿、`social-publisher` 不路由——按封存边界回复并 STOP。
 
 ---
 

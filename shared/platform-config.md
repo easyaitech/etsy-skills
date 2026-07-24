@@ -61,7 +61,7 @@
 - 商品上架 / `Products 商品` 表：`listing-catalog/references/platforms/xiaohongshu.md`
 - 订单 / 客服 / 售后表：`orders-customers/references/platforms/xiaohongshu.md`
 - 发布任务池：`publish-composer/references/platform-publishing-model.md` 的“小红书图文 / 小红书视频”
-- 自动发布状态：`social-publisher/references/adapter-registry.md` 小红书 = **staged（未对外开放）**——adapter `xiaohongshu-autopost` 后端 + 契约就绪，但当前只草稿 + 人工对账，不跑真发；对外放行后改 `enabled`
+- 自动发布状态：`social-publisher/references/adapter-registry.md` 小红书 = **封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**——adapter `xiaohongshu-autopost` 后端 + 契约就绪，但整体封存：用户提小红书发布请求只说明封存边界 + 引导回 Etsy + STOP，**连草稿 / 人工对账都不做**；解封走 adapter-registry §小红书解封验收清单（不是一处开关）改 `enabled`
 - 社媒图默认规格：`image-synth/references/social-platform-specs.md` 的“小红书图文 / 商品种草图”
 
 小红书商品按 SPU / SPL / SPV / ITEM 分层，`Products 商品` 表必须保留品牌、末级类目、规格、图片、描述、产品参数、价格、库存、上下架和审核状态等字段。小红书订单按订单 / 包裹 / SKU / 售后分层，`Orders 订单` 表必须保留包裹 ID、订单状态、售后状态、取消状态、SKU 明细、物流模式、承诺发货时间和收件地区等字段。
