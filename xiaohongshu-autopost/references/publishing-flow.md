@@ -140,6 +140,8 @@ test 安全边界：填表 + 预览，不点发布。用户必须目视确认小
 
 服务器 job 状态判读表（`test_succeeded` / `test_failed` / `claimed_for_test` 长时间不变）见 [`../../shared/social-adapter-paradigm.md`](../../shared/social-adapter-paradigm.md) § Test 结果处理。
 
+**小红书失败列合同（test 阶段）**：`test_failed` 时读失败 note → 写 `失败原因分类`（DOM漂移 / 平台拒绝 / …），修正后重建 test job。
+
 用户说封面 / 文案 / 话题 / 链接不对 → 回 Base 改源字段（或回 assets-library 模式 E 改变体）→ 重建 test job。
 
 ---

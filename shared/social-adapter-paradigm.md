@@ -86,7 +86,7 @@
 
 发布结果由 adapter（执行状态列 owner）回写 `社媒发布队列`：成功 = 状态推进到「已发」+ 回写公开 `发布 URL`（拿不到公开 URL 不能标已发）；失败 = 状态推进到「失败」+ 按各平台 publishing-flow 的失败列合同回写。**具体列名、失败分类枚举、尝试计数 / 清空规则等合同细节完全归各平台的 publishing-flow.md**，本文不作统一断言。
 
-平台结果列（如 `平台 post id`）按各 adapter 自己的 publishing-flow 补。`状态` 是事件日志的投影（状态机见 [`../publish-composer/references/base-schema.md`](../publish-composer/references/base-schema.md) § 表 2）；回写 `状态` 时如该行有 `事件日志` 列，追加一条 `who=adapter / from→to / ts / reason` 转移记录，不裸改状态。幂等：插件迟到上报不得造成重复发布（同 `jobId` 只回写一次）。回写前按通用协议列出改动让用户确认，回执遵守 [`store-base-architecture.md`](store-base-architecture.md) §Base 写穿不变量。
+平台结果列（如 `平台 post id`）与事件日志追加规则按各 adapter 自己的 publishing-flow 合同执行（`状态` 状态机见 [`../publish-composer/references/base-schema.md`](../publish-composer/references/base-schema.md) § 表 2）。幂等：插件迟到上报不得造成重复发布（同 `jobId` 只回写一次）。回写前按通用协议列出改动让用户确认，回执遵守 [`store-base-architecture.md`](store-base-architecture.md) §Base 写穿不变量。
 
 ---
 
