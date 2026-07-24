@@ -13,7 +13,8 @@ publish-composer 生成发布任务草稿
 social-publisher 做任务校验 / 排期 / 适配器路由
         ↓
 Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plugin
-小红书 / Instagram / TikTok: 未来适配器或人工后台
+小红书: 封存 shelved（不对用户开放，只说明封存边界+引导回 Etsy+STOP，无人工后台出口）
+Instagram / TikTok: 未来适配器或人工后台
 ```
 
 它不负责长期素材归档，不负责生成图片或制作视频，不负责写商品事实。素材归档归 `assets-library`，图片生成归 `image-synth`，商品事实归 `listing-catalog`。
