@@ -35,6 +35,8 @@ publish-composer 选素材+文案 → … → 平台发布（已发，有公开 
 
 **边界**：本 skill 不重新实现发布、不读浏览器登录态、不改 `状态` / `执行锁` 等执行状态列（那是 ECS dispatch / adapter）。只写 metrics 列。
 
+养个店长 Hermes 飞书直聊 runtime 无 lark-cli 时，`社媒发布队列` 等表的只读查询走后端 `POST /api/hermes/bitable/record-search` 端点，访问约定见 [`../shared/backend-api-access.md`](../shared/backend-api-access.md)。
+
 ---
 
 ## 模式 A：建发布指标列
