@@ -1,8 +1,8 @@
 # 社媒发布 Adapter 共享范式
 
-`pinterest-autopin`（已上线）与 `xiaohongshu-autopost`（staged）是同一套范式的兄弟 adapter：把电商店铺的「商品 + 素材 + 品牌」组装成平台发布物，并作为 `social-publisher` 的平台输出适配器。本文收敛两者（以及未来新平台 adapter）共用的**平台无关骨架**——三层架构、队列表模型、模式分类、job 生命周期、架构边界。
+`pinterest-autopin`（已上线 enabled）与 `xiaohongshu-autopost`（当前封存 shelved，产品决策专注 Etsy）是同一套范式的兄弟 adapter：把电商店铺的「商品 + 素材 + 品牌」组装成平台发布物，并作为 `social-publisher` 的平台输出适配器。本文收敛两者（以及未来新平台 adapter）共用的**平台无关骨架**——三层架构、队列表模型、模式分类、job 生命周期、架构边界。
 
-**平台差异（专属字段、素材规格、端点契约、capability、文案语言、staged 红线、dispatch 细节）留在各 adapter 自己的 `SKILL.md` / `references/publishing-flow.md` 里，本文不覆盖它们**；本文只做结构去重，不改变任何 adapter 的触发路由、模式语义、红线和守卫，与各 adapter 文档的平台专属描述冲突时以各 adapter 文档为准。
+**平台差异（专属字段、素材规格、端点契约、capability、文案语言、staged / 封存 shelved 红线、dispatch 细节）留在各 adapter 自己的 `SKILL.md` / `references/publishing-flow.md` 里，本文不覆盖它们**；本文只做结构去重，不改变任何 adapter 的触发路由、模式语义、红线和守卫，与各 adapter 文档的平台专属描述冲突时以各 adapter 文档为准。
 
 ---
 
@@ -33,7 +33,9 @@
 - **模式 B（组草稿）= 内容合同，不是后端发布功能**：Hermes 一次性生成内容字段并与用户沟通确认；后端把这些字段当作已确认输入，只校验、传递和记录；缺字段时 fail-closed，不生成、不改写、不补全文案。每次只组一条，不批量。
 - **模式 C（手动发某条）**：Hermes 亲自调服务器端点建 test job → 用户目视确认 → confirm-publish 转 final。逐条人工把关，适合首发 / 拿不准的内容。
 - **模式 D（无人值守自动发布）**：Hermes **不亲自调发布端点**，只把已审核的行标成 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给 ECS 常驻 dispatch 自动建 publish job、插件真发、结果回写。dispatch 到点直发、无逐条人工确认闸——人工把关点前移到「标记」那一下，标记 = 授权无人值守发到真实平台。dispatch 的合格条件 / 建表校验 / 撤回规则归有模式 D 的 adapter（当前只有 Pinterest）与 `social-publisher`。
-- adapter 未必开放全部模式：`staged` 的 adapter（注册表见 [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md)）只组草稿 + 人工发布清单，**不创建真实 server publish job**；产品侧放行改 `enabled` 后才解锁真发。
+- adapter 未必开放全部模式（状态见注册表 [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md)）：
+  - `staged` 的 adapter：只组草稿 + 人工发布清单，**不创建真实 server publish job**；产品侧放行改 `enabled` 后才解锁真发。
+  - `封存 shelved` 的 adapter（当前小红书，产品决策专注 Etsy）：**fail-closed，比 staged 更严**——连草稿 / 人工发布清单都不组，用户提该平台请求只说明封存边界 + 引导回 Etsy + STOP。解封走注册表的解封验收清单改 `enabled`（不是一处开关）。
 
 ---
 
@@ -104,9 +106,9 @@
 
 新平台 adapter 复用本文骨架，只需给出以下平台差异（服务侧接入契约——认证边界 / 输入映射 / 校验 / 回写等 7 项——另见 [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) § Adapter 接入契约）：
 
-1. **平台字段**：`社媒发布队列` 里该平台真实读取的专属列（如 Pinterest 的 `Board (Pinterest)` / `Alt Text (EN)`；小红书 staged 期间专属字段先进人工发布清单）+ typed extension（`XxxExt`）的启用条件。
+1. **平台字段**：`社媒发布队列` 里该平台真实读取的专属列（如 Pinterest 的 `Board (Pinterest)` / `Alt Text (EN)`；`staged` 平台的专属字段先进人工发布清单，`封存 shelved` 平台则连草稿都不组）+ typed extension（`XxxExt`）的启用条件。
 2. **素材规格**：该平台的变体比例与规格（如 Pinterest 2:3、小红书 3:4 封面 / 商品图），由 assets-library 模式 E 派生；adapter 只引用变体文件链接。
 3. **端点对**：`POST /api/tools/<platform>/jobs` + `POST /api/tools/<platform>/jobs/confirm-publish`，请求体字段契约写在该 adapter 的 `references/publishing-flow.md`。
 4. **capability 名**：浏览器插件需具备的 capability（如 `pinterest` / `xiaohongshu`），服务器据此返回 409 / 426 安装升级提示。
-5. **staged → enabled 放行流程**：先在 adapter-registry 注册为 `staged`（只组草稿 + 人工发布清单，不建真实 server job）；产品侧明确批准对外开放后把该行改 `enabled`，模式 C 才解锁真发。
+5. **生命周期状态（staged / shelved / enabled）**：新 adapter 先在 adapter-registry 注册为 `staged`（只组草稿 + 人工发布清单，不建真实 server job）；产品侧明确批准对外开放后把该行改 `enabled`，模式 C 才解锁真发。若产品侧决定某平台**暂不对用户开放**（如小红书当前封存，专注 Etsy），注册为 `封存 shelved`——fail-closed，连草稿都不组，用户请求只说明封存边界 + 引导回主力平台 + STOP；解封走注册表的解封验收清单（非一处开关）。
 6. **文案语言与平台红线**：平台默认输出语言（如 Pinterest 英文 / 小红书中文）与平台专属红线守卫，写在该 adapter 的 SKILL.md。

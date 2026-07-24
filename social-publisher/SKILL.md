@@ -1,6 +1,6 @@
 ---
 name: social-publisher
-description: 社交媒体发布总控层（薄触发）：管 adapter registry + 人工/按需发布（模式 B）+ 开启无人值守自动发布（标 `自动发布=true` 交给 ECS dispatch 直发，标记即人工把关点）+ confirm-publish（手动路径）+ 对账。**自动发布的巡检 / 锁 / 重试 / 死信归 ECS 常驻 dispatch（yanggedianzhang publish dispatch，T5），本 skill 不再手搓巡检 / 定时器**。当前真实发布适配器只有 Pinterest（pinterest-autopin，经 yanggedianzhang 服务器 + 浏览器插件执行）；小红书 adapter（xiaohongshu-autopost）后端 + 契约已就绪但 **staged 未对外开放**（只草稿 + 人工对账，不跑真发）；Instagram、TikTok 等 planned/manual-only。未 enabled 的平台不能声称已自动发布。用于用户说“发这条 / 发 Pinterest / publish / 对账发布结果 / 接发布器”等场景。
+description: 社交媒体发布总控层（薄触发）：管 adapter registry + 人工/按需发布（模式 B）+ 开启无人值守自动发布（标 `自动发布=true` 交给 ECS dispatch 直发，标记即人工把关点）+ confirm-publish（手动路径）+ 对账。**自动发布的巡检 / 锁 / 重试 / 死信归 ECS 常驻 dispatch（yanggedianzhang publish dispatch，T5），本 skill 不再手搓巡检 / 定时器**。当前真实发布适配器只有 Pinterest（pinterest-autopin，经 yanggedianzhang 服务器 + 浏览器插件执行）；小红书 adapter（xiaohongshu-autopost）**已整体封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**——用户提小红书发布 / 对账请求时只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**不组草稿、不建行、不出人工发布清单、不做对账**；Instagram、TikTok 等 planned/manual-only。未 enabled 的平台不能声称已自动发布。用于用户说“发这条 / 发 Pinterest / publish / 对账发布结果 / 接发布器 / 发小红书（→ 封存拒绝）”等场景。
 ---
 
 # Social Publisher
@@ -13,7 +13,8 @@ publish-composer 生成发布任务草稿
 social-publisher 做任务校验 / 排期 / 适配器路由
         ↓
 Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plugin
-小红书 / Instagram / TikTok: 未来适配器或人工后台
+小红书: 封存 shelved（不对用户开放，只说明封存边界+引导回 Etsy+STOP，无人工后台出口）
+Instagram / TikTok: 未来适配器或人工后台
 ```
 
 它不负责长期素材归档，不负责生成图片或制作视频，不负责写商品事实。素材归档归 `assets-library`，图片生成归 `image-synth`，商品事实归 `listing-catalog`。
@@ -33,7 +34,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 | 执行 / 自动发布 社媒发布队列 | [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md) |
 | 判断某个平台能不能自动发 | [`references/adapter-registry.md`](references/adapter-registry.md) |
 | Pinterest 发布 | `pinterest-autopin/SKILL.md` + `pinterest-autopin/references/publishing-flow.md` |
-| 小红书发布 | `xiaohongshu-autopost/SKILL.md` + `xiaohongshu-autopost/references/publishing-flow.md`（**staged 未对外开放**：契约就绪，当前只草稿 + 人工对账） |
+| 小红书发布 | **封存 shelved（不对外开放）**：不读执行细节，直接按封存话术拒绝并引导回 Etsy + STOP。契约文档 `xiaohongshu-autopost/SKILL.md` + `xiaohongshu-autopost/references/publishing-flow.md` 仅供未来解封复用 |
 
 > 养个店长 Hermes 飞书直聊 runtime 无 lark-cli 时，`社媒发布队列` 等 Base 表的只读查询走后端 `POST /api/hermes/bitable/record-search` 端点，访问约定见 [`../shared/backend-api-access.md`](../shared/backend-api-access.md)。
 
@@ -54,7 +55,7 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
 3. 如果发布任务表缺少自动发布运行字段，列出字段清单给用户确认后再补：`自动发布`、`发布适配器`、`外部队列 ID`（或 `ECS job ID`，二选一）、`发布尝试次数`、`最后尝试时间`、`下次重试时间`、`执行锁`（或 `执行锁 (lock_token)`，二选一）、`失败原因分类`、`事件日志`。不要默认补 `素材顺序` / `封面素材` / `标签` / `备注` / 平台扩展类字段；补完后按 `publish-composer` 的默认视图字段隐藏锁、重试、外部队列 ID、事件日志等技术列。
 4. 读 [`references/adapter-registry.md`](references/adapter-registry.md)，展示当前适配器状态：
    - Pinterest = enabled，真实发布走 `pinterest-autopin` adapter → 服务器工具 → 浏览器插件
-   - 小红书 = staged（后端 + 契约就绪，但**未对外开放**），adapter `xiaohongshu-autopost` 已建；当前只允许建草稿 + 人工发布清单 + 人工回填，**不跑真发**。对外放行后改 `enabled`
+   - 小红书 = **封存 shelved**（产品决策 2026-07-24：专注 Etsy，不对用户开放）——用户提小红书请求只说明封存边界 + 引导回 Etsy + STOP，**连草稿 / 人工发布清单 / 人工回填都不做**。adapter `xiaohongshu-autopost` 契约原样保留供未来解封（解封走 [`references/adapter-registry.md`](references/adapter-registry.md) §小红书解封验收清单，不是一处开关）
    - Instagram / TikTok = planned/manual-only，只允许建任务和人工回填
 5. 如用户要启用 Pinterest，按 `pinterest-autopin` 模式 A 检查服务器工具、浏览器插件和 `社媒发布队列`（Pinterest pin 即本表 `平台 = Pinterest` 的行）。
 6. **不在 Hermes 侧建定时器 / cron 跑自动发布**——自动发布的常驻巡检是 ECS dispatch 的事（T5）。要真开自动发布，由运维在 ECS 侧开启 dispatch（配 `PUBLISH_DISPATCH_POLL_MS` + 确认队列有 `自动发布 = true` 行），本 skill 不承担、也不模拟这个后台循环。
@@ -84,10 +85,10 @@ Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plug
    - 调 `pinterest-autopin` 模式 C：server test job → 用户目视确认 → server confirm-publish → final
    - 成功后回写本行：`状态 = 已发`、`发布时间`、`发布 URL`，清空 `执行锁`
    - 失败后回写：`状态 = 失败`、`失败原因分类` + `失败原因`、`最后尝试时间`，清空 `执行锁`；不重复递增占用阶段已加的 `发布尝试次数`
-6. staged / planned/manual-only 平台（小红书 staged；Instagram / TikTok planned）：
-   - 不登录、不上传、不点击发布；**不创建真实 server publish job**（小红书后端虽就绪但未对外开放）
+6. **封存 shelved 平台（小红书）= fail-closed**：用户提小红书「发这条」，只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**不登录、不上传、不组草稿、不出人工发布清单、不创建 server publish job、不做对账**。判据 = [`references/adapter-registry.md`](references/adapter-registry.md) 小红书状态 = `封存 shelved`（!= `enabled` 即封存）。小红书解封（走 §小红书解封验收清单，不是一处开关）后才并入第 5 步走真发。
+7. planned/manual-only 平台（Instagram / TikTok）：
+   - 不登录、不上传、不点击发布；**不创建真实 server publish job**
    - 只输出人工发布清单，或在用户给出公开 URL 后走模式 D 对账
-   - 小红书对外放行（adapter-registry 改 `enabled`）后才并入第 5 步走真发
 
 直接发布前必须有确认门。用户没有明确说“发吧 / 真发 / publish / 到点自动发”时，只能 validate / test / 准备。
 
@@ -114,7 +115,7 @@ ECS dispatch 的行为（本 skill 只需知道、不实现）：
 
 进入条件：
 
-- 用户给了 Pinterest / 小红书 / Instagram 等公开发布 URL
+- 用户给了 Pinterest / Instagram 等公开发布 URL（小红书封存 shelved，不做对账——见 §禁区）
 - 平台发布成功但队列表还没回写
 - 自动发布失败后需要人工核对
 
@@ -134,7 +135,8 @@ ECS dispatch 的行为（本 skill 只需知道、不实现）：
 ## 禁区
 
 - 不把 `publish-composer` 的“已入任务”当成“已发布”。
-- 不为小红书（staged 未对外开放）、Instagram、TikTok 伪造自动发布能力；只有 Pinterest 是 enabled。未 enabled 的平台一律只做草稿 / 人工对账，不伪造已发——小红书后端虽就绪，未对外开放前一样不跑真发。
+- **小红书封存 shelved：不组草稿、不出人工发布清单、不对账、不伪造任何能力**——用户提小红书请求只说明封存边界 + 引导回 Etsy + STOP（后端虽就绪，产品决策专注 Etsy、不对外开放）。
+- 不为 Instagram、TikTok（planned/manual-only）伪造自动发布能力；只有 Pinterest 是 enabled。这些平台一律只做草稿 / 人工对账，不伪造已发。
 - 不替用户登录平台，不保存账号密码、cookie、token。
 - 不跳过 Pinterest 的 test → final 确认门，除非用户明确说明已经 test 过并要求 final。
 - 不对 `失败` 记录无限重试；默认最多两次，之后停在 `失败`（待人工核对）。

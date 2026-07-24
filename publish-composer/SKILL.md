@@ -1,6 +1,6 @@
 ---
 name: publish-composer
-description: 发布编排（旧名 content-asset-pool）：把已归档的素材变体 + 商品事实 + 品牌底座组装成跨平台发布意图 PublishIntent，并拥有店铺总 Base 内 `社媒发布队列` 表。把单图、多图轮播、视频、图文笔记组合成 Pinterest、Instagram、小红书、TikTok、Etsy Listing 等平台发布任务；平台专属字段只有在对应 adapter 已启用且真实读取时才补 typed extension 或显式列。触发：用户说"组发布任务 / 排一条 pin / 出小红书笔记草稿 / 这组图发哪些平台 / 这张图发过哪些平台 / 跨平台复用素材 / 对账发布结果"。**只引用 assets-library 已产出的发布副本变体，自己不收集素材、不清理、不裁切**（那些归 assets-library）；真实发布交 social-publisher 路由到平台适配器。所有真实写入经用户确认。
+description: 发布编排（旧名 content-asset-pool）：把已归档的素材变体 + 商品事实 + 品牌底座组装成跨平台发布意图 PublishIntent，并拥有店铺总 Base 内 `社媒发布队列` 表。把单图、多图轮播、视频、图文笔记组合成 Pinterest、Instagram、TikTok、Etsy Listing 等平台发布任务；平台专属字段只有在对应 adapter 已启用且真实读取时才补 typed extension 或显式列。**小红书分支已整体封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**——用户提"出小红书笔记草稿 / 这几张做条小红书"等小红书组装请求时（触发词保留以正确拒绝），只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**不组小红书草稿、不建小红书队列行**；Etsy / Pinterest 组装完全不受影响。触发：用户说"组发布任务 / 排一条 pin / 出小红书笔记草稿（→ 封存拒绝）/ 这组图发哪些平台 / 这张图发过哪些平台 / 跨平台复用素材 / 对账发布结果"。**只引用 assets-library 已产出的发布副本变体，自己不收集素材、不清理、不裁切**（那些归 assets-library）；真实发布交 social-publisher 路由到平台适配器。所有真实写入经用户确认。
 layer: application
 depends-on: [shop-foundation, assets-library, listing-catalog, social-publisher]
 ---
@@ -49,7 +49,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 5. **商品型发布链接来自 `Products 商品` 表的 `分享链接` 字段**。不要临时拼任何平台 URL（包括 Etsy listing URL）。`分享链接` 缺失时阻塞发布任务创建并引导回 `listing-catalog` 补齐。
 6. **按写者分组 + 状态机转移权限**。composer 写内容列；dispatch 写执行状态列；adapter 写平台结果列；状态走事件日志投影，越权转移即拒（schema 见 [`references/base-schema.md` 表 2](references/base-schema.md)）。
 7. **只定义和准备，不直接发布**。真实飞书写入、平台发布、自动发布任务修改都必须用户明确确认；发布执行交给 `social-publisher` 路由到适配器。
-8. **品牌接地气文案主权归 adapter，composer 只兜底**。pin / 笔记的 title / description / 正文 / `cover_caption` 等品牌接地气文案，由对应平台 adapter 读 `BRAND.md` + `BRAND_MARKETING.md` + `MARKETING_PLATFORM.md` 撰写（如 `pinterest-autopin`）。**仅当目标平台暂无 live adapter（小红书 staged、IG/TikTok 未接）**，composer 在 Workflow D 兜底撰写，此时必须先读这三份品牌文档，文案才不脱离人群 / 情感触点 / 红线；adapter 上线后文案主权交回 adapter，避免 composer 与 adapter 两处各写一份漂移。有 live adapter 的平台（Pinterest），composer 不重复写品牌文案。
+8. **品牌接地气文案主权归 adapter，composer 只兜底**。pin / 笔记的 title / description / 正文 / `cover_caption` 等品牌接地气文案，由对应平台 adapter 读 `BRAND.md` + `BRAND_MARKETING.md` + `MARKETING_PLATFORM.md` 撰写（如 `pinterest-autopin`）。**仅当目标平台暂无 live adapter（IG/TikTok 未接）**，composer 在 Workflow D 兜底撰写，此时必须先读这三份品牌文档，文案才不脱离人群 / 情感触点 / 红线；adapter 上线后文案主权交回 adapter，避免 composer 与 adapter 两处各写一份漂移。有 live adapter 的平台（Pinterest），composer 不重复写品牌文案。**小红书封存 shelved（专注 Etsy，不对用户开放）：composer 不为小红书兜底撰写、不组小红书草稿——用户提小红书请求只说明封存边界 + 引导回 Etsy + STOP（判据 = [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`）。**
 
 ---
 
@@ -71,7 +71,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 
 - 默认人读视图：`任务 ID`、`平台`、`状态`、`发布类型`、`关联 SKU`、`关联素材`、`标题`、`描述`、`链接`、`自动发布`、`计划发布时间`、`发布适配器`、`发布 URL`、`发布时间`、`失败原因分类`、`失败原因`、`Board (Pinterest)`、`Alt Text (EN)`。
 - 默认隐藏但保留：`外部队列 ID`、`发布尝试次数`、`最后尝试时间`、`下次重试时间`、`执行锁`、`事件日志`、`平台字段 JSON`、`素材顺序`、`封面素材`、`标签`、`备注`，以及未启用平台的扩展字段。
-- 平台专属字段只有在该平台 enabled 且运营需要核对时进入默认视图；当前 Pinterest 只展示 `Board (Pinterest)` 和 `Alt Text (EN)`，小红书 / Instagram / TikTok 仍按草稿或人工清单处理，不提前展示空字段。
+- 平台专属字段只有在该平台 enabled 且运营需要核对时进入默认视图；当前 Pinterest 只展示 `Board (Pinterest)` 和 `Alt Text (EN)`，Instagram / TikTok 仍按草稿或人工清单处理，不提前展示空字段。**小红书封存 shelved（不组草稿、不建行），不涉及本视图。**
 
 ---
 
@@ -99,6 +99,8 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 - 用户问“这几张能不能做一条小红书 / Instagram carousel / Pinterest carousel”
 - 用户要把素材与某个 SKU 关联并形成待发布任务
 
+> **⛔ 平台 = 小红书 → fail-closed 封存**：本 workflow 一进入先看目标平台。若平台 = 小红书（判据 = [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`），**不组草稿、不建 `社媒发布队列` 行、不取变体、不写文案**，只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP。下面步骤只对 Etsy / Pinterest 等非封存平台执行。
+
 步骤：
 
 1. 读 [`references/platform-publishing-model.md`](references/platform-publishing-model.md)。
@@ -116,7 +118,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
    - `发布类型 = 单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合`
    - `关联素材` 指向 `Asset Variants 派生素材`（变体，不是 canonical 原图），并在草稿里展示编号顺序
    - 平台专属字段只在真实发布器已读取时写；不要为了预留默认创建 `平台扩展 (typed)` 或自由 JSON
-   - **品牌接地气文案**（title / description / 正文 / `cover_caption` 等）：有 live adapter 的平台（Pinterest）由 adapter 写，composer 不碰；**目标平台无 live adapter 时（小红书 / IG / TikTok）由 composer 兜底**——先读 `BRAND.md` + `BRAND_MARKETING.md` + `MARKETING_PLATFORM.md` 目标平台章节，再把文案放进草稿/人工清单；等 adapter enabled 且真实读取时才写结构化平台扩展字段。缺品牌文档 → DEGRADE：先按 BRAND.md 出，相应文案段标 ⚠️，回复末尾提示补 BRAND_MARKETING / MARKETING_PLATFORM
+   - **品牌接地气文案**（title / description / 正文 / `cover_caption` 等）：有 live adapter 的平台（Pinterest）由 adapter 写，composer 不碰；**目标平台无 live adapter 时（IG / TikTok）由 composer 兜底**——先读 `BRAND.md` + `BRAND_MARKETING.md` + `MARKETING_PLATFORM.md` 目标平台章节，再把文案放进草稿/人工清单；等 adapter enabled 且真实读取时才写结构化平台扩展字段。缺品牌文档 → DEGRADE：先按 BRAND.md 出，相应文案段标 ⚠️，回复末尾提示补 BRAND_MARKETING / MARKETING_PLATFORM。**小红书封存 shelved：本步不为小红书出任何文案（已在 workflow 入口 fail-closed 拦截）**
 6. 组好后状态进 `待审`（半自动核心：用户在此批准 / 退回 / 跳过）。不要直接标“已发布”。
 
 写入前必须展示任务草稿和素材顺序，等用户确认。确认后遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量：本 turn 内先把 `社媒发布队列` 草稿行真正写进 Base 拿到成功返回、再报"已组好任务"，写完带一句含可点击飞书链接的回执；只在对话里展示草稿而 Base 没落行 = 没做完。（执行状态列仍由 social-publisher / dispatch 回写，composer 不越权改。）
@@ -172,7 +174,9 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 封面 = ASSET-COVER-001（草稿展示；不默认建字段）
 ```
 
-### 小红书图文
+### 小红书图文（⛔ 封存 shelved — 以下为未来解封资料，封存期不组装）
+
+> 小红书当前封存（专注 Etsy，不对用户开放）：**不为小红书组装任何发布任务**，用户提小红书请求按封存边界回复并 STOP。下面的结构示意仅供未来解封复用。
 
 ```text
 发布类型 = 图文笔记
@@ -204,13 +208,13 @@ AI metadata / 水印清理**不再由本 skill 做**，已移交 `assets-library
 ### social-publisher（dispatch 执行层）
 
 - `social-publisher` 是 社媒发布队列 的执行层。用户说“自动发布 / 到点发布 / 发这条任务”时交给它。
-- 当前 enabled adapter 只有 Pinterest（`pinterest-autopin`）；小红书 adapter `xiaohongshu-autopost` 后端 + 契约就绪但 **staged 未对外开放**（草稿 + 人工对账）；IG/TikTok 仍草稿。
+- 当前 enabled adapter 只有 Pinterest（`pinterest-autopin`）；小红书 adapter `xiaohongshu-autopost` **已整体封存 shelved（专注 Etsy，不对用户开放）**——用户提小红书请求只说明封存边界 + 引导回 Etsy + STOP，**连草稿 / 人工对账都不做**（后端 + 契约就绪，原样保留供未来解封）；IG/TikTok 仍草稿。
 - 执行状态列由 dispatch / adapter 按状态机转移权限回写，composer 不越权改。
 
 ### pinterest-autopin / xiaohongshu-autopost（平台适配器）
 
 - Pinterest pin = 社媒发布队列 `平台 = Pinterest` 行（`PIN-xxx`）；小红书笔记 = `平台 = 小红书` 行（`XHS-xxx`）。
-- 平台专属字段只在对应 adapter 已启用且真实读取时补；staged / manual-only 平台先放进草稿或人工发布清单。
+- 平台专属字段只在对应 adapter 已启用且真实读取时补；staged / manual-only 平台先放进草稿或人工发布清单。**小红书封存 shelved 例外：不组草稿、不出人工发布清单，按封存边界回复并 STOP。**
 - 商品型发布行的 `链接` 必须用 `Products 商品` 表的 `分享链接`，不临时拼平台商品 URL。
 - 发布图引用 `Asset Variants 派生素材` 的对应平台规格变体，不引用 canonical 原图。
 

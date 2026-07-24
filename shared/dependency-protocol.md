@@ -46,7 +46,7 @@
 - `publish-composer`：取 assets-library 变体 + 商品 + 平台策略 → 组跨平台发布意图 PublishIntent，拥有 `社媒发布队列`（只引用变体，不收集/清理/裁切）
 - `social-publisher`（薄触发）：管 adapter registry + 人工/按需发布 + confirm-publish 人工闸 + 对账。自动发布的巡检/锁/重试/死信归 ECS dispatch（yanggedianzhang publish dispatch，T5），不在本 skill
 - `pinterest-autopin`：Pinterest adapter；取 社媒发布队列（`平台 = Pinterest` 行）+ 商品 + 素材 + 品牌 → 组 pin 发布
-- `xiaohongshu-autopost`：小红书 adapter（**staged 未对外开放**）；取 社媒发布队列（`平台 = 小红书` 行）+ 商品 + 变体 + 品牌 → 组笔记草稿 + 人工清单。后端 + 契约就绪，放行后改 enabled 才走 server test → confirm-publish → final
+- `xiaohongshu-autopost`：小红书 adapter（**封存 shelved，产品决策 2026-07-24：专注 Etsy，不对用户开放**）；用户提小红书请求只说明封存边界 + 引导回 Etsy + STOP，**不组草稿、不建队列行、不出人工清单**。后端 + 契约就绪，原样保留供未来解封（解封走 adapter-registry §小红书解封验收清单改 enabled 才走 server test → confirm-publish → final）
 - `publish-metrics`（反馈层）：读已发 PublishIntent → 回写表现 metrics（曝光/点击/保存/转化）→ 按变体/文案/SKU/平台聚合复盘喂回 publish-composer。只读结果 + 写 metrics 列，不碰内容/执行状态列
 
 未来的推广、CRM 等 skill 同样围绕基座层运行。

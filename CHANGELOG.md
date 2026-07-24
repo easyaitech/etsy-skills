@@ -2,6 +2,15 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 2026-07-24 (小红书封存 — 全路由 fail-closed 加固)
+
+- **小红书 adapter 整体封存，加固为「全路由 fail-closed」（产品决策：现阶段专注 Etsy，小红书不对用户开放，代码 / 文档原样保留待未来解封）。** 上一轮只改了 `xiaohongshu-autopost/SKILL.md` 的 frontmatter description，Codex 复审 FAIL——body（Mode A/B/C / 检查表 / 写入步骤）仍命令组草稿、`adapter-registry` 路由树无 `shelved` 分支（小红书落进「非 enabled → 人工发布清单」通用分支）、用户若先触发 `social-publisher` / `publish-composer` 仍按 staged 组草稿绕过封存。本轮把封存落到**每条触发路由的动作契约**上，判据统一为 fail-closed：`adapter-registry` 小红书状态 != `enabled`（现为 `封存 shelved`）即一律封存——只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**不组草稿、不建 `社媒发布队列` 行、不创建 server publish job、不出人工发布清单、不做对账**。
+  - **`xiaohongshu-autopost/SKILL.md`**：body 顶部加 ⛔ 封存总闸（禁止继续读取 / 执行下方任何模式 / 检查表 / 写入步骤），Mode A/B/C 与就绪检查表各入口重复封存守卫，整块正文标为「未来解封资料，封存期禁止执行」；补完整解封验收清单（产品批准 + 后端 `XHS_PLATFORM_ENABLED=1` + 逐文件技能仓改动 + 验收，明确「不是一处开关」）；修 `publishing-flow.md` 链接的全角右括号。
+  - **`social-publisher/references/adapter-registry.md`**（路由事实源）：小红书行动作语义改封存 fail-closed；路由决策树新增显式 `shelved → 封存边界 + 引导回 Etsy + STOP` 分支，并把「非 enabled → 人工清单」通用规则明确排除 `shelved`；eval #3 由 staged 改 shelved（期望输出改为封存话术，不再是人工发布清单）；新增 §小红书解封验收清单。
+  - **`social-publisher/SKILL.md` / `publish-composer/SKILL.md`**：frontmatter description + body（必读引用 / 模式 A/B / 禁区 / Workflow D 入口 / Core Principle 8 / 默认视图 / 协作）里小红书从 staged 组草稿改为封存 fail-closed。`publish-composer` 只改「平台 = 小红书」分支，Etsy / Pinterest 组装一字未动。
+  - **`shared/platform-config.md` / `shared/dependency-protocol.md` / `shared/social-adapter-paradigm.md` / `xiaohongshu-autopost/references/publishing-flow.md` / `publish-composer/references/platform-publishing-model.md` / `publish-composer/references/base-schema.md`**：小红书 staged / 组草稿 / 人工清单的当前态表述改为封存（封存期不执行，保留作未来资料）。`social-adapter-paradigm.md` 是平台无关骨架，只把小红书当 staged 的示例改中性 + 在生命周期里加 `shelved` 状态（fail-closed，比 staged 更严），不破坏骨架。
+  - **Pinterest（enabled）、Etsy 及各平台的路由 / 触发 / 模式语义一字未动。** 小红书触发词全部保留（仍路由到对应 skill 以「正确拒绝」），只改「触发后做什么」。组笔记 / 三层范式 / 发布契约文档原样保留供未来解封复用。
+
 ## 2026-07-24
 
 - **技能层底层化改造初稿（只做结构去重与指针收敛，不改任何触发路由 / 模式语义 / 红线 / 守卫）**，三项：

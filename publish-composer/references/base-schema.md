@@ -7,6 +7,8 @@
 
 社媒发布队列回答“这次发布用了哪些（派生）素材、顺序是什么、发到哪个平台/账号、走到哪个状态、发没发”。
 
+> ⛔ **小红书封存说明（shelved，产品决策 2026-07-24：专注 Etsy，不对用户开放）**：下方 schema/字段/枚举/adapter 示例里出现的**小红书**（`XHS-*` 任务 ID、`平台 = 小红书`、`manual-xiaohongshu` 等）仅为**数据模型完整性 + 未来解封资料**保留，**当前一律不建任何 `平台 = 小红书` 的行、不路由到小红书 adapter**。收到小红书请求按封存边界拒绝（「当前版本专注 Etsy，小红书功能暂未开放」）+ 引导回 Etsy + STOP。判据见 [`adapter-registry.md`](../../social-publisher/references/adapter-registry.md)（小红书 = `封存 shelved`，!= `enabled` 即封存）。Pinterest（enabled）/ Etsy 不受影响。
+
 ---
 
 ## 表 1：素材池 / Asset Pool（schema owner = assets-library，本 skill 不重声明）
@@ -145,14 +147,16 @@ SKU: FUB-001
 - Pinterest 行最小额外字段只需要 `Board (Pinterest)`、`Alt Text (EN)`。图片来源走通用 `关联素材`；如果历史表已有 `素材顺序` / `封面素材` / `平台字段 JSON`，保留作历史数据或人工检查，不作为新建必需列。
 - 这些 Pinterest 专属字段对非 Pinterest 行留空即可，不影响跨平台字段模型。
 
-### 小红书发布任务字段约定
+### 小红书发布任务字段约定（⛔ 封存 shelved — 未来解封资料）
 
-当 `平台 = 小红书` 时：
+> **小红书当前封存**（产品决策 2026-07-24：专注 Etsy，不对用户开放，判据 = [`../../social-publisher/references/adapter-registry.md`](../../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`）。封存期**不组小红书发布任务、不建 `平台 = 小红书` 行**，按封存边界回复并 STOP。以下字段约定仅供未来解封复用。
+
+当 `平台 = 小红书` 时（解封后）：
 
 - `任务 ID` 建议使用 `XHS-YYYYMMDD-001`。
 - `发布类型` 只能从 `单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合` 中选；图文笔记的顺序和封面可先写进 `关联素材` / 正文草稿，只有真实发布器需要结构化读取时再补 `素材顺序` / `封面素材`。
 - `标题`、`描述`、`标签` 使用中文；如果 COMMERCE_PLATFORM.md 或 MARKETING_PLATFORM.md 要求双语，再按配置输出。
-- 小红书仍 staged 时不默认加专属列；对外放行后再按 `XiaohongshuExt` 的真实读取需求补字段或 `平台扩展 (typed)`，不知道的字段留空标 `待后台确认`，不要编造。
+- 小红书未 `enabled` 时不默认加专属列；对外放行后再按 `XiaohongshuExt` 的真实读取需求补字段或 `平台扩展 (typed)`，不知道的字段留空标 `待后台确认`，不要编造。
 - 商品型笔记如果没有 `Products 商品` 表的 `分享链接`，`链接` 可以为空并标记为待补；不要临时拼小红书商品 URL。
 
 ---

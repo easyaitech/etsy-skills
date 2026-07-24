@@ -38,9 +38,9 @@ bash install.sh
 | [`assets-library`](assets-library/SKILL.md) | 素材生命周期 owner（双层：六文件夹物理层 + 店铺总 Base `Assets 素材池` canonical + `Asset Variants 派生素材` 变体工厂）；不碰创意策略 |
 | [`image-brief`](image-brief/SKILL.md) | 图片方案设计（创意 brief owner）：给 SKU + 目标平台出平台感知 brief（槽位/Mood/镜头清单），再分叉到人工拍摄 / image-synth / 已有素材；只产 brief 计划文档，不拍不生图不归档 |
 | [`publish-composer`](publish-composer/SKILL.md) | 发布编排（旧名 content-asset-pool）：把 assets-library 的发布副本变体 + 商品 + 品牌组装成跨平台发布意图 PublishIntent，拥有 `社媒发布队列` 表；平台专属走 typed extension。只引用变体，不收集/清理/裁切 |
-| [`social-publisher`](social-publisher/SKILL.md) | 社交媒体自动发布总控层：从店铺总 Base 内 `社媒发布队列` 表读取待发任务，按 adapter 路由（Pinterest enabled；小红书 staged 未对外开放；IG/TikTok 草稿/人工对账） |
+| [`social-publisher`](social-publisher/SKILL.md) | 社交媒体自动发布总控层：从店铺总 Base 内 `社媒发布队列` 表读取待发任务，按 adapter 路由（Pinterest enabled；小红书 **封存 shelved 不对用户开放**——只说明封存边界+引导回 Etsy+STOP，不组草稿/不出人工清单；IG/TikTok 草稿/人工对账） |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | `社媒发布队列` 表 `平台 = Pinterest` 行 + 调 yanggedianzhang 服务器工具创建 Pinterest job，由现有浏览器插件使用租户登录态执行 |
-| [`xiaohongshu-autopost`](xiaohongshu-autopost/SKILL.md) | `社媒发布队列` 表 `平台 = 小红书` 行（笔记，`XiaohongshuExt` typed 字段）+ 同 pinterest 三层范式调服务器工具/插件；**staged 未对外开放**：后端 + 发布契约（publishing-flow.md）就绪，当前只组草稿 + 人工发布清单，对外放行后改 enabled 才真发 |
+| [`xiaohongshu-autopost`](xiaohongshu-autopost/SKILL.md) | `社媒发布队列` 表 `平台 = 小红书` 行 adapter，当前 **封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**：收到小红书请求只说明封存边界+引导回 Etsy+STOP，不组草稿/不建行/不出人工清单；后端 + 发布契约文档原样保留供未来解封（改 enabled + 后端开关） |
 | [`publish-metrics`](publish-metrics/SKILL.md) | 发布结果回收闭环（反馈层）：把已发 PublishIntent 的表现（URL / post id / 曝光 / 点击 / 保存 / 转化）回写 `社媒发布队列`，按变体 / 文案 / SKU / 平台聚合复盘喂回 publish-composer；只读结果 + 写 metrics 列，数据来源如实标注、拿不到留空不编 |
 | [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
 | [`trend-radar`](trend-radar/SKILL.md) | 每周自动采集 Google Trends / Pinterest Trends / eRank Trend Buzz 热词，并生成趋势 × 店铺/品牌/商品的 fit report 供人工判断 |
