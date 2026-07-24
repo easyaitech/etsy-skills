@@ -14,7 +14,7 @@
 2. **yanggedianzhang 服务器（控制面）**：校验租户、保存平台 job 状态、加锁、发放素材下载地址、记录 test / final 结果（平台需要时还热下发填表 recipe）。
 3. **租户浏览器插件（执行面）**：在租户自己的浏览器登录态里打开平台发布页、填表、上传服务器给的素材，并把结果回传服务器。插件版本必须带该平台的 capability；安装 / 升级提示由服务器返回，Hermes 只把 `userMessage` 原样转述给用户。
 
-底层执行模型见 [`tools-architecture.md`](tools-architecture.md)（tier 2 范式：服务器控制面 + 浏览器插件，Hermes 不持 Chrome / token / 队列）；服务器端点的访问约定（环境变量 / 令牌按引用使用 / 判据）见 [`backend-api-access.md`](backend-api-access.md)。
+底层执行模型见 [`tools-architecture.md`](tools-architecture.md)（tier 2 范式：服务器控制面 + 浏览器插件，Hermes 不持 Chrome / token / 队列）。**服务器端点的具体契约（URL、鉴权方式、请求体）完全归各 adapter 自己的 `references/publishing-flow.md`**，本文不作统一断言。
 
 ---
 
@@ -68,14 +68,14 @@
 | `426 BROWSER_TOOL_UPGRADE_REQUIRED` | 插件版本低或缺该平台 capability | 把响应里的 `userMessage` 原样转述给用户 |
 | `503 HERMES_TOOL_DISABLED` | 服务器未启用 Hermes tool | 停止，提示管理员配置服务端 |
 
-安装 / 升级类错误不算发布失败；队列表保持草稿 / 待配置状态（各平台的降级出口见其 publishing-flow）。
+安装 / 升级类错误不算发布失败；队列表保持发布前状态（具体状态名与降级出口见各平台 publishing-flow）。
 
 ### Test 结果处理
 
 | 状态 | 含义 | Hermes 怎么处理 |
 |---|---|---|
 | `test_succeeded` | 插件已完成 test 填表 | 让用户确认页面是否正确 |
-| `test_failed` | 插件未能完成 test | 读取失败 note → 写 `失败原因分类`（DOM漂移 / 平台拒绝 / …）+ `失败原因`，修正后重建 test job |
+| `test_failed` | 插件未能完成 test | 读取失败 note → 按该平台 publishing-flow 的要求回写失败原因字段（至少 `失败原因分类`：DOM漂移 / 平台拒绝 / …），修正后重建 test job |
 | `claimed_for_test` 长时间不变 | 插件领取后掉线或浏览器关闭 | 等 lease 过期后可重新领取；不要创建重复 job |
 
 用户说内容 / 素材 / 链接不对时，回到 Base 修改源字段（必要时回 assets-library 模式 E 改变体），再重新创建 test job。
@@ -111,7 +111,7 @@
 - 素材必须先变成服务器能授权下载的 asset，插件再从服务器拉取 Blob/File 上传。
 - Hermes 不持 Chrome profile、不跑 Playwright、不持队列、不自己跑巡检定时器——自动发布的巡检 / 锁 / 重试循环归 ECS 常驻 dispatch。
 - `browserToolToken` 由管理员发放给插件选项页；Hermes 不编造、不回显、不持久化 token，也不把它写进 Base 或对话。
-- 鉴权用按租户派生的 Hermes 工具令牌，由运行时 / 网关处理；skill 只写「调哪个入口、传什么」（见 [`backend-api-access.md`](backend-api-access.md)）。
+- 服务器端点的鉴权按各 adapter 的 publishing-flow 契约执行；skill 侧纪律统一：不编造、不回显、不持久化任何密钥 / token，也不把它写进 Base 或对话。
 
 ---
 
