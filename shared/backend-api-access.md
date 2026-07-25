@@ -2,7 +2,7 @@
 
 [`tools-architecture.md`](tools-architecture.md) §接口形态 第 4 点定死了「agent 调工具的真实路径 = Hermes skill → 调 ECS 的 HTTP endpoint（薄、无密钥、带租户 session key）」。**本文是那条路径的落地细节**：你在 Hermes 里拿什么、在哪能拿到、怎么调、怎么判断成没成。
 
-各端点自己的请求体和字段语义**不在本文**——那些写在各 skill 的 reference 里（如 [`../orders-customers/references/etsy-order-message-tool.md`](../orders-customers/references/etsy-order-message-tool.md)）。本文只管**访问约定**，全 skill 共用。
+各端点自己的请求体和字段语义**不在本文**——那些写在各 skill 的 reference 里（如 [`../orders-customers/references/etsy-message-tools.md`](../orders-customers/references/etsy-message-tools.md)）。本文只管**访问约定**，全 skill 共用。
 
 ---
 
