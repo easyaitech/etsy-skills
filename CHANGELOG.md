@@ -2,6 +2,19 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.6] - 2026-07-25
+
+- **Etsy 客户消息统一切换为正式获取 + 真实发布**：`orders-customers` 删除旧 `etsy-dm`
+  会话查询、回复草稿和订单消息说明，合并为
+  [`etsy-message-tools.md`](orders-customers/references/etsy-message-tools.md)。现在可按客户 ID、
+  订单号或快递单号定位同一 customer；获取返回 inbound / outbound、完整正文和平台发送时间；
+  发布只支持文字并使用稳定幂等键，只有
+  `job.status=sent + job.externalMessageId + job.platformSentAt` 才能声称成功，
+  `result_unknown` 禁止自动重发。
+- **工具契约可自动核验**：新增 `scripts/validate-customer-message-contract.py`，防止旧端点、
+  旧文件或关键安全语义回流；README 和 install.sh 的固定安装示例升级到 `v1.0.6`，
+  `v1.0.5` 保持为回滚点。
+
 ## [v1.0.5] - 2026-07-25
 
 - **接入两个已上线的 Etsy Listing 独立只读工具**：新增
@@ -40,9 +53,6 @@
 - **废除旧「工作区 `skill-prefs/<skill>.md` 自由覆盖层」**（经架构评审否决：自由文本对长期注入 = 无确认闸的软指令通道；实测从未在任何租户落地）：`ecommerce-stack init` 不再创建该目录，`doctor` 的 skill-prefs 检查改为遗留残留检测。
 
 ## [Unreleased]
-
-### 变更
-- **Etsy 客户消息工具切换为正式获取 + 真实发布**：`orders-customers` 删除旧 `etsy-dm` 会话查询、回复草稿和订单消息说明，合并为 [`etsy-message-tools.md`](orders-customers/references/etsy-message-tools.md)。新契约统一支持按客户 ID、订单号或快递单号定位 customer；获取返回 inbound / outbound、完整正文与平台发送时间；发布只支持文字并使用稳定幂等键，只有 `sent + externalMessageId + platformSentAt` 才能声称成功，`result_unknown` 禁止自动重发。
 
 ### 新增
 - **后端 API 访问约定升为 canonical：新增 [`shared/backend-api-access.md`](shared/backend-api-access.md)（收编 Mac mini 上 agent 自建的同名文档，逐条核对后**大改**）**。**修的问题**：`YANGGEDIANZHANG_API_BASE` / `YANGGEDIANZHANG_HERMES_TOOL_TOKEN` / `YANGGEDIANZHANG_TENANT_ID` 这三个变量名与用法，此前在本仓 grep **零命中**——所有 skill 的鉴权段只写「用按租户派生的 Hermes 工具令牌」，从不说变量叫什么、在哪能拿到、怎么调。bot 能调通后端，靠的是一份 agent 自己写的、只活在 fublessings 那台机器上的说明书（机器重装 / profile 重 provision 即丢，同款漏损见上游热修条目）。现固化进 `shared/`，因为它是全 skill 共用的**调用约定**而非某个 skill 专有，并与 [`shared/tools-architecture.md`](shared/tools-architecture.md) §接口形态 第 4 点（「agent 调工具的真实路径 = Hermes skill → 调 ECS 的 HTTP endpoint」）互相链接——那条一直缺这块落地细节。`orders-customers` 的 `etsy-order-message-tool.md` / `etsy-reply-draft-tool.md` 鉴权段加指针过去。
