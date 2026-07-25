@@ -15,6 +15,7 @@ OLD_ENDPOINTS = (
     "/api/hermes/etsy-dm/conversations",
     "/api/hermes/etsy-dm/reply-draft",
     "/api/hermes/etsy-dm/order-message",
+    "/api/etsy-dm/draft",
 )
 
 
@@ -78,6 +79,14 @@ def main() -> int:
     failures += require(
         "shared/backend-api-access.md",
         "../orders-customers/references/etsy-message-tools.md",
+    )
+    failures += require(
+        "shared/tools-architecture.md",
+        "Etsy 客户消息",
+        "/api/hermes/etsy/messages/get",
+        "/api/hermes/etsy/messages/publish",
+        "幂等真实发送任务",
+        "旧会话查询、草稿与订单发送路径已退役",
     )
 
     for relative in OLD_FILES:
