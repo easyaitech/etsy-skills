@@ -50,6 +50,18 @@ After implementation both validators pass.
 - Regression: image-synth 20/20 and trend-radar 26/26 tests passed.
 - QA verdict: DONE, zero defects found, zero fixes deferred.
 
+## Security
+
+- Diff-scoped daily CSO audit covered all phases with the 8/10 confidence gate.
+- Branch history and all 49 changed files contained no credential-pattern, real tenant/listing
+  identifier, user-name path, or tracked `.env` match.
+- The 20 generated Spec Kit files matched their recorded integration-manifest SHA-256 hashes.
+- The machine-local gstack-speckit progress file is ignored and absent from the Git tree.
+- No runtime endpoint, dependency manifest, CI workflow, container, IaC, webhook, database,
+  Etsy session, or customer data was added or accessed.
+- Security verdict: DONE, zero reportable findings. Local report:
+  `/tmp/etsy-skills-security-report-20260725.json`.
+
 ## Release procedure
 
 1. Commit the reviewed feature branch and push `codex/listing-read-contract`.
