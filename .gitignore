@@ -21,3 +21,6 @@ __pycache__/
 
 # Claude Code local session state
 .claude/
+
+# Local gstack-speckit pipeline progress (contains machine-local paths)
+.specify/gstack-speckit-state.json

@@ -9,7 +9,7 @@
 ## 安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.1/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.5/install.sh | bash
 ```
 
 脚本会：
@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.1/insta
 谨慎模式（先看再跑）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.1/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.5/install.sh -o install.sh
 less install.sh    # 自查一遍
 bash install.sh
 ```
@@ -30,7 +30,7 @@ bash install.sh
 | Skill | 干啥 |
 |---|---|
 | [`shop-foundation`](shop-foundation/SKILL.md) | 维护 BRAND.md（品牌原则）+ SHOP.md（店铺事实）+ COMMERCE_PLATFORM.md（销售平台配置）+ BRAND_MARKETING.md（品牌营销策略）+ MARKETING_PLATFORM.md（内容平台策略）五份元基础 |
-| [`listing-catalog`](listing-catalog/SKILL.md) | 店铺总 Base 内 `Products 商品` 表 + 按目标电商平台配置撰写商品页 / listing 文案 |
+| [`listing-catalog`](listing-catalog/SKILL.md) | 店铺总 Base 内 `Products 商品` 表 + 按目标电商平台配置撰写商品页 / listing 文案 + 读取 / 分析 / 优化现有 Etsy Listing（线上事实走独立 public/admin 只读工具，不以 Base 代替） |
 | [`orders-customers`](orders-customers/SKILL.md) | 店铺总 Base 内 `Orders 订单` / `Customers 客户` 表 + 按平台配置支撑客服/履约 SOP + 客户标签 |
 | [`logistics-tracking`](logistics-tracking/SKILL.md) | 跨境物流状态跟踪（薄 skill）：让 agent 调 `track` 命令查/录物流，接后端常驻的 17TRACK 跟踪服务（每天自动轮询到签收）；正确性在后端服务，不写飞书 Base |
 | [`supplier-foundation`](supplier-foundation/SKILL.md) | 店铺总 Base 内 `Suppliers 供应商` 表 + 采购来源筛选、主用/备用/淘汰记录 |
@@ -119,7 +119,7 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 | `HERMES_SKILLS_DIR` | `~/.hermes/skills` |
 | `ECOMMERCE_STACK_BIN` | `~/.local/bin` |
 | `ECOMMERCE_SKILLS_REPO` | `https://github.com/easyaitech/etsy-skills.git` |
-| `ECOMMERCE_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v1.0.1`） |
+| `ECOMMERCE_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v1.0.5`） |
 | `ECOMMERCE_WORKSPACE` | 无；显式声明电商工作区根 |
 | `PINTEREST_AUTOPIN_HOME` | 仅旧本地 Playwright 工具迁移排查使用；新 Pinterest 发布不读取 |
 | `PINTEREST_AUTOPIN_REPO` | 仅旧本地 Playwright 工具迁移排查使用；新 Pinterest 发布不读取 |
