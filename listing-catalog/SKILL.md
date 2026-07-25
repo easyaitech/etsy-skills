@@ -1,16 +1,20 @@
 ---
 name: listing-catalog
-description: 维护电商商品目录（店铺总 Base 内商品 / SKU 表）+ 按目标销售平台配置撰写商品页 / listing 文案。三种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——在店铺总 Base 内建表；(2) "写 listing / 上新文案 / 商品标题 / 产品描述 / 平台 SEO / 小红书商品页"——按 BRAND.md 语调 + COMMERCE_PLATFORM.md 平台规则写文案；(3) "改 SKU / 调价 / 调库存"——读写表。Etsy 和小红书是内置平台 preset，其他平台必须先有平台配置。
+description: 维护电商商品目录（店铺总 Base 内商品 / SKU 表）+ 按目标销售平台配置撰写商品页 / listing 文案 + 读取 / 分析 / 优化现有 Etsy Listing。四种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——在店铺总 Base 内建表；(2) "写 listing / 上新文案 / 商品标题 / 产品描述 / 平台 SEO / 小红书商品页"——按 BRAND.md 语调 + COMMERCE_PLATFORM.md 平台规则写文案；(3) "改 SKU / 调价 / 调库存"——读写 Base；(4) "读取现有 Listing / 看 Etsy 后台 Listing / 分析竞品 Listing / 优化现有 Etsy Listing"——先用独立只读工具取得线上真实数据。Etsy 和小红书是内置平台 preset，其他平台必须先有平台配置。
 layer: foundation
 ---
 
 # 商品目录 (Listing Catalog)
 
-这个 skill 维护电商商品目录（结构化数据 → 店铺总 Base 内商品 / SKU 表）+ 按目标销售平台撰写商品页 / listing 文案。
+这个 skill 维护电商商品目录（结构化数据 → 店铺总 Base 内商品 / SKU 表）+ 按目标销售平台撰写商品页 / listing 文案，也负责读取、分析和优化现有 Etsy Listing。
 
 **对外的实操接口**：店铺总 Base 内的 `Products 商品` 表（通常用 `lark-base` skill 操作；在养个店长 Hermes 飞书直聊里，优先用后端只读工具 `POST /api/hermes/bitable/record-search` 查询；架构见 `../shared/store-base-architecture.md`）+ 工作区根目录的 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md（用 `shop-foundation` skill 维护）。
 
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，降级协议见 [`shared/dependency-protocol.md`](../shared/dependency-protocol.md)。
+>
+> Etsy 线上 Listing 的读取路由、限制、版本化结果与只读边界见
+> [`shared/etsy-listing-read.md`](../shared/etsy-listing-read.md)。**线上事实来自该工具结果；
+> Base 是内部目录 / 草稿 / 历史，不是当前 Etsy 页面的替代来源。**
 
 ---
 
@@ -40,7 +44,7 @@ layer: foundation
 
 ---
 
-## 三种执行模式
+## 四种执行模式
 
 ### 模式 A：建表（首次建立商品 / SKU 表）
 
@@ -79,6 +83,11 @@ layer: foundation
 **执行步骤**：
 1. 按 `references/input-checklist.md` 盘点用户已给的输入；**缺必填项一次性问全**，不要边写边追问。**预期售价**建议永远提供（定价语境）。**礼物倾向**是 **Etsy 专属必填**——目标平台（由 COMMERCE_PLATFORM.md 或用户目标确定）是 Etsy 时才收集，决定 step 5.5 收集礼物维度的程度；**非 Etsy 平台不收集礼物倾向、不跑 step 5.5**。Etsy 下预期售价还用于判断礼物角度的投入程度（低价轻量 / 高价值深挖）
 2. 确认目标 SKU（如果是新品，先在 Base 里建一行记录基础信息；如果是改既有 listing，用 lark-base 查现有行）
+   - **改 / 优化现有 Etsy Listing**：先按模式 D 调对应只读工具，拿当前 public 或 admin
+     结果作为线上事实基线，再把 Base 行作为内部目录上下文。两者不一致时分别标注，不
+     自动覆盖。
+   - live read 失败时，不得继续声称建议基于“当前 Etsy 页面”。可说明失败，并询问用户
+     是否改为基于 Base / 其提供文本另起草稿；若继续，必须标注未核对当前线上内容。
 3. 确认目标销售平台。读 BRAND.md（语调 / 定位 / 视觉关键词作为关键词源头）+ SHOP.md（政策段 + 礼盒服务字段）+ COMMERCE_PLATFORM.md（平台配置）
 4. 按平台选择规则来源：
    - **Etsy**：读 `references/platforms/etsy.md`，理解 Etsy 标题 / 标签 / 描述 / materials / category 的 SEO 规则（§listing 字段 SEO 规则）
@@ -129,9 +138,37 @@ layer: foundation
 2. 如果 Base 工具返回未配置、无权限、表不存在、字段不存在或当前运行环境没有任何可调用 Base 工具：如实说明这一条真实卡点和下一步（让管理员接入/补配置，或请用户点机器人菜单打开资料表/发截图），**不要连续多轮换句式重复“我无法确认是否读到表”**。
 3. 只有读到真实 Base 记录后，才基于字段值回答或继续写 listing / 做发布；不要用用户口述的 SKU 名称假装已查表。
 
+本模式回答的是 **Base 内部目录**。用户问当前 Etsy 页面、公开 URL 或后台编辑器字段时，
+转模式 D；不要把 Base 值包装成线上事实。
+
 本 skill 只在以下场景介入：
 - 字段语义不清时引用 `references/base-schema.md`
 - 需要按品牌一致性校验改动（如改标题/描述）时，按"模式 B"流程跑
+
+### 模式 D：读取 / 分析现有 Etsy Listing（只读）
+
+**进入条件**：
+- 用户给出 Etsy Listing / Shop URL，要求读取、抓取、分析或看竞品
+- 用户明确要求查看自己 Etsy 后台 Listing 配置
+- 模式 B 正在改 / 优化现有 Etsy Listing，需要当前线上事实基线
+
+**执行步骤**：
+1. 完整读取 [`../shared/etsy-listing-read.md`](../shared/etsy-listing-read.md)。
+2. 按来源选择：
+   - 公开 URL、竞品、公开批量 / Shop → `etsy_listing_public_read`
+   - 店主明确要求自己的后台配置 → `etsy_listing_admin_read`
+3. `tenantId` 只取 `$YANGGEDIANZHANG_TENANT_ID`；不向用户索要、不用店铺名代替。
+4. 只把最终 `etsy-listing-read/v1` 当结果；public 的 pending / requestId 不对用户展示。
+5. 返回来源、关键真实字段、requested/result/truncated 和完整度限制。`unknown/raw`、
+   `unavailable`、`excluded`、`errors` 不得静默遗漏或补成空值。
+6. 用户只要读取 / 分析时到此结束，不写 Base。用户要优化时回模式 B，把 live data 当
+   线上事实、Base 当内部目录上下文。
+
+**硬边界**：
+- public 批量禁止使用店主浏览器插件；admin 仅在店主明确要求时调用
+- admin 遇登录失效、Challenge、429、额度或插件错误立即停止
+- 两个工具都只读：不写 Etsy、不写 Base；不得宣称“已修改 / 已同步 / 已发布”
+- Listing 自动巡检保持暂停，不新增 cron、Alarm 或自动抓取
 
 ---
 

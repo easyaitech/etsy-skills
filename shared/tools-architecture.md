@@ -113,6 +113,8 @@ skill 侧只写「调哪个入口、传什么、怎么解释返回」；不写�
 | `image-synth` 生图 | **已上收 ECS**：中心后端 `POST /image/generate`（GPT Image 2 / OpenRouter） | 同左（已是目标态） | ✅ key / 配额 / 换模型都在后端一处，skill 经 `terminal` 调端点、不持 key、不传 model slug（per-profile token + idempotency）。见 image-synth `references/backend-image-gen-contract.md` |
 | `pinterest-autopin` 发布 | **已上收 ECS**：yanggedianzhang 服务器控制面 + 现有浏览器插件（租户 Chrome 登录态执行） | 同左（已是 tier 2 目标态） | ✅ Hermes 只生成 + 调服务器工具，不持 Chrome / Playwright / 队列 / token；服务器做 job 状态机 / 鉴权 / 素材授权 / 结果回写 |
 | 发布**编排**（巡检 / 锁 / 重试 / 死信） | **已上收 ECS**：yanggedianzhang publish dispatch（T5，常驻 tick，dormant-by-default） | 同左（已是目标态） | ✅ 队列调度 / 单写者锁 / 重试退避 / 幂等去重 / 崩溃恢复在服务端；`social-publisher` skill 退薄（只做配置 / 人工发布 / confirm-publish 闸 / 对账），不再 Hermes 手搓巡检。v1 不自动 confirm-publish（保留人工目视确认闸） |
+| Etsy Listing 公开读取 | **已上收 ECS**：`/api/hermes/etsy/listings/public-read` 经独立 Apify Actor，start/result 短轮询后返回最终 `etsy-listing-read/v1` | 同左（已是无账号目标态） | ✅ single/batch/shop；不依赖 Base，不使用店主浏览器。公开批量禁止改走账号插件，契约见 [`etsy-listing-read.md`](etsy-listing-read.md) |
+| Etsy Listing 后台读取 | **已上收 ECS 控制面**：`/api/hermes/etsy/listings/admin-read` 编排租户浏览器插件读取店主后台编辑器 | 同左（已是 tier 2 目标态） | ✅ 仅店主明确调用，顺序读取并在登录/Challenge/429/额度/插件错误时停止；自动巡检已暂停，现有 Base 核对代码和历史数据保留 |
 | `trend-radar` 抓取 | Mac mini 上的 Node 脚本 + `SERPAPI_KEY` | 数据抓取走 ECS（tier 1，有 API），密钥存 ECS | 密钥目前在 Mac mini 是过渡；非租户特异的只读输入，优先迁 ECS |
 | Etsy 站内信草稿 | 插件读会话 → ECS `/api/etsy-dm/draft` → 租户 Hermes profile 出草稿 → 回填不发送 | 已基本符合 tier 2（插件 + ECS 控制面 + Hermes 出文） | 端到端已验过；保持控制面在 ECS |
 | 物流跟踪 | 17TRACK 公共引擎（register-once + 轮询 + 飞书推送） | tier 1（有 API），按租户路由 | 引擎已建；部署到目标租户 profile 时控制面在 ECS |
@@ -130,5 +132,6 @@ skill 侧只写「调哪个入口、传什么、怎么解释返回」；不写�
 | 每店铺一 Base、机器人最小权限、客户共享边界 | [`shared/store-base-architecture.md`](store-base-architecture.md) |
 | 基座层 / 应用层两层 skill 架构 + 依赖降级 | [`shared/dependency-protocol.md`](dependency-protocol.md) |
 | 授权才能发布、事实不可自编 | [`shared/preamble.md`](preamble.md) §经营原则 |
+| Etsy Listing public/admin 读取、完整度与 Base 边界 | [`shared/etsy-listing-read.md`](etsy-listing-read.md) |
 
 一句话收尾：**这些 skill 是大脑，不是工具本体；想清楚再调入口，密钥和执行都不归你管。**
