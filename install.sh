@@ -2,7 +2,7 @@
 # 电商 skill stack 安装 / 升级脚本（兼容旧 etsy-stack 安装路径）
 #
 # ── 推荐（钉死版本）─────────────────────────────────────────────
-#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.5/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.6/install.sh | bash
 #
 # ── 最新主线 ────────────────────────────────────────────────────
 #   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash
@@ -11,7 +11,7 @@
 #   bash install.sh    或    ecommerce-stack update（旧命令 etsy-stack update 兼容）
 #
 # ── 谨慎模式（先看再跑） ───────────────────────────────────────
-#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.5/install.sh -o install.sh
+#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.6/install.sh -o install.sh
 #   less install.sh   # 自查一遍
 #   bash install.sh
 #
@@ -21,7 +21,7 @@
 #   ECOMMERCE_STACK_BIN    ecommerce-stack / etsy-stack 命令的安装目录（默认 ~/.local/bin）
 #   ECOMMERCE_SKILLS_REPO  Git 仓库 URL（默认 HTTPS：https://github.com/easyaitech/etsy-skills.git）
 #                          开发者可改成 SSH：git@github.com:easyaitech/etsy-skills.git
-#   ECOMMERCE_SKILLS_REF   要 checkout 的分支 / tag（默认 main；推荐传具体 tag 如 v1.0.5）
+#   ECOMMERCE_SKILLS_REF   要 checkout 的分支 / tag（默认 main；推荐传具体 tag 如 v1.0.6）
 #
 # 旧变量 ETSY_SKILLS_HOME / ETSY_STACK_BIN / ETSY_SKILLS_REPO / ETSY_SKILLS_REF 继续兼容。
 

@@ -2,6 +2,19 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.6] - 2026-07-25
+
+- **Etsy 客户消息统一切换为正式获取 + 真实发布**：`orders-customers` 删除旧 `etsy-dm`
+  会话查询、回复草稿和订单消息说明，合并为
+  [`etsy-message-tools.md`](orders-customers/references/etsy-message-tools.md)。现在可按客户 ID、
+  订单号或快递单号定位同一 customer；获取返回 inbound / outbound、完整正文和平台发送时间；
+  发布只支持文字并使用稳定幂等键，只有
+  `job.status=sent + job.externalMessageId + job.platformSentAt` 才能声称成功，
+  `result_unknown` 禁止自动重发。
+- **工具契约可自动核验**：新增 `scripts/validate-customer-message-contract.py`，防止旧端点、
+  旧文件或关键安全语义回流；README 和 install.sh 的固定安装示例升级到 `v1.0.6`，
+  `v1.0.5` 保持为回滚点。
+
 ## [v1.0.5] - 2026-07-25
 
 - **接入两个已上线的 Etsy Listing 独立只读工具**：新增
@@ -48,8 +61,8 @@
 
 ### 移除
 - **归档 fublessings 机器上 agent 自建的 `business-operations/listing-catalog/` 影子目录**（有价值的一份已按上条升为 canonical，其余两份经核对不该留）。该目录挂在 agent 自建的 `business-operations/` 下，其 `SKILL.md` 的 frontmatter `name` 也叫 `listing-catalog`，与软链到共享 clone 的 canonical `listing-catalog` **同名打架**；且它是 canonical 的**过期分叉**（缺 canonical 后来加的 §`Products 商品` 默认视图字段，另自行加了「主图更换子流程」，正文还残留字面 `\n` 转义），本就该随 canonical 走而不是就地分叉。
-  - `references/feishu-sync-conflicts.md` **不提升、归档**——经核对该文**机制与处置全是编的**：它把「多维表格的内容已经变了 / 字段被改过」当成「飞书自动同步工具」的行为，实则这句话是**我们自己 ECS 后端** Etsy listing 核对同步的 409 文案；真实判据是**按 listingId 现查记录、逐个比对待写字段当前值是否仍等于核对时缓存的值**（防止用几天前抓到的 Etsy 值盖掉这期间的人工修改），是**值**层面的乐观并发闸，与该文断言的「对比字段定义 / 字段名类型选项做 field list diff」无关。故其三条「根因」（自定义字段名如 `售价 (HKD)` 不匹配标准 schema / 迁移遗留字段定义 / 新增字段被检测到）全部不成立，「修复选项 A：在飞书 Base 同步设置里重置或忽略字段冲突」更是不存在的功能；照它诊断会让 bot 对着用户笃定地给出假根因和假操作步骤。真实的 409 误报根因（tags / materials 分词拼接形态 vs 单元格原文整串比对）已在服务端 v0.6.0.36 root-cause 并修掉。该文唯一站得住的一点是「用户说没改不是撒谎、别连续多轮追问用户改了什么」——但正确处置是**重跑核对刷新缓存**，与该文给的路径完全不同，故不作为文档保留。（补上服务端 v0.6.10.22 上线时欠的 bot 侧一半）**：新增 [`orders-customers/references/etsy-order-message-tool.md`](orders-customers/references/etsy-order-message-tool.md)——店主在飞书里给出订单号 + 逐字定稿消息文本后，Hermes 调 `POST /api/hermes/etsy-dm/order-message`（per-tenant 派生令牌），店主机器上的浏览器插件（≥0.5.52）在 Etsy 订单页 New / Completed 两个页签按订单号定位订单卡、点行内聊天 icon、填入并**代为发送**，结果经飞书回执。**修的问题**：服务端与插件早已上线，但网关技能从没注册这个工具，bot 手里只有按会话发的 `etsy-reply-draft-tool`，于是店主给了订单号还被反问「缺这个订单对应的买家会话信息」。现在 SKILL.md 索引表 / 模式 C 第 5 步 / §写入前的硬性约束、`platforms/etsy.md` §自动化边界、skill `description` 触发词都按「有会话→填回复框、只有订单号→按订单号代发」明确二选一，并写死**不得向店主索要买家会话信息**。红线：只有店主逐字确认过的文本才调、一次定稿只调一次、暂存超时或报错**绝不盲目重投**（宁可漏发也不双发）、`409 ORDER_MESSAGE_ALREADY_DISPATCHED` 一律等飞书回执不重投；错误码（订单号格式 400 / 超长 400 / 在途 409 / 满员 409 / 插件未装 409 / 版本 <0.5.52 426 / 停服 403）逐条给了处置。`buyerName` 标为「能给就给」——它是插件侧防发错人的收件人校验闸。
-- **Etsy 站内信「飞书定稿 → 插件填入回复框」工具接入 `orders-customers`**：新增 [`orders-customers/references/etsy-reply-draft-tool.md`](orders-customers/references/etsy-reply-draft-tool.md)——店主在飞书里跟店长讨论定稿站内信回复后，Hermes 调服务器工具（`POST /api/hermes/etsy-dm/conversations` 读会话上下文 + `POST /api/hermes/etsy-dm/reply-draft` 暂存草稿，per-tenant 派生令牌），店主机器上的浏览器插件（≥0.5.45）自动打开对应会话把草稿填进回复框，**发送仍由店主手动点击**。SKILL.md 模式 C 第 5 步与 `platforms/etsy.md` §自动化边界同步放宽为「可填入、不发送」（服务端 yanggedianzhang v0.6.10.8）。定稿才暂存、同会话重投即修订、错误码（多命中 409 / 未同步 404 / 插件版本 426）逐条给了处置。
+  - `references/feishu-sync-conflicts.md` **不提升、归档**——经核对该文**机制与处置全是编的**：它把「多维表格的内容已经变了 / 字段被改过」当成「飞书自动同步工具」的行为，实则这句话是**我们自己 ECS 后端** Etsy listing 核对同步的 409 文案；真实判据是**按 listingId 现查记录、逐个比对待写字段当前值是否仍等于核对时缓存的值**（防止用几天前抓到的 Etsy 值盖掉这期间的人工修改），是**值**层面的乐观并发闸，与该文断言的「对比字段定义 / 字段名类型选项做 field list diff」无关。故其三条「根因」（自定义字段名如 `售价 (HKD)` 不匹配标准 schema / 迁移遗留字段定义 / 新增字段被检测到）全部不成立，「修复选项 A：在飞书 Base 同步设置里重置或忽略字段冲突」更是不存在的功能；照它诊断会让 bot 对着用户笃定地给出假根因和假操作步骤。真实的 409 误报根因（tags / materials 分词拼接形态 vs 单元格原文整串比对）已在服务端 v0.6.0.36 root-cause 并修掉。该文唯一站得住的一点是「用户说没改不是撒谎、别连续多轮追问用户改了什么」——但正确处置是**重跑核对刷新缓存**，与该文给的路径完全不同，故不作为文档保留。（补上服务端 v0.6.10.22 上线时欠的 bot 侧一半）**：新增 `orders-customers/references/etsy-order-message-tool.md`——店主在飞书里给出订单号 + 逐字定稿消息文本后，Hermes 调 `POST /api/hermes/etsy-dm/order-message`（per-tenant 派生令牌），店主机器上的浏览器插件（≥0.5.52）在 Etsy 订单页 New / Completed 两个页签按订单号定位订单卡、点行内聊天 icon、填入并**代为发送**，结果经飞书回执。**修的问题**：服务端与插件早已上线，但网关技能从没注册这个工具，bot 手里只有按会话发的 `etsy-reply-draft-tool`，于是店主给了订单号还被反问「缺这个订单对应的买家会话信息」。现在 SKILL.md 索引表 / 模式 C 第 5 步 / §写入前的硬性约束、`platforms/etsy.md` §自动化边界、skill `description` 触发词都按「有会话→填回复框、只有订单号→按订单号代发」明确二选一，并写死**不得向店主索要买家会话信息**。红线：只有店主逐字确认过的文本才调、一次定稿只调一次、暂存超时或报错**绝不盲目重投**（宁可漏发也不双发）、`409 ORDER_MESSAGE_ALREADY_DISPATCHED` 一律等飞书回执不重投；错误码（订单号格式 400 / 超长 400 / 在途 409 / 满员 409 / 插件未装 409 / 版本 <0.5.52 426 / 停服 403）逐条给了处置。`buyerName` 标为「能给就给」——它是插件侧防发错人的收件人校验闸。
+- **Etsy 站内信「飞书定稿 → 插件填入回复框」工具接入 `orders-customers`**：新增 `orders-customers/references/etsy-reply-draft-tool.md`——店主在飞书里跟店长讨论定稿站内信回复后，Hermes 调服务器工具（`POST /api/hermes/etsy-dm/conversations` 读会话上下文 + `POST /api/hermes/etsy-dm/reply-draft` 暂存草稿，per-tenant 派生令牌），店主机器上的浏览器插件（≥0.5.45）自动打开对应会话把草稿填进回复框，**发送仍由店主手动点击**。SKILL.md 模式 C 第 5 步与 `platforms/etsy.md` §自动化边界同步放宽为「可填入、不发送」（服务端 yanggedianzhang v0.6.10.8）。定稿才暂存、同会话重投即修订、错误码（多命中 409 / 未同步 404 / 插件版本 426）逐条给了处置。
 - **上游 Mac mini 本地热修：发货后必须回填平台后台，否则这单不算完（orders-customers 履约约束）**：fublessings 部署机的共享 clone 上曾就地（未提交）给 `order-fulfillment-sop.md` 阶段 5 加过两条——拿到快递单号后要提醒用户把单号回填到 Etsy 后台对应订单、核对承运信息 / 发货确认是否已提交，未填完前这单仍算有一个未完成待办。**修的问题**：Base 里 `状态 = 已发货` 不等于 Etsy 后台已发货，本 skill 又明确不替用户在后台标记发货（契约 #11），中间这段真空此前没人跟，订单会在「我们这边完事了」的假象里收尾。该热修本地未进 git、下次 `ecommerce-stack update` 会被覆盖丢失，现固化进 canonical 仓库，并**按多平台架构下沉**：热修原文写的是「如果目标平台是 Etsy…」这种条件句，而 `platforms/platform-presets.md` 把 `order-fulfillment-sop.md` 列为不得写平台差异的流程逻辑文件。故拆成两层——core SOP 阶段 5 的检查项 / 完成条件只留**平台中性**的「回填到平台后台 + 提交平台发货确认，入口与核对项见平台 preset §自动化边界」（回填后台这件事对小红书等平台同样成立，其 preset #11 亦已写明不替用户发货 / 改快递单号，故中性化后覆盖面严格大于原热修）；Etsy 专属细节（回填到 Etsy 后台对应订单、核对承运信息 / 发货确认、未提交则继续作为最后一个待办）落进 `platforms/etsy.md` 新增 §发货回填，契约 #11 补指针。
 - **上游 Mac mini 本地热修：过期未发 pin 不许自己顺延（pinterest-autopin 硬约束）**：fublessings 部署机上曾就地（未提交）加过一条红线——过期未发的 pin（`自动发布=true`+`状态∈{待发,已批准}`+计划时间<now）**先问用户要不要改回近几天补发，不主动往后推一两周**，并记了用户偏好「积压过期 pin 应尽快补发」。该热修本地未进 git、下次 `ecommerce-stack update` 会被覆盖丢失，现固化进 canonical SKILL.md 硬约束（含"读 `事件日志` 排除租约超时/失败重复行"），与模式 E 第 3 步互为强调。
 
