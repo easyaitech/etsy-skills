@@ -37,6 +37,19 @@ After implementation both validators pass.
   distribution findings.
 - Verdict: `Pre-Landing Review: No issues found.`
 
+## QA
+
+- Isolated installer QA: cloned commit `46ba180` into a system temporary directory, installed
+  all 15 manifest skills, and verified both `listing-catalog` and `shared` links.
+- Installed bundle exposed `shared/etsy-listing-read.md`; the installed consuming skill
+  contained Mode D and both production tool routes.
+- CLI smoke: `ecommerce-stack version` returned `v1.0.4-23-g46ba180`; `ecommerce-stack list`
+  reported all 15 managed skills installed.
+- Validator behavior: both repository validators passed; direct negative/path assertions
+  confirmed missing-file failure and relative/link parsing behavior.
+- Regression: image-synth 20/20 and trend-radar 26/26 tests passed.
+- QA verdict: DONE, zero defects found, zero fixes deferred.
+
 ## Release procedure
 
 1. Commit the reviewed feature branch and push `codex/listing-read-contract`.
