@@ -17,7 +17,7 @@
 
 ```json
 {"customerId":"C-2026-0001"}
-{"orderNumber":"4079795776"}
+{"orderNumber":"ORDER-NUMBER"}
 {"trackingNumber":"TRACKING-NUMBER"}
 ```
 
@@ -35,7 +35,7 @@
 ```json
 {
   "tenantId": "$YANGGEDIANZHANG_TENANT_ID",
-  "selector": {"orderNumber": "4079795776"},
+  "selector": {"orderNumber": "ORDER-NUMBER"},
   "limit": 50
 }
 ```
@@ -71,7 +71,7 @@
 ```json
 {
   "tenantId": "$YANGGEDIANZHANG_TENANT_ID",
-  "selector": {"orderNumber": "4079795776"},
+  "selector": {"orderNumber": "ORDER-NUMBER"},
   "idempotencyKey": "稳定且仅代表这一次业务发送意图的非秘密键",
   "messageType": "text",
   "content": "完整消息正文"
