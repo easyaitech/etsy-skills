@@ -2,6 +2,22 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.5] - 2026-07-25
+
+- **接入两个已上线的 Etsy Listing 独立只读工具**：新增
+  [`shared/etsy-listing-read.md`](shared/etsy-listing-read.md)，统一 public/admin 的
+  single、batch、shop 路由、数量/风控限制、`etsy-listing-read/v1` 完整度语义和
+  Base 边界。公开 URL/竞品/公开批量走无账号 Apify 路径；店主明确要求后台配置才走
+  授权浏览器插件。公开批量禁止借用店主插件，后台遇登录/Challenge/429/额度/插件错误
+  立即停止。
+- **`listing-catalog` 以真实线上数据为现有 Listing 基线**：新增只读模式 D；改/优化
+  现有 Etsy Listing 时先读 live source，Base 只作内部目录、草稿和历史上下文。读取
+  失败不得拿 Base 或口述伪装当前 Etsy 页面；两个工具都不写 Etsy、不写 Base。
+- **巡检与旧能力边界不变**：Listing 自动巡检继续暂停；现有 Base 核对代码、接口和
+  历史数据保留。本次不新增写工具、自动同步、批量修改、跨平台发布或顶层 skill。
+- **发布可核验**：README 和 install.sh 的固定安装示例从过期 `v1.0.1` 对齐到
+  `v1.0.5`；上一稳定版本 `v1.0.4` 是回滚点。
+
 ## 2026-07-24 (小红书封存 — 全路由 fail-closed 加固)
 
 - **小红书 adapter 整体封存，加固为「全路由 fail-closed」（产品决策：现阶段专注 Etsy，小红书不对用户开放，代码 / 文档原样保留待未来解封）。** 上一轮只改了 `xiaohongshu-autopost/SKILL.md` 的 frontmatter description，Codex 复审 FAIL——body（Mode A/B/C / 检查表 / 写入步骤）仍命令组草稿、`adapter-registry` 路由树无 `shelved` 分支（小红书落进「非 enabled → 人工发布清单」通用分支）、用户若先触发 `social-publisher` / `publish-composer` 仍按 staged 组草稿绕过封存。本轮把封存落到**每条触发路由的动作契约**上，判据统一为 fail-closed：`adapter-registry` 小红书状态 != `enabled`（现为 `封存 shelved`）即一律封存——只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**不组草稿、不建 `社媒发布队列` 行、不创建 server publish job、不出人工发布清单、不做对账**。
