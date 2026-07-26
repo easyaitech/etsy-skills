@@ -27,6 +27,7 @@ layer: foundation
 | `references/order-fulfillment-sop.md` | 新订单到发货、签收跟进的阶段清单 | 新订单 / 待发货订单必须用它判断下一步、缺失证据和要写回的字段 |
 | `references/order-handling.md` | 客服回复场景 SOP（平台中性骨架） | 只用于买家消息、差评、退换货、感谢信等话术，不替代履约 SOP；买家语言 / 措辞 / 平台特例看目标平台 preset |
 | `references/etsy-message-tools.md` | Etsy 客户消息正式获取与真实发布工具 | 仅目标平台 Etsy 且需要读取或发送客户消息时读；按 `customerId`、订单号或快递单号唯一定位 customer，获取完整双向文字消息或真实发送文字消息 |
+| `references/etsy-order-read.md` | Etsy 当前订单事实统一读取 | 目标平台 Etsy 且要查当前订单、履约或送达状态时读；统一调用 `get_etsy_orders`，New / Completed 只作内部证据来源 |
 | `references/platforms/<platform>.md` | 目标平台 preset（订单号 / 买家语言 / 承诺发货来源 / 消息边界 / 标签阈值） | 每次处理订单 / 客服前读对应平台 preset；内置 `platforms/etsy.md` / `platforms/xiaohongshu.md`，其他平台缺 preset 时阻塞 |
 
 ---
@@ -117,7 +118,7 @@ layer: foundation
 - `Orders 订单` 表的 `SOP 阶段`、确认照片、跟踪号或 `签收评价消息状态` 缺失；`打包视频` 只有在本单明确要求留证/用户要求/已选择录制社媒素材时才作为缺口
 
 **执行步骤**：
-1. 先查 `Orders 订单` 表、`Customers 客户` 表、`Products 商品` 表，拿到订单状态、SKU、定制需求、承诺发货日、跟踪号和客户标签
+1. 先查 `Orders 订单` 表、`Customers 客户` 表、`Products 商品` 表，拿到内部记录；目标平台是 Etsy 时再读 `references/etsy-order-read.md` 并调用 `get_etsy_orders` 获取当前平台事实。Base 与 Etsy 不一致时显式报告差异，不拿 Base 代替线上状态
 2. 读 `references/order-fulfillment-sop.md` + 目标平台 preset（`references/platforms/<platform>.md`，承诺发货时间来源按 preset）
 3. **签收状态以 `logistics-tracking` 为准**：涉及"是否已签收 / delivered"时用 `track` 查询（见 `../logistics-tracking`），不要自己猜或去承运商网页查；签收事实驱动签收评价、30 天复购两个触点
 4. 按 SOP 输出：

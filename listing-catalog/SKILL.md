@@ -154,11 +154,11 @@ layer: foundation
 
 **执行步骤**：
 1. 完整读取 [`../shared/etsy-listing-read.md`](../shared/etsy-listing-read.md)。
-2. 按来源选择：
-   - 公开 URL、竞品、公开批量 / Shop → `etsy_listing_public_read`
-   - 店主明确要求自己的后台配置 → `etsy_listing_admin_read`
-3. `tenantId` 只取 `$YANGGEDIANZHANG_TENANT_ID`；不向用户索要、不用店铺名代替。
-4. 只把最终 `etsy-listing-read/v1` 当结果；public 的 pending / requestId 不对用户展示。
+2. 统一调用 `etsy_listings_get`，用 `fields=public|seller_admin` 选择来源：
+   - 公开 URL、竞品、公开批量 / Shop → `fields=public`
+   - 店主明确要求自己的后台配置 → `fields=seller_admin`
+3. Agent 输入不带 `tenantId` 或 token；运行时自动注入，不向用户索要、不用店铺名代替。
+4. 只解释最终 `etsy-agent-tool/v1` 信封中的 Listing 数据；pending / requestId 不对用户展示。
 5. 返回来源、关键真实字段、requested/result/truncated 和完整度限制。`unknown/raw`、
    `unavailable`、`excluded`、`errors` 不得静默遗漏或补成空值。
 6. 用户只要读取 / 分析时到此结束，不写 Base。用户要优化时回模式 B，把 live data 当

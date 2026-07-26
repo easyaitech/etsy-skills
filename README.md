@@ -9,18 +9,23 @@
 ## 安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.6/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.7/install.sh | bash
 ```
 
 脚本会：
 - clone 到 `~/.local/share/etsy-skills/`
 - 把所有 skill 软链进 `~/.hermes/skills/`
 - 把 `ecommerce-stack` CLI 装到 `~/.local/bin/`，并保留 `etsy-stack` 兼容命令
+- 安装四个 Agent 工具：`etsy_listings_get`、`etsy_customer_messages_get`、
+  `etsy_customer_messages_publish`、`get_etsy_orders`
+
+四个 Etsy 工具只接收业务 JSON，不接收 tenant、token 或内部轮询 ID；统一最终结构见
+[`shared/etsy-agent-tools.md`](shared/etsy-agent-tools.md)。
 
 谨慎模式（先看再跑）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.6/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.7/install.sh -o install.sh
 less install.sh    # 自查一遍
 bash install.sh
 ```
@@ -119,7 +124,7 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 | `HERMES_SKILLS_DIR` | `~/.hermes/skills` |
 | `ECOMMERCE_STACK_BIN` | `~/.local/bin` |
 | `ECOMMERCE_SKILLS_REPO` | `https://github.com/easyaitech/etsy-skills.git` |
-| `ECOMMERCE_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v1.0.6`） |
+| `ECOMMERCE_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v1.0.7`） |
 | `ECOMMERCE_WORKSPACE` | 无；显式声明电商工作区根 |
 | `PINTEREST_AUTOPIN_HOME` | 仅旧本地 Playwright 工具迁移排查使用；新 Pinterest 发布不读取 |
 | `PINTEREST_AUTOPIN_REPO` | 仅旧本地 Playwright 工具迁移排查使用；新 Pinterest 发布不读取 |

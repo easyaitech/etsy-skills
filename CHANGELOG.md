@@ -2,6 +2,22 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.7] - 2026-07-26
+
+- **四个 Agent-first Etsy 工具**：新增 `etsy_listings_get`、
+  `etsy_customer_messages_get`、`etsy_customer_messages_publish`、`get_etsy_orders`
+  四个同名 CLI 薄适配器。Agent input 不再包含 tenant、token 或 transport ID；公开
+  Listing 与后台 Listing 在一个工具内用 `fields` 选源，订单在一个工具内跨 New /
+  Completed 读取。
+- **统一最终信封**：四个工具只向 Agent 返回 `etsy-agent-tool/v1` 最终 JSON；内部
+  start/poll、requestId、operationId 全部隐藏。读取显式区分 complete / partial /
+  failed，真实消息发布只有拿到平台消息 ID 和发送时间才成功；结果未知时
+  `safeToRetry=false`，禁止自动重发。
+- **订单状态不再等同 Tab**：履约、送达、来源 bucket 分开；已发货未送达可继续位于 New。
+  覆盖不完整不能证明 not-found，跨来源冲突不静默覆盖。
+- **旧 Etsy 消息工具下线**：skill 不再暴露旧会话、草稿或订单私信入口，不允许降级回旧
+  工具。上一稳定版本 `v1.0.6` 保持为回滚点。
+
 ## [v1.0.6] - 2026-07-25
 
 - **Etsy 客户消息统一切换为正式获取 + 真实发布**：`orders-customers` 删除旧 `etsy-dm`

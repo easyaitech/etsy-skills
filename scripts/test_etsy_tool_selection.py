@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""Validate the Agent tool-selection acceptance matrix.
+
+This does not pretend to emulate an LLM. It keeps a reviewable set of natural-language
+requests and enforces that every expected answer is one of the four published tools and
+never a retired tool. The >=95% runtime selection score is collected during Agent canary.
+"""
+
+from __future__ import annotations
+
+import unittest
+from pathlib import Path
+
+
+FORMAL_TOOLS = {
+    "etsy_listings_get",
+    "etsy_customer_messages_get",
+    "etsy_customer_messages_publish",
+    "get_etsy_orders",
+}
+
+RETIRED_TOOLS = {
+    "etsy_listing_public_read",
+    "etsy_listing_admin_read",
+    "etsy_dm_conversations",
+    "etsy_dm_reply_draft",
+    "etsy_order_message",
+}
+
+CASES = [
+    ("看看这个 Etsy listing 的公开标题和价格", "etsy_listings_get"),
+    ("批量读取这十个 Etsy 商品链接", "etsy_listings_get"),
+    ("读取我店铺后台这个 listing 的完整配置", "etsy_listings_get"),
+    ("把 Etsy 店铺里的 listing 列出来", "etsy_listings_get"),
+    ("查这位 Etsy 客户最近的双向消息", "etsy_customer_messages_get"),
+    ("按订单号找到买家并读取聊天记录", "etsy_customer_messages_get"),
+    ("按快递单号查对应客户消息", "etsy_customer_messages_get"),
+    ("继续读取这段 Etsy 会话的下一页", "etsy_customer_messages_get"),
+    ("把这段已确认文字真实发送给 Etsy 客户", "etsy_customer_messages_publish"),
+    ("按这个稳定幂等键发布客户回复", "etsy_customer_messages_publish"),
+    ("核验刚才那条 Etsy 消息是否真的发出", "etsy_customer_messages_publish"),
+    ("发送这条纯文字售后回复，不要附件", "etsy_customer_messages_publish"),
+    ("获取订单 1234567890 的详细信息", "get_etsy_orders"),
+    ("查这几个 Etsy 订单号现在的状态", "get_etsy_orders"),
+    ("列出所有未送达订单", "get_etsy_orders"),
+    ("列出已经送达的订单", "get_etsy_orders"),
+    ("同时扫描 active 和 delivered 订单", "get_etsy_orders"),
+    ("继续读取上一页订单结果", "get_etsy_orders"),
+    ("这张已经发货但运输中的订单详情是什么", "get_etsy_orders"),
+    ("订单在 New 还是 Completed 不清楚，帮我查到它", "get_etsy_orders"),
+    ("读取 New 和 Completed 并按订单号去重", "get_etsy_orders"),
+    ("查订单履约、配送和页面归属三个状态", "get_etsy_orders"),
+    ("这个订单是否已经 delivered", "get_etsy_orders"),
+    ("查询 active 订单的下一页", "get_etsy_orders"),
+]
+
+
+class ToolSelectionMatrixTest(unittest.TestCase):
+    def test_matrix_has_at_least_twenty_cases_and_only_formal_tools(self) -> None:
+        self.assertGreaterEqual(len(CASES), 20)
+        expected = {tool for _, tool in CASES}
+        self.assertTrue(expected.issubset(FORMAL_TOOLS))
+        self.assertTrue(expected.isdisjoint(RETIRED_TOOLS))
+        self.assertEqual(expected, FORMAL_TOOLS)
+
+    def test_each_case_is_unique_and_reviewable(self) -> None:
+        prompts = [prompt for prompt, _ in CASES]
+        self.assertEqual(len(prompts), len(set(prompts)))
+        self.assertTrue(all(len(prompt.strip()) >= 8 for prompt in prompts))
+
+    def test_ecommerce_stack_dispatches_only_the_four_formal_tools(self) -> None:
+        script = Path(__file__).with_name("etsy-stack").read_text(encoding="utf-8")
+        self.assertIn("etsy_listings_get|etsy_customer_messages_get|etsy_customer_messages_publish|get_etsy_orders)", script)
+        self.assertIn('exec "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$tool_name"', script)
+        self.assertNotIn("eval ", script)
+
+
+if __name__ == "__main__":
+    unittest.main()

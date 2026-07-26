@@ -7,7 +7,11 @@
 通用地址、租户身份、令牌引用和错误判据见
 [`backend-api-access.md`](backend-api-access.md)。本文不复制鉴权实现。
 
-## 两个独立入口
+## 一个 Agent 入口、两个内部来源
+
+Agent 统一调用 `etsy_listings_get`，通过 `fields=public|seller_admin` 明确来源。以下两个名字
+只用于解释 ECS 内部 transport / 原始 Listing 批次，不再作为 Agent 可选工具：
+正式适配器只访问 `/api/hermes/etsy/tools/listings/get` 及其内部 result 路径。
 
 | 业务入口 / 最终 `tool` | 何时使用 | 执行位置 | Base / 登录态 |
 |---|---|---|---|
@@ -34,10 +38,20 @@
 不确定是不是店主自己的后台时，默认 public；只有店主明确要求后台配置才使用 admin。
 公开批量读取**禁止**调用绑定店主 Etsy 账号的浏览器插件。
 
+## Agent 输入
+
+```json
+{"scope":"single","fields":"public","urls":["https://www.etsy.com/listing/123/example"]}
+{"scope":"batch","fields":"seller_admin","urls":["https://www.etsy.com/listing/123/example"]}
+{"scope":"shop","fields":"public","shopUrl":"https://www.etsy.com/shop/example","maxItems":30}
+```
+
+Agent 不执行本文下方的 HTTP start/result；薄适配器会隐藏它们，只返回统一最终信封。
+
 ## 租户身份与访问
 
-`tenantId` 只取运行时注入的 `$YANGGEDIANZHANG_TENANT_ID`。不要向店主索要，不要自行
-拼接，也不要用 Etsy 店铺名、用户名、Base token 或公开 URL 代替。裸店铺名可能返回
+`tenantId` 由工具运行时注入，不属于 Agent input。不要向店主索要，不要自行拼接，也不要用
+Etsy 店铺名、用户名、Base token 或公开 URL 代替。裸店铺名可能返回
 `UNAUTHORIZED`；只有实际读到该 JSON 错误时，才按
 [`backend-api-access.md`](backend-api-access.md) 的公共闸门表处理。
 
@@ -86,7 +100,12 @@ start 返回 `202 pending` 时，按 `retryAfterMs` 调 result，body 传当前
 
 ## Admin read
 
-端点：`POST /api/hermes/etsy/listings/admin-read`
+内部端点：
+
+- start：`POST /api/hermes/etsy/listings/admin-read`
+- result：`POST /api/hermes/etsy/listings/admin-read/result`
+
+两者同样由 `etsy_listings_get` 适配器隐藏，Agent 不处理 requestId 或 pending。
 
 ### 输入
 

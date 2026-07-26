@@ -23,6 +23,9 @@ def main() -> int:
         "shared/etsy-listing-read.md",
         "etsy_listing_public_read",
         "etsy_listing_admin_read",
+        "etsy_listings_get",
+        "/api/hermes/etsy/tools/listings/get",
+        "fields=public|seller_admin",
         "single",
         "batch",
         "shop",
@@ -72,7 +75,7 @@ def main() -> int:
     failures += require(
         "README.md",
         "读取 / 分析 / 优化现有 Etsy Listing",
-        "v1.0.6",
+        "v1.0.7",
     )
     manifest = (ROOT / "etsy-stack.json").read_text(encoding="utf-8")
     if "listing-reader" in manifest or "etsy-listing-read" in manifest:

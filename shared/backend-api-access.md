@@ -53,6 +53,12 @@ cron 的 no_agent script 跑在同一套环境里，同样能拿到。
 
 ## 怎么调
 
+Etsy Listing、客户消息和订单优先调用已安装的四个同名 Agent 工具，见
+[`etsy-agent-tools.md`](etsy-agent-tools.md)。它们自动注入本节三个运行时变量，并隐藏
+start/result 轮询；Agent 不应手写这些 Etsy HTTP 请求。
+
+以下 curl 模板供没有正式薄适配器的其他后端工具使用：
+
 ```bash
 curl -sS -X POST "$YANGGEDIANZHANG_API_BASE/api/hermes/<endpoint>" \
   -H "Authorization: Bearer $YANGGEDIANZHANG_HERMES_TOOL_TOKEN" \

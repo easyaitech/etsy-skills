@@ -41,11 +41,11 @@ def main() -> int:
     failures: list[str] = []
     failures += require(
         "orders-customers/references/etsy-message-tools.md",
-        "/api/hermes/etsy/messages/get",
-        "/api/hermes/etsy/messages/publish",
-        "customerId",
-        "orderNumber",
-        "trackingNumber",
+        "etsy_customer_messages_get",
+        "etsy_customer_messages_publish",
+        '"type":"customer_id"',
+        '"type":"order_number"',
+        '"type":"tracking_number"',
         "direction=inbound",
         "direction=outbound",
         "sentAt",
@@ -57,6 +57,8 @@ def main() -> int:
         "job.externalMessageId",
         "job.platformSentAt",
         "result_unknown",
+        "safeToRetry=false",
+        "verify_status_only",
         "每个会话最多保留最近 100 条",
         "每个租户最多保留最近",
         "5000 条",
@@ -67,6 +69,7 @@ def main() -> int:
         "references/etsy-message-tools.md",
         "调正式获取工具读取该 customer 的双向消息",
         "调正式发布工具",
+        "get_etsy_orders",
         "订单号或快递单号",
         "result_unknown",
     )
@@ -83,8 +86,8 @@ def main() -> int:
     failures += require(
         "shared/tools-architecture.md",
         "Etsy 客户消息",
-        "/api/hermes/etsy/messages/get",
-        "/api/hermes/etsy/messages/publish",
+        "/api/hermes/etsy/tools/customer-messages/get",
+        "/api/hermes/etsy/tools/customer-messages/publish",
         "幂等真实发送任务",
         "旧会话查询、草稿与订单发送路径已退役",
     )

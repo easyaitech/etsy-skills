@@ -70,7 +70,7 @@
 1. 先把能力写成**核心库 / 纯函数**；CLI、HTTP endpoint、MCP 都只是它外面的薄壳。
 2. **默认 CLI**：单个、无状态、单一职责的能力。
 3. **才上 MCP**：一组共享同一份 auth / 有状态会话的工具族（如浏览器 / CDP 连接）。
-4. **agent 调工具的真实路径** = Hermes skill → 调 ECS 的 HTTP endpoint（薄、无密钥、带租户 session key）。落地细节（注入哪三个环境变量、terminal / execute_code 里怎么拿、怎么调、怎么判断成没成）见 [`shared/backend-api-access.md`](backend-api-access.md)。
+4. **agent 调工具的真实路径** = Hermes skill → 薄 Agent adapter → ECS HTTP endpoint（薄、无密钥、运行时注入租户）。Etsy 四个正式 adapter 见 [`etsy-agent-tools.md`](etsy-agent-tools.md)；其它端点的注入与访问细节见 [`backend-api-access.md`](backend-api-access.md)。adapter 可以隐藏同一次逻辑读取的 start/result transport polling，但不能接管 ECS 的业务重试、队列或状态机。
 
 skill 侧只写「调哪个入口、传什么、怎么解释返回」；不写鉴权、不写重试编排、不写密钥读取——那些在 ECS。
 
@@ -113,10 +113,10 @@ skill 侧只写「调哪个入口、传什么、怎么解释返回」；不写�
 | `image-synth` 生图 | **已上收 ECS**：中心后端 `POST /image/generate`（GPT Image 2 / OpenRouter） | 同左（已是目标态） | ✅ key / 配额 / 换模型都在后端一处，skill 经 `terminal` 调端点、不持 key、不传 model slug（per-profile token + idempotency）。见 image-synth `references/backend-image-gen-contract.md` |
 | `pinterest-autopin` 发布 | **已上收 ECS**：yanggedianzhang 服务器控制面 + 现有浏览器插件（租户 Chrome 登录态执行） | 同左（已是 tier 2 目标态） | ✅ Hermes 只生成 + 调服务器工具，不持 Chrome / Playwright / 队列 / token；服务器做 job 状态机 / 鉴权 / 素材授权 / 结果回写 |
 | 发布**编排**（巡检 / 锁 / 重试 / 死信） | **已上收 ECS**：yanggedianzhang publish dispatch（T5，常驻 tick，dormant-by-default） | 同左（已是目标态） | ✅ 队列调度 / 单写者锁 / 重试退避 / 幂等去重 / 崩溃恢复在服务端；`social-publisher` skill 退薄（只做配置 / 人工发布 / confirm-publish 闸 / 对账），不再 Hermes 手搓巡检。v1 不自动 confirm-publish（保留人工目视确认闸） |
-| Etsy Listing 公开读取 | **已上收 ECS**：`/api/hermes/etsy/listings/public-read` 经独立 Apify Actor，start/result 短轮询后返回最终 `etsy-listing-read/v1` | 同左（已是无账号目标态） | ✅ single/batch/shop；不依赖 Base，不使用店主浏览器。公开批量禁止改走账号插件，契约见 [`etsy-listing-read.md`](etsy-listing-read.md) |
-| Etsy Listing 后台读取 | **已上收 ECS 控制面**：`/api/hermes/etsy/listings/admin-read` 编排租户浏览器插件读取店主后台编辑器 | 同左（已是 tier 2 目标态） | ✅ 仅店主明确调用，顺序读取并在登录/Challenge/429/额度/插件错误时停止；自动巡检已暂停，现有 Base 核对代码和历史数据保留 |
+| Etsy Listing 公开读取 | **已上收 ECS**：正式工具经 `/api/hermes/etsy/tools/listings/get` 选择公开来源，内部由独立 Apify Actor 执行 | 同左（已是无账号目标态） | ✅ single/batch/shop；不依赖 Base，不使用店主浏览器。公开批量禁止改走账号插件，契约见 [`etsy-listing-read.md`](etsy-listing-read.md) |
+| Etsy Listing 后台读取 | **已上收 ECS 控制面**：同一个正式 Listing facade 选择后台来源并编排租户浏览器插件 | 同左（已是 tier 2 目标态） | ✅ 仅店主明确调用，顺序读取并在登录/Challenge/429/额度/插件错误时停止；自动巡检已暂停，现有 Base 核对代码和历史数据保留 |
 | `trend-radar` 抓取 | Mac mini 上的 Node 脚本 + `SERPAPI_KEY` | 数据抓取走 ECS（tier 1，有 API），密钥存 ECS | 密钥目前在 Mac mini 是过渡；非租户特异的只读输入，优先迁 ECS |
-| Etsy 客户消息 | **已上收 ECS 控制面**：Hermes 调 `/api/hermes/etsy/messages/get` 获取正式双向文字消息，调 `/api/hermes/etsy/messages/publish` 创建幂等真实发送任务；租户浏览器插件在 Etsy 登录态执行 | 同左（已是 tier 2 目标态） | ✅ 按 customer / 订单号 / 快递单号唯一定位，服务端负责鉴权、客户绑定、持久化、幂等和结果状态；旧会话查询、草稿与订单发送路径已退役，不再回填草稿或降级执行 |
+| Etsy 客户消息 | **已上收 ECS 控制面**：Hermes 调 `/api/hermes/etsy/tools/customer-messages/get` 获取正式双向文字消息，调 `/api/hermes/etsy/tools/customer-messages/publish` 创建幂等真实发送任务；租户浏览器插件在 Etsy 登录态执行 | 同左（已是 tier 2 目标态） | ✅ 按 customer / 订单号 / 快递单号唯一定位，服务端负责鉴权、客户绑定、持久化、幂等和结果状态；旧会话查询、草稿与订单发送路径已退役，不再回填草稿或降级执行 |
 | 物流跟踪 | 17TRACK 公共引擎（register-once + 轮询 + 飞书推送） | tier 1（有 API），按租户路由 | 引擎已建；部署到目标租户 profile 时控制面在 ECS |
 
 迁移只追加不破坏：上收某能力到 ECS 时，先双跑验证、保留旧路径只读，人工验收后再切换 skill 侧入口。
