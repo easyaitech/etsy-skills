@@ -1,24 +1,24 @@
 # Etsy 客户消息：正式获取与真实发布
 
-仅在目标销售平台是 **Etsy** 且需要读取或发送客户消息时使用。两个正式工具分别负责获取和发布：
+仅在目标销售平台是 **Etsy** 且需要读取或发送客户消息时使用。两个正式 Agent 工具分别负责获取和发布：
 
-| 动作 | 端点 | 语义 |
+| 动作 | Agent 工具 | 语义 |
 |---|---|---|
-| 获取 | `POST /api/hermes/etsy/messages/get` | 获取唯一 customer 的正式双向文字消息 |
-| 发布 | `POST /api/hermes/etsy/messages/publish` | 创建或重放一次真实 Etsy 文字发送任务 |
+| 获取 | `etsy_customer_messages_get` | 获取唯一 customer 的正式双向文字消息 |
+| 发布 | `etsy_customer_messages_publish` | 真实发送并等待可证明终态 |
 
 旧 `etsy-dm` 会话查询、回复草稿和订单消息端点已退役，**不得调用、不得降级回旧工具**。V1 只支持文字，不支持图片或附件。
 
-访问地址、租户 ID 和鉴权令牌统一按 [`../../shared/backend-api-access.md`](../../shared/backend-api-access.md) 使用：URL 从 `$YANGGEDIANZHANG_API_BASE` 拼接，body 的 `tenantId` 使用 `$YANGGEDIANZHANG_TENANT_ID`，鉴权头使用 `Bearer $YANGGEDIANZHANG_HERMES_TOOL_TOKEN`。不要读取、打印或让用户提供这些变量的值。
+运行时按 [`../../shared/etsy-agent-tools.md`](../../shared/etsy-agent-tools.md) 自动注入地址、租户和鉴权。Agent 输入不得带 `tenantId` 或 token，也不要读取、打印或让用户提供这些值。
 
 ## 1. 唯一定位 customer
 
 两个工具都使用相同的 `selector`，且以下三项**必须恰好提供一项**：
 
 ```json
-{"customerId":"C-2026-0001"}
-{"orderNumber":"ORDER-NUMBER"}
-{"trackingNumber":"TRACKING-NUMBER"}
+{"type":"customer_id","value":"C-2026-0001"}
+{"type":"order_number","value":"ORDER-NUMBER"}
+{"type":"tracking_number","value":"TRACKING-NUMBER"}
 ```
 
 - `customerId` 是 `Customers 客户`.`客户 ID`。
@@ -29,13 +29,11 @@
 
 ## 2. 获取正式消息
 
-逻辑请求体（实际调用时必须让 shell 展开 `tenantId` 环境变量，不能把字面字符串
-`"$YANGGEDIANZHANG_TENANT_ID"` 发给服务端）：
+Agent 输入：
 
 ```json
 {
-  "tenantId": "$YANGGEDIANZHANG_TENANT_ID",
-  "selector": {"orderNumber": "ORDER-NUMBER"},
+  "selector": {"type":"order_number","value":"ORDER-NUMBER"},
   "limit": 50
 }
 ```
@@ -66,12 +64,11 @@
 - 正文由你起草或修改：先完整展示正文，取得用户明确确认后再发布。
 - 不支持图片、附件或空正文；正文最多 4000 字符，超限整条拒绝，不截断。
 
-逻辑请求体（`tenantId` 同样必须使用环境变量的实际值）：
+Agent 输入：
 
 ```json
 {
-  "tenantId": "$YANGGEDIANZHANG_TENANT_ID",
-  "selector": {"orderNumber": "ORDER-NUMBER"},
+  "selector": {"type":"order_number","value":"ORDER-NUMBER"},
   "idempotencyKey": "稳定且仅代表这一次业务发送意图的非秘密键",
   "messageType": "text",
   "content": "完整消息正文"
@@ -86,6 +83,14 @@
 - `idempotencyKey` 必填、最多 200 字符；它不是鉴权凭据，不放 token 或客户隐私。
 
 ## 4. 发布结果判定
+
+适配器内部用相同幂等意图查询状态，Agent 只接收最终 `etsy-agent-tool/v1`：
+
+- `outcome=complete` 且 `data.status=sent`，并带 `externalMessageId`、`platformSentAt`：才可报告已发送。
+- `outcome=failed`：报告已证明失败，不自动创建新发送意图。
+- `outcome=unknown` / `safeToRetry=false` / `actionRequired=verify_status_only`：可能已经发送，只核对状态，禁止自动重发。
+
+以下 job 状态表是内部 transport 的判据，Agent 不展示 jobId 或轮询过程。
 
 发布接口成功响应为 `{ "ok": true, "job": { ... } }`；同一请求重放时还可能带
 `"deduped": true`。按 `job.status` 判定：
