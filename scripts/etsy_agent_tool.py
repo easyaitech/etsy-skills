@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thin Agent-facing adapter for the seven canonical Etsy tools.
+"""Thin Agent-facing adapter for the eight canonical Etsy tools.
 
 Input is one JSON object on stdin. Runtime tenant/auth are injected from env.
 Stdout contains exactly one final JSON object; transport polling identifiers
@@ -26,6 +26,7 @@ TOOLS = {
     "get_etsy_stats",
     "describe_etsy_stats",
     "summarize_etsy_stats",
+    "get_etsy_ads",
 }
 RUNTIME_FIELDS = {
     "tenantId",
@@ -493,6 +494,13 @@ def run_stats_summarize(client: Client, data: dict[str, Any]) -> dict[str, Any]:
         raise_http(status, result)
     return validate_final("summarize_etsy_stats", result)
 
+def run_ads_get(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+    require_keys(data, {"from", "to", "sections", "listingIds"}, {"from", "to"})
+    status, result = client.post("/api/hermes/etsy/tools/ads/get", data)
+    if status >= 400 or result.get("ok") is False and result.get("schemaVersion") != SCHEMA_VERSION:
+        raise_http(status, result)
+    return validate_final("get_etsy_ads", result)
+
 
 def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, Any]:
     if tool not in TOOLS:
@@ -513,6 +521,8 @@ def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, An
         return run_stats_describe(runtime, data)
     if tool == "summarize_etsy_stats":
         return run_stats_summarize(runtime, data)
+    if tool == "get_etsy_ads":
+        return run_ads_get(runtime, data)
     raise ToolFailure("UNKNOWN_TOOL", f"未知工具：{tool}")
 
 

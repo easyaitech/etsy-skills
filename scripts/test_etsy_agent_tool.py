@@ -25,10 +25,10 @@ class FakeClient:
 
 
 class EtsyAgentToolTest(unittest.TestCase):
-    def test_install_and_cli_smoke_cover_all_three_stats_commands(self):
+    def test_install_and_cli_smoke_cover_all_stats_and_ads_commands(self):
         root = MODULE_PATH.parent.parent
         install = (root / "install.sh").read_text(encoding="utf-8")
-        for name in ("get_etsy_stats", "describe_etsy_stats", "summarize_etsy_stats"):
+        for name in ("get_etsy_stats", "describe_etsy_stats", "summarize_etsy_stats", "get_etsy_ads"):
             self.assertIn(name, install)
             completed = subprocess.run(
                 ["python3", str(MODULE_PATH), name],
@@ -230,6 +230,42 @@ class EtsyAgentToolTest(unittest.TestCase):
                 "dimension": "listing",
                 "metrics": [{"key": "views", "aggregation": "sum"}],
             }, FakeClient([(200, unsafe)]))
+
+    def test_ads_uses_an_explicit_sync_path_and_preserves_time_semantics(self):
+        final = {
+            "schemaVersion": "etsy-agent-tool/v1",
+            "tool": "get_etsy_ads",
+            "ok": True,
+            "outcome": "complete",
+            "data": {
+                "source": "etsy_ads_backend",
+                "timeSemantics": {
+                    "campaign": "daily",
+                    "listings": "daily",
+                    "attributedOrders": "rolling_30_days_as_observed",
+                    "settings": "current_at_capture",
+                },
+                "snapshots": [],
+                "gaps": [],
+            },
+            "completeness": {"status": "complete", "truncated": False},
+            "errors": [],
+        }
+        client = FakeClient([(200, final)])
+        result = tool.execute("get_etsy_ads", {
+            "from": "2026-07-26",
+            "to": "2026-07-26",
+            "sections": ["campaign", "listings", "attributed_orders", "settings"],
+            "listingIds": ["4510004567"],
+        }, client)
+        self.assertEqual(result, final)
+        self.assertEqual(client.calls[0][0], "/api/hermes/etsy/tools/ads/get")
+        with self.assertRaisesRegex(tool.ToolFailure, "不支持字段"):
+            tool.execute("get_etsy_ads", {
+                "from": "2026-07-26",
+                "to": "2026-07-26",
+                "cursor": "not-supported",
+            }, FakeClient([]))
 
     def test_message_get_uses_canonical_selector_and_cursor(self):
         client = FakeClient([(200, {

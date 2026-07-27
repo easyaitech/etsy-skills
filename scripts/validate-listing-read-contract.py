@@ -75,7 +75,7 @@ def main() -> int:
     failures += require(
         "README.md",
         "读取 / 分析 / 优化现有 Etsy Listing",
-        "v1.0.7",
+        "v1.0.10",
     )
     manifest = (ROOT / "etsy-stack.json").read_text(encoding="utf-8")
     if "listing-reader" in manifest or "etsy-listing-read" in manifest:
