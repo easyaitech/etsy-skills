@@ -2,6 +2,12 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.10] - 2026-07-27
+
+- 新增第八个正式工具 `get_etsy_ads`，读取独立 Etsy Ads 后台的逐日 campaign / Listing
+  指标、滚动 30 天归因订单和采集时设置快照。
+- Ads 与 Stats 菜单保持不同数据源和时间口径；缺失日期不补零，Agent 输入继续禁止运行时字段。
+
 ## [v1.0.9] - 2026-07-27
 
 - Stats 能力从一个原始查询扩展为三个显式工具：`describe_etsy_stats` 发现实际数据能力，

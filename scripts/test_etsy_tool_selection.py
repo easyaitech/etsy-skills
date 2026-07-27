@@ -2,7 +2,7 @@
 """Validate the Agent tool-selection acceptance matrix.
 
 This does not pretend to emulate an LLM. It keeps a reviewable set of natural-language
-requests and enforces that every expected answer is one of the seven published tools and
+requests and enforces that every expected answer is one of the eight published tools and
 never a retired tool. The >=95% runtime selection score is collected during Agent canary.
 """
 
@@ -20,6 +20,7 @@ FORMAL_TOOLS = {
     "get_etsy_stats",
     "describe_etsy_stats",
     "summarize_etsy_stats",
+    "get_etsy_ads",
 }
 
 RETIRED_TOOLS = {
@@ -57,13 +58,16 @@ CASES = [
     ("查询 active 订单的下一页", "get_etsy_orders"),
     ("我不知道数据库里有哪些 Etsy Stats 指标，先列出来", "describe_etsy_stats"),
     ("现在有哪几天和哪些 Listing 的 Stats 数据", "describe_etsy_stats"),
-    ("独立 Etsy Ads 后台是否包含在现有 Stats 数据里", "describe_etsy_stats"),
+    ("现有 Stats 数据是否包含独立 Etsy Ads 后台", "describe_etsy_stats"),
     ("分析最近七天 Etsy 店铺访问和订单趋势", "summarize_etsy_stats"),
     ("比较这些 Listing 每天的流量表现", "summarize_etsy_stats"),
     ("哪些 Etsy 流量来源带来的访问最多", "summarize_etsy_stats"),
     ("比较这个月和上个月 Listing views", "summarize_etsy_stats"),
     ("读取 Etsy 搜索词和外部网站来源统计", "get_etsy_stats"),
     ("继续读取上一页 Etsy Stats 查询结果", "get_etsy_stats"),
+    ("读取昨天 Etsy Ads 的展示、点击、花费和 ROAS", "get_etsy_ads"),
+    ("比较各个广告 Listing 最近一周的表现", "get_etsy_ads"),
+    ("广告归因订单和当前每日预算是多少", "get_etsy_ads"),
 ]
 
 
@@ -80,9 +84,9 @@ class ToolSelectionMatrixTest(unittest.TestCase):
         self.assertEqual(len(prompts), len(set(prompts)))
         self.assertTrue(all(len(prompt.strip()) >= 8 for prompt in prompts))
 
-    def test_ecommerce_stack_dispatches_only_the_seven_formal_tools(self) -> None:
+    def test_ecommerce_stack_dispatches_only_the_eight_formal_tools(self) -> None:
         script = Path(__file__).with_name("etsy-stack").read_text(encoding="utf-8")
-        self.assertIn("etsy_listings_get|etsy_customer_messages_get|etsy_customer_messages_publish|get_etsy_orders|get_etsy_stats|describe_etsy_stats|summarize_etsy_stats)", script)
+        self.assertIn("etsy_listings_get|etsy_customer_messages_get|etsy_customer_messages_publish|get_etsy_orders|get_etsy_stats|describe_etsy_stats|summarize_etsy_stats|get_etsy_ads)", script)
         self.assertIn('exec "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$tool_name"', script)
         self.assertNotIn("eval ", script)
 

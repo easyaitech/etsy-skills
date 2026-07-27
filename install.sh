@@ -2,7 +2,7 @@
 # 电商 skill stack 安装 / 升级脚本（兼容旧 etsy-stack 安装路径）
 #
 # ── 推荐（钉死版本）─────────────────────────────────────────────
-#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.6/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.10/install.sh | bash
 #
 # ── 最新主线 ────────────────────────────────────────────────────
 #   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash
@@ -11,7 +11,7 @@
 #   bash install.sh    或    ecommerce-stack update（旧命令 etsy-stack update 兼容）
 #
 # ── 谨慎模式（先看再跑） ───────────────────────────────────────
-#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.6/install.sh -o install.sh
+#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.10/install.sh -o install.sh
 #   less install.sh   # 自查一遍
 #   bash install.sh
 #
@@ -21,7 +21,7 @@
 #   ECOMMERCE_STACK_BIN    ecommerce-stack / etsy-stack 命令的安装目录（默认 ~/.local/bin）
 #   ECOMMERCE_SKILLS_REPO  Git 仓库 URL（默认 HTTPS：https://github.com/easyaitech/etsy-skills.git）
 #                          开发者可改成 SSH：git@github.com:easyaitech/etsy-skills.git
-#   ECOMMERCE_SKILLS_REF   要 checkout 的分支 / tag（默认 main；推荐传具体 tag 如 v1.0.6）
+#   ECOMMERCE_SKILLS_REF   要 checkout 的分支 / tag（默认 main；推荐传具体 tag 如 v1.0.10）
 #
 # 旧变量 ETSY_SKILLS_HOME / ETSY_STACK_BIN / ETSY_SKILLS_REPO / ETSY_SKILLS_REF 继续兼容。
 
@@ -138,12 +138,13 @@ for _etsy_agent_tool in \
   get_etsy_orders \
   get_etsy_stats \
   describe_etsy_stats \
-  summarize_etsy_stats
+  summarize_etsy_stats \
+  get_etsy_ads
 do
   ln -sfn "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$BIN_DIR/$_etsy_agent_tool"
 done
 ok "命令安装到：$BIN_DIR/ecommerce-stack（兼容旧命令：$BIN_DIR/etsy-stack）"
-ok "Etsy Agent 工具安装到：$BIN_DIR/{etsy_listings_get,etsy_customer_messages_get,etsy_customer_messages_publish,get_etsy_orders,get_etsy_stats,describe_etsy_stats,summarize_etsy_stats}"
+ok "Etsy Agent 工具安装到：$BIN_DIR/{etsy_listings_get,etsy_customer_messages_get,etsy_customer_messages_publish,get_etsy_orders,get_etsy_stats,describe_etsy_stats,summarize_etsy_stats,get_etsy_ads}"
 
 _retired_photo_style="$BIN_DIR/photo-style"
 if [[ -L "$_retired_photo_style" ]]; then
