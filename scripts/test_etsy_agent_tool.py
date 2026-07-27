@@ -25,6 +25,29 @@ class FakeClient:
 
 
 class EtsyAgentToolTest(unittest.TestCase):
+    def test_install_and_cli_smoke_cover_all_three_stats_commands(self):
+        root = MODULE_PATH.parent.parent
+        install = (root / "install.sh").read_text(encoding="utf-8")
+        for name in ("get_etsy_stats", "describe_etsy_stats", "summarize_etsy_stats"):
+            self.assertIn(name, install)
+            completed = subprocess.run(
+                ["python3", str(MODULE_PATH), name],
+                input="{}",
+                text=True,
+                capture_output=True,
+                env={
+                    "PATH": "/usr/bin:/bin",
+                    "YANGGEDIANZHANG_API_BASE": "",
+                    "YANGGEDIANZHANG_TENANT_ID": "",
+                    "YANGGEDIANZHANG_HERMES_TOOL_TOKEN": "",
+                },
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 1)
+            payload = __import__("json").loads(completed.stdout)
+            self.assertEqual(payload["tool"], name)
+            self.assertEqual(payload["schemaVersion"], "etsy-agent-tool/v1")
+
     def test_transport_does_not_put_token_in_process_arguments(self):
         client = tool.Client({
             "YANGGEDIANZHANG_API_BASE": "https://bridge.test",
@@ -142,6 +165,71 @@ class EtsyAgentToolTest(unittest.TestCase):
             }, client)
         self.assertEqual(raised.exception.code, "RUNTIME_FIELD_FORBIDDEN")
         self.assertEqual(client.calls, [])
+
+    def test_describe_stats_has_an_explicit_path_and_whitelist(self):
+        final = {
+            "schemaVersion": "etsy-agent-tool/v1",
+            "tool": "describe_etsy_stats",
+            "ok": True,
+            "outcome": "complete",
+            "data": {"dimensions": ["listing"], "excludedSources": ["etsy_ads_backend"]},
+            "completeness": {"status": "complete", "truncated": False},
+            "errors": [],
+        }
+        client = FakeClient([(200, final)])
+        result = tool.execute("describe_etsy_stats", {
+            "sections": ["dimensions", "metrics"],
+            "limit": 20,
+        }, client)
+        self.assertEqual(result, final)
+        self.assertEqual(client.calls[0][0], "/api/hermes/etsy/tools/stats/describe")
+        with self.assertRaisesRegex(tool.ToolFailure, "不支持字段"):
+            tool.execute("describe_etsy_stats", {"from": "2026-07-01"}, FakeClient([]))
+
+    def test_summarize_stats_has_an_explicit_path_required_fields_and_cursor(self):
+        final = {
+            "schemaVersion": "etsy-agent-tool/v1",
+            "tool": "summarize_etsy_stats",
+            "ok": True,
+            "outcome": "complete",
+            "data": {"rows": []},
+            "completeness": {"status": "complete", "truncated": True, "nextCursor": "ess1_next"},
+            "errors": [],
+        }
+        client = FakeClient([(200, final)])
+        result = tool.execute("summarize_etsy_stats", {
+            "dimension": "listing",
+            "metrics": [{"key": "views", "aggregation": "sum"}],
+            "groupBy": ["listing"],
+            "cursor": "ess1_previous",
+        }, client)
+        self.assertEqual(result["completeness"]["nextCursor"], "ess1_next")
+        self.assertEqual(client.calls[0][0], "/api/hermes/etsy/tools/stats/summarize")
+        with self.assertRaisesRegex(tool.ToolFailure, "缺少字段"):
+            tool.execute("summarize_etsy_stats", {"dimension": "listing"}, FakeClient([]))
+
+    def test_stats_final_tool_name_and_safe_output_are_fail_closed(self):
+        wrong = {
+            "schemaVersion": "etsy-agent-tool/v1",
+            "tool": "get_etsy_stats",
+            "ok": True,
+            "outcome": "complete",
+            "data": {},
+            "completeness": {"status": "complete", "truncated": False},
+            "errors": [],
+        }
+        with self.assertRaisesRegex(tool.ToolFailure, "终态不符合"):
+            tool.execute("describe_etsy_stats", {}, FakeClient([(200, wrong)]))
+        unsafe = {
+            **wrong,
+            "tool": "summarize_etsy_stats",
+            "data": {"nested": {"operationId": "internal"}},
+        }
+        with self.assertRaisesRegex(tool.ToolFailure, "内部字段"):
+            tool.execute("summarize_etsy_stats", {
+                "dimension": "listing",
+                "metrics": [{"key": "views", "aggregation": "sum"}],
+            }, FakeClient([(200, unsafe)]))
 
     def test_message_get_uses_canonical_selector_and_cursor(self):
         client = FakeClient([(200, {

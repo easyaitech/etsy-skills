@@ -28,7 +28,7 @@ $CMD_NAME — 电商 skill bundle 管理工具（兼容旧 etsy-stack 名称）
   $CMD_NAME version            当前安装版本
   $CMD_NAME check              立即检查更新（绕过 24h 缓存）
   $CMD_NAME update             拉最新版本并刷新软链
-  $CMD_NAME tool NAME          从 stdin 读取业务 JSON，调用四个正式 Etsy Agent 工具之一
+  $CMD_NAME tool NAME          从 stdin 读取业务 JSON，调用七个正式 Etsy Agent 工具之一
   $CMD_NAME list               列出 manifest 中的 skill 及链接状态
   $CMD_NAME doctor [--quarantine]  体检：非托管 skill 目录 + 检测旧版工作区 skill-prefs 残留
   $CMD_NAME pinterest-tool     查看旧本地 Pinterest-autopin 工具（已废弃，仅迁移排查）
@@ -278,12 +278,12 @@ case "$cmd" in
     fi
     tool_name="${1:-}"
     case "$tool_name" in
-      etsy_listings_get|etsy_customer_messages_get|etsy_customer_messages_publish|get_etsy_orders|get_etsy_stats)
+      etsy_listings_get|etsy_customer_messages_get|etsy_customer_messages_publish|get_etsy_orders|get_etsy_stats|describe_etsy_stats|summarize_etsy_stats)
         exec "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$tool_name"
         ;;
       *)
         echo "未知 Etsy Agent 工具：$tool_name" >&2
-        echo "可用：etsy_listings_get / etsy_customer_messages_get / etsy_customer_messages_publish / get_etsy_orders / get_etsy_stats" >&2
+        echo "可用：etsy_listings_get / etsy_customer_messages_get / etsy_customer_messages_publish / get_etsy_orders / get_etsy_stats / describe_etsy_stats / summarize_etsy_stats" >&2
         exit 2
         ;;
     esac

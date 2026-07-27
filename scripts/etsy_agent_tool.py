@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thin Agent-facing adapter for the five canonical Etsy tools.
+"""Thin Agent-facing adapter for the seven canonical Etsy tools.
 
 Input is one JSON object on stdin. Runtime tenant/auth are injected from env.
 Stdout contains exactly one final JSON object; transport polling identifiers
@@ -24,6 +24,8 @@ TOOLS = {
     "etsy_customer_messages_publish",
     "get_etsy_orders",
     "get_etsy_stats",
+    "describe_etsy_stats",
+    "summarize_etsy_stats",
 }
 RUNTIME_FIELDS = {
     "tenantId",
@@ -442,16 +444,54 @@ def run_orders(client: Client, data: dict[str, Any]) -> dict[str, Any]:
     return final
 
 
-def run_stats(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+def validate_final(tool: str, result: dict[str, Any]) -> dict[str, Any]:
+    if result.get("schemaVersion") != SCHEMA_VERSION or result.get("tool") != tool:
+        raise ToolFailure("INVALID_RESPONSE", "统计终态不符合 Agent 契约", retryable=True, safe_to_retry=True)
+    pending: list[Any] = [result]
+    while pending:
+        current = pending.pop()
+        if isinstance(current, dict):
+            forbidden = RUNTIME_FIELDS.intersection(current)
+            if forbidden:
+                raise ToolFailure(
+                    "INVALID_RESPONSE",
+                    f"统计终态包含内部字段：{', '.join(sorted(forbidden))}",
+                    retryable=True,
+                    safe_to_retry=True,
+                )
+            pending.extend(current.values())
+        elif isinstance(current, list):
+            pending.extend(current)
+    return result
+
+
+def run_stats_get(client: Client, data: dict[str, Any]) -> dict[str, Any]:
     require_keys(data, {
         "from", "to", "granularity", "dimensions", "listingIds", "metrics", "limit", "cursor",
     })
     status, result = client.post("/api/hermes/etsy/tools/stats/get", data)
     if status >= 400 or result.get("ok") is False and result.get("schemaVersion") != SCHEMA_VERSION:
         raise_http(status, result)
-    if result.get("schemaVersion") != SCHEMA_VERSION or result.get("tool") != "get_etsy_stats":
-        raise ToolFailure("INVALID_RESPONSE", "统计终态不符合 Agent 契约", retryable=True, safe_to_retry=True)
-    return result
+    return validate_final("get_etsy_stats", result)
+
+
+def run_stats_describe(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+    require_keys(data, {"sections", "dimensions", "limit", "cursor"})
+    status, result = client.post("/api/hermes/etsy/tools/stats/describe", data)
+    if status >= 400 or result.get("ok") is False and result.get("schemaVersion") != SCHEMA_VERSION:
+        raise_http(status, result)
+    return validate_final("describe_etsy_stats", result)
+
+
+def run_stats_summarize(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+    require_keys(data, {
+        "from", "to", "dimension", "metrics", "groupBy", "listingIds", "subjectKeys",
+        "compare", "sort", "limit", "cursor",
+    }, {"dimension", "metrics"})
+    status, result = client.post("/api/hermes/etsy/tools/stats/summarize", data)
+    if status >= 400 or result.get("ok") is False and result.get("schemaVersion") != SCHEMA_VERSION:
+        raise_http(status, result)
+    return validate_final("summarize_etsy_stats", result)
 
 
 def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, Any]:
@@ -467,7 +507,13 @@ def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, An
         return run_messages_publish(runtime, data)
     if tool == "get_etsy_orders":
         return run_orders(runtime, data)
-    return run_stats(runtime, data)
+    if tool == "get_etsy_stats":
+        return run_stats_get(runtime, data)
+    if tool == "describe_etsy_stats":
+        return run_stats_describe(runtime, data)
+    if tool == "summarize_etsy_stats":
+        return run_stats_summarize(runtime, data)
+    raise ToolFailure("UNKNOWN_TOOL", f"未知工具：{tool}")
 
 
 def main(argv: list[str]) -> int:

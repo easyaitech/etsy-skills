@@ -2,6 +2,15 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.9] - 2026-07-27
+
+- Stats 能力从一个原始查询扩展为三个显式工具：`describe_etsy_stats` 发现实际数据能力，
+  `get_etsy_stats` 保持 v1 原始事实查询，`summarize_etsy_stats` 执行有界排名、趋势、
+  汇总与上期比较。
+- 三条 Stats 路由分别校验输入白名单与最终工具名；删除“其余工具全部落到 get”的 fallthrough，
+  最终输出继续拒绝 tenant、token、requestId、operationId 等运行时字段。
+- 范围仍是 Stats 菜单全量数据，不进入独立 Etsy Ads 后台；缺口不补零，质量告警不改写原始值。
+
 ## [v1.0.8] - 2026-07-27
 
 - **新增第五个正式 Etsy 工具 `get_etsy_stats`**：同步查询店铺、Listing、流量来源、搜索词和
