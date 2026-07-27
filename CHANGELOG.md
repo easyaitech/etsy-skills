@@ -2,6 +2,20 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.13] - 2026-07-27
+
+v1.0.12 补上了字段清单，但按单号问地址仍然拿不到——后端实测店主问的那一单返回
+`outcome=complete` 却没有 `fullAddress`。原因是后端的「账本优先」（yanggedianzhang
+0.6.17.41）会拦下所有小规模点查、从店铺 Base 作答，而完整地址按隐私规则本来就不进 Base。
+后端 0.6.17.43 给了出口，这一版把出口写进契约。
+
+- 输入新增 `requireLive: true`（可选）：这次必须现场去 Etsy 看，绕开账本。**店主问完整地址 /
+  门牌 / 邮编 / 收件电话时直接带上它**；问「Etsy 现在显示什么」也要带。缺省不传保持账本优先。
+- `missingFields` 的处置按来源分两种：`data.source=base_ledger` 时**原样重查多少次都还是空的**，
+  必须带 `requireLive` 重查；`etsy_live_scan` 时才是按原条件重读或缩小范围。
+- 记入 `data.source` / `data.sourceNote` 的语义：`base_ledger` 只能说「账本里记的是…」，
+  `etsy_live_scan` 才能说「我查了一下，现在是…」。
+
 ## [v1.0.12] - 2026-07-27
 
 起因：店主问某订单的完整收货地址，店长 bot 回「Base 里没存完整地址，你直接去 Etsy 后台

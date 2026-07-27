@@ -15,6 +15,9 @@ Etsy 订单只调用 `get_etsy_orders`，不按 New / Completed 拆成两个 Age
 现查不等于必然拿到：只有本次返回里确实带了该字段，才能用它回答；没带就按下面
 `missingFields` 那条处理，不要拿 Base 的地区级信息冒充完整地址。
 
+**问地址就带 `requireLive: true`。** 不带的话，按单号的查询可能由店铺账本作答，而账本读的就是
+Base——同一条隐私规则决定了它永远给不出完整地址。详见下面输入那节。
+
 用户问到下列任何一项，先调本工具，再回答：
 
 | 用户问的 | 结果里的字段 |
@@ -48,18 +51,32 @@ Etsy 订单只调用 `get_etsy_orders`，不按 New / Completed 拆成两个 Age
 
 ```json
 {"orderNumbers":["1234567890"]}
+{"orderNumbers":["1234567890"],"requireLive":true}
 {"scope":"active"}
 {"scope":"delivered"}
 {"scope":"all","cursor":"上次结果返回的不透明游标"}
 ```
 
 - `orderNumbers` 存在时先查 New，再只为仍缺失的订单查 Completed；调用方不用判断 Tab。
+- `requireLive: true` = **这次必须现场去 Etsy 看**。不传时按单号的点查可能由店铺账本
+  （多维表格 Orders 表）直接作答——那条路快得多，大多数问题够用，但账本**答不了完整收货
+  地址和收件电话**（按隐私规则本来就不进 Base）。所以：
+  - 店主问完整地址 / 门牌 / 邮编 / 收件电话 → **直接带 `requireLive: true`**。
+  - 已经拿到账本结果、发现要的字段在 `missingFields` 里 → 用同样的单号带 `requireLive: true`
+    再查一次，不要就此回答「系统里没有」。
+  - 问「Etsy 现在显示什么 / 平台上是不是已经改了」→ 也要 `requireLive: true`；账本是店铺
+    记录，不等于平台此刻状态。
+  - 现场读取要用店主的浏览器插件，比账本慢，也需要插件在线。不确定要不要现场时，先按默认
+    问一次，再按 `missingFields` 和 `sourceNote` 决定要不要补一次 `requireLive`。
 - 精确查单或列表扫描返回 `nextCursor` 时，下一次沿用相同 `orderNumbers` / `scope` 并传回
   `cursor`；游标已绑定当前租户且会过期，不能拼装或跨租户复用。
 - `active` 是未送达订单，包括待发货、已发货和运输中；`delivered` 是已送达；`all`
   同时扫描两个内部适配器并按订单号去重。
 - 未传 `orderNumbers` 和 `scope` 时默认 `active`。
 - Agent 不传 `tenantId`、bucket、requestId 或 operationId。
+- `data.source` 说明这次答案从哪来：`base_ledger` = 店铺账本，只能说「账本里记的是…」；
+  `etsy_live_scan` = 刚从平台现场查的，才能说「我查了一下，现在是…」。`data.sourceNote` 是后端
+  写好的来源说明，可以直接念给店主。
 
 ## 结果字段
 
@@ -75,7 +92,12 @@ Etsy 订单只调用 `get_etsy_orders`，不按 New / Completed 拆成两个 Age
 
 `missingFields[]` 是本次**没读到**的字段名（例如出现 `fullAddress` = 这一单的地址这次没读
 出来）。它说的是本次读取的缺口，**不是**「这一单没有这项信息」——不得据此告诉用户平台上
-没有地址、没有买家名。正确处置是按原条件重读一次，或把范围缩到该订单号再读。
+没有地址、没有买家名。正确处置分两种：
+
+- `data.source` 是 `base_ledger`（账本作答）→ 用同样的单号带 `requireLive: true` 再查一次。
+  账本读的是 Base，完整地址 / 电话按隐私规则不在里面，**原样重查多少次都还是空的**。
+- `data.source` 是 `etsy_live_scan`（已经现场查过）→ 按原条件重读一次，或把范围缩到该订单号
+  再读；同时看 `coverage[].reason` 有没有说明原因。
 
 “已经发货但物流尚未送达”可以同时是 `fulfillmentStatus=fulfilled`、
 `deliveryStatus=in_transit`、`platformBucket=new`，这不是冲突。只有页面明确给出

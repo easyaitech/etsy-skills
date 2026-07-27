@@ -9,7 +9,7 @@
 ## 安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.12/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.13/install.sh | bash
 ```
 
 脚本会：
@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.12/inst
 谨慎模式（先看再跑）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.12/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.13/install.sh -o install.sh
 less install.sh    # 自查一遍
 bash install.sh
 ```
@@ -125,7 +125,7 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 | `HERMES_SKILLS_DIR` | `~/.hermes/skills` |
 | `ECOMMERCE_STACK_BIN` | `~/.local/bin` |
 | `ECOMMERCE_SKILLS_REPO` | `https://github.com/easyaitech/etsy-skills.git` |
-| `ECOMMERCE_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v1.0.12`） |
+| `ECOMMERCE_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v1.0.13`） |
 | `ECOMMERCE_WORKSPACE` | 无；显式声明电商工作区根 |
 | `PINTEREST_AUTOPIN_HOME` | 仅旧本地 Playwright 工具迁移排查使用；新 Pinterest 发布不读取 |
 | `PINTEREST_AUTOPIN_REPO` | 仅旧本地 Playwright 工具迁移排查使用；新 Pinterest 发布不读取 |
