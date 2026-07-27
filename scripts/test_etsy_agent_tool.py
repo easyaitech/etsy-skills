@@ -105,6 +105,44 @@ class EtsyAgentToolTest(unittest.TestCase):
         })
         self.assertEqual(result["completeness"]["nextCursor"], "eor1_opaque")
 
+    def test_stats_is_sync_and_preserves_partial_gaps_and_cursor(self):
+        final = {
+            "schemaVersion": "etsy-agent-tool/v1",
+            "tool": "get_etsy_stats",
+            "ok": True,
+            "outcome": "partial",
+            "data": {"rows": [], "gaps": [{"period": "2026-07-01", "dimension": "listing"}]},
+            "completeness": {"status": "partial", "truncated": True, "nextCursor": "esq1_opaque"},
+            "errors": [{"code": "STATS_COVERAGE_PARTIAL", "message": "partial", "retryable": True, "safeToRetry": True}],
+        }
+        client = FakeClient([(200, final)])
+        result = tool.execute("get_etsy_stats", {
+            "from": "2026-07-01",
+            "to": "2026-07-07",
+            "dimensions": ["listing", "traffic_source"],
+            "cursor": "esq1_previous",
+        }, client)
+        self.assertEqual(result, final)
+        self.assertEqual(client.calls, [(
+            "/api/hermes/etsy/tools/stats/get",
+            {
+                "from": "2026-07-01",
+                "to": "2026-07-07",
+                "dimensions": ["listing", "traffic_source"],
+                "cursor": "esq1_previous",
+            },
+            45,
+        )])
+
+    def test_stats_rejects_nested_runtime_fields_before_transport(self):
+        client = FakeClient([])
+        with self.assertRaises(tool.ToolFailure) as raised:
+            tool.execute("get_etsy_stats", {
+                "dimensions": [{"tenantId": "tenant-b"}],
+            }, client)
+        self.assertEqual(raised.exception.code, "RUNTIME_FIELD_FORBIDDEN")
+        self.assertEqual(client.calls, [])
+
     def test_message_get_uses_canonical_selector_and_cursor(self):
         client = FakeClient([(200, {
             "ok": True,

@@ -278,12 +278,12 @@ case "$cmd" in
     fi
     tool_name="${1:-}"
     case "$tool_name" in
-      etsy_listings_get|etsy_customer_messages_get|etsy_customer_messages_publish|get_etsy_orders)
+      etsy_listings_get|etsy_customer_messages_get|etsy_customer_messages_publish|get_etsy_orders|get_etsy_stats)
         exec "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$tool_name"
         ;;
       *)
         echo "未知 Etsy Agent 工具：$tool_name" >&2
-        echo "可用：etsy_listings_get / etsy_customer_messages_get / etsy_customer_messages_publish / get_etsy_orders" >&2
+        echo "可用：etsy_listings_get / etsy_customer_messages_get / etsy_customer_messages_publish / get_etsy_orders / get_etsy_stats" >&2
         exit 2
         ;;
     esac

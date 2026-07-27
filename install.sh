@@ -135,12 +135,13 @@ for _etsy_agent_tool in \
   etsy_listings_get \
   etsy_customer_messages_get \
   etsy_customer_messages_publish \
-  get_etsy_orders
+  get_etsy_orders \
+  get_etsy_stats
 do
   ln -sfn "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$BIN_DIR/$_etsy_agent_tool"
 done
 ok "命令安装到：$BIN_DIR/ecommerce-stack（兼容旧命令：$BIN_DIR/etsy-stack）"
-ok "Etsy Agent 工具安装到：$BIN_DIR/{etsy_listings_get,etsy_customer_messages_get,etsy_customer_messages_publish,get_etsy_orders}"
+ok "Etsy Agent 工具安装到：$BIN_DIR/{etsy_listings_get,etsy_customer_messages_get,etsy_customer_messages_publish,get_etsy_orders,get_etsy_stats}"
 
 _retired_photo_style="$BIN_DIR/photo-style"
 if [[ -L "$_retired_photo_style" ]]; then

@@ -2,6 +2,14 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.8] - 2026-07-27
+
+- **新增第五个正式 Etsy 工具 `get_etsy_stats`**：同步查询店铺、Listing、流量来源、搜索词和
+  referrer 的已提交历史；支持签名 cursor 续页，partial 原样保留 gaps，缺失不补零。
+- **范围明确**：第一版只读 Stats 菜单及其来源详情，包含 Stats 内的 Etsy Ads 来源页，不进入
+  独立 Etsy Ads 或 Offsite Ads 后台，也不推断页面没有提供的来源 × Listing 归因。
+- **运行时字段继续隔离**：tenant、token 和 transport ID 在任意嵌套层级出现都会在发请求前拒绝。
+
 ## [v1.0.7] - 2026-07-26
 
 - **四个 Agent-first Etsy 工具**：新增 `etsy_listings_get`、
