@@ -2,6 +2,30 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.12] - 2026-07-27
+
+起因：店主问某订单的完整收货地址，店长 bot 回「Base 里没存完整地址，你直接去 Etsy 后台
+Shipping 页看一下」。现场用 `get_etsy_orders` 读订单 4112506739，`fullAddress` 完整返回——
+**工具是好的，bot 只是不知道它能做这件事**。
+
+- `get_etsy_orders` 契约补上返回的业务字段清单（`fullAddress` / `phone` / `buyerName` /
+  `items` / `customizationText` / `totalText` / `trackingNumber` 等），并按「用户问什么 →
+  看哪个字段」给出路由表。此前契约只描述状态与 evidence，`fullAddress` 在整个仓库里一次
+  都没出现过，Agent 没有任何线索知道这个工具就是答案。
+- 把「Base 不存完整地址」和「完整地址去哪取」接上：`base-schema.md` 的两处隐私规则、
+  `platforms/etsy.md` 第 9 项、`orders-customers/SKILL.md` 的触发语与依赖表，现在都在说明
+  不存完整地址的同时指向 `get_etsy_orders`。规则本身不变（Base 仍只存 `收件地区`，
+  现查到的地址不回写）。
+- 明确 `missingFields` 语义：它是**本次没读到**的字段，不等于平台上没有这项信息；据此
+  告诉用户「系统里没有地址」或让用户自己去 Etsy 后台 Shipping 页翻，都是错的。
+- `coverage[].reason` 有值时以原文为准，与 `errors[].code` 一样逐字复述；它是可选的，
+  `partial` 也可能只由 `conflicts` 或送达状态判不了触发，没有就别推断一个。
+- 脱敏规则按场景拆开，`SKILL.md` 与 `etsy-order-read.md` 两处对齐：店主本人为发货 / 打单 /
+  核对而问 → 完整展示 `fullAddress` / `phone` 不脱敏（脱敏到店主自己都用不了等于把工具
+  作废）；写进 Base / 发给买家 / 对外分享 → 按脱敏约定；一律不回写 Base。
+- 修 `validate-listing-read-contract.py` 里漏改的版本断言（v1.0.11 发版时 README 和
+  install.sh 都升了，脚本里硬编码的期望值还停在 v1.0.10，导致该校验在 main 上一直 FAIL）。
+
 ## [v1.0.11] - 2026-07-27
 
 - `etsy_listings_get` 新增可选 `acceptCachedWithinMs`（毫秒）：声明「这次问题能接受多旧的
