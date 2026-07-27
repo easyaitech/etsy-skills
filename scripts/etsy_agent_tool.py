@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thin Agent-facing adapter for the four canonical Etsy tools.
+"""Thin Agent-facing adapter for the five canonical Etsy tools.
 
 Input is one JSON object on stdin. Runtime tenant/auth are injected from env.
 Stdout contains exactly one final JSON object; transport polling identifiers
@@ -23,6 +23,7 @@ TOOLS = {
     "etsy_customer_messages_get",
     "etsy_customer_messages_publish",
     "get_etsy_orders",
+    "get_etsy_stats",
 }
 RUNTIME_FIELDS = {
     "tenantId",
@@ -159,9 +160,20 @@ class Client:
 def require_input(value: Any) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ToolFailure("INVALID_INPUT", "工具输入必须是 JSON 对象")
-    forbidden = sorted(RUNTIME_FIELDS.intersection(value))
+    forbidden: set[str] = set()
+    pending = [value]
+    while pending:
+        current = pending.pop()
+        if isinstance(current, dict):
+            forbidden.update(RUNTIME_FIELDS.intersection(current))
+            pending.extend(current.values())
+        elif isinstance(current, list):
+            pending.extend(current)
     if forbidden:
-        raise ToolFailure("RUNTIME_FIELD_FORBIDDEN", f"Agent 输入不得包含运行时字段：{', '.join(forbidden)}")
+        raise ToolFailure(
+            "RUNTIME_FIELD_FORBIDDEN",
+            f"Agent 输入不得包含运行时字段：{', '.join(sorted(forbidden))}",
+        )
     return value
 
 
@@ -430,6 +442,18 @@ def run_orders(client: Client, data: dict[str, Any]) -> dict[str, Any]:
     return final
 
 
+def run_stats(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+    require_keys(data, {
+        "from", "to", "granularity", "dimensions", "listingIds", "metrics", "limit", "cursor",
+    })
+    status, result = client.post("/api/hermes/etsy/tools/stats/get", data)
+    if status >= 400 or result.get("ok") is False and result.get("schemaVersion") != SCHEMA_VERSION:
+        raise_http(status, result)
+    if result.get("schemaVersion") != SCHEMA_VERSION or result.get("tool") != "get_etsy_stats":
+        raise ToolFailure("INVALID_RESPONSE", "统计终态不符合 Agent 契约", retryable=True, safe_to_retry=True)
+    return result
+
+
 def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, Any]:
     if tool not in TOOLS:
         raise ToolFailure("UNKNOWN_TOOL", f"未知工具：{tool}")
@@ -441,7 +465,9 @@ def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, An
         return run_messages_get(runtime, data)
     if tool == "etsy_customer_messages_publish":
         return run_messages_publish(runtime, data)
-    return run_orders(runtime, data)
+    if tool == "get_etsy_orders":
+        return run_orders(runtime, data)
+    return run_stats(runtime, data)
 
 
 def main(argv: list[str]) -> int:
