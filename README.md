@@ -9,7 +9,7 @@
 ## 安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.14/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash
 ```
 
 脚本会：
@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.14/inst
 谨慎模式（先看再跑）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.14/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh -o install.sh
 less install.sh    # 自查一遍
 bash install.sh
 ```
@@ -125,12 +125,29 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 | `HERMES_SKILLS_DIR` | `~/.hermes/skills` |
 | `ECOMMERCE_STACK_BIN` | `~/.local/bin` |
 | `ECOMMERCE_SKILLS_REPO` | `https://github.com/easyaitech/etsy-skills.git` |
-| `ECOMMERCE_SKILLS_REF` | `main`（推荐传具体 tag，例如 `v1.0.14`） |
+| `ECOMMERCE_SKILLS_REF` | `main`（**发布口径就是 main**，见下面 §发布与分发；tag 已不再维护，别 pin） |
 | `ECOMMERCE_WORKSPACE` | 无；显式声明电商工作区根 |
 | `PINTEREST_AUTOPIN_HOME` | 仅旧本地 Playwright 工具迁移排查使用；新 Pinterest 发布不读取 |
 | `PINTEREST_AUTOPIN_REPO` | 仅旧本地 Playwright 工具迁移排查使用；新 Pinterest 发布不读取 |
 
 旧变量 `ETSY_SKILLS_HOME` / `ETSY_STACK_BIN` / `ETSY_SKILLS_REPO` / `ETSY_SKILLS_REF` / `ETSY_WORKSPACE` 继续兼容。
+
+## 发布与分发
+
+**发布口径 = 合并到 `main`。** 每个 PR 自带 `CHANGELOG.md` 顶部的版本号 bump，合并即发版；
+`main` 永远是「已发布」的那一版。
+
+- **不再打 tag。** tag 停在 `v1.0.11`，`v1.0.12`~`v1.0.14` 都没打——README 里原先 pin 到
+  `.../v1.0.14/install.sh` 的安装命令因此**直接 404**。而真正的开通路径（`yanggedianzhang`
+  仓 `tools/ops/provision-tenant`）本来就从 `main` 拉 `install.sh`。约定跟着现实走：别再 pin
+  版本号。再加一道「记得打 tag」的人工步骤，只会重蹈下面这条的覆辙。
+- **版本号的唯一真源是 `CHANGELOG.md` 顶部。** `scripts/validate-listing-read-contract.py`
+  从那里推导，不再硬编码（v1.0.11 发版时漏改硬编码断言，`main` 上该校验一直 FAIL 却没人发现
+  ——因为当时仓库没有任何 CI 会去跑它）。
+- **合并 ≠ 上线。** 线上租户读的不是这个仓库，而是 ECS 上各 Hermes profile 的 skill 软链。
+  分发由 `yanggedianzhang` 仓 `tools/ops/etsy-skills-sync.sh` 负责（ECS cron 每 10 分钟拉一次
+  并自证生效）。想确认某次合并真的到了线上，看那边的 `/var/log/ygd-etsy-skills-sync.log`，
+  或直接跑 `etsy-skills-sync.sh check`。
 
 ## 仓库布局
 
