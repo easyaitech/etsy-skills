@@ -161,6 +161,21 @@ class EtsyAgentToolTest(unittest.TestCase):
         self.assertEqual(client.calls[1][0], "/api/hermes/etsy/tools/orders/get/result")
         self.assertEqual(client.calls[1][1], {"operationId": "internal"})
 
+    def test_orders_passes_require_live_through(self):
+        """requireLive 是「这次必须现场去 Etsy 看」。包装层挡掉它的话，按单号问完整收货地址
+        就永远拿不到——账本拦下所有小规模点查，而完整地址按隐私规则不进 Base。"""
+        client = FakeClient([(200, {
+            "schemaVersion": "etsy-agent-tool/v1",
+            "tool": "get_etsy_orders",
+            "ok": True,
+            "outcome": "complete",
+            "data": {"orders": [], "notFound": False},
+            "completeness": {"status": "complete", "truncated": False},
+            "errors": [],
+        })])
+        tool.execute("get_etsy_orders", {"orderNumbers": ["123456"], "requireLive": True}, client)
+        self.assertEqual(client.calls[0][1], {"orderNumbers": ["123456"], "requireLive": True})
+
     def test_orders_preserves_business_scope_and_opaque_cursor(self):
         client = FakeClient([(200, {
             "schemaVersion": "etsy-agent-tool/v1",

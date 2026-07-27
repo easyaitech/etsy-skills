@@ -447,7 +447,9 @@ def run_messages_publish(client: Client, data: dict[str, Any]) -> dict[str, Any]
 
 
 def run_orders(client: Client, data: dict[str, Any]) -> dict[str, Any]:
-    require_keys(data, {"orderNumbers", "scope", "cursor"})
+    # requireLive：这次必须现场去 Etsy 看，绕开店铺账本。不放行的话，按单号问完整收货地址
+    # 永远拿不到——账本拦下所有小规模点查，而完整地址按隐私规则不进 Base。
+    require_keys(data, {"orderNumbers", "scope", "cursor", "requireLive"})
     status, started = client.post("/api/hermes/etsy/tools/orders/get", data)
     if status >= 400:
         raise_http(status, started)

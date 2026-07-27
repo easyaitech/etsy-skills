@@ -2,6 +2,12 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.14] - 2026-07-27
+
+- 修 `get_etsy_orders` 包装脚本挡掉 `requireLive` 的问题。v1.0.13 只把这个参数写进了 markdown
+  契约，`scripts/etsy_agent_tool.py` 自己那层输入白名单没放行——线上按契约照做会拿到
+  `INVALID_INPUT：不支持字段：requireLive`，等于契约写了一个用不了的参数。端到端实跑才暴露。
+
 ## [v1.0.13] - 2026-07-27
 
 v1.0.12 补上了字段清单，但按单号问地址仍然拿不到——后端实测店主问的那一单返回
