@@ -239,8 +239,30 @@ def listing_ids(urls: Any) -> list[str]:
     return ids
 
 
+def accept_cached_within_ms(data: dict[str, Any]) -> dict[str, Any]:
+    """把「这次问题能接受多旧的数据」透传给后端。
+
+    缺省不传 = 后端照常真的去读，行为与本次改动前完全一致。之所以由**调用方**声明而不是让后端
+    定一个默认窗口：listing 是平台的快照，「这个 listing 现在什么价」和「我上次给它写的标题是啥」
+    对新鲜度的要求差着数量级，只有发起这次调用的人知道是哪一种。
+
+    只对 single/batch 生效（shop 是枚举，缓存里有哪几条取决于历史读过什么，证明不了「这就是全店」）；
+    后端也在解析层再挡一次，两边一致。
+    """
+    raw = data.get("acceptCachedWithinMs")
+    if raw is None:
+        return {}
+    if not isinstance(raw, (int, float)) or isinstance(raw, bool) or raw <= 0:
+        raise ToolFailure("INVALID_INPUT", "acceptCachedWithinMs 必须是正数（毫秒）")
+    return {"acceptCachedWithinMs": int(raw)}
+
+
 def run_listings(client: Client, data: dict[str, Any]) -> dict[str, Any]:
-    require_keys(data, {"scope", "fields", "urls", "shopUrl", "maxItems"}, {"scope", "fields"})
+    require_keys(
+        data,
+        {"scope", "fields", "urls", "shopUrl", "maxItems", "acceptCachedWithinMs"},
+        {"scope", "fields"},
+    )
     scope = data.get("scope")
     fields = data.get("fields")
     if scope not in {"single", "batch", "shop"} or fields not in {"public", "seller_admin"}:
@@ -250,6 +272,8 @@ def run_listings(client: Client, data: dict[str, Any]) -> dict[str, Any]:
         for key in ("urls", "shopUrl", "maxItems"):
             if key in data:
                 body[key] = data[key]
+        if scope != "shop":
+            body.update(accept_cached_within_ms(data))
         status, started = client.post("/api/hermes/etsy/tools/listings/get", body)
         if status >= 400:
             raise_http(status, started)
@@ -272,6 +296,7 @@ def run_listings(client: Client, data: dict[str, Any]) -> dict[str, Any]:
         else:
             listing_ids(data.get("urls"))
             facade_body["urls"] = data["urls"]
+            facade_body.update(accept_cached_within_ms(data))
         status, started = client.post("/api/hermes/etsy/tools/listings/get", facade_body)
         if status >= 400:
             raise_http(status, started)

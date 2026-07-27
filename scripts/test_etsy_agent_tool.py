@@ -24,6 +24,63 @@ class FakeClient:
         return self.replies.pop(0)
 
 
+class ListingCacheDeclarationTest(unittest.TestCase):
+    """「能接受多旧」由调用方声明，缺省不传 —— 默认行为必须一个字不变。"""
+
+    def _final(self):
+        return {"ok": True, "results": [], "errors": []}
+
+    def test_seller_admin_forwards_the_declaration(self):
+        client = FakeClient([(200, self._final())])
+        tool.run_listings(client, {
+            "scope": "single",
+            "fields": "seller_admin",
+            "urls": ["https://www.etsy.com/listing/123/x"],
+            "acceptCachedWithinMs": 600000,
+        })
+        _, body, _ = client.calls[0]
+        self.assertEqual(body["acceptCachedWithinMs"], 600000)
+
+    def test_public_forwards_the_declaration(self):
+        client = FakeClient([(200, self._final())])
+        tool.run_listings(client, {
+            "scope": "batch",
+            "fields": "public",
+            "urls": ["https://www.etsy.com/listing/123/x"],
+            "acceptCachedWithinMs": 300000,
+        })
+        _, body, _ = client.calls[0]
+        self.assertEqual(body["acceptCachedWithinMs"], 300000)
+
+    def test_absent_declaration_is_not_sent(self):
+        # 缺省 = 后端照常真的去读；多发一个字段都可能被后端的封闭字段集拒掉。
+        client = FakeClient([(200, self._final())])
+        tool.run_listings(client, {
+            "scope": "single",
+            "fields": "seller_admin",
+            "urls": ["https://www.etsy.com/listing/123/x"],
+        })
+        _, body, _ = client.calls[0]
+        self.assertNotIn("acceptCachedWithinMs", body)
+
+    def test_shop_scope_never_forwards_it(self):
+        # shop 是枚举：缓存里有哪几条取决于历史读过什么，证明不了「这就是全店」。
+        client = FakeClient([(200, self._final())])
+        tool.run_listings(client, {
+            "scope": "shop",
+            "fields": "seller_admin",
+            "maxItems": 5,
+            "acceptCachedWithinMs": 600000,
+        })
+        _, body, _ = client.calls[0]
+        self.assertNotIn("acceptCachedWithinMs", body)
+
+    def test_rejects_a_nonsense_window(self):
+        for bad in (0, -1, "600000", True):
+            with self.assertRaises(tool.ToolFailure):
+                tool.accept_cached_within_ms({"acceptCachedWithinMs": bad})
+
+
 class EtsyAgentToolTest(unittest.TestCase):
     def test_install_and_cli_smoke_cover_all_stats_and_ads_commands(self):
         root = MODULE_PATH.parent.parent
