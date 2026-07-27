@@ -2,6 +2,22 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.15] - 2026-07-27
+
+- **把「发布口径」写死成 main，并让机器守住它。** 合并到 `main` 即发版，不再打 tag。
+  - 依据不是偏好：tag 停在 `v1.0.11`，`v1.0.12`~`v1.0.14` 全没打，README 里 pin 到
+    `.../v1.0.14/install.sh` 的安装命令**实测 404**；而真正的开通路径
+    （`yanggedianzhang` 仓 `tools/ops/provision-tenant`）本来就从 `main` 拉 `install.sh`。
+  - README 安装 URL 改回 `main`，新增 §发布与分发 说明「合并 ≠ 上线」。
+- **`validate-listing-read-contract.py` 的版本断言改为从 `CHANGELOG.md` 顶部推导**，不再硬编码。
+  v1.0.11 发版时漏改这处硬编码，导致 `main` 上该校验一直 FAIL。校验同时新增一条：README 的安装
+  URL 不许再 pin 版本号（pin 上去就会 404）。
+- **新增 CI（`.github/workflows/validate.yml`）**——本仓此前没有任何 CI，校验脚本只在 specs 里
+  写着「手动跑」，所以上面那个 FAIL 才能在 main 上躺着没人发现。现在 PR 和 push 都会跑三个契约
+  校验 + 27 个单元测试（只用 stdlib `unittest`，不引 pytest）。
+- 配套：线上分发由 `yanggedianzhang` 仓新增的 `tools/ops/etsy-skills-sync.sh` 承接
+  （ECS cron 每 10 分钟拉 `main` 并穿过软链自证生效）。此前这条链路上**没有任何自动更新**。
+
 ## [v1.0.14] - 2026-07-27
 
 - 修 `get_etsy_orders` 包装脚本挡掉 `requireLive` 的问题。v1.0.13 只把这个参数写进了 markdown

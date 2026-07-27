@@ -1,0 +1,34 @@
+# 契约校验 + 单元测试。
+#
+# 为什么现在才加：本仓此前**没有任何 CI**，scripts/ 下的校验脚本只在 specs 文档里写着
+# 「手动跑一下」。结果 v1.0.11 发版时漏改了 validate-listing-read-contract.py 里硬编码的
+# 版本断言，main 上那个校验一直 FAIL 却没人发现——没有任何东西会去跑它。
+# 版本断言本身已改成从 CHANGELOG 顶部推导（不再需要手改），这个 workflow 负责另一半：
+# 让「校验挂了」这件事自己冒出来，而不是等下次有人想起来手动跑。
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 契约校验：LLM 面向的工具/路由契约有没有被改漏
+      - name: 契约校验
+        run: |
+          python3 scripts/validate-listing-read-contract.py
+          python3 scripts/validate-customer-message-contract.py
+          python3 scripts/validate-markdown-links.py
+
+      # 只用 stdlib unittest，不引 pytest：生产 Hermes 的 venv 里没有 pytest 且不能出网装，
+      # 保持「本地 / CI / 生产都能用同一条命令跑」。
+      - name: 单元测试
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
