@@ -1,6 +1,6 @@
 ---
 name: orders-customers
-description: 维护电商订单 + 客户两张表（默认位于店铺总 Base 内），并按目标销售平台配置支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。四种触发：(1) "建订单库 / 客户库"——在店铺总 Base 建表；(2) "录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"——读写 Base；(3) "回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发 / 给某订单的买家发消息 / 按订单号或快递单号发站内信 / 催评价"——按客服 SOP + BRAND.md 语调 + COMMERCE_PLATFORM.md 平台边界输出回复；Etsy 客户消息统一通过正式获取与真实发布工具处理，可按客户 ID、订单号或快递单号定位（见 references/etsy-message-tools.md）；(4) "这单下一步 / 能不能发货 / 有没有漏 / 履约检查 / 签收跟进 / 复购触达"——按履约 SOP 输出阶段与缺口。多平台架构：每个销售平台一个 preset（见 references/platforms/platform-presets.md），Etsy 和小红书是内置 preset，亚马逊等其他平台需先在 COMMERCE_PLATFORM.md 配置 + 新增对应 preset。
+description: 维护电商订单 + 客户两张表（默认位于店铺总 Base 内），并按目标销售平台配置支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。四种触发：(1) "建订单库 / 客户库"——在店铺总 Base 建表；(2) "录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"——读写 Base；(3) "回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发 / 给某订单的买家发消息 / 按订单号或快递单号发站内信 / 催评价"——按客服 SOP + BRAND.md 语调 + COMMERCE_PLATFORM.md 平台边界输出回复；Etsy 客户消息统一通过正式获取与真实发布工具处理，可按客户 ID、订单号或快递单号定位（见 references/etsy-message-tools.md）；(4) "这单下一步 / 能不能发货 / 有没有漏 / 履约检查 / 签收跟进 / 复购触达"——按履约 SOP 输出阶段与缺口；"这单寄到哪 / 完整收货地址 / 门牌 / 邮编 / 收件电话 / 买家叫什么"这类平台事实，Etsy 用 `get_etsy_orders` 现查（见 references/etsy-order-read.md），Base 按隐私规则本就不存完整地址。多平台架构：每个销售平台一个 preset（见 references/platforms/platform-presets.md），Etsy 和小红书是内置 preset，亚马逊等其他平台需先在 COMMERCE_PLATFORM.md 配置 + 新增对应 preset。
 layer: foundation
 ---
 
@@ -27,7 +27,7 @@ layer: foundation
 | `references/order-fulfillment-sop.md` | 新订单到发货、签收跟进的阶段清单 | 新订单 / 待发货订单必须用它判断下一步、缺失证据和要写回的字段 |
 | `references/order-handling.md` | 客服回复场景 SOP（平台中性骨架） | 只用于买家消息、差评、退换货、感谢信等话术，不替代履约 SOP；买家语言 / 措辞 / 平台特例看目标平台 preset |
 | `references/etsy-message-tools.md` | Etsy 客户消息正式获取与真实发布工具 | 仅目标平台 Etsy 且需要读取或发送客户消息时读；按 `customerId`、订单号或快递单号唯一定位 customer，获取完整双向文字消息或真实发送文字消息 |
-| `references/etsy-order-read.md` | Etsy 当前订单事实统一读取 | 目标平台 Etsy 且要查当前订单、履约或送达状态时读；统一调用 `get_etsy_orders`，New / Completed 只作内部证据来源 |
+| `references/etsy-order-read.md` | Etsy 当前订单事实统一读取 | 目标平台 Etsy 且要查当前订单、履约或送达状态时读；统一调用 `get_etsy_orders`，New / Completed 只作内部证据来源。**Base 按隐私规则不存的完整收货地址 / 门牌 / 邮编 / 收件电话也在这里现查**（`fullAddress` / `phone`），不要因为 Base 里只有国家或城市就说查不到 |
 | `references/platforms/<platform>.md` | 目标平台 preset（订单号 / 买家语言 / 承诺发货来源 / 消息边界 / 标签阈值） | 每次处理订单 / 客服前读对应平台 preset；内置 `platforms/etsy.md` / `platforms/xiaohongshu.md`，其他平台缺 preset 时阻塞 |
 
 ---
@@ -139,7 +139,7 @@ layer: foundation
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执）。本 skill 特有禁区：
 
 - **不替用户发平台消息 / 发货 / 退款 / 售后审核**：只产文案 + 维护 Base；真实操作由用户在平台后台、ERP 或专门平台 skill 执行。唯一例外是 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 的 Etsy 正式发布工具：只发送用户明确指定或确认的完整文字；同一发送意图始终复用同一个幂等键查询状态，`queued` / `dispatched` 不得声称已发送，`result_unknown` 绝不自动重发。
-- **客户隐私**：邮箱、地址、订单号属敏感数据——Agent 输出里用脱敏写法（如 `订单 #****1234`），不要大段重复
+- **客户隐私**：邮箱、地址、订单号属敏感数据——Agent 输出里用脱敏写法（如 `订单 #****1234`），不要大段重复。**唯一例外**：店主本人为发货 / 打单 / 核对地址而问自己订单的收件信息时，完整展示现查到的 `fullAddress` / `phone` 原文，不脱敏、不打码（脱敏到店主自己都用不了，就是把工具作废）；写进 Base、发给买家、放进对外文案或分享给第三方时，仍按脱敏写法。现查到的完整地址 / 电话**一律不回写 Base**（Base 只存 `收件地区`，见 [`references/base-schema.md`](references/base-schema.md)）。详见 [`references/etsy-order-read.md`](references/etsy-order-read.md) §隐私边界
 - **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘 → 回执；不要只在对话里报改动而不写 Base
 - **客服回复**：除 Etsy 正式发布工具外，用户自己复制到目标平台后台 / 客服入口发送；Etsy 按新工具真实发送。发出后把用户最终版本回写到 `Orders 订单` 表的"客服记录"字段
 
