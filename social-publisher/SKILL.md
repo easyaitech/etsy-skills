@@ -23,6 +23,8 @@ Instagram / TikTok: 未来适配器或人工后台
 
 > **工具架构**（见 [`shared/tools-architecture.md`](../shared/tools-architecture.md)）：**自动发布的编排硬核（队列巡检 / 单写者锁 / 重试退避 / 死信 / 结果回写）已落到 ECS 常驻控制面（yanggedianzhang 的 publish dispatch，T5）**——本 skill **不再在 Hermes 上手搓巡检 / 锁 / 定时器**。ECS dispatch 默认 dormant（`PUBLISH_DISPATCH_POLL_MS` 未配 = 关；**yanggedianzhang 生产已开启，约 60s 一轮**），只处理 `自动发布 = true` 的行，合格行**直接建 publish job 无人值守直发、无逐条人工确认闸**（人工把关点前移到「标 `自动发布=true`」那一下）。本 skill 退成薄触发，只剩四件事：① 配置 adapter registry / 建队列表字段；② **人工 / 按需发布**（用户"发这条"，模式 B）；③ **开启自动发布**：内容审核完把行标 `自动发布=true` + `已批准` + `计划发布时间` 交给 dispatch 直发（对 Pinterest 走 `pinterest-autopin` 模式 D）；手动路径的 test → confirm-publish 仍在模式 B；④ 对账。Base 是 SoT；`执行锁` 字段现由 ECS dispatch 持有，skill 侧人工发布前要避让（见模式 B）。登录 / 凭据红线见 §禁区。
 
+> **P0 永久退役闸**：旧 Hermes job `d99651079542`（`ETSY Social Publisher / Publishing Queue 到期自动发布`）必须保持 paused 或 removed。**永不 resume、run、重建或修复它的本地路径**；用户说“开启自动发布 / 到点自动发”只走 ECS dispatch。若发现该 job 已启用或报错，只停用它并如实回报，不执行旧发布脚本。
+
 ---
 
 ## 必读引用
@@ -138,6 +140,7 @@ ECS dispatch 的行为（本 skill 只需知道、不实现）：
 - **小红书封存 shelved：不组草稿、不出人工发布清单、不对账、不伪造任何能力**——用户提小红书请求只说明封存边界 + 引导回 Etsy + STOP（后端虽就绪，产品决策专注 Etsy、不对外开放）。
 - 不为 Instagram、TikTok（planned/manual-only）伪造自动发布能力；只有 Pinterest 是 enabled。这些平台一律只做草稿 / 人工对账，不伪造已发。
 - 不替用户登录平台，不保存账号密码、cookie、token。
+- 不恢复、运行、重建或修复旧 Hermes job `d99651079542`；它与 ECS dispatch 并行会造成重复发布。
 - 不跳过 Pinterest 的 test → final 确认门，除非用户明确说明已经 test 过并要求 final。
 - 不对 `失败` 记录无限重试；默认最多两次，之后停在 `失败`（待人工核对）。
 - 不批量补发 backlog（每平台每轮只发一条的节流由 ECS dispatch 负责，本 skill 人工发布也一次一条，不一口气清队列）。
