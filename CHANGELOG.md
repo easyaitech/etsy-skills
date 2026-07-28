@@ -2,6 +2,14 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.16] - 2026-07-28
+
+- 永久退役旧 Hermes job `d99651079542`（`ETSY Social Publisher / Publishing Queue 到期自动发布`）：
+  `social-publisher` 与 `pinterest-autopin` 明确禁止恢复、运行、重建或修复旧本地 Cron，自动发布只交给
+  ECS dispatch，避免两套调度并行造成重复发布。
+- 补齐 Pinterest 自动发布的素材类型契约：关联素材必须使用控制面可识别的图片词表，卡片角色改写在
+  名称、备注或顺序中，避免描述性类型触发 `ASSET_NOT_PUBLISHABLE`。
+
 ## [v1.0.15] - 2026-07-27
 
 - **把「发布口径」写死成 main，并让机器守住它。** 合并到 `main` 即发版，不再打 tag。
