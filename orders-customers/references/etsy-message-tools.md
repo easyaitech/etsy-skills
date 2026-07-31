@@ -4,28 +4,32 @@
 
 | 动作 | Agent 工具 | 语义 |
 |---|---|---|
-| 获取 | `etsy_customer_messages_get` | 获取唯一 customer 的正式双向文字消息 |
+| 获取 | `etsy_customer_messages_get` | 按 selector 获取唯一 customer 的正式双向文字消息，或按 `scope="recent"` 列出最近有来往的会话 |
 | 发布 | `etsy_customer_messages_publish` | 真实发送并等待可证明终态 |
 
 旧 `etsy-dm` 会话查询、回复草稿和订单消息端点已退役，**不得调用、不得降级回旧工具**。V1 只支持文字，不支持图片或附件。
 
 运行时按 [`../../shared/etsy-agent-tools.md`](../../shared/etsy-agent-tools.md) 自动注入地址、租户和鉴权。Agent 输入不得带 `tenantId` 或 token，也不要读取、打印或让用户提供这些值。
 
+后端版本要求：`platform_customer_id`、`scope="recent"` 与潜在客户合成身份需后端 >= v0.6.20.0；`customer_id` 接受 `etsy-buyer:…` 与潜在客户真实发送需 >= v0.6.21.6。
+
 ## 1. 唯一定位 customer
 
-两个工具都使用相同的 `selector`，且以下三项**必须恰好提供一项**：
+两个工具都使用相同的 `selector`，且以下四项**必须恰好提供一项**：
 
 ```json
 {"type":"customer_id","value":"C-2026-0001"}
 {"type":"order_number","value":"ORDER-NUMBER"}
 {"type":"tracking_number","value":"TRACKING-NUMBER"}
+{"type":"platform_customer_id","value":"911046840"}
 ```
 
-- `customerId` 是 `Customers 客户`.`客户 ID`。
-- `orderNumber` 从 `Orders 订单` 唯一解析到关联 customer。
-- `trackingNumber` 从 `Orders 订单`.`跟踪号` 唯一解析到关联 customer。
+- `customer_id` 接受两种值：`Customers 客户`.`客户 ID`（形如 `C-2026-0001`），以及系统给潜在客户的合成身份（形如 `etsy-buyer:911046840`，获取结果里怎么给的就怎么用回来）。Etsy 数字买家 ID 或买家昵称**不是** customer_id，拿它们查会得到 404 `CUSTOMER_SELECTOR_NOT_FOUND`。
+- `order_number` 从 `Orders 订单` 唯一解析到关联 customer。
+- `tracking_number` 从 `Orders 订单`.`跟踪号` 唯一解析到关联 customer。
+- `platform_customer_id` 是 Etsy 数字买家 ID（只收纯数字；买家主页 URL 里那串字母 slug 不是它）。服务端先按 `Customers 客户`.`平台客户 ID` 反查档案；查不到**不报错**——那是还没下过单的潜在客户，自动落到合成身份 `etsy-buyer:<数字ID>`，获取和发送共用这条回退。
 - customer、订单或快递单号无法唯一解析时停止，不猜客户、不索要 Etsy 会话 ID。
-- 同一个 customer 只属于一个销售平台；这里必须是 Etsy。服务端还会校验 Customers 中稳定的 `平台客户 ID` 与 Etsy 会话客户身份一致。
+- 同一个 customer 只属于一个销售平台；这里必须是 Etsy。服务端还会校验会话身份与 selector 解析结果一致。
 
 ## 2. 获取正式消息
 
@@ -38,7 +42,13 @@ Agent 输入：
 }
 ```
 
-`limit` 为 1–100，默认 50。返回 `hasMore=true` 时，把 `nextCursor` 原样放进下一次请求；不要解析或改写 cursor。只有明确需要限定某个已返回的会话时才带 `conversationId`。
+`limit` 为 1–100，默认 50。`completeness.truncated=true` 时，把 `completeness.nextCursor` 原样放进下一次请求的 `cursor`；不要解析或改写 cursor。只有明确需要限定某个已返回的会话时才带 `conversationId`。
+
+返回的 `data` 顶层是 `customerId`、`isProspect`、`messageCount`、`conversations`：
+
+- **消息在 `data.conversations[].messages[]` 里，`data` 顶层没有 `messages` 这个键**。要条数一律读 `data.messageCount`——`len(data.get('messages', []))` 恒得 0 且不报错，会把一次成功读取谎报成「没有消息」。
+- `messageCount` 是本页条数；`truncated=true` 时还有下一页，别把本页条数当成总数。
+- `isProspect=true` 表示这位买家在 Base 客户表里**还没有档案**（多半是先来问、还没下单的潜在客户，他的 `customerId` 形如 `etsy-buyer:911046840`，是系统给的临时身份、不是店里的客户编号）。这时只能说「Etsy 上叫 X 的买家」，不许说成店里的客户、也不许说他下过单；名字只用 `platformDisplayName`（Etsy 上显示的名字）。他之后真下了单，同一条会话会自动改绑到真客户档案上、历史消息跟着走，不需要也不允许替他在 Customers 表建档。
 
 每条 `message` 的关键字段：
 
@@ -54,7 +64,25 @@ Agent 输入：
 5000 条，达到容量后按稳定时间顺序淘汰最旧记录。这里的“长期保存”受这两个容量上限约束，
 不能向用户承诺超过容量后仍保留被淘汰的旧消息。
 
-## 3. 真实发布文字消息
+## 3. 最近来往列表（scope="recent"）
+
+用户问「最近有谁来问」「有没有新客户咨询」「谁在等我回复」这类**不指名道姓**的问题时，用同一个获取工具的列表模式。**不要**为了回答这类问题猜几个订单号挨个查——猜不到潜在客户，也答不出总数。
+
+Agent 输入（不带 `selector`；`selector` 与 `scope` 必须恰好提供一项，同时给或都不给都会被拒）：
+
+```json
+{"scope":"recent","limit":20}
+```
+
+`limit` 可选，整数 1–50，默认 20。返回的 `data`：
+
+- `scope="recent"`、`conversationCount`（本页条数）、`totalConversationCount`（会话总数）、`conversations` 按最后一次来往从新到旧。
+- 每条会话认得出是谁、看得出最后一件事，但不展开正文：`conversationId`、`customerId`、`isProspect`、`platformCustomerId`、`customerName`（有档案才有）、`platformDisplayName`、`messageCount`、`lastMessage`，可能还有 `latestEvent`（图片这类没有正文的最新事件）。
+- 时间字段二选一，**不能混为一谈**：`lastActivityAt` 是平台侧最后一次来往时间；没有平台时间的会话只有 `lastSyncedAt`（我们最后一次同步到它的时间），不能当作买家的活动时间转述。
+- `truncated=true` 表示还有更多会话没列出；这个模式没有 cursor，调大 `limit` 再查一次。
+- 要看某条会话的完整正文，拿返回的 `customerId`（含 `etsy-buyer:…`）按 §2 再查一次。
+
+## 4. 真实发布文字消息
 
 发布不是草稿，也不会只填入回复框。调用后浏览器插件会在该租户 Etsy 登录态中执行真实发送。
 
@@ -63,6 +91,11 @@ Agent 输入：
 - 用户已经给出明确收件目标、完整原文并要求发送：该请求本身就是授权，不重复确认。
 - 正文由你起草或修改：先完整展示正文，取得用户明确确认后再发布。
 - 不支持图片、附件或空正文；正文最多 4000 字符，超限整条拒绝，不截断。
+
+**潜在客户照常可发**：selector 用 `platform_customer_id`（他的数字买家 ID）或直接用获取结果里的 `etsy-buyer:…` customer_id，不需要他先下单、也不需要建档——绝不要对用户说「他没下过单所以发不了」。发送只能回到已同步的会话里：
+
+- 404 `CUSTOMER_CONVERSATION_NOT_FOUND`：这个人名下还没同步到会话（先请用户在 Etsy 打开一次那条会话），**不是不允许发**。
+- `CUSTOMER_CONVERSATION_NOT_UNIQUE`：名下有多条会话，带 `conversationId` 指明哪一条。
 
 Agent 输入：
 
@@ -82,7 +115,7 @@ Agent 输入：
 - 网络超时或暂时拿不到最终状态时，继续用原请求重放查询，绝不自行换键重投。
 - `idempotencyKey` 必填、最多 200 字符；它不是鉴权凭据，不放 token 或客户隐私。
 
-## 4. 发布结果判定
+## 5. 发布结果判定
 
 适配器内部用相同幂等意图查询状态，Agent 只接收最终 `etsy-agent-tool/v1`：
 
@@ -107,9 +140,9 @@ Agent 输入：
 `queued`、`dispatched`、HTTP 201 或拿到 `jobId` 都不等于客户已经收到消息。没有
 `job.status=sent + job.externalMessageId + job.platformSentAt` 的完整证据，禁止说“已发送”。
 
-## 5. 错误与安全边界
+## 6. 错误与安全边界
 
-- 只有实际请求返回的 JSON 错误码才可对用户报告；不要把文档里的可能性冒充实测。
+- 只有实际请求返回的 JSON 错误码才可对用户报告，且错误码必须逐字复述；不要把文档里的可能性冒充实测，也不要换成自以为更好懂的另一个码。
 - 客户、订单、快递单号或会话匹配不唯一时停止，禁止选“第一个”。
 - 功能未启用、服务未生效、租户绑定缺失或插件能力不足时，如实报告并停止，不绕过门禁。
 - 不在日志、回复或 Base 客服记录中暴露鉴权令牌；订单号等敏感标识在面向用户的总结中按既有脱敏规则展示。

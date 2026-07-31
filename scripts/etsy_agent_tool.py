@@ -343,18 +343,41 @@ def run_listings(client: Client, data: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_messages_get(client: Client, data: dict[str, Any]) -> dict[str, Any]:
-    require_keys(data, {"selector", "conversationId", "limit", "cursor"}, {"selector"})
+    require_keys(data, {"selector", "scope", "conversationId", "limit", "cursor"})
+    # v1.0.14 的教训反着再守一遍：契约（后端 >= v0.6.20.0）已支持 scope="recent" 列表模式，
+    # 包装层不放行就是「契约写了但包装层挡掉了」。selector 与 scope 恰好一项在这里就拒，
+    # 不让含混请求打到后端再猜语义。
+    scope = data.get("scope")
+    if scope is not None and scope != "recent":
+        raise ToolFailure("INVALID_INPUT", 'scope 只支持 "recent"')
+    recent = scope == "recent"
+    if ("selector" in data) == recent:
+        raise ToolFailure(
+            "INVALID_INPUT",
+            'selector 与 scope="recent" 必须恰好提供一项：指名道姓用 selector，列最近来往用 scope',
+        )
     status, result = client.post("/api/hermes/etsy/tools/customer-messages/get", data)
     if status >= 400 or result.get("ok") is False:
         raise_http(status, result)
     has_more = bool(result.get("hasMore"))
+    if recent:
+        payload: dict[str, Any] = {
+            "scope": "recent",
+            "conversationCount": result.get("conversationCount", 0),
+            "totalConversationCount": result.get("totalConversationCount", 0),
+            "conversations": result.get("conversations", []),
+        }
+    else:
+        payload = {
+            "customerId": result.get("customerId"),
+            "isProspect": bool(result.get("isProspect")),
+            "messageCount": result.get("messageCount", 0),
+            "conversations": result.get("conversations", []),
+        }
     return envelope(
         "etsy_customer_messages_get",
         "partial" if has_more else "complete",
-        data={
-            "customerId": result.get("customerId"),
-            "conversations": result.get("conversations", []),
-        },
+        data=payload,
         truncated=has_more,
         next_cursor=str(result.get("nextCursor") or ""),
     )

@@ -2,6 +2,31 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.17] - 2026-07-31
+
+- **Etsy 客户消息契约补齐后端早已上线的三件能力**（`orders-customers/references/etsy-message-tools.md`
+  此前还停在「selector 三选一」的旧口径）：
+  - 第 4 种 selector `platform_customer_id`（Etsy 数字买家 ID，只收纯数字；服务端先按
+    `Customers`.`平台客户 ID` 反查，查不到自动落到潜在客户合成身份，需后端 >= v0.6.20.0）。
+  - `customer_id` 接受潜在客户合成身份 `etsy-buyer:<数字ID>`，且**潜在客户真实发布也可用**
+    （需后端 >= v0.6.21.6）：发送只能回到已同步会话，404 `CUSTOMER_CONVERSATION_NOT_FOUND`
+    = 名下还没同步到会话（请用户在 Etsy 打开一次），不是不允许发；多条会话是另一个码
+    `CUSTOMER_CONVERSATION_NOT_UNIQUE`，带 `conversationId` 指明。
+  - `scope="recent"` 列表模式：不带 selector 列最近有来往的会话（含潜在客户），回答
+    「最近有谁来问 / 谁在等我回复」这类不指名道姓的问题；`lastActivityAt`（平台时间）与
+    `lastSyncedAt`（仅同步时间）必须分开转述。
+- **包装层同步放行，不再重演 v1.0.14**（契约写了但包装层挡掉了）：`etsy_agent_tool.py` 的
+  get 放行 `scope` 且要求 selector 与 `scope="recent"` 恰好一项；`data` 补透传
+  `isProspect` / `messageCount`——潜在客户的措辞纪律（只能说「Etsy 上叫 X 的买家」）全靠
+  这两个字段撑着，此前包装层把它们丢掉了。
+- get 文档同时钉死取数姿势：消息在 `data.conversations[].messages[]`，顶层没有 `messages`
+  键，条数一律读 `data.messageCount`（本页条数，`truncated=true` 还有下一页）。
+- 配套：`validate-customer-message-contract.py` 把上述新契约全部钉进校验；
+  `validate-markdown-links.py` 的跳过清单补上 `.claude` / `.gstack`（本地遗留 worktree
+  目录会让 main 上的校验在本地必挂，CI 却看不见——违反「本地 / CI 同一条命令」）。
+- `orders-customers/SKILL.md`、`platforms/etsy.md`、`shared/tools-architecture.md` 的
+  selector 枚举同步加上数字买家 ID 与潜在客户口径。
+
 ## [v1.0.16] - 2026-07-28
 
 - 永久退役旧 Hermes job `d99651079542`（`ETSY Social Publisher / Publishing Queue 到期自动发布`）：

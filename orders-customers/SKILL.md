@@ -1,6 +1,6 @@
 ---
 name: orders-customers
-description: 维护电商订单 + 客户两张表（默认位于店铺总 Base 内），并按目标销售平台配置支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。四种触发：(1) "建订单库 / 客户库"——在店铺总 Base 建表；(2) "录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"——读写 Base；(3) "回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发 / 给某订单的买家发消息 / 按订单号或快递单号发站内信 / 催评价"——按客服 SOP + BRAND.md 语调 + COMMERCE_PLATFORM.md 平台边界输出回复；Etsy 客户消息统一通过正式获取与真实发布工具处理，可按客户 ID、订单号或快递单号定位（见 references/etsy-message-tools.md）；(4) "这单下一步 / 能不能发货 / 有没有漏 / 履约检查 / 签收跟进 / 复购触达"——按履约 SOP 输出阶段与缺口；"这单寄到哪 / 完整收货地址 / 门牌 / 邮编 / 收件电话 / 买家叫什么"这类平台事实，Etsy 用 `get_etsy_orders` 现查（见 references/etsy-order-read.md），Base 按隐私规则本就不存完整地址。多平台架构：每个销售平台一个 preset（见 references/platforms/platform-presets.md），Etsy 和小红书是内置 preset，亚马逊等其他平台需先在 COMMERCE_PLATFORM.md 配置 + 新增对应 preset。
+description: 维护电商订单 + 客户两张表（默认位于店铺总 Base 内），并按目标销售平台配置支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。四种触发：(1) "建订单库 / 客户库"——在店铺总 Base 建表；(2) "录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"——读写 Base；(3) "回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发 / 给某订单的买家发消息 / 按订单号或快递单号发站内信 / 催评价"——按客服 SOP + BRAND.md 语调 + COMMERCE_PLATFORM.md 平台边界输出回复；Etsy 客户消息统一通过正式获取与真实发布工具处理，可按客户 ID、订单号、快递单号或 Etsy 数字买家 ID 定位，也可不指名道姓列最近来往会话（见 references/etsy-message-tools.md）；(4) "这单下一步 / 能不能发货 / 有没有漏 / 履约检查 / 签收跟进 / 复购触达"——按履约 SOP 输出阶段与缺口；"这单寄到哪 / 完整收货地址 / 门牌 / 邮编 / 收件电话 / 买家叫什么"这类平台事实，Etsy 用 `get_etsy_orders` 现查（见 references/etsy-order-read.md），Base 按隐私规则本就不存完整地址。多平台架构：每个销售平台一个 preset（见 references/platforms/platform-presets.md），Etsy 和小红书是内置 preset，亚马逊等其他平台需先在 COMMERCE_PLATFORM.md 配置 + 新增对应 preset。
 layer: foundation
 ---
 
@@ -26,7 +26,7 @@ layer: foundation
 | `references/platforms/platform-presets.md` | 多平台架构与 preset 契约 | 决定读哪个平台 preset、加新平台怎么扩；核心流程平台中性，差异都在 preset |
 | `references/order-fulfillment-sop.md` | 新订单到发货、签收跟进的阶段清单 | 新订单 / 待发货订单必须用它判断下一步、缺失证据和要写回的字段 |
 | `references/order-handling.md` | 客服回复场景 SOP（平台中性骨架） | 只用于买家消息、差评、退换货、感谢信等话术，不替代履约 SOP；买家语言 / 措辞 / 平台特例看目标平台 preset |
-| `references/etsy-message-tools.md` | Etsy 客户消息正式获取与真实发布工具 | 仅目标平台 Etsy 且需要读取或发送客户消息时读；按 `customerId`、订单号或快递单号唯一定位 customer，获取完整双向文字消息或真实发送文字消息 |
+| `references/etsy-message-tools.md` | Etsy 客户消息正式获取与真实发布工具 | 仅目标平台 Etsy 且需要读取或发送客户消息时读；按 `customerId`、订单号、快递单号或 Etsy 数字买家 ID 唯一定位 customer（还没下单的潜在客户走合成身份 `etsy-buyer:<数字ID>`，读和发都可用），获取完整双向文字消息或真实发送文字消息；"最近有谁来问 / 谁在等我回复"这类不指名道姓的问题用 `scope="recent"` 列表模式 |
 | `references/etsy-order-read.md` | Etsy 当前订单事实统一读取 | 目标平台 Etsy 且要查当前订单、履约或送达状态时读；统一调用 `get_etsy_orders`，New / Completed 只作内部证据来源。**Base 按隐私规则不存的完整收货地址 / 门牌 / 邮编 / 收件电话也在这里现查**（`fullAddress` / `phone`），不要因为 Base 里只有国家或城市就说查不到 |
 | `references/platforms/<platform>.md` | 目标平台 preset（订单号 / 买家语言 / 承诺发货来源 / 消息边界 / 标签阈值） | 每次处理订单 / 客服前读对应平台 preset；内置 `platforms/etsy.md` / `platforms/xiaohongshu.md`，其他平台缺 preset 时阻塞 |
 
@@ -105,7 +105,7 @@ layer: foundation
 2. 读 BRAND.md（客服姿态 / 文案语调）+ SHOP.md（政策原文）+ COMMERCE_PLATFORM.md（平台买家语言 / 消息渠道 / 自动化边界）
 3. 读 `references/order-handling.md`：按场景找 SOP（差评 / 退货 / 定制等）
 4. 输出客服回复草稿（买家语言按目标平台 preset 的「买家语言」，最终以 COMMERCE_PLATFORM.md 为准），整篇展示给用户
-5. 用户确认后，**用户自己**复制到目标平台后台 / 客服入口发送（本 skill 不替操作平台）。Etsy 是唯一例外：按 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 调正式发布工具**真实发送**。用户已经给出明确收件目标和完整原文并要求发送时，该请求本身就是授权，不重复确认；如果正文由你起草或修改，必须先完整展示并取得明确确认。可用 `customerId`、订单号或快递单号定位，不向用户索要 Etsy 会话 ID。
+5. 用户确认后，**用户自己**复制到目标平台后台 / 客服入口发送（本 skill 不替操作平台）。Etsy 是唯一例外：按 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 调正式发布工具**真实发送**。用户已经给出明确收件目标和完整原文并要求发送时，该请求本身就是授权，不重复确认；如果正文由你起草或修改，必须先完整展示并取得明确确认。可用 `customerId`、订单号、快递单号或 Etsy 数字买家 ID 定位（潜在客户没下过单也照常可发，见该文档），不向用户索要 Etsy 会话 ID。
 6. 落地（**回写要真正落进 Base，不是只在对话里记下**——遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量）：
    - 把回复要点 + 用户最终发出的版本回写到 `Orders 订单` 表的"客服记录"字段；用 lark-base 写入拿到成功返回后带一句回执（**含可点击的飞书 Base 链接**，优先深链到该订单记录）
    - 如果该次互动反映客户特征（VIP、定制粉、投诉户），更新 `Customers 客户` 表标签

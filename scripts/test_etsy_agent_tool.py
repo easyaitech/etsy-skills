@@ -357,6 +357,59 @@ class EtsyAgentToolTest(unittest.TestCase):
         self.assertEqual(client.calls[0][0], "/api/hermes/etsy/tools/customer-messages/get")
         self.assertEqual(client.calls[0][1]["selector"], {"type": "order_number", "value": "123"})
 
+    def test_message_get_passes_through_platform_customer_id_selector(self):
+        # 第 4 种 selector（后端 >= v0.6.20.0）：包装层不改写、不拦截，data 透传 isProspect 与
+        # messageCount——潜在客户的措辞规则（「Etsy 上叫 X 的买家」）全靠这两个字段撑着。
+        client = FakeClient([(200, {
+            "ok": True,
+            "customerId": "etsy-buyer:911046840",
+            "isProspect": True,
+            "messageCount": 3,
+            "conversations": [{"conversationId": "conv-1", "messages": []}],
+            "hasMore": False,
+        })])
+        result = tool.execute(
+            "etsy_customer_messages_get",
+            {"selector": {"type": "platform_customer_id", "value": "911046840"}},
+            client,
+        )
+        self.assertEqual(result["outcome"], "complete")
+        self.assertEqual(
+            client.calls[0][1]["selector"],
+            {"type": "platform_customer_id", "value": "911046840"},
+        )
+        self.assertEqual(result["data"]["customerId"], "etsy-buyer:911046840")
+        self.assertTrue(result["data"]["isProspect"])
+        self.assertEqual(result["data"]["messageCount"], 3)
+
+    def test_message_get_recent_scope_lists_without_selector(self):
+        client = FakeClient([(200, {
+            "ok": True,
+            "scope": "recent",
+            "conversationCount": 2,
+            "totalConversationCount": 5,
+            "conversations": [{"conversationId": "conv-1"}, {"conversationId": "conv-2"}],
+            "hasMore": True,
+        })])
+        result = tool.execute("etsy_customer_messages_get", {"scope": "recent", "limit": 2}, client)
+        self.assertEqual(result["outcome"], "partial")
+        self.assertTrue(result["completeness"]["truncated"])
+        self.assertEqual(client.calls[0][1]["scope"], "recent")
+        self.assertNotIn("selector", client.calls[0][1])
+        self.assertEqual(result["data"]["scope"], "recent")
+        self.assertEqual(result["data"]["conversationCount"], 2)
+        self.assertEqual(result["data"]["totalConversationCount"], 5)
+
+    def test_message_get_requires_exactly_one_of_selector_and_recent_scope(self):
+        # selector 与 scope 同给 / 都不给 / scope 取别的值，都在包装层就拒，不打到后端猜语义。
+        for bad_input in (
+            {},
+            {"selector": {"type": "customer_id", "value": "C-1"}, "scope": "recent"},
+            {"scope": "all"},
+        ):
+            with self.assertRaisesRegex(tool.ToolFailure, "selector|scope"):
+                tool.execute("etsy_customer_messages_get", bad_input, FakeClient([]))
+
     def test_publish_replays_same_intent_until_proven_sent(self):
         request = {
             "selector": {"type": "customer_id", "value": "C-1"},
