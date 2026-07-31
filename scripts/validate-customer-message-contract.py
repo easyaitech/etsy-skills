@@ -46,6 +46,17 @@ def main() -> int:
         '"type":"customer_id"',
         '"type":"order_number"',
         '"type":"tracking_number"',
+        # 后端 >= v0.6.20.0 / v0.6.21.6 的三件能力，缺一条就是把文档改回过去时：
+        # 第 4 种 selector、潜在客户合成身份（读+发）、不指名道姓的最近来往列表。
+        '"type":"platform_customer_id"',
+        "etsy-buyer:",
+        'CUSTOMER_SELECTOR_NOT_FOUND',
+        'CUSTOMER_CONVERSATION_NOT_FOUND',
+        '"scope":"recent"',
+        "totalConversationCount",
+        "isProspect=true",
+        "platformDisplayName",
+        "messageCount",
         "direction=inbound",
         "direction=outbound",
         "sentAt",

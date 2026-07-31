@@ -10,7 +10,7 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 LINK = re.compile(r"!?\[[^\]]*]\(([^)]+)\)")
-SKIP_PARTS = {".git", ".codex", "node_modules", ".quarantine"}
+SKIP_PARTS = {".git", ".codex", ".claude", ".gstack", "node_modules", ".quarantine"}
 SKIP_FILES = {"CHANGELOG.md"}
 
 
