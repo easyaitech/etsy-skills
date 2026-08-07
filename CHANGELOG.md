@@ -11,6 +11,14 @@
   - `etsy_order_sop_propose_flow_change`（idempotencyKey + changes[]，流程定义没有 agent
     直接写口——只交提议，落库由店主点确认卡触发）。
   防重演 v1.0.14/v1.0.17 的教训：后端契约与包装层白名单同一天同步放行。
+- **定制文字必须逐字复制（2026-08-07 生产事故固化）**：agent 起草买家确认消息时把订单定制的
+  「和光频临/澄怀清朗」凭记忆重打成「和光同塵/澄懷清曠」——工具返回里明明有正确原文。两处补规则：
+  - `orders-customers/references/order-handling.md` 场景 6 新增禁忌：定制文字当轮从「定制需求」
+    工具返回原文逐字复制；繁体呈现先给原文再逐字转换；给店主的草稿附「定制文字（订单原文）」
+    一行供发前核对。
+  - `orders-customers/references/etsy-message-tools.md` §4 发布约束：后端（>= v0.6.31.1）按订单号/
+    跟踪号发送时逐字校验，相近但不一致的中文 400 `CUSTOM_TEXT_MISMATCH` 拒发并回传
+    `orderCustomizationText` 原文，照抄重发即可。
 
 ## [v1.0.17] - 2026-07-31
 
