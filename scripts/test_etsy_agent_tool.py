@@ -511,3 +511,79 @@ class EtsyAgentToolTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OrderSopToolsTest(unittest.TestCase):
+    """订单 SOP 三工具（P3）：路径显式、输入白名单收紧、信封透传、工具名校验 fail-closed。"""
+
+    def _final(self, tool_name, data=None):
+        return {
+            "schemaVersion": "etsy-agent-tool/v1",
+            "tool": tool_name,
+            "ok": True,
+            "outcome": "complete",
+            "data": data or {},
+            "completeness": {"status": "complete", "truncated": False},
+            "errors": [],
+        }
+
+    def test_get_has_explicit_path_and_whitelist(self):
+        client = FakeClient([(200, self._final("etsy_order_sop_get", {"orders": [], "count": 0}))])
+        tool.execute("etsy_order_sop_get", {"orderNumber": "4137840459"}, client)
+        self.assertEqual(client.calls[0][0], "/api/hermes/etsy/tools/order-sop/get")
+        self.assertEqual(client.calls[0][1], {"orderNumber": "4137840459"})
+        with self.assertRaises(tool.ToolFailure):
+            tool.execute("etsy_order_sop_get", {"orderNo": "x"}, FakeClient([]))
+
+    def test_update_requires_order_and_status_and_is_mutation(self):
+        client = FakeClient([(200, self._final("etsy_order_sop_update", {"orderNumber": "1", "noop": True}))])
+        tool.execute("etsy_order_sop_update", {"orderNumber": "1", "stepId": "packing", "status": "done"}, client)
+        self.assertEqual(client.calls[0][0], "/api/hermes/etsy/tools/order-sop/update")
+        with self.assertRaises(tool.ToolFailure):
+            tool.execute("etsy_order_sop_update", {"orderNumber": "1"}, FakeClient([]))
+        # 500 属于写操作：retryable 但 safe_to_retry=False（先核对真实状态再重试）
+        try:
+            tool.execute(
+                "etsy_order_sop_update",
+                {"orderNumber": "1", "stepId": "packing", "status": "done"},
+                FakeClient([(500, {"error": "BOOM"})]),
+            )
+            self.fail("expected ToolFailure")
+        except tool.ToolFailure as failure:
+            self.assertTrue(failure.retryable)
+            self.assertFalse(failure.safe_to_retry)
+
+    def test_propose_requires_idempotency_and_changes(self):
+        client = FakeClient([
+            (200, self._final("etsy_order_sop_propose_flow_change", {"proposalId": "osp_1", "proposalStatus": "pending_confirmation"}))
+        ])
+        tool.execute(
+            "etsy_order_sop_propose_flow_change",
+            {"idempotencyKey": "k1", "changes": [{"op": "disable", "stepId": "followup"}]},
+            client,
+        )
+        self.assertEqual(client.calls[0][0], "/api/hermes/etsy/tools/order-sop/propose-flow-change")
+        with self.assertRaises(tool.ToolFailure):
+            tool.execute("etsy_order_sop_propose_flow_change", {"changes": []}, FakeClient([]))
+
+    def test_final_tool_name_mismatch_is_fail_closed(self):
+        client = FakeClient([(200, self._final("get_etsy_orders"))])
+        with self.assertRaises(tool.ToolFailure):
+            tool.execute("etsy_order_sop_get", {"orderNumber": "1"}, client)
+
+    def test_envelope_failure_passes_through_with_closed_set_code(self):
+        failed = {
+            "schemaVersion": "etsy-agent-tool/v1",
+            "tool": "etsy_order_sop_update",
+            "ok": False,
+            "outcome": "failed",
+            "data": {},
+            "completeness": {"status": "failed", "truncated": False},
+            "errors": [{"code": "ORDER_SOP_ORDER_NOT_FOUND", "message": "x", "retryable": False, "safeToRetry": True}],
+        }
+        result = tool.execute(
+            "etsy_order_sop_update",
+            {"orderNumber": "999", "stepId": "packing", "status": "done"},
+            FakeClient([(200, failed)]),
+        )
+        self.assertEqual(result["errors"][0]["code"], "ORDER_SOP_ORDER_NOT_FOUND")
