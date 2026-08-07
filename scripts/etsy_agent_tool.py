@@ -27,6 +27,9 @@ TOOLS = {
     "describe_etsy_stats",
     "summarize_etsy_stats",
     "get_etsy_ads",
+    "etsy_order_sop_get",
+    "etsy_order_sop_update",
+    "etsy_order_sop_propose_flow_change",
 }
 RUNTIME_FIELDS = {
     "tenantId",
@@ -552,6 +555,32 @@ def run_ads_get(client: Client, data: dict[str, Any]) -> dict[str, Any]:
     return validate_final("get_etsy_ads", result)
 
 
+def run_order_sop_get(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+    require_keys(data, {"orderNumber", "buyerName"})
+    status, result = client.post("/api/hermes/etsy/tools/order-sop/get", data)
+    if status >= 400 or result.get("ok") is False and result.get("schemaVersion") != SCHEMA_VERSION:
+        raise_http(status, result)
+    return validate_final("etsy_order_sop_get", result)
+
+
+def run_order_sop_update(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+    # 进度唯一的 agent 写口：stepId/stepName 二选一由后端校验，status 只有 done/undo。
+    require_keys(data, {"orderNumber", "stepId", "stepName", "status"}, {"orderNumber", "status"})
+    status, result = client.post("/api/hermes/etsy/tools/order-sop/update", data)
+    if status >= 400 or result.get("ok") is False and result.get("schemaVersion") != SCHEMA_VERSION:
+        raise_http(status, result, mutation=True)
+    return validate_final("etsy_order_sop_update", result)
+
+
+def run_order_sop_propose_flow_change(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+    # 流程定义没有 agent 直接写口：只交提议，落库由店主确认卡触发。
+    require_keys(data, {"idempotencyKey", "changes"}, {"idempotencyKey", "changes"})
+    status, result = client.post("/api/hermes/etsy/tools/order-sop/propose-flow-change", data)
+    if status >= 400 or result.get("ok") is False and result.get("schemaVersion") != SCHEMA_VERSION:
+        raise_http(status, result, mutation=True)
+    return validate_final("etsy_order_sop_propose_flow_change", result)
+
+
 def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, Any]:
     if tool not in TOOLS:
         raise ToolFailure("UNKNOWN_TOOL", f"未知工具：{tool}")
@@ -573,6 +602,12 @@ def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, An
         return run_stats_summarize(runtime, data)
     if tool == "get_etsy_ads":
         return run_ads_get(runtime, data)
+    if tool == "etsy_order_sop_get":
+        return run_order_sop_get(runtime, data)
+    if tool == "etsy_order_sop_update":
+        return run_order_sop_update(runtime, data)
+    if tool == "etsy_order_sop_propose_flow_change":
+        return run_order_sop_propose_flow_change(runtime, data)
     raise ToolFailure("UNKNOWN_TOOL", f"未知工具：{tool}")
 
 
