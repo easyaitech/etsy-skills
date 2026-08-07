@@ -2,7 +2,7 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [v1.0.18] - 2026-08-07
+## [v1.0.19] - 2026-08-07
 
 - **订单 SOP 三工具进包装层白名单**（配套后端 v0.6.31.0，docs/order-sop-plan.md P3）：
   - `etsy_order_sop_get`（orderNumber/buyerName 二选一，查订单 SOP 清单与当前进度）；
@@ -11,6 +11,9 @@
   - `etsy_order_sop_propose_flow_change`（idempotencyKey + changes[]，流程定义没有 agent
     直接写口——只交提议，落库由店主点确认卡触发）。
   防重演 v1.0.14/v1.0.17 的教训：后端契约与包装层白名单同一天同步放行。
+
+## [v1.0.18] - 2026-08-07
+
 - **定制文字必须逐字复制（2026-08-07 生产事故固化）**：agent 起草买家确认消息时把订单定制的
   「和光频临/澄怀清朗」凭记忆重打成「和光同塵/澄懷清曠」——工具返回里明明有正确原文。两处补规则：
   - `orders-customers/references/order-handling.md` 场景 6 新增禁忌：定制文字当轮从「定制需求」
