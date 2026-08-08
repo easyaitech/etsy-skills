@@ -128,7 +128,8 @@ if [[ -d "$_shared_src" ]]; then
 fi
 
 mkdir -p "$BIN_DIR"
-chmod +x "$INSTALL_DIR/scripts/etsy-stack" "$INSTALL_DIR/scripts/check-update.sh" "$INSTALL_DIR/scripts/etsy_agent_tool.py"
+chmod +x "$INSTALL_DIR/scripts/etsy-stack" "$INSTALL_DIR/scripts/check-update.sh" "$INSTALL_DIR/scripts/etsy_agent_tool.py" \
+  "$INSTALL_DIR/scripts/install_skill_package.py"
 ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/ecommerce-stack"
 ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/etsy-stack"
 for _etsy_agent_tool in \
@@ -143,6 +144,9 @@ for _etsy_agent_tool in \
 do
   ln -sfn "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$BIN_DIR/$_etsy_agent_tool"
 done
+# 店主自带技能包的安装器。与上面 8 个 etsy 工具不同，它不是「查平台数据」而是「把云盘里的
+# .skill 包解到本 profile 的 skills/ 下」——名字保持动词形态，agent 照契约直接敲。
+ln -sfn "$INSTALL_DIR/scripts/install_skill_package.py" "$BIN_DIR/install_skill_package"
 ok "命令安装到：$BIN_DIR/ecommerce-stack（兼容旧命令：$BIN_DIR/etsy-stack）"
 ok "Etsy Agent 工具安装到：$BIN_DIR/{etsy_listings_get,etsy_customer_messages_get,etsy_customer_messages_publish,get_etsy_orders,get_etsy_stats,describe_etsy_stats,summarize_etsy_stats,get_etsy_ads}"
 
