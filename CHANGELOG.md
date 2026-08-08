@@ -2,6 +2,21 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.20] - 2026-08-09
+
+- **店主自带技能包终于装得进去了**（2026-08-09 店主实测撞墙）：店主把自己做的
+  `fublessings-letter.skill` 传进飞书云盘素材库，店长只列得出文件名和 file token、**读不到字节**，
+  于是只能回一句「我读不到这个 skill 里写了什么，没法核实」——整条自助上传的路在最后一米断掉。
+  - 新增 `scripts/install_skill_package.py`（装为 `~/.local/bin/install_skill_package`）：
+    走后端 `/api/hermes/skills/package-download` 取包 → 本地独立校验（单一顶层目录 / 名字合法且
+    不占用内置技能名 / 有 SKILL.md 且 frontmatter `name` 与目录名一致 / 无 zip slip / 无软链 /
+    体积与压缩比闸）→ 原子解到 `$HERMES_HOME/skills/<技能名>/`。
+    `--dry-run` 只看不装；`--force` 覆盖同名（旧的先备份到 `.replaced/`）；落点是软链
+    （官方技能的分发形态）时一律拒绝覆盖。配套后端 >= v0.6.43.0。
+  - **装完不需要重启网关**：`skills_list` / `skill_view` 每次调用都现扫磁盘，新技能立刻可用。
+  - 装的是**本 profile 私有目录**，绝不写共享 clone——那份是官方契约的分发源，
+    写进去会立刻泄露到所有租户（见 2026-06-21 的跨客户技能泄露）。
+
 ## [v1.0.19] - 2026-08-07
 
 - **订单 SOP 三工具进包装层白名单**（配套后端 v0.6.31.0，docs/order-sop-plan.md P3）：
