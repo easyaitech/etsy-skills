@@ -22,6 +22,9 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install
 - 安装店主自带技能包的安装器 `install_skill_package`：把店主放进飞书云盘素材库「技能」目录的
   `.skill` / `.zip` 包解到**本 profile** 的 `~/.hermes/skills/` 下（不碰共享 clone）。
   详见 [`scripts/install_skill_package.py`](scripts/install_skill_package.py) 顶部说明
+- 安装生成物上行口 `upload_to_drive`：把店长自己生成的文件（PDF 信件 / 报表 / 导出表）传进店主
+  飞书云盘素材库（缺省「输出」目录），回一条可直接发给店主的链接。
+  详见 [`scripts/drive_upload_tool.py`](scripts/drive_upload_tool.py) 顶部说明
 
 八个 Etsy 工具只接收业务 JSON，不接收 tenant、token 或内部轮询 ID；统一最终结构见
 [`shared/etsy-agent-tools.md`](shared/etsy-agent-tools.md)。
