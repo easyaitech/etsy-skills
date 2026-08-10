@@ -7,11 +7,11 @@
 | 获取 | `etsy_customer_messages_get` | 按 selector 获取唯一 customer 的正式双向文字消息，或按 `scope="recent"` 列出最近有来往的会话 |
 | 发布 | `etsy_customer_messages_publish` | 真实发送并等待可证明终态 |
 
-旧 `etsy-dm` 会话查询、回复草稿和订单消息端点已退役，**不得调用、不得降级回旧工具**。V1 只支持文字，不支持图片或附件。
+旧 `etsy-dm` 会话查询、回复草稿和订单消息端点已退役，**不得调用、不得降级回旧工具**。发布支持文字正文 + 可选图片附件（`imageAssetUrls`，见 §4）；纯图片、无文字的消息不支持。
 
 运行时按 [`../../shared/etsy-agent-tools.md`](../../shared/etsy-agent-tools.md) 自动注入地址、租户和鉴权。Agent 输入不得带 `tenantId` 或 token，也不要读取、打印或让用户提供这些值。
 
-后端版本要求：`platform_customer_id`、`scope="recent"` 与潜在客户合成身份需后端 >= v0.6.20.0；`customer_id` 接受 `etsy-buyer:…` 与潜在客户真实发送需 >= v0.6.21.6。
+后端版本要求：`platform_customer_id`、`scope="recent"` 与潜在客户合成身份需后端 >= v0.6.20.0；`customer_id` 接受 `etsy-buyer:…` 与潜在客户真实发送需 >= v0.6.21.6；图片附件（`imageAssetUrls`）需后端 >= v0.6.48.0，且店主浏览器插件 >= 0.5.140——插件版本不足时带图发布会得到 426 `BROWSER_TOOL_UPGRADE_REQUIRED`，如实告知店主等插件自动更新后再发，不要降级成只发文字。
 
 ## 1. 唯一定位 customer
 
@@ -90,7 +90,7 @@ Agent 输入（不带 `selector`；`selector` 与 `scope` 必须恰好提供一�
 
 - 用户已经给出明确收件目标、完整原文并要求发送：该请求本身就是授权，不重复确认。
 - 正文由你起草或修改：先完整展示正文，取得用户明确确认后再发布。
-- 不支持图片、附件或空正文；正文最多 4000 字符，超限整条拒绝，不截断。
+- 正文不能为空；最多 4000 字符，超限整条拒绝，不截断。图片以 `imageAssetUrls` 作为附件随文字一起发（见下），纯图片、无文字的消息不支持。带图发送前必须跟用户确认要发哪几张图。
 - 正文里的定制文字必须逐字取自订单「定制需求」工具返回原文（简繁形态也不能私换）。按订单号 /
   跟踪号发送时后端会逐字校验：与该单定制文字相近但不一致的中文会被 400 `CUSTOM_TEXT_MISMATCH`
   拒发，返回附 `orderCustomizationText` 原文——照原文改对重发即可，不是后端故障（真实事故
@@ -106,13 +106,20 @@ Agent 输入：
 ```json
 {
   "selector": {"type":"order_number","value":"ORDER-NUMBER"},
+  "conversationId": "etsy:123456789",
+  "expectedBuyerName": "店主确认的买家展示名",
   "idempotencyKey": "稳定且仅代表这一次业务发送意图的非秘密键",
   "messageType": "text",
-  "content": "完整消息正文"
+  "content": "完整消息正文",
+  "imageAssetUrls": ["系统提供的本租户签名图片链接（可选，最多 3 项）"]
 }
 ```
 
-同一业务发送意图从首次创建到查询最终状态，必须始终使用**相同 selector、相同完整正文和相同 `idempotencyKey`**：
+- `conversationId` **必填**：原样使用获取结果里的值（形如 `etsy:123`），不要自己拼、也不要放进 selector。
+- `expectedBuyerName` **必填**：店主确认的收件买家展示名，服务端用它做收件人身份复核，对不上整条拒发。
+- `imageAssetUrls` 可选（最多 3 项）：元素只能是**系统在对话里提供的本租户内部签名图片链接**（店主在飞书发图后系统自动生成的 `/api/feishu/message-assets/…` 链接，7 天内有效），逐字原样传；不能填外部图片网址、不能自己拼链接。单张限 8 MiB、仅 JPEG/PNG/GIF/WebP。被拒时按返回错误码处理：`IMAGE_ATTACHMENT_NOT_FOUND`（链接过期，请店主重发图片）、`IMAGE_ATTACHMENT_TOO_LARGE`（请店主压缩重发）、`IMAGE_ATTACHMENT_FORBIDDEN`（不是系统给的链接）等，错误里都带人话提示，逐字复述即可。
+
+同一业务发送意图从首次创建到查询最终状态，必须始终使用**相同 selector、相同完整正文、相同附件清单和相同 `idempotencyKey`**：
 
 - 同键同内容重放只返回同一 job，不重复发送。
 - 同键换客户、会话或正文会冲突；修改后的新发送意图必须使用新键。

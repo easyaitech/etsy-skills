@@ -413,6 +413,8 @@ class EtsyAgentToolTest(unittest.TestCase):
     def test_publish_replays_same_intent_until_proven_sent(self):
         request = {
             "selector": {"type": "customer_id", "value": "C-1"},
+            "conversationId": "etsy:70001",
+            "expectedBuyerName": "G G",
             "idempotencyKey": "stable",
             "messageType": "text",
             "content": "hello",
@@ -431,6 +433,42 @@ class EtsyAgentToolTest(unittest.TestCase):
         self.assertEqual(client.calls[0][0], "/api/hermes/etsy/tools/customer-messages/publish")
         self.assertEqual(client.calls[0][1], client.calls[1][1])
 
+    def test_publish_passes_image_asset_urls_through_verbatim(self):
+        # v1.0.22：imageAssetUrls（站内信图片附件）必须原样透传——两层白名单任何一层
+        # 挡掉它，契约就又变成「写了一个用不了的参数」。
+        client = FakeClient([
+            (201, {"ok": True, "job": {
+                "status": "sent",
+                "externalMessageId": "m-img",
+                "platformSentAt": "2026-08-10T00:00:00.000Z",
+            }}),
+        ])
+        image_urls = ["https://app.example.com/api/feishu/message-assets/tenant-a_0f.jpg?expiresAt=x&sig=y"]
+        result = tool.execute("etsy_customer_messages_publish", {
+            "selector": {"type": "customer_id", "value": "C-1"},
+            "conversationId": "etsy:70001",
+            "expectedBuyerName": "G G",
+            "idempotencyKey": "stable-img",
+            "messageType": "text",
+            "content": "photos attached",
+            "imageAssetUrls": image_urls,
+        }, client)
+        self.assertEqual(result["outcome"], "complete")
+        self.assertEqual(client.calls[0][1]["imageAssetUrls"], image_urls)
+
+    def test_publish_requires_recipient_evidence_fields(self):
+        # 后端 v2 硬要求 conversationId + expectedBuyerName；包装层就地拒绝并点名字段，
+        # 不让缺证据的请求打到后端再猜语义。
+        client = FakeClient([])
+        with self.assertRaisesRegex(tool.ToolFailure, "缺少字段.*(conversationId|expectedBuyerName)"):
+            tool.execute("etsy_customer_messages_publish", {
+                "selector": {"type": "customer_id", "value": "C-1"},
+                "idempotencyKey": "stable",
+                "messageType": "text",
+                "content": "hello",
+            }, client)
+        self.assertEqual(client.calls, [])
+
     def test_publish_result_unknown_is_not_safe_to_retry(self):
         client = FakeClient([(200, {"ok": True, "job": {
             "status": "result_unknown",
@@ -438,6 +476,8 @@ class EtsyAgentToolTest(unittest.TestCase):
         }})])
         result = tool.execute("etsy_customer_messages_publish", {
             "selector": {"type": "customer_id", "value": "C-1"},
+            "conversationId": "etsy:70001",
+            "expectedBuyerName": "G G",
             "idempotencyKey": "stable",
             "messageType": "text",
             "content": "hello",
@@ -457,6 +497,8 @@ class EtsyAgentToolTest(unittest.TestCase):
         with self.assertRaises(tool.ToolFailure) as raised:
             tool.execute("etsy_customer_messages_publish", {
                 "selector": {"type": "customer_id", "value": "C-1"},
+                "conversationId": "etsy:70001",
+                "expectedBuyerName": "G G",
                 "idempotencyKey": "stable",
                 "messageType": "text",
                 "content": "hello",

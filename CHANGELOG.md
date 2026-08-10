@@ -2,6 +2,18 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.22] - 2026-08-10
+
+- **站内信发布支持图片附件 + 修包装层漏字段**（配套主仓 v0.6.48.0 / 插件 0.5.140）：
+  - `etsy_customer_messages_publish` 白名单放行 `imageAssetUrls`（≤3 项，仅系统发给 agent 的
+    本租户签名图片链接，随文字一起发；纯图片、无文字仍不支持）。
+  - **补上一直缺的 `conversationId` / `expectedBuyerName`**：后端 publish v2 起就硬要求这两个
+    收件人身份字段，包装层白名单却从未放行——照文档走包装层调用必得 400
+    `EXPECTED_BUYER_NAME_REQUIRED`，又一例「契约写了但包装层挡掉」（同 `requireLive`、
+    `scope="recent"` 的教训）。现在两字段必填、缺了就地点名拒绝。
+  - `orders-customers/references/etsy-message-tools.md` §4 输入契约同步补齐（三字段 + 附件
+    规则 + 426 插件版本闸的话术）；`validate-customer-message-contract.py` 锚点跟着换代。
+
 ## [v1.0.21] - 2026-08-09
 
 - **店长生成的文件终于交得出去了**（2026-08-09 店主实测）：店长按技能生成了一封 PDF 信，

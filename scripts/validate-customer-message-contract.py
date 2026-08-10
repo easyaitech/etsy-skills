@@ -73,7 +73,11 @@ def main() -> int:
         "每个会话最多保留最近 100 条",
         "每个租户最多保留最近",
         "5000 条",
-        "不支持图片或附件",
+        # v1.0.22：发布支持图片附件（imageAssetUrls），但纯图片、无文字仍不支持——
+        # 契约必须同时讲清「怎么带图」和「不能只发图」。
+        "imageAssetUrls",
+        "纯图片、无文字的消息不支持",
+        "expectedBuyerName",
     )
     failures += require(
         "orders-customers/SKILL.md",
