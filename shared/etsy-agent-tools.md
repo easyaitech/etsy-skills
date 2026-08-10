@@ -6,7 +6,7 @@
 |---|---|---|
 | `etsy_listings_get` | 读取公开或店主后台 Listing | 只读 |
 | `etsy_customer_messages_get` | 获取唯一客户的双向消息 | 只读 |
-| `etsy_customer_messages_publish` | 真实发布一条已授权文字消息 | 对外写 |
+| `etsy_customer_messages_publish` | 真实发布一条已授权文字消息（可附最多 3 张图片） | 对外写 |
 | `get_etsy_orders` | 跨 New / Completed 读取订单 | 只读 |
 | `get_etsy_stats` | 按日期、Listing、指标和流量来源读取已采集的 Stats 历史 | 只读 |
 | `describe_etsy_stats` | 发现实际可用日期、维度、指标、Listing、缺口和排除范围 | 只读 |

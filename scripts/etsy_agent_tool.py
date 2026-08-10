@@ -387,10 +387,15 @@ def run_messages_get(client: Client, data: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_messages_publish(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+    # v1.0.22：补齐与后端 v2 的字段差。后端自 publish v2 起就要求 conversationId 与
+    # expectedBuyerName（收件人身份证据），此前包装层白名单没放行、也没要求——照文档调用
+    # 必得 400 EXPECTED_BUYER_NAME_REQUIRED，又一例「契约写了但包装层挡掉」（同 requireLive /
+    # scope="recent" 的教训）。imageAssetUrls 是 v0.6.48.0 的图片附件（≤3 项，只能是系统
+    # 发给 agent 的本租户签名图片链接，随文字一起发）。
     require_keys(
         data,
-        {"selector", "conversationId", "idempotencyKey", "messageType", "content"},
-        {"selector", "idempotencyKey", "messageType", "content"},
+        {"selector", "conversationId", "expectedBuyerName", "idempotencyKey", "messageType", "content", "imageAssetUrls"},
+        {"selector", "conversationId", "expectedBuyerName", "idempotencyKey", "messageType", "content"},
     )
     deadline = time.monotonic() + 12 * 60
     while True:
