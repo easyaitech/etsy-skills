@@ -397,6 +397,10 @@ def run_messages_publish(client: Client, data: dict[str, Any]) -> dict[str, Any]
         {"selector", "conversationId", "expectedBuyerName", "idempotencyKey", "messageType", "content", "imageAssetUrls"},
         {"selector", "conversationId", "expectedBuyerName", "idempotencyKey", "messageType", "content"},
     )
+    # ⚠️ 主仓 v0.6.49.0 起，publish **不再直接发送**：任务停在 awaiting_confirmation，服务端把
+    # 最终文案+图片做成飞书确认卡发给店主，店主点「确认发送」才进 queued。所以这里绝不能像
+    # 以前那样一路轮询等终态——那是在等一个人，而人可能几分钟后才看手机，甚至选择不发。
+    # 拿到 awaiting_confirmation 就立刻返回，让 agent 结束这一轮去告诉店主看卡。
     deadline = time.monotonic() + 12 * 60
     while True:
         try:
@@ -423,6 +427,40 @@ def run_messages_publish(client: Client, data: dict[str, Any]) -> dict[str, Any]
                 action_required="verify_status_only",
             )
         job_status = job.get("status")
+        if job_status == "awaiting_confirmation":
+            confirmation = job.get("confirmation") if isinstance(job.get("confirmation"), dict) else {}
+            card_delivered = bool(result.get("cardDelivered") or confirmation.get("cardDelivered"))
+            return envelope(
+                "etsy_customer_messages_publish",
+                "complete",
+                data={
+                    "status": "awaiting_confirmation",
+                    "cardDelivered": card_delivered,
+                    **({"expiresAt": confirmation["expiresAt"]} if confirmation.get("expiresAt") else {}),
+                    "note": (
+                        "还没有发送。系统已把最终文案（和图片）做成确认卡发到店主飞书，"
+                        "只有店主在卡上点「确认发送」才会真的发出去。你不能替店主确认，"
+                        "也不要再重复提交同一条；告诉店主去看那张卡即可。"
+                        "要查结果就用**同一份请求、同一个 idempotencyKey** 再调一次本工具。"
+                        if card_delivered else
+                        "还没有发送，而且确认卡这次没能送到店主的飞书（任务停在等确认，谁也领不走）。"
+                        "请用**同一个 idempotencyKey** 原样重试一次补投这张卡；不要换 key 重建任务。"
+                    ),
+                },
+            )
+        if job_status == "cancelled":
+            # 店主在确认卡上点了「我要修改」或「取消不发」，或有人撤了单。一个字都没发出去。
+            return envelope(
+                "etsy_customer_messages_publish",
+                "failed",
+                data={"status": "cancelled"},
+                errors=[{
+                    "code": "PUBLISH_CANCELLED",
+                    "message": str(job.get("note") or "店主没有确认这条消息，未发送"),
+                    "retryable": False,
+                    "safeToRetry": False,
+                }],
+            )
         if job_status == "sent" and job.get("externalMessageId") and job.get("platformSentAt"):
             return envelope(
                 "etsy_customer_messages_publish",

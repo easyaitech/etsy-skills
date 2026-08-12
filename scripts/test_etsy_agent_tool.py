@@ -469,6 +469,92 @@ class EtsyAgentToolTest(unittest.TestCase):
             }, client)
         self.assertEqual(client.calls, [])
 
+    def test_publish_stops_at_the_owner_confirmation_card_instead_of_polling(self):
+        # 主仓 v0.6.49.0：publish 不再直接发，任务停在 awaiting_confirmation 等店主点卡。
+        # 这里在等一个人——绝不能像等 queued 那样轮询到 12 分钟超时，必须当场返回让 agent 收工。
+        client = FakeClient([(201, {
+            "ok": True,
+            "cardDelivered": True,
+            "job": {
+                "status": "awaiting_confirmation",
+                "confirmation": {"cardDelivered": True, "expiresAt": "2026-08-12T05:00:00.000Z"},
+            },
+        })])
+        with patch.object(tool.time, "sleep") as slept:
+            result = tool.execute("etsy_customer_messages_publish", {
+                "selector": {"type": "customer_id", "value": "C-1"},
+                "conversationId": "etsy:70001",
+                "expectedBuyerName": "G G",
+                "idempotencyKey": "stable-gate",
+                "messageType": "text",
+                "content": "hello",
+            }, client)
+        self.assertEqual(result["outcome"], "complete")
+        self.assertEqual(result["data"]["status"], "awaiting_confirmation")
+        self.assertTrue(result["data"]["cardDelivered"])
+        self.assertIn("还没有发送", result["data"]["note"])
+        self.assertEqual(len(client.calls), 1)
+        slept.assert_not_called()
+
+    def test_publish_tells_agent_to_replay_same_key_when_the_card_was_not_delivered(self):
+        # 卡没送到 = 闸没落地。正确动作是同键补投，不是换键重建任务。
+        client = FakeClient([(201, {
+            "ok": True,
+            "cardDelivered": False,
+            "job": {"status": "awaiting_confirmation", "confirmation": {"cardDelivered": False}},
+        })])
+        result = tool.execute("etsy_customer_messages_publish", {
+            "selector": {"type": "customer_id", "value": "C-1"},
+            "conversationId": "etsy:70001",
+            "expectedBuyerName": "G G",
+            "idempotencyKey": "stable-undelivered",
+            "messageType": "text",
+            "content": "hello",
+        }, client)
+        self.assertFalse(result["data"]["cardDelivered"])
+        self.assertIn("同一个 idempotencyKey", result["data"]["note"])
+
+    def test_publish_reports_owner_decline_as_a_proven_not_sent_failure(self):
+        # 店主点了「我要修改」/「取消不发」：一个字都没发出去，且不能用原键重投。
+        client = FakeClient([(200, {"ok": True, "job": {
+            "status": "cancelled",
+            "note": "店主在确认卡上选择了「我要修改」，本稿未发送",
+        }})])
+        result = tool.execute("etsy_customer_messages_publish", {
+            "selector": {"type": "customer_id", "value": "C-1"},
+            "conversationId": "etsy:70001",
+            "expectedBuyerName": "G G",
+            "idempotencyKey": "stable-declined",
+            "messageType": "text",
+            "content": "hello",
+        }, client)
+        self.assertEqual(result["outcome"], "failed")
+        self.assertEqual(result["data"]["status"], "cancelled")
+        self.assertEqual(result["errors"][0]["code"], "PUBLISH_CANCELLED")
+        self.assertFalse(result["errors"][0]["safeToRetry"])
+
+    def test_publish_still_polls_to_a_proven_terminal_after_the_owner_confirmed(self):
+        # 店主确认之后再用同一份请求查一次，仍走原来的「轮询到可证明终态」路径。
+        client = FakeClient([
+            (200, {"ok": True, "job": {"status": "queued"}}),
+            (200, {"ok": True, "job": {
+                "status": "sent",
+                "externalMessageId": "m-9",
+                "platformSentAt": "2026-08-12T05:10:00.000Z",
+            }}),
+        ])
+        with patch.object(tool.time, "sleep"):
+            result = tool.execute("etsy_customer_messages_publish", {
+                "selector": {"type": "customer_id", "value": "C-1"},
+                "conversationId": "etsy:70001",
+                "expectedBuyerName": "G G",
+                "idempotencyKey": "stable-confirmed",
+                "messageType": "text",
+                "content": "hello",
+            }, client)
+        self.assertEqual(result["data"]["status"], "sent")
+        self.assertEqual(result["data"]["externalMessageId"], "m-9")
+
     def test_publish_result_unknown_is_not_safe_to_retry(self):
         client = FakeClient([(200, {"ok": True, "job": {
             "status": "result_unknown",

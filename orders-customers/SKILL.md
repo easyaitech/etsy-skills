@@ -105,7 +105,7 @@ layer: foundation
 2. 读 BRAND.md（客服姿态 / 文案语调）+ SHOP.md（政策原文）+ COMMERCE_PLATFORM.md（平台买家语言 / 消息渠道 / 自动化边界）
 3. 读 `references/order-handling.md`：按场景找 SOP（差评 / 退货 / 定制等）
 4. 输出客服回复草稿（买家语言按目标平台 preset 的「买家语言」，最终以 COMMERCE_PLATFORM.md 为准），整篇展示给用户
-5. 用户确认后，**用户自己**复制到目标平台后台 / 客服入口发送（本 skill 不替操作平台）。Etsy 是唯一例外：按 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 调正式发布工具**真实发送**。用户已经给出明确收件目标和完整原文并要求发送时，该请求本身就是授权，不重复确认；如果正文由你起草或修改，必须先完整展示并取得明确确认。可用 `customerId`、订单号、快递单号或 Etsy 数字买家 ID 定位（潜在客户没下过单也照常可发，见该文档），不向用户索要 Etsy 会话 ID。
+5. 用户确认后，**用户自己**复制到目标平台后台 / 客服入口发送（本 skill 不替操作平台）。Etsy 是唯一例外：按 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 调正式发布工具**真实发送**。⚠️ 调用发布工具**不等于发出去了**：后端会把最终稿做成一张**店主确认卡**发到店主飞书（逐字正文 + 图片 + 确认/修改/取消三个按钮），店主点「确认发送」才真的发。拿到 `status=awaiting_confirmation` 就告诉店主去点那张卡并结束本轮，绝不能说成已发送、也不要换幂等键再提交一次（见该文档 §4.1）。用户已经给出明确收件目标和完整原文并要求发送时，该请求本身就是授权，不重复确认；如果正文由你起草或修改，必须先完整展示并取得明确确认。可用 `customerId`、订单号、快递单号或 Etsy 数字买家 ID 定位（潜在客户没下过单也照常可发，见该文档），不向用户索要 Etsy 会话 ID。
 6. 落地（**回写要真正落进 Base，不是只在对话里记下**——遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量）：
    - 把回复要点 + 用户最终发出的版本回写到 `Orders 订单` 表的"客服记录"字段；用 lark-base 写入拿到成功返回后带一句回执（**含可点击的飞书 Base 链接**，优先深链到该订单记录）
    - 如果该次互动反映客户特征（VIP、定制粉、投诉户），更新 `Customers 客户` 表标签
@@ -138,7 +138,7 @@ layer: foundation
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执）。本 skill 特有禁区：
 
-- **不替用户发平台消息 / 发货 / 退款 / 售后审核**：只产文案 + 维护 Base；真实操作由用户在平台后台、ERP 或专门平台 skill 执行。唯一例外是 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 的 Etsy 正式发布工具：只发送用户明确指定或确认的完整文字；同一发送意图始终复用同一个幂等键查询状态，`queued` / `dispatched` 不得声称已发送，`result_unknown` 绝不自动重发。
+- **不替用户发平台消息 / 发货 / 退款 / 售后审核**：只产文案 + 维护 Base；真实操作由用户在平台后台、ERP 或专门平台 skill 执行。唯一例外是 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 的 Etsy 正式发布工具：只发送用户明确指定或确认的完整文字，且发出前必须由店主在飞书**确认卡**上点「确认发送」（`awaiting_confirmation` 不是已发送）；同一发送意图始终复用同一个幂等键查询状态，`queued` / `dispatched` 不得声称已发送，`result_unknown` 绝不自动重发。
 - **客户隐私**：邮箱、地址、订单号属敏感数据——Agent 输出里用脱敏写法（如 `订单 #****1234`），不要大段重复。**唯一例外**：店主本人为发货 / 打单 / 核对地址而问自己订单的收件信息时，完整展示现查到的 `fullAddress` / `phone` 原文，不脱敏、不打码（脱敏到店主自己都用不了，就是把工具作废）；写进 Base、发给买家、放进对外文案或分享给第三方时，仍按脱敏写法。现查到的完整地址 / 电话**一律不回写 Base**（Base 只存 `收件地区`，见 [`references/base-schema.md`](references/base-schema.md)）。详见 [`references/etsy-order-read.md`](references/etsy-order-read.md) §隐私边界
 - **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘 → 回执；不要只在对话里报改动而不写 Base
 - **客服回复**：除 Etsy 正式发布工具外，用户自己复制到目标平台后台 / 客服入口发送；Etsy 按新工具真实发送。发出后把用户最终版本回写到 `Orders 订单` 表的"客服记录"字段
