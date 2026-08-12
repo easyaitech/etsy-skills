@@ -78,10 +78,19 @@ def main() -> int:
         "imageAssetUrls",
         "纯图片、无文字的消息不支持",
         "expectedBuyerName",
+        # v1.0.23：发送前的店主确认卡（主仓 v0.6.49.0）。这是发送链路唯一的人工闸——
+        # 契约里少讲一条，agent 就会把「已送确认卡」汇报成「已发送」，或者换个键再提交一次。
+        "awaiting_confirmation",
+        "确认发送",
+        "cardDelivered",
+        "PUBLISH_CONFIRMATION_PENDING_EXISTS",
+        "PUBLISH_CONFIRMATION_CHAT_MISSING",
+        "cancelled",
     )
     failures += require(
         "orders-customers/SKILL.md",
         "references/etsy-message-tools.md",
+        "店主确认卡",
         "调正式获取工具读取该 customer 的双向消息",
         "调正式发布工具",
         "get_etsy_orders",

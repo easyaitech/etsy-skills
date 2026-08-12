@@ -2,6 +2,26 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.23] - 2026-08-12
+
+- **站内信发布接上「发送前的店主确认卡」**（配套主仓 v0.6.49.0）。后端自 v0.6.49.0 起 publish
+  **不再直接发送**：任务停在新状态 `awaiting_confirmation`，服务端把最终文案与图片做成一张飞书
+  确认卡发给店主，店主点「确认发送」才进队列真发。包装层与契约同步：
+  - **修一个当场就会炸的缺口**：`run_messages_publish` 的状态判定只认 `queued`/`dispatched`，
+    新状态直接落进 `INVALID_RESPONSE：未知发布状态：awaiting_confirmation`——卡明明已经发到店主
+    手上了，agent 却收到一个像后端故障的错误。现在 `awaiting_confirmation` **当场返回**
+    （`outcome=complete` + `data.status` + `cardDelivered` + 一句「还没有发送，去让店主点卡」），
+    **绝不轮询**：那 12 分钟的轮询窗口是给机器等机器的，不是给机器等人的。
+  - 新增 `cancelled` 终态处理（店主点了「我要修改」/「取消不发」）：`outcome=failed` +
+    `PUBLISH_CANCELLED`，明确「一个字都没发出去」且不可用原键重投。此前同样会落进 `INVALID_RESPONSE`。
+  - 契约 §4.1 新写「发送前的店主确认卡」：拿到 `awaiting_confirmation` 只做一件事——告诉店主去点卡
+    然后结束本轮；查结果=用同一份请求同一个 `idempotencyKey` 再调一次；`cardDelivered=false`=同键
+    补投不要换键；两个 409（`PUBLISH_CONFIRMATION_PENDING_EXISTS` /
+    `PUBLISH_CONFIRMATION_CHAT_MISSING`）都发生在一个字都没发出去的阶段，不许汇报成「发送失败」。
+  - §5 状态表补 `awaiting_confirmation` / `cancelled` 两行；`expired` 补上「含确认卡超时未处理」。
+    SKILL.md 与 platforms/etsy.md 的「真实发送」措辞一并改成「提交后还要店主点卡才发」。
+  - 契约校验脚本钉死上述关键词，避免下次改文档时把这道闸悄悄写没。
+
 ## [v1.0.22] - 2026-08-10
 
 - **站内信发布支持图片附件 + 修包装层漏字段**（配套主仓 v0.6.48.0 / 插件 0.5.140）：
