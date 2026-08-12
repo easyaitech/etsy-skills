@@ -2,6 +2,16 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.24] - 2026-08-12
+
+- **Pinterest 自动发布从 Agent 自律升级为服务端幂等合同**（配套主仓 v0.6.49.4）：
+  - 工具返回 `dispatched:true` 后立即停手，不再重派同一事项；
+  - 普通自动发布只走 `/api/tools/pinterest/publish-intents/enqueue`，由服务端按来源、业务 key、
+    解析后的素材内容和严格全表分页去重；无时区排期、marker/payload 漂移、带执行证据的 legacy 行
+    都 fail-closed，人读任务 ID 不再承担唯一性；
+  - 撤回只走 `/api/tools/pinterest/publish-intents/cancel`，存在锁、job、失败处置或发布证据时 fail-closed；
+  - 禁止通用 Base writer 绕过专用入口激活、取消或改写带 marker 的 Pinterest 发布意图。
+
 ## [v1.0.23] - 2026-08-12
 
 - **站内信发布接上「发送前的店主确认卡」**（配套主仓 v0.6.49.0）。后端自 v0.6.49.0 起 publish
