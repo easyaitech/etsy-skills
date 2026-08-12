@@ -126,6 +126,8 @@ Agent 输入（不带 `selector`；`selector` 与 `scope` 必须恰好提供一�
 **潜在客户照常可发**：selector 用 `platform_customer_id`（他的数字买家 ID）或直接用获取结果里的 `etsy-buyer:…` customer_id，不需要他先下单、也不需要建档——绝不要对用户说「他没下过单所以发不了」。发送只能回到已同步的会话里：
 
 - 404 `CUSTOMER_CONVERSATION_NOT_FOUND`：这个人名下还没同步到会话（先请用户在 Etsy 打开一次那条会话），**不是不允许发**。
+- 409 `CUSTOMER_CONVERSATION_ALREADY_EXISTS`：不带 `conversationId` 发给一位**已经有会话**的买家。返回里带着正确的 `conversationId`，照它换新幂等键重发。
+- 400 `FIRST_CONTACT_CUSTOMER_NAME_MISMATCH` / `FIRST_CONTACT_CUSTOMER_NAME_PROOF_MISSING`：首次主动联系时店主指名的姓名与客户表里的客户名称对不上（或客户表没写名称）。一个字都没发出去，先跟店主核对是谁。
 - `CUSTOMER_CONVERSATION_NOT_UNIQUE`：名下有多条会话，带 `conversationId` 指明哪一条。
 
 Agent 输入：
@@ -142,7 +144,11 @@ Agent 输入：
 }
 ```
 
-- `conversationId` **必填**：原样使用获取结果里的值（形如 `etsy:123`），不要自己拼、也不要放进 selector。
+- `conversationId` **有会话就必填**：原样使用获取结果里的值（形如 `etsy:123`），不要自己拼、也不要放进 selector。
+- **买家一句话没说过、直接下单时没有 conversationId，也照样能发**（典型：下单后确认定制内容、说明工期）。这类买家在 Etsy 上**根本没有会话**——会话 ID 是第一条消息发出那一刻才由 Etsy 分配的，所以 `get` 给不出，这不是同步没跟上、更不是发不了。做法：`selector` 用 `{"type":"order_number","value":"订单号"}`，**整个不传 `conversationId`**，其余字段照旧。系统会从那张订单卡发起第一条会话。约束三条：
+  - 只收订单号——客户编号和跟踪号定位不到订单卡；
+  - 第一次主动联系只能发纯文字，带 `imageAssetUrls` 会被拒（买家回复之后这条会话就存在了，之后按 `conversationId` 发就能带图）；
+  - **已经有会话的买家不要走这条路**：省掉 `conversationId` 会得到 409 `CUSTOMER_CONVERSATION_ALREADY_EXISTS` 并附上正确的 `conversationId`，照它换一个新 `idempotencyKey` 重发即可，绝不要为同一个人另开一条平行会话。
 - `expectedBuyerName` **必填**：店主确认的收件买家展示名，服务端用它做收件人身份复核，对不上整条拒发。
 - `imageAssetUrls` 可选（最多 3 项）：元素只能是**系统在对话里提供的本租户内部签名图片链接**（店主在飞书发图后系统自动生成的 `/api/feishu/message-assets/…` 链接，7 天内有效），逐字原样传；不能填外部图片网址、不能自己拼链接。单张限 8 MiB、仅 JPEG/PNG/GIF/WebP。被拒时按返回错误码处理：`IMAGE_ATTACHMENT_NOT_FOUND`（链接过期，请店主重发图片）、`IMAGE_ATTACHMENT_TOO_LARGE`（请店主压缩重发）、`IMAGE_ATTACHMENT_FORBIDDEN`（不是系统给的链接）等，错误里都带人话提示，逐字复述即可。
 

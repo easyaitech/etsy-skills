@@ -457,15 +457,58 @@ class EtsyAgentToolTest(unittest.TestCase):
         self.assertEqual(client.calls[0][1]["imageAssetUrls"], image_urls)
 
     def test_publish_requires_recipient_evidence_fields(self):
-        # 后端 v2 硬要求 conversationId + expectedBuyerName；包装层就地拒绝并点名字段，
-        # 不让缺证据的请求打到后端再猜语义。
+        # 后端 v2 硬要求 expectedBuyerName；包装层就地拒绝并点名字段，不让缺证据的请求
+        # 打到后端再猜语义。
         client = FakeClient([])
-        with self.assertRaisesRegex(tool.ToolFailure, "缺少字段.*(conversationId|expectedBuyerName)"):
+        with self.assertRaisesRegex(tool.ToolFailure, "缺少字段.*expectedBuyerName"):
             tool.execute("etsy_customer_messages_publish", {
                 "selector": {"type": "customer_id", "value": "C-1"},
+                "conversationId": "etsy:1",
                 "idempotencyKey": "stable",
                 "messageType": "text",
                 "content": "hello",
+            }, client)
+        self.assertEqual(client.calls, [])
+
+    # ── 首次主动联系（主仓 v0.6.51.0）──────────────────────────────────────────
+    # 买家一句话没说过就下单时，Etsy 上根本没有这条会话，get 也给不出 conversationId。
+    # 包装层再硬要求它，就等于把这条新链路整条挡死（v1.0.22/1.0.23 同一条教训的第三次）。
+    def test_publish_first_contact_from_order_needs_no_conversation_id(self):
+        client = FakeClient([(201, {
+            "ok": True,
+            "cardDelivered": True,
+            "job": {"status": "awaiting_confirmation", "confirmation": {"expiresAt": "2026-08-12T08:30:00.000Z"}},
+        })])
+        result = tool.execute("etsy_customer_messages_publish", {
+            "selector": {"type": "order_number", "value": "4142376422"},
+            "expectedBuyerName": "Hongyang Qi",
+            "idempotencyKey": "stable",
+            "messageType": "text",
+            "content": "hello",
+        }, client)
+        self.assertEqual(result["outcome"], "complete")
+        self.assertEqual(result["data"]["status"], "awaiting_confirmation")
+        # 空的 conversationId 绝不能被原样带给后端：那边只认「字段缺席」。
+        self.assertNotIn("conversationId", client.calls[0][1])
+
+    def test_publish_first_contact_rejects_non_order_selectors_and_images(self):
+        client = FakeClient([])
+        with self.assertRaisesRegex(tool.ToolFailure, "orderNumber"):
+            tool.execute("etsy_customer_messages_publish", {
+                "selector": {"type": "customer_id", "value": "C-1"},
+                "expectedBuyerName": "Hongyang Qi",
+                "idempotencyKey": "stable",
+                "messageType": "text",
+                "content": "hello",
+            }, client)
+        with self.assertRaisesRegex(tool.ToolFailure, "纯文字"):
+            tool.execute("etsy_customer_messages_publish", {
+                "selector": {"type": "order_number", "value": "4142376422"},
+                "expectedBuyerName": "Hongyang Qi",
+                "idempotencyKey": "stable",
+                "messageType": "text",
+                "content": "hello",
+                "imageAssetUrls": ["/api/feishu/message-assets/x"],
             }, client)
         self.assertEqual(client.calls, [])
 

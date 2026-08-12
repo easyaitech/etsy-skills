@@ -2,6 +2,21 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.25] - 2026-08-12
+
+- **买家没发过消息、直接下单，店长现在也能主动给他发站内信**（配套主仓 v0.6.51.0）：
+  - 这类买家在 Etsy 上**根本没有会话**——会话 ID 是第一条消息发出那一刻才由 Etsy 分配的，
+    所以 `get` 给不出 `conversationId`。包装层此前把它列为**必填**，等于把主仓新开的这条链路
+    整条挡死（第三次踩「契约写了但包装层挡掉」：前两次是 `requireLive` 和 `scope="recent"`）。
+  - `run_messages_publish` 的 `conversationId` 降为「有会话就必填」：不带它时必须 `selector`
+    按订单号（`{"type":"order_number",…}` 与旧单键 `{"orderNumber":…}` 两种写法都认），
+    否则就地拒绝并给出正确配方；空串等于没传，不会被原样丢给后端。
+  - 首次主动联系只支持纯文字，带 `imageAssetUrls` 在包装层就拒（订单卡上的 compose 面板与站内信页
+    是两套 DOM，没做过真机校准的带图有可能只把文字发出去）。
+  - 契约 §4 写清配方与三条约束、§4 错误清单补 `CUSTOMER_CONVERSATION_ALREADY_EXISTS`
+    与两个 `FIRST_CONTACT_*`；SKILL.md 模式 C 补一句「别因为取不到会话 ID 就说发不了」；
+    校验脚本钉死关键词防回退。
+
 ## [v1.0.24] - 2026-08-12
 
 - **Pinterest 自动发布从 Agent 自律升级为服务端幂等合同**（配套主仓 v0.6.49.4）：

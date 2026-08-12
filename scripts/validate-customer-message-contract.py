@@ -86,6 +86,12 @@ def main() -> int:
         "PUBLISH_CONFIRMATION_PENDING_EXISTS",
         "PUBLISH_CONFIRMATION_CHAT_MISSING",
         "cancelled",
+        # v1.0.25：首次主动联系（主仓 v0.6.51.0）。买家没发过消息、直接下单时 Etsy 上根本没有
+        # 会话，契约必须讲清「不传 conversationId + 按订单号」这条配方，以及不要为已有会话的
+        # 买家另开一条平行会话——少讲一条，agent 就会把「拿不到 conversationId」当成发不了。
+        "CUSTOMER_CONVERSATION_ALREADY_EXISTS",
+        "整个不传 `conversationId`",
+        "第一次主动联系只能发纯文字",
     )
     failures += require(
         "orders-customers/SKILL.md",
