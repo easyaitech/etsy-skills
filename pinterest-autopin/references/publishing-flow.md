@@ -261,19 +261,51 @@ Authorization: Bearer <browserToolToken>
 
 ---
 
-## 自动发布路径（模式 D：Hermes 只标行，dispatch 无人值守发）
+## 自动发布路径（模式 D：专用幂等入口，dispatch 无人值守发）
 
-上面 [1]–[6] 是**手动路径**（模式 C）：Hermes 亲自调 `POST /api/tools/pinterest/jobs`、逐条人工 confirm-publish。**自动发布路径不走这些端点**——Hermes 一个发布端点都不调，只用 `lark-base` 改 3 个字段，剩下全由 **ECS dispatch** 接管。
+上面 [1]–[6] 是**手动路径**（模式 C）：Hermes 亲自调 `POST /api/tools/pinterest/jobs`、逐条人工 confirm-publish。自动发布不走这些手动端点，也不直接改 Base 入口字段；只调用 `POST /api/tools/pinterest/publish-intents/enqueue`，由服务器在表锁内严格分页扫描、解析素材并创建/复用唯一发布意图，剩下全由 **ECS dispatch** 接管。
+
+```http
+POST https://yanggedianzhang.com/api/tools/pinterest/publish-intents/enqueue
+Authorization: Bearer <Hermes 工具令牌>
+Content-Type: application/json
+```
+
+```json
+{
+  "tenantId": "tenant_xxx",
+  "idempotencyKey": "stable-business-operation-key",
+  "displayIntentId": "PIN-20260811-001",
+  "title": "A calm gift idea",
+  "description": "A reviewed Pinterest pin.",
+  "link": "https://example.com/listing/1",
+  "board": "Gift Ideas",
+  "altTexts": ["Front view of a handmade ceramic cup on linen."],
+  "assetIds": ["ASSET-20260811-001"],
+  "scheduledAt": "2026-08-21T20:00:00+08:00",
+  "confirmPublishApproval": true
+}
+```
+
+`idempotencyKey` 表示业务动作，重试必须复用；`displayIntentId` 仅供人读，不参与根去重；`scheduledAt` 必须带 `Z` 或明确 UTC offset（如 `+08:00`），无时区日期/时间会以 `PINTEREST_PUBLISH_INTENT_SCHEDULE_INVALID` 拒绝。服务端还按 tenant、board、link、**有序解析后的 Drive file token** 和 revision 计算内容身份。相同身份同请求返回 `reused`；ACK 丢失对账或原地接管旧草稿返回 `recovered`。只有 `状态 ∈ {空, 草稿, 待审}`、自动发布关闭且 job/lock/尝试/失败/发布证据全空的 legacy 草稿可原地接管；`失败`、`跳过` 或带任一执行证据的行返回 `PINTEREST_PUBLISH_INTENT_LEGACY_UNSAFE`，绝不重新激活。服务端 fresh-read 还会重算实际标题、描述、排期、看板、链接和有序素材内容；marker 与实际 payload 不自洽按扫描不完整失败关闭。禁止换 key 绕过。
+
+常见 enqueue 失败方向：
+
+| HTTP / code | 处理 |
+|---|---|
+| `400 PINTEREST_PUBLISH_INTENT_SCHEDULE_INVALID` | 改成带时区 ISO；不要让服务器猜本地时区 |
+| `409 PINTEREST_PUBLISH_INTENT_CONFLICT` | 同业务 key/内容身份出现不同 payload；停下核对，不换 key |
+| `409 PINTEREST_PUBLISH_INTENT_SCAN_INCOMPLETE` | 全表/marker/payload 无法自洽确认；报告无法确认，不创建 |
+| `409 PINTEREST_PUBLISH_INTENT_LEGACY_UNSAFE` | 已有相同内容行带历史状态或执行证据；人工对账，不重新激活 |
+| `503 PINTEREST_PUBLISH_INTENT_PERSIST_FAILED` | reservation 未安全落盘；本次零 create，保留原 key 重试 |
+| `502 PINTEREST_PUBLISH_INTENT_CREATE_FAILED` | provider 结果无法严格对账；不要换 key 或盲目再 create |
 
 ### 谁在做什么
 
 ```text
-Hermes（模式 D）              ECS dispatch（yanggedianzhang 常驻，约 60s 一轮）         浏览器插件
+Hermes（模式 D）              服务器幂等入口 / ECS dispatch（约 60s 一轮）              浏览器插件
    │                              │                                                    │
-   ├─ lark-base 标行：            │                                                    │
-   │   自动发布=true              │                                                    │
-   │   状态=已批准                │                                                    │
-   │   计划发布时间=空/未来        │                                                    │
+   ├─ enqueue 完整发布意图 ──────>│ 全表去重 → 创建或原地接管 → 自动发布=true/已批准       │
    │                              ├─ 扫到合格行 → 抢锁(执行锁) → 建 publish job         │
    │  （到此交出，不再经手）       │   状态→发布中、job id 列=jobId                    │
    │                              │                                     GET jobs/next?stage=publish
@@ -312,7 +344,27 @@ dispatch 启用前有一道 **schema 守卫**：该租户 `社媒发布队列` �
 
 ### Hermes 标行后不再经手
 
-标完 3 个字段就结束。**不要**再调发布端点、不要轮询 job、不要模拟重试——那些 dispatch 全包了。用户问进度就看该行 `状态`（已批准→发布中→已发/失败）和 `事件日志` 列。撤回：dispatch 领取前（`状态=已批准` 且 `执行锁` 空）取消 `自动发布` 或把 `状态` 改回 `待审` 即可；已 `发布中` 就让位。
+enqueue 成功就结束。**不要**轮询 job、不要模拟重试——那些 dispatch 全包了。用户问进度就严格分页读 Base，再看响应 `recordId` 对应行的 `状态`（已批准→发布中→已发/失败）和 `事件日志`。
+
+撤回只调用：
+
+```http
+POST https://yanggedianzhang.com/api/tools/pinterest/publish-intents/cancel
+Authorization: Bearer <Hermes 工具令牌>
+Content-Type: application/json
+```
+
+```json
+{
+  "tenantId": "tenant_xxx",
+  "recordId": "rec_xxx",
+  "expectedTaskId": "PIN-20260811-001",
+  "idempotencyKey": "stable-cancel-operation-key",
+  "reason": "duplicate of an already published pin"
+}
+```
+
+服务端按 `browser-tool-jobs:<tenant>` → queue table 的固定锁序 fresh-read。仅状态仍为 `已批准/待发`、两套 job/lock 别名都空、无活动 browser job、无 URL/发布时间/可能已提交证据，且失败处置为空或精确为 `retry + 可能已提交=false` 时，才写 `状态=跳过`、`自动发布=false` 并 fresh-verify 完整取消 marker。`manual_fix`、`reconcile`、未知失败处置或缺少 pre-commit 证明都按 too-late 处理。`PINTEREST_PUBLISH_CANCEL_TOO_LATE` / `PINTEREST_PUBLISH_CANCEL_VERIFY_FAILED` 必须如实报告，禁止直接改 Base 抢取消。
 
 ---
 
