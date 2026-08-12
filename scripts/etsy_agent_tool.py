@@ -392,11 +392,40 @@ def run_messages_publish(client: Client, data: dict[str, Any]) -> dict[str, Any]
     # 必得 400 EXPECTED_BUYER_NAME_REQUIRED，又一例「契约写了但包装层挡掉」（同 requireLive /
     # scope="recent" 的教训）。imageAssetUrls 是 v0.6.48.0 的图片附件（≤3 项，只能是系统
     # 发给 agent 的本租户签名图片链接，随文字一起发）。
+    # v1.0.25：conversationId 从「必填」降为「有会话就必填」。买家一句话没说过、直接下单时，
+    # 这条会话在 Etsy 上**根本不存在**（会话 ID 是第一条消息发出那一刻才由 Etsy 分配的），
+    # get 也给不出——包装层再要求它，就等于把主仓 v0.6.51.0 新开的「首次主动联系」整条挡死，
+    # 又一例「契约写了但包装层挡掉」。这条路的判据是 selector 用 orderNumber 且不带 conversationId。
     require_keys(
         data,
         {"selector", "conversationId", "expectedBuyerName", "idempotencyKey", "messageType", "content", "imageAssetUrls"},
-        {"selector", "conversationId", "expectedBuyerName", "idempotencyKey", "messageType", "content"},
+        {"selector", "expectedBuyerName", "idempotencyKey", "messageType", "content"},
     )
+    selector = data.get("selector")
+    # selector 有两种合法写法（后端两种都收）：新的 {"type":"order_number","value":…}
+    # 和旧的单键 {"orderNumber":…}。判「是不是按订单号定位」必须两种都认，
+    # 否则照文档写 type/value 的调用会被自家包装层拒掉。
+    by_order_number = isinstance(selector, dict) and (
+        set(selector) == {"orderNumber"}
+        or (set(selector) == {"type", "value"} and selector.get("type") == "order_number")
+    )
+    conversation_id = str(data.get("conversationId") or "").strip()
+    if not conversation_id:
+        if not by_order_number:
+            raise ToolFailure(
+                "INVALID_INPUT",
+                "缺 conversationId。已经有会话就把 get 返回的 conversationId（形如 etsy:123）原样带上；"
+                "这位买家从没给店里发过消息、手里只有订单时，改用 selector={\"orderNumber\": …} 且不传 "
+                "conversationId，系统会从那张订单发起第一条会话（客户编号/跟踪号定位不到订单卡）。",
+            )
+        if data.get("imageAssetUrls"):
+            raise ToolFailure(
+                "INVALID_INPUT",
+                "第一次主动联系（从订单发起会话）暂时只能发纯文字。先发一条不带图的；"
+                "买家回复之后这条会话就存在了，之后按 conversationId 发送才能带图。",
+            )
+        # 传了空串等于没传：别把它原样发给后端，那边只认「字段缺席」。
+        data = {key: value for key, value in data.items() if key != "conversationId"}
     # ⚠️ 主仓 v0.6.49.0 起，publish **不再直接发送**：任务停在 awaiting_confirmation，服务端把
     # 最终文案+图片做成飞书确认卡发给店主，店主点「确认发送」才进 queued。所以这里绝不能像
     # 以前那样一路轮询等终态——那是在等一个人，而人可能几分钟后才看手机，甚至选择不发。
