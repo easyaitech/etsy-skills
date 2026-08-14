@@ -628,7 +628,9 @@ def run_ads_get(client: Client, data: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_order_sop_get(client: Client, data: dict[str, Any]) -> dict[str, Any]:
-    require_keys(data, {"orderNumber", "buyerName"})
+    # v1.0.26：sendCard=true（配套主仓 v0.6.54.0）——店主想「看」流程清单时，后端顺手把该单的
+    # SOP 卡片重新发进群（返回 data.cardsSent），agent 不用逐条复述步骤。
+    require_keys(data, {"orderNumber", "buyerName", "sendCard"})
     status, result = client.post("/api/hermes/etsy/tools/order-sop/get", data)
     if status >= 400 or result.get("ok") is False and result.get("schemaVersion") != SCHEMA_VERSION:
         raise_http(status, result)
