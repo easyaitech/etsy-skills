@@ -706,6 +706,12 @@ class OrderSopToolsTest(unittest.TestCase):
         with self.assertRaises(tool.ToolFailure):
             tool.execute("etsy_order_sop_get", {"orderNo": "x"}, FakeClient([]))
 
+    def test_get_send_card_passes_through(self):
+        # v1.0.26：sendCard 放行原样透传（后端只认严格布尔 true）
+        client = FakeClient([(200, self._final("etsy_order_sop_get", {"orders": [], "count": 0, "cardsSent": 1}))])
+        tool.execute("etsy_order_sop_get", {"orderNumber": "4137840459", "sendCard": True}, client)
+        self.assertEqual(client.calls[0][1], {"orderNumber": "4137840459", "sendCard": True})
+
     def test_update_requires_order_and_status_and_is_mutation(self):
         client = FakeClient([(200, self._final("etsy_order_sop_update", {"orderNumber": "1", "noop": True}))])
         tool.execute("etsy_order_sop_update", {"orderNumber": "1", "stepId": "packing", "status": "done"}, client)
