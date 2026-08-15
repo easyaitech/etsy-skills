@@ -2,6 +2,27 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.27] - 2026-08-15
+
+- **新增 `inventory` skill：实物库存（成品 + 包材附件）**，对应后端 v0.6.37/38 上线的两张表
+  `Inventory 库存品`（`accessories`）+ `Inventory Ledger 库存流水`（`accessory_ledger`）。四种模式：
+  查库存 / 记入库与盘点 / 建库存品与配绑定 / 补货清单。写死三条底层事实：流水是唯一事实源、
+  `当前库存` 与 `流水 ID` 是服务端专列（被拒返回 `BITABLE_FIELD_SERVER_GENERATED` 是设计不是故障）、
+  销售扣减由订单入库自动完成不许手工扣；另含盘点记差额不记结果值、流水只追加用冲正行纠错、
+  快照最迟次日早报刷新（不是写入失败）等真实坑位。
+- **修掉 `listing-catalog` 对实物库存的错误认领**（本次的直接起因）：店主问「你有库存相关的
+  skill 吗」，bot 照 frontmatter 第 3 类触发「改 SKU / 调价 / **调库存**——读写 Base」回答
+  「库存挂在 listing-catalog 下，读写商品 Base 的库存列」——把平台在售挂牌数量当成了仓库实物库存。
+  现在：第 3 类触发去掉「调库存」并显式指向 `inventory`；模式 C 增加「不进入本模式的一类问题」；
+  依赖关系表新增 `Inventory 库存品` 一行；`references/base-schema.md` 的「库存」列定义改成
+  **平台在售挂牌数量**并标明实物库存另有其表；「缺货」视图改名「平台已售罄」。
+- `shared/store-base-architecture.md` 扩展表注册两个逻辑键（`accessories` / `accessory_ledger`），
+  `products` 行的说明去掉「库存」并注明边界；写穿协议里那个「把这个 SKU 库存改成 5」的举例
+  换成改售价（举例本身在传播错误心智）。
+- 新增 `scripts/test_inventory_contract.py`（5 条锚点断言）：钉住 manifest/README 注册、两张表与
+  流水记账规则、实物库存与商品表「库存」列的边界、listing-catalog 不再出现「调库存」、
+  架构文档两个逻辑键——防这条语义边界被后人改回去。
+
 ## [v1.0.26] - 2026-08-14
 
 - **`etsy_order_sop_get` 放行 `sendCard`**（配套主仓 v0.6.54.0「订单 SOP 可见性」）：店主说

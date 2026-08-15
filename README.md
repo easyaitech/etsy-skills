@@ -46,6 +46,7 @@ bash install.sh
 | [`orders-customers`](orders-customers/SKILL.md) | 店铺总 Base 内 `Orders 订单` / `Customers 客户` 表 + 按平台配置支撑客服/履约 SOP + 客户标签 |
 | [`logistics-tracking`](logistics-tracking/SKILL.md) | 跨境物流状态跟踪（薄 skill）：让 agent 调 `track` 命令查/录物流，接后端常驻的 17TRACK 跟踪服务（每天自动轮询到签收）；正确性在后端服务，不写飞书 Base |
 | [`supplier-foundation`](supplier-foundation/SKILL.md) | 店铺总 Base 内 `Suppliers 供应商` 表 + 采购来源筛选、主用/备用/淘汰记录 |
+| [`inventory`](inventory/SKILL.md) | 实物库存（成品 + 包材附件）：店铺总 Base 内 `Inventory 库存品` + `Inventory Ledger 库存流水` 两张表，流水记账、订单成交自动扣减、跌破安全库存早报点名；商品表的「库存」列是平台在售数量、不归它管 |
 | [`business-knowledge`](business-knowledge/SKILL.md) | 轻量业务知识库：每周材料 → raw / weekly / wiki markdown + `Knowledge Cards 知识卡片` 表 + Marketing Brief |
 | [`assets-library`](assets-library/SKILL.md) | 素材生命周期 owner（双层：六文件夹物理层 + 店铺总 Base `Assets 素材池` canonical + `Asset Variants 派生素材` 变体工厂）；不碰创意策略 |
 | [`image-brief`](image-brief/SKILL.md) | 图片方案设计（创意 brief owner）：给 SKU + 目标平台出平台感知 brief（槽位/Mood/镜头清单），再分叉到人工拍摄 / image-synth / 已有素材；只产 brief 计划文档，不拍不生图不归档 |
@@ -178,6 +179,7 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 ├── orders-customers/          # │ 基座层平级，按需建立
 ├── logistics-tracking/        # │ 物流跟踪薄 skill（调后端 ECS track 服务）
 ├── supplier-foundation/       # │
+├── inventory/                 # │ 实物库存（成品 + 包材），两张表由后端 provision 维护
 ├── business-knowledge/        # │ 可选业务记忆层
 ├── assets-library/            # ┘
 ├── publish-composer/        # ┐

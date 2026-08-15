@@ -1,6 +1,6 @@
 ---
 name: listing-catalog
-description: 维护电商商品目录（店铺总 Base 内商品 / SKU 表）+ 按目标销售平台配置撰写商品页 / listing 文案 + 读取 / 分析 / 优化现有 Etsy Listing。四种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——在店铺总 Base 内建表；(2) "写 listing / 上新文案 / 商品标题 / 产品描述 / 平台 SEO / 小红书商品页"——按 BRAND.md 语调 + COMMERCE_PLATFORM.md 平台规则写文案；(3) "改 SKU / 调价 / 调库存"——读写 Base；(4) "读取现有 Listing / 看 Etsy 后台 Listing / 分析竞品 Listing / 优化现有 Etsy Listing"——先用独立只读工具取得线上真实数据。Etsy 和小红书是内置平台 preset，其他平台必须先有平台配置。
+description: 维护电商商品目录（店铺总 Base 内商品 / SKU 表）+ 按目标销售平台配置撰写商品页 / listing 文案 + 读取 / 分析 / 优化现有 Etsy Listing。四种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——在店铺总 Base 内建表；(2) "写 listing / 上新文案 / 商品标题 / 产品描述 / 平台 SEO / 小红书商品页"——按 BRAND.md 语调 + COMMERCE_PLATFORM.md 平台规则写文案；(3) "改 SKU / 调价 / 改商品字段"——读写 Base（**实物库存不在这里**：仓库里还剩多少走 `inventory` skill，本表的「库存」列只是平台在售数量）；(4) "读取现有 Listing / 看 Etsy 后台 Listing / 分析竞品 Listing / 优化现有 Etsy Listing"——先用独立只读工具取得线上真实数据。Etsy 和小红书是内置平台 preset，其他平台必须先有平台配置。
 layer: foundation
 ---
 
@@ -27,7 +27,8 @@ layer: foundation
 | `<workspace>/BRAND.md` | 文案语调 / 视觉原则 / 品牌定位 | 标题、描述、标签的语气与措辞——"应该说"、"避免说"、"原则"段都要遵守 |
 | `<workspace>/SHOP.md` | 处理时间 / 运输方式 / 退换货 / 定制政策 | 描述或客服相关政策段引用 SHOP.md 原文，不要自行编造 |
 | `<workspace>/COMMERCE_PLATFORM.md` | 目标销售平台、买家语言、标题/描述/tag/媒体/订单规则 | 决定输出语言、字段、长度、平台枚举和自动化边界；非 Etsy / 小红书平台缺失时阻塞 |
-| 店铺总 Base 的 SKU 行 | 成本、变体、库存、关键词、平台商品 ID、商品级故事 / 分享链接 | 写商品页时先查 `Products 商品` 表（商品级与 SKU 级字段同表）；写完后回写平台商品 ID、状态、上线日 |
+| 店铺总 Base 的 SKU 行 | 成本、变体、关键词、平台商品 ID、商品级故事 / 分享链接 | 写商品页时先查 `Products 商品` 表（商品级与 SKU 级字段同表）；写完后回写平台商品 ID、状态、上线日 |
+| `Inventory 库存品` 表（`inventory` skill） | 仓库里真实还剩多少（成品 + 包材） | 任何"还有货吗 / 还剩几个 / 该补货了"的问题转 `inventory`；本表「库存」列只是平台在售数量，不能代替它 |
 
 **写 listing 之前**永远先：
 1. 读 BRAND.md（如不存在，提示用户先用 shop-foundation 建立——这是品牌一致性的根）
@@ -128,8 +129,12 @@ layer: foundation
 ### 模式 C：查询 / 更新现有商品
 
 **进入条件**：
-- 用户要看 / 改某 SKU 的字段（价格、库存、状态、变体、SEO 关键词等）
-- 或要批量查询（"哪些 SKU 缺货"、"哪些是上新预备")
+- 用户要看 / 改某 SKU 的字段（价格、状态、变体、SEO 关键词等）
+- 或要批量查询（"哪些是上新预备"、"哪些还没写描述"）
+
+**不进入本模式的一类问题**：问**实物库存**（"麻布袋还剩几个"、"这个成品还有货吗"、"记一下入库"、
+"该补什么货"）一律转 `inventory` skill。本表的「库存」列是 Etsy 平台在售挂牌数量（由 listing 读取
+自动回写），不是仓库里有几个；拿它回答"还剩多少"是答错了对象。
 
 **执行步骤**：
 1. **先判断当前运行环境是否有 Base 工具**：
