@@ -47,7 +47,7 @@
 
 | 逻辑键 | 表名 | 归属 skill | 说明 |
 |---|---|---|---|
-| `products` | `Products 商品` | listing-catalog | 商品 + SKU 合并：商品级故事 / 品类 / 平台 listing 聚合 + SKU / 成本 / 售价 / 库存 / 平台商品 ID；一行 = 一个可售 SKU |
+| `products` | `Products 商品` | listing-catalog | 商品 + SKU 合并：商品级故事 / 品类 / 平台 listing 聚合 + SKU / 成本 / 售价 / 平台商品 ID；一行 = 一个可售 SKU。「库存」列是平台在售挂牌数量，实物库存见 `accessories` |
 | `orders` | `Orders 订单` | orders-customers | 订单、发货、ship by、追踪号、履约状态 |
 | `customers` | `Customers 客户` | orders-customers | 客户、标签、复购、客服上下文 |
 | `suppliers` | `Suppliers 供应商` | supplier-foundation | 供应商、采购来源、主用/备用/淘汰 |
@@ -60,6 +60,8 @@
 | `asset_variants` | `Asset Variants 派生素材` | assets-library | 平台发布副本变体（裁切/封面/清理），派生自 canonical |
 | `publishing_queue` | `社媒发布队列` | publish-composer（owner）/ social-publisher / pinterest-autopin / xiaohongshu-autopost | 跨平台发布任务 PublishIntent 的 source of truth；用 `平台` + typed extension 区分 |
 | `knowledge_cards` | `Knowledge Cards 知识卡片` | business-knowledge | 业务知识卡片、引用次数、brief 关联 |
+| `accessories` | `Inventory 库存品` | inventory | 实物库存单位（成品真实 SKU + 包材附件）：当前库存、安全库存、绑定规则。**由后端 provision 建表，不手工建** |
+| `accessory_ledger` | `Inventory Ledger 库存流水` | inventory | 库存变动流水（采购入库 / 销售扣减 / 盘点调整），只追加不修改；`当前库存` 由它求和派生 |
 
 表名可以本地化，但逻辑键必须稳定，便于各 skill 读取配置。
 
@@ -74,7 +76,7 @@
 ### 写穿协议（每次改 Base 都按这个收口）
 
 1. **先落库，再报完成**：在同一个 turn 内，必须先用 `lark-base` 把改动写进目标表 / 行，拿到成功返回，**之后**才能对用户说"已加上 / 已改好 / 已录入"。绝不能凭对话内容当成已落地。
-2. **确认与落库不跨 turn**：`shared/preamble.md` §写入前的通用约束的「展示 → 等确认 → 落盘」闸门照旧（草稿 / diff 仍要先给用户看、等同意）。但用户一旦确认，**落库必须在本 turn 内紧接着发生**，不能把"确认"留在这轮、"写入"拖到下一轮（中间那次写入最容易丢）。用户在指令里已经把改动讲死、无歧义的直接字段改动（如"把这个 SKU 库存改成 5"），预览可以压缩成一行 diff，但写入照样必须真实落到 Base 才算完。
+2. **确认与落库不跨 turn**：`shared/preamble.md` §写入前的通用约束的「展示 → 等确认 → 落盘」闸门照旧（草稿 / diff 仍要先给用户看、等同意）。但用户一旦确认，**落库必须在本 turn 内紧接着发生**，不能把"确认"留在这轮、"写入"拖到下一轮（中间那次写入最容易丢）。用户在指令里已经把改动讲死、无歧义的直接字段改动（如"把这个 SKU 的售价改成 39.9"），预览可以压缩成一行 diff，但写入照样必须真实落到 Base 才算完。
 3. **写后回执（必须带飞书链接）**：落库成功后，回复里**必须**附上一条可点击的飞书 Base 链接，让用户一键跳过去核对到底改了什么——这是回执的硬性组成，不是可选项。
    - 优先给**深链**（定位到改动的那张表 / 视图，能定位到记录更好），用户点开就看到本次改动的行；拿不到深链时退而给店铺总 Base 链接。
    - 链接从 `<workspace>/docs/store-base.md` 记录的 Base / 表信息拼，或用 `lark-base` 返回的链接。**交付形式只用飞书分享链接本身**——飞书 Base / 表的 URL 即许可的交付物（即便 URL 里天然带 app_token / table_id）；禁的是把 app_token / table_id / record_id / field_id 当作**裸 ID 单独写进正文**，不是禁链接（见 §工作区配置文件）。
