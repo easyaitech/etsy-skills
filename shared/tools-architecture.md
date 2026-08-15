@@ -112,7 +112,7 @@ skill 侧只写「调哪个入口、传什么、怎么解释返回」；不写�
 |---|---|---|---|
 | `image-synth` 生图 | **已上收 ECS**：中心后端 `POST /image/generate`（GPT Image 2 / OpenRouter） | 同左（已是目标态） | ✅ key / 配额 / 换模型都在后端一处，skill 经 `terminal` 调端点、不持 key、不传 model slug（per-profile token + idempotency）。见 image-synth `references/backend-image-gen-contract.md` |
 | `pinterest-autopin` 发布 | **已上收 ECS**：yanggedianzhang 服务器控制面 + 现有浏览器插件（租户 Chrome 登录态执行） | 同左（已是 tier 2 目标态） | ✅ Hermes 只生成 + 调服务器工具，不持 Chrome / Playwright / 队列 / token；服务器做 job 状态机 / 鉴权 / 素材授权 / 结果回写 |
-| 发布**编排**（巡检 / 锁 / 重试 / 死信） | **已上收 ECS**：yanggedianzhang publish dispatch（T5，常驻 tick，dormant-by-default） | 同左（已是目标态） | ✅ 队列调度 / 单写者锁 / 重试退避 / 幂等去重 / 崩溃恢复在服务端；`social-publisher` skill 退薄（只做配置 / 人工发布 / confirm-publish 闸 / 对账），不再 Hermes 手搓巡检。v1 不自动 confirm-publish（保留人工目视确认闸） |
+| 发布**编排**（巡检 / 锁 / 重试 / 死信） | **已上收 ECS**：yanggedianzhang publish dispatch（T5，常驻 tick，dormant-by-default） | 同左（已是目标态） | ✅ 队列调度 / 单写者锁 / 重试退避 / 幂等去重 / 崩溃恢复在服务端；手动发布仍走 test → confirm-publish → final 人工闸；明确授权并标记自动发布的行由 dispatch 到点直发、无逐条人工确认，`social-publisher` 不再 Hermes 手搓巡检。 |
 | Etsy Listing 公开读取 | **已上收 ECS**：正式工具经 `/api/hermes/etsy/tools/listings/get` 选择公开来源，内部由独立 Apify Actor 执行 | 同左（已是无账号目标态） | ✅ single/batch/shop；不依赖 Base，不使用店主浏览器。公开批量禁止改走账号插件，契约见 [`etsy-listing-read.md`](etsy-listing-read.md) |
 | Etsy Listing 后台读取 | **已上收 ECS 控制面**：同一个正式 Listing facade 选择后台来源并编排租户浏览器插件 | 同左（已是 tier 2 目标态） | ✅ 仅店主明确调用，顺序读取并在登录/Challenge/429/额度/插件错误时停止；自动巡检已暂停，现有 Base 核对代码和历史数据保留 |
 | `trend-radar` 抓取 | Mac mini 上的 Node 脚本 + `SERPAPI_KEY` | 数据抓取走 ECS（tier 1，有 API），密钥存 ECS | 密钥目前在 Mac mini 是过渡；非租户特异的只读输入，优先迁 ECS |

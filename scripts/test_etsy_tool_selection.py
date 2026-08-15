@@ -2,26 +2,19 @@
 """Validate the Agent tool-selection acceptance matrix.
 
 This does not pretend to emulate an LLM. It keeps a reviewable set of natural-language
-requests and enforces that every expected answer is one of the eight published tools and
+requests and enforces that every expected answer is one of the eleven published tools and
 never a retired tool. The >=95% runtime selection score is collected during Agent canary.
 """
 
 from __future__ import annotations
 
 import unittest
+import json
 from pathlib import Path
 
 
-FORMAL_TOOLS = {
-    "etsy_listings_get",
-    "etsy_customer_messages_get",
-    "etsy_customer_messages_publish",
-    "get_etsy_orders",
-    "get_etsy_stats",
-    "describe_etsy_stats",
-    "summarize_etsy_stats",
-    "get_etsy_ads",
-}
+ROOT = Path(__file__).resolve().parents[1]
+FORMAL_TOOLS = set(json.loads((ROOT / "etsy-stack.json").read_text(encoding="utf-8"))["agentTools"])
 
 RETIRED_TOOLS = {
     "etsy_listing_public_read",
@@ -68,6 +61,9 @@ CASES = [
     ("读取昨天 Etsy Ads 的展示、点击、花费和 ROAS", "get_etsy_ads"),
     ("比较各个广告 Listing 最近一周的表现", "get_etsy_ads"),
     ("广告归因订单和当前每日预算是多少", "get_etsy_ads"),
+    ("查一下订单 1234567890 的 SOP 做到哪一步", "etsy_order_sop_get"),
+    ("把这单的打包步骤标记成已完成", "etsy_order_sop_update"),
+    ("提议把 SOP 的质检步骤移到打包前", "etsy_order_sop_propose_flow_change"),
 ]
 
 
@@ -84,10 +80,10 @@ class ToolSelectionMatrixTest(unittest.TestCase):
         self.assertEqual(len(prompts), len(set(prompts)))
         self.assertTrue(all(len(prompt.strip()) >= 8 for prompt in prompts))
 
-    def test_ecommerce_stack_dispatches_only_the_eight_formal_tools(self) -> None:
+    def test_ecommerce_stack_delegates_formal_tool_validation_to_adapter(self) -> None:
         script = Path(__file__).with_name("etsy-stack").read_text(encoding="utf-8")
-        self.assertIn("etsy_listings_get|etsy_customer_messages_get|etsy_customer_messages_publish|get_etsy_orders|get_etsy_stats|describe_etsy_stats|summarize_etsy_stats|get_etsy_ads)", script)
         self.assertIn('exec "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$tool_name"', script)
+        self.assertNotIn("etsy_listings_get|etsy_customer_messages_get", script)
         self.assertNotIn("eval ", script)
 
 

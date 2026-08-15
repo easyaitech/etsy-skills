@@ -1,6 +1,7 @@
 # Etsy Agent 工具统一契约
 
-对 Agent 只暴露八个稳定工具：
+对 Agent 只暴露十一个稳定工具；清单以 [`etsy-stack.json`](../etsy-stack.json) 的
+`agentTools` 为安装发布源：
 
 | 工具 | 用途 | 副作用 |
 |---|---|---|
@@ -12,6 +13,9 @@
 | `describe_etsy_stats` | 发现实际可用日期、维度、指标、Listing、缺口和排除范围 | 只读 |
 | `summarize_etsy_stats` | 做有界排名、趋势、汇总和等长上期比较 | 只读 |
 | `get_etsy_ads` | 读取独立 Etsy Ads 后台的逐日 campaign / Listing 指标、归因订单和设置快照 | 只读 |
+| `etsy_order_sop_get` | 查询订单 SOP 清单、步骤与当前进度，可按合同补发清单卡片 | 只读 / 可选发卡 |
+| `etsy_order_sop_update` | 按步骤标记订单 SOP 完成或撤销，并刷新既有卡片 | 内部写 |
+| `etsy_order_sop_propose_flow_change` | 提交 SOP 流程变更提议；仅店主确认卡可使其生效 | 提议写 |
 
 每个工具从 stdin 接收一个 JSON 对象，stdout 只返回一个最终 JSON 对象。运行时自动注入
 API 地址、tenant 和鉴权；Agent 输入中禁止出现 `tenantId`、token、requestId、operationId。

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thin Agent-facing adapter for the eight canonical Etsy tools.
+"""Thin Agent-facing adapter for the canonical Etsy tools.
 
 Input is one JSON object on stdin. Runtime tenant/auth are injected from env.
 Stdout contains exactly one final JSON object; transport polling identifiers

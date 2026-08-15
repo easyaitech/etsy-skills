@@ -2,6 +2,13 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.28] - 2026-08-16
+
+- 正式 Etsy Agent 工具改由 `etsy-stack.json` 的 11 项 `agentTools` 清单统一驱动安装、CLI、合同和文档，补齐三个订单 SOP 工具；清单名称先做非空、唯一和安全正则校验，冲突的非托管命令文件保留但安装明确失败。
+- 修正 Pinterest 手动确认与授权后自动直发的合同边界，并把安装说明统一到真实发布入口 `main`。
+- `inventory` 加入官方 skill 保留名；CI 新增两组 Node 的 clean install、46 项测试、TypeScript 检查和 high 级依赖审计。
+- 升级 Vitest/Vite 到无已知 high/critical 告警的兼容版本；Python 78 项、Node 46 项与三套合同 validator 全部通过。
+
 ## [v1.0.27] - 2026-08-15
 
 - **新增 `inventory` skill：实物库存（成品 + 包材附件）**，对应后端 v0.6.37/38 上线的两张表

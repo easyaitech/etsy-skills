@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 # 电商 skill stack 安装 / 升级脚本（兼容旧 etsy-stack 安装路径）
 #
-# ── 推荐（钉死版本）─────────────────────────────────────────────
-#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.14/install.sh | bash
-#
-# ── 最新主线 ────────────────────────────────────────────────────
+# ── 推荐（发布口径 = main）──────────────────────────────────────
 #   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh | bash
 #
 # ── 已 clone 后本地升级 ────────────────────────────────────────
 #   bash install.sh    或    ecommerce-stack update（旧命令 etsy-stack update 兼容）
 #
 # ── 谨慎模式（先看再跑） ───────────────────────────────────────
-#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/v1.0.14/install.sh -o install.sh
+#   curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install.sh -o install.sh
 #   less install.sh   # 自查一遍
 #   bash install.sh
 #
@@ -21,7 +18,7 @@
 #   ECOMMERCE_STACK_BIN    ecommerce-stack / etsy-stack 命令的安装目录（默认 ~/.local/bin）
 #   ECOMMERCE_SKILLS_REPO  Git 仓库 URL（默认 HTTPS：https://github.com/easyaitech/etsy-skills.git）
 #                          开发者可改成 SSH：git@github.com:easyaitech/etsy-skills.git
-#   ECOMMERCE_SKILLS_REF   要 checkout 的分支 / tag（默认 main；推荐传具体 tag 如 v1.0.14）
+#   ECOMMERCE_SKILLS_REF   要 checkout 的分支 / tag（默认且发布口径为 main；仅开发排查时覆盖）
 #
 # 旧变量 ETSY_SKILLS_HOME / ETSY_STACK_BIN / ETSY_SKILLS_REPO / ETSY_SKILLS_REF 继续兼容。
 
@@ -67,12 +64,39 @@ SKILLS=()
 while IFS= read -r line; do
   [[ -n "$line" ]] && SKILLS+=("$line")
 done < <(MANIFEST="$MANIFEST" python3 -c '
-import json, os
-m = json.load(open(os.environ["MANIFEST"]))
-for s in m["skills"]:
+import json, os, re
+with open(os.environ["MANIFEST"], encoding="utf-8") as f:
+    m = json.load(f)
+skills = m.get("skills")
+if not isinstance(skills, list) or not skills:
+    raise SystemExit("manifest.skills 必须是非空数组")
+if len(skills) != len(set(skills)):
+    raise SystemExit("manifest.skills 不得重复")
+if not all(isinstance(s, str) and re.fullmatch(r"[a-z][a-z0-9-]*", s) for s in skills):
+    raise SystemExit("manifest.skills 含不安全名称")
+for s in skills:
     print(s)
 ')
 [[ ${#SKILLS[@]} -gt 0 ]] || fail "manifest.skills 为空"
+
+AGENT_TOOLS=()
+while IFS= read -r line; do
+  [[ -n "$line" ]] && AGENT_TOOLS+=("$line")
+done < <(MANIFEST="$MANIFEST" python3 -c '
+import json, os, re
+with open(os.environ["MANIFEST"], encoding="utf-8") as f:
+    m = json.load(f)
+tools = m.get("agentTools")
+if not isinstance(tools, list) or not tools:
+    raise SystemExit("manifest.agentTools 必须是非空数组")
+if len(tools) != len(set(tools)):
+    raise SystemExit("manifest.agentTools 不得重复")
+if not all(isinstance(name, str) and re.fullmatch(r"[a-z][a-z0-9_]*", name) for name in tools):
+    raise SystemExit("manifest.agentTools 含不安全名称")
+for name in tools:
+    print(name)
+')
+[[ ${#AGENT_TOOLS[@]} -gt 0 ]] || fail "manifest.agentTools 为空"
 
 mkdir -p "$HERMES_SKILLS_DIR"
 INSTALL_DIR="$INSTALL_DIR" HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" MANIFEST="$MANIFEST" python3 - <<'PY'
@@ -132,26 +156,27 @@ chmod +x "$INSTALL_DIR/scripts/etsy-stack" "$INSTALL_DIR/scripts/check-update.sh
   "$INSTALL_DIR/scripts/install_skill_package.py" "$INSTALL_DIR/scripts/drive_upload_tool.py"
 ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/ecommerce-stack"
 ln -sfn "$INSTALL_DIR/scripts/etsy-stack" "$BIN_DIR/etsy-stack"
-for _etsy_agent_tool in \
-  etsy_listings_get \
-  etsy_customer_messages_get \
-  etsy_customer_messages_publish \
-  get_etsy_orders \
-  get_etsy_stats \
-  describe_etsy_stats \
-  summarize_etsy_stats \
-  get_etsy_ads
-do
-  ln -sfn "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$BIN_DIR/$_etsy_agent_tool"
+_agent_tool_conflicts=0
+for _etsy_agent_tool in "${AGENT_TOOLS[@]}"; do
+  _tool_link="$BIN_DIR/$_etsy_agent_tool"
+  if [[ -e "$_tool_link" && ! -L "$_tool_link" ]]; then
+    warn "$_tool_link 已存在且不是本 stack 管理的软链，保留原文件"
+    _agent_tool_conflicts=$(( _agent_tool_conflicts + 1 ))
+    continue
+  fi
+  ln -sfn "$INSTALL_DIR/scripts/etsy_agent_tool.py" "$_tool_link"
 done
-# 店主自带技能包的安装器。与上面 8 个 etsy 工具不同，它不是「查平台数据」而是「把云盘里的
+[[ "$_agent_tool_conflicts" -eq 0 ]] \
+  || fail "${_agent_tool_conflicts} 个正式 Etsy 工具名被非托管文件占用；未覆盖用户文件，请先移走冲突文件后重试"
+unset _agent_tool_conflicts
+# 店主自带技能包的安装器。与上面的正式 Etsy 工具不同，它不是「查平台数据」而是「把云盘里的
 # .skill 包解到本 profile 的 skills/ 下」——名字保持动词形态，agent 照契约直接敲。
 ln -sfn "$INSTALL_DIR/scripts/install_skill_package.py" "$BIN_DIR/install_skill_package"
 # 店长生成物的上行口：把本地 PDF / 报表传进店主云盘并回一条链接。没有它，店长只能说
 # 「文件在我本地」——而本地路径店主一个都打不开。
 ln -sfn "$INSTALL_DIR/scripts/drive_upload_tool.py" "$BIN_DIR/upload_to_drive"
 ok "命令安装到：$BIN_DIR/ecommerce-stack（兼容旧命令：$BIN_DIR/etsy-stack）"
-ok "Etsy Agent 工具安装到：$BIN_DIR/{etsy_listings_get,etsy_customer_messages_get,etsy_customer_messages_publish,get_etsy_orders,get_etsy_stats,describe_etsy_stats,summarize_etsy_stats,get_etsy_ads}"
+ok "Etsy Agent 工具安装完成：${#AGENT_TOOLS[@]} 个（清单来自 etsy-stack.json）"
 
 _retired_photo_style="$BIN_DIR/photo-style"
 if [[ -L "$_retired_photo_style" ]]; then
