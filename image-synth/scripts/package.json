@@ -6,12 +6,14 @@
   "scripts": {
     "bench": "tsx bench.ts",
     "models": "tsx models-list.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit --module NodeNext --moduleResolution NodeNext --target ES2022 --types node"
   },
   "devDependencies": {
     "@types/node": "^25.8.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0",
-    "vitest": "^3.2.0"
+    "vite": "^7.3.6",
+    "vitest": "^3.2.6"
   }
 }

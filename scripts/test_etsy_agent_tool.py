@@ -84,9 +84,11 @@ class ListingCacheDeclarationTest(unittest.TestCase):
 class EtsyAgentToolTest(unittest.TestCase):
     def test_install_and_cli_smoke_cover_all_stats_and_ads_commands(self):
         root = MODULE_PATH.parent.parent
+        manifest = __import__("json").loads((root / "etsy-stack.json").read_text(encoding="utf-8"))
         install = (root / "install.sh").read_text(encoding="utf-8")
+        self.assertIn('m.get("agentTools")', install)
         for name in ("get_etsy_stats", "describe_etsy_stats", "summarize_etsy_stats", "get_etsy_ads"):
-            self.assertIn(name, install)
+            self.assertIn(name, manifest["agentTools"])
             completed = subprocess.run(
                 ["python3", str(MODULE_PATH), name],
                 input="{}",

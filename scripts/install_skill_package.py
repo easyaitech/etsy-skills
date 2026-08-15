@@ -66,6 +66,7 @@ RESERVED_NAMES = {
     "business-knowledge",
     "image-brief",
     "image-synth",
+    "inventory",
     "listing-catalog",
     "logistics-tracking",
     "orders-customers",
