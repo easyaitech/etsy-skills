@@ -2,7 +2,7 @@
 商品页 / listing 文案标准模板。Agent 写新商品页时按此结构产出，整篇展示给用户确认后再写入 Base。
 - 文案语调：参考 <workspace>/BRAND.md
 - 政策段：引用 <workspace>/SHOP.md 原文，不要自己编
-- 平台规则：参考 <workspace>/COMMERCE_PLATFORM.md；Etsy 可使用 references/platforms/etsy.md 内置 preset，小红书可使用 references/platforms/xiaohongshu.md 内置 preset
+- 平台规则：销售平台固定 Etsy，以内置 Etsy preset 为准（references/platforms/etsy.md，索引见 shared/platform-config.md）
 - 输出三块：(1) 文案预览  (2) 平台关键词 / 属性  (3) 类目与平台字段
 -->
 
@@ -12,7 +12,7 @@
 
 ### 标题 / Title
 ```
-{{按 COMMERCE_PLATFORM.md 的目标平台语言、长度和关键词顺序生成；Etsy preset 为 Title ≤ 140 chars}}
+{{按内置 Etsy preset 的语言、长度和关键词顺序生成；Title ≤ 140 chars}}
 ```
 
 ### 描述 / Description
@@ -38,15 +38,14 @@
 
 ### 关键词 / Tags（复制用）
 ```text
-{{按 COMMERCE_PLATFORM.md 的数量、长度、分隔符输出；Etsy preset 为 13 个 tag，用半角逗号分隔}}
+{{按内置 Etsy preset 的数量、长度、分隔符输出：13 个 tag，用半角逗号分隔}}
 ```
 
-> 写入 Base 的 `关键词 / Tags` 字段也使用同样格式；非 Etsy 平台不要强行凑 13 个。
-> 小红书没有 Etsy 式 13 tags；需要把搜索词、卖点词、类目词写入 `SEO 关键词` 或 `小红书产品参数 JSON` 的可确认字段，不要伪造后台标签。
+> 写入 Base 的 `关键词 / Tags` 字段也使用同样格式。
 
 ### 材质 / 平台属性（复制用）
 ```text
-{{按 COMMERCE_PLATFORM.md 输出；Etsy preset 为 13 个 material，用半角逗号分隔}}
+{{按内置 Etsy preset 输出：13 个 material，用半角逗号分隔}}
 ```
 
 > 写入 Base 的 `材质 / 属性` 字段也使用同样格式；平台枚举不确定时留空并标注需要用户在后台确认。
@@ -55,9 +54,9 @@
 
 ## (3) 平台专属字段
 
-- **平台字段 JSON**：`{{只写 COMMERCE_PLATFORM.md 已配置或用户已确认的字段}}`
+- **平台字段 JSON**：`{{只写内置 Etsy preset 覆盖或用户已确认的字段}}`
 - **Etsy preset**：Sustainability / Occasion / Holiday 等必须从 Etsy 后台字段选项中选择；不确定留空。
-- **小红书 preset**：按 `小红书品牌 ID`、`小红书末级类目 ID`、`小红书商品特色`、`小红书产品参数 JSON`、`小红书 FAQ JSON`、`小红书 SPL/SPV 规格 JSON` 等字段输出；不知道 ID 时写“待后台确认”，不要编造。
+- **小红书 preset（封存，仅未来解封后适用）**：按 `小红书品牌 ID`、`小红书末级类目 ID`、`小红书商品特色`、`小红书产品参数 JSON`、`小红书 FAQ JSON`、`小红书 SPL/SPV 规格 JSON` 等字段输出；不知道 ID 时写“待后台确认”，不要编造。
 
 ---
 
@@ -72,9 +71,7 @@
 
 ## SEO 自检
 
-Etsy：写完按 `references/platforms/etsy.md` 末尾的"SEO 自检清单"逐条核对。
-
-非 Etsy：按 COMMERCE_PLATFORM.md 的平台规则逐条核对；缺规则就标注未知，不能套 Etsy 规则。
+写完按 `references/platforms/etsy.md` 末尾的"SEO 自检清单"逐条核对。
 
 ---
 

@@ -1,6 +1,6 @@
 # 小红书平台 preset
 
-> 仅在目标销售平台是「小红书 / 小红书店铺 / RED」时读取；不要把这些字段套给 Etsy 或其他平台。注册见 [`../../../shared/platform-config.md`](../../../shared/platform-config.md) § 内置平台 preset · 小红书。
+> **⛔ 封存 shelved**：小红书电商整体封存（产品决策 2026-07-24：专注 Etsy），本文件仅在未来解封后启用；字段不能反向套给 Etsy。封存边界见 [`../../../shared/platform-config.md`](../../../shared/platform-config.md) § 小红书（封存 shelved）。
 
 依据：
 - 商品结构 SPU / SPL / SPV / ITEM 分层：https://school.xiaohongshu.com/en/open/product/product-structure.html
@@ -61,7 +61,7 @@
 
 ## 飞书 Base 建字段要求
 
-当 `COMMERCE_PLATFORM.md` 包含小红书平台时，`listing-catalog` 模式 A 建 `Products 商品` 表必须在通用核心字段外加建 [`../base-schema.md`](../base-schema.md) 的"小红书字段"分组。字段多，但这是平台约束；可以先建空字段，后续按 SKU 慢慢补齐。
+未来小红书解封启用后，`listing-catalog` 模式 A 建 `Products 商品` 表必须在通用核心字段外加建 [`../base-schema.md`](../base-schema.md) 的"小红书字段"分组。字段多，但这是平台约束；可以先建空字段，后续按 SKU 慢慢补齐。
 
 ## 发布边界
 

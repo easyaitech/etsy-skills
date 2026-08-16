@@ -10,7 +10,7 @@
 |---|---|---|
 | 品牌语气 / 文案口吻 / 视觉原则 | `BRAND.md` | `shop-foundation`（**不是**本层） |
 | 店铺事实（处理时间 / 政策 / 公告） | `SHOP.md` | `shop-foundation` |
-| 销售平台规则 / 买家语言 / 字段限制 | `COMMERCE_PLATFORM.md` | `shop-foundation` |
+| 销售平台规则 / 买家语言 / 字段限制 | 内置 Etsy preset（`shared/platform-config.md`，随 stack 仓库发版） | 不落工作区，变更反馈 stack 维护者 |
 | 营销定位 / 内容平台规范 | `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md` | `shop-foundation` |
 | 方法论知识 / 写作 SOP | `knowledge/wiki/` + Knowledge Cards | `business-knowledge` |
 | **店主对"怎么做/怎么说"的长期口味**（汇报语气、排期习惯、提醒详略……） | **服务端「我的偏好」注册表键** | **本层（propose → 店主点卡确认）** |

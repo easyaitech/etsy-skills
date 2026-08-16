@@ -39,7 +39,7 @@
 | `方法论` | 可执行的写作 / 运营 SOP（标题去 AI 味、description 开头规则、热点转化框架等）| **必须读 `知识页链接` 并把其中的清单 / 模板 / 正反例应用到产出**；卡面一句话只是指针，不是交付物 |
 | `趋势` | 时效热点 / 季节信号 | 一句话摘要足够；带 `过期提醒日期`，受 [`card-extraction-rules.md`](card-extraction-rules.md) §Expiry sweep 清扫 |
 | `选品` | 选品 / 竞品 / 供应链发现 | 一句话摘要 + 建议动作足够 |
-| `定位` | 长效战略定位 / 品牌护城河 | 一句话摘要足够。**注意**：纯定位内容更应沉淀进 `BRAND_MARKETING.md` / `COMMERCE_PLATFORM.md`，不宜长期只活在 SKIP 级卡表里 |
+| `定位` | 长效战略定位 / 品牌护城河 | 一句话摘要足够。**注意**：纯定位内容更应沉淀进 `BRAND_MARKETING.md`，不宜长期只活在 SKIP 级卡表里 |
 | `观察` | 其他可审计观察（默认）| 一句话摘要足够 |
 
 只有 `方法论` 卡会触发“强制读 wiki 并应用”（契约见 [`knowledge-card-lookup.md`](knowledge-card-lookup.md)）。未标类型的卡按 `观察` 处理（安全默认：不强制读 wiki，避免对每张卡都做昂贵的 wiki 读取）。
