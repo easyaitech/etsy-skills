@@ -30,6 +30,7 @@ TOOLS = {
     "etsy_order_sop_get",
     "etsy_order_sop_update",
     "etsy_order_sop_propose_flow_change",
+    "etsy_order_shipment_submit",
 }
 RUNTIME_FIELDS = {
     "tenantId",
@@ -655,6 +656,127 @@ def run_order_sop_propose_flow_change(client: Client, data: dict[str, Any]) -> d
     return validate_final("etsy_order_sop_propose_flow_change", result)
 
 
+def run_order_shipment_submit(client: Client, data: dict[str, Any]) -> dict[str, Any]:
+    # 订单发货录入（Complete order）。submit 不直接动 Etsy：任务停在 awaiting_confirmation，
+    # 店主在飞书确认卡上点「确认提交」后插件才会去后台执行。语义与 publish 的确认闸同款：
+    # 拿到 awaiting_confirmation 立刻返回（在等一个人，不是在等机器）；同键重调即查询进度。
+    require_keys(
+        data,
+        {"orderNumber", "shipDate", "carrierName", "trackingNumber", "idempotencyKey"},
+        {"orderNumber", "shipDate", "carrierName", "trackingNumber", "idempotencyKey"},
+    )
+    deadline = time.monotonic() + 12 * 60
+    while True:
+        try:
+            status, result = client.post("/api/hermes/etsy/tools/orders/shipment/submit", data)
+        except ToolFailure as error:
+            if error.retryable:
+                raise ToolFailure(
+                    "RESULT_UNKNOWN",
+                    "录入请求的传输结果未知，请先查状态再决定下一步",
+                    retryable=True,
+                    safe_to_retry=False,
+                    action_required="verify_status_only",
+                ) from error
+            raise
+        if status >= 400 or result.get("ok") is False:
+            raise_http(status, result, mutation=True)
+        job = result.get("job")
+        if not isinstance(job, dict):
+            raise ToolFailure(
+                "INVALID_RESPONSE",
+                "录入响应缺 job",
+                retryable=True,
+                safe_to_retry=False,
+                action_required="verify_status_only",
+            )
+        job_status = job.get("status")
+        if job_status == "awaiting_confirmation":
+            confirmation = job.get("confirmation") if isinstance(job.get("confirmation"), dict) else {}
+            card_delivered = bool(result.get("cardDelivered") or confirmation.get("cardDelivered"))
+            return envelope(
+                "etsy_order_shipment_submit",
+                "complete",
+                data={
+                    "status": "awaiting_confirmation",
+                    "cardDelivered": card_delivered,
+                    **({"expiresAt": confirmation["expiresAt"]} if confirmation.get("expiresAt") else {}),
+                    **({"ledgerWarnings": result["ledgerWarnings"]} if isinstance(result.get("ledgerWarnings"), list) and result.get("ledgerWarnings") else {}),
+                    "note": (
+                        "还没有动 Etsy。系统已把发货信息做成确认卡发到店主飞书，只有店主在卡上点"
+                        "「确认提交」插件才会去 Etsy 后台执行录入。你不能替店主确认，也不要重复提交同一单；"
+                        "要查结果就用**同一份请求、同一个 idempotencyKey** 再调一次本工具。"
+                        if card_delivered else
+                        "还没有动 Etsy，而且确认卡这次没能送到店主的飞书（任务停在等确认，谁也领不走）。"
+                        "请用**同一个 idempotencyKey** 原样重试一次补投这张卡；不要换 key 重建任务。"
+                    ),
+                },
+            )
+        if job_status == "cancelled":
+            return envelope(
+                "etsy_order_shipment_submit",
+                "failed",
+                data={"status": "cancelled"},
+                errors=[{
+                    "code": "SHIPMENT_CANCELLED",
+                    "message": str(job.get("note") or "店主没有确认这次录入，Etsy 上没有任何变化"),
+                    "retryable": False,
+                    "safeToRetry": False,
+                }],
+            )
+        if job_status == "submitted":
+            return envelope(
+                "etsy_order_shipment_submit",
+                "complete",
+                data={
+                    "status": "submitted",
+                    **({"submittedAt": job["submittedAt"]} if job.get("submittedAt") else {}),
+                },
+            )
+        if job_status in {"failed", "expired"}:
+            return envelope(
+                "etsy_order_shipment_submit",
+                "failed",
+                data={"status": job_status},
+                errors=[{
+                    "code": f"SHIPMENT_{str(job_status).upper()}",
+                    "message": str(job.get("note") or job_status),
+                    "retryable": False,
+                    "safeToRetry": False,
+                }],
+            )
+        if job_status == "result_unknown":
+            return envelope(
+                "etsy_order_shipment_submit",
+                "unknown",
+                data={"status": "result_unknown"},
+                errors=[{
+                    "code": "RESULT_UNKNOWN",
+                    "message": str(job.get("note") or "录入结果未知，请让店主先去 Etsy 后台核对这单的实际状态"),
+                    "retryable": True,
+                    "safeToRetry": False,
+                    "actionRequired": "verify_status_only",
+                }],
+            )
+        if job_status not in {"queued", "dispatched", "submit_authorized"}:
+            raise ToolFailure(
+                "INVALID_RESPONSE",
+                f"未知录入状态：{job_status}",
+                retryable=True,
+                safe_to_retry=False,
+                action_required="verify_status_only",
+            )
+        if time.monotonic() >= deadline:
+            raise ToolFailure(
+                "RESULT_UNKNOWN",
+                "录入在等待窗口内未得到可证明终态",
+                retryable=True,
+                safe_to_retry=False,
+                action_required="verify_status_only",
+            )
+        time.sleep(2)
+
+
 def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, Any]:
     if tool not in TOOLS:
         raise ToolFailure("UNKNOWN_TOOL", f"未知工具：{tool}")
@@ -682,6 +804,8 @@ def execute(tool: str, value: Any, client: Client | None = None) -> dict[str, An
         return run_order_sop_update(runtime, data)
     if tool == "etsy_order_sop_propose_flow_change":
         return run_order_sop_propose_flow_change(runtime, data)
+    if tool == "etsy_order_shipment_submit":
+        return run_order_shipment_submit(runtime, data)
     raise ToolFailure("UNKNOWN_TOOL", f"未知工具：{tool}")
 
 
