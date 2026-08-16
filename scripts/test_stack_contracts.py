@@ -33,7 +33,7 @@ class StackContractsTest(unittest.TestCase):
     def test_manifest_is_the_complete_agent_tool_source(self) -> None:
         tools = self.manifest.get("agentTools")
         self.assertIsInstance(tools, list)
-        self.assertEqual(len(tools), 11)
+        self.assertEqual(len(tools), 12)
         self.assertEqual(len(tools), len(set(tools)))
         self.assertTrue(all(re.fullmatch(r"[a-z][a-z0-9_]*", name) for name in tools))
         self.assertEqual(set(tools), agent_tool.TOOLS)
@@ -52,8 +52,8 @@ class StackContractsTest(unittest.TestCase):
     def test_public_tool_contract_names_all_manifest_tools(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         contract = (ROOT / "shared" / "etsy-agent-tools.md").read_text(encoding="utf-8")
-        self.assertIn("十一个 Agent 工具", readme)
-        self.assertIn("十一个稳定工具", contract)
+        self.assertIn("十二个 Agent 工具", readme)
+        self.assertIn("十二个稳定工具", contract)
         for name in self.manifest["agentTools"]:
             with self.subTest(name=name):
                 self.assertIn(f"`{name}`", readme)

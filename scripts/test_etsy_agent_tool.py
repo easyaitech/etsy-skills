@@ -766,3 +766,100 @@ class OrderSopToolsTest(unittest.TestCase):
             FakeClient([(200, failed)]),
         )
         self.assertEqual(result["errors"][0]["code"], "ORDER_SOP_ORDER_NOT_FOUND")
+
+
+class OrderShipmentSubmitTest(unittest.TestCase):
+    """订单发货录入：submit 只建任务+确认卡，店主点卡才动 Etsy（与 publish 确认闸同款语义）。"""
+
+    BODY = {
+        "orderNumber": "4136102143",
+        "shipDate": "2026-08-16",
+        "carrierName": "4PX",
+        "trackingNumber": "4PX3003050680083CN",
+        "idempotencyKey": "ship-1",
+    }
+
+    def test_requires_all_five_fields(self):
+        with self.assertRaises(tool.ToolFailure) as raised:
+            tool.execute("etsy_order_shipment_submit", {"orderNumber": "4136102143"}, FakeClient([]))
+        self.assertEqual(raised.exception.code, "INVALID_INPUT")
+        with self.assertRaises(tool.ToolFailure):
+            tool.execute("etsy_order_shipment_submit", {**self.BODY, "extra": 1}, FakeClient([]))
+
+    def test_stops_at_the_owner_confirmation_card_instead_of_polling(self):
+        client = FakeClient([(201, {
+            "ok": True,
+            "cardDelivered": True,
+            "ledgerWarnings": ["订单表里这单已有另一个跟踪号 OLD-1，与本次提交的不同，请确认没有录错单"],
+            "job": {
+                "status": "awaiting_confirmation",
+                "confirmation": {"cardDelivered": True, "expiresAt": "2026-08-16T09:00:00.000Z"},
+            },
+        })])
+        with patch.object(tool.time, "sleep") as slept:
+            result = tool.execute("etsy_order_shipment_submit", dict(self.BODY), client)
+        self.assertEqual(result["outcome"], "complete")
+        self.assertEqual(result["data"]["status"], "awaiting_confirmation")
+        self.assertTrue(result["data"]["cardDelivered"])
+        self.assertIn("还没有动 Etsy", result["data"]["note"])
+        self.assertEqual(result["data"]["ledgerWarnings"][0].count("OLD-1"), 1)
+        self.assertEqual(len(client.calls), 1)
+        self.assertEqual(client.calls[0][0], "/api/hermes/etsy/tools/orders/shipment/submit")
+        slept.assert_not_called()
+
+    def test_card_not_delivered_says_replay_same_key(self):
+        client = FakeClient([(201, {
+            "ok": True,
+            "cardDelivered": False,
+            "job": {"status": "awaiting_confirmation", "confirmation": {"cardDelivered": False}},
+        })])
+        result = tool.execute("etsy_order_shipment_submit", dict(self.BODY), client)
+        self.assertFalse(result["data"]["cardDelivered"])
+        self.assertIn("同一个 idempotencyKey", result["data"]["note"])
+
+    def test_replay_with_same_key_reports_submitted_terminal(self):
+        client = FakeClient([(200, {
+            "ok": True,
+            "deduped": True,
+            "job": {"status": "submitted", "submittedAt": "2026-08-16T08:09:00.000Z"},
+        })])
+        result = tool.execute("etsy_order_shipment_submit", dict(self.BODY), client)
+        self.assertEqual(result["outcome"], "complete")
+        self.assertEqual(result["data"]["status"], "submitted")
+        self.assertEqual(result["data"]["submittedAt"], "2026-08-16T08:09:00.000Z")
+
+    def test_owner_cancel_is_a_proven_not_submitted_failure(self):
+        client = FakeClient([(200, {"ok": True, "job": {
+            "status": "cancelled",
+            "note": "店主在确认卡上取消了这次发货录入",
+        }})])
+        result = tool.execute("etsy_order_shipment_submit", dict(self.BODY), client)
+        self.assertEqual(result["outcome"], "failed")
+        self.assertEqual(result["errors"][0]["code"], "SHIPMENT_CANCELLED")
+
+    def test_result_unknown_is_not_safe_to_retry(self):
+        client = FakeClient([(200, {"ok": True, "job": {"status": "result_unknown", "note": "proof missing"}})])
+        result = tool.execute("etsy_order_shipment_submit", dict(self.BODY), client)
+        self.assertEqual(result["outcome"], "unknown")
+        self.assertFalse(result["errors"][0]["safeToRetry"])
+        self.assertEqual(result["errors"][0]["actionRequired"], "verify_status_only")
+
+    def test_http_rejections_pass_through_with_backend_code(self):
+        client = FakeClient([(409, {"ok": False, "code": "SHIPMENT_JOB_PENDING_EXISTS"})])
+        with self.assertRaises(tool.ToolFailure) as raised:
+            tool.execute("etsy_order_shipment_submit", dict(self.BODY), client)
+        self.assertEqual(raised.exception.code, "SHIPMENT_JOB_PENDING_EXISTS")
+
+    def test_transport_error_is_unknown_and_not_safe_to_retry(self):
+        client = FakeClient([])
+        client.post = Mock(side_effect=tool.ToolFailure(
+            "TRANSPORT_ERROR",
+            "connection reset",
+            retryable=True,
+            safe_to_retry=True,
+        ))
+        with self.assertRaises(tool.ToolFailure) as raised:
+            tool.execute("etsy_order_shipment_submit", dict(self.BODY), client)
+        self.assertEqual(raised.exception.code, "RESULT_UNKNOWN")
+        self.assertFalse(raised.exception.safe_to_retry)
+        self.assertEqual(raised.exception.action_required, "verify_status_only")

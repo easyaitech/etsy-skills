@@ -2,6 +2,16 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.30] - 2026-08-16
+
+- **新增第十二个正式工具 `etsy_order_shipment_submit`（订单发货录入 / Complete order）**：
+  店长在飞书一步步收齐「订单号 + 发货日期 + 物流公司 + 快递单号」后一次性提交；
+  工具**不直接动 Etsy**——后端建任务并给店主发确认卡，店主点「确认提交」后由浏览器插件在
+  Orders 页拟人化完成 Complete order（配套主仓 v0.6.101.0 + 插件 0.5.161）。
+  包装层五字段全必填白名单；`awaiting_confirmation` 当场返回（在等人不轮询）、同
+  idempotencyKey 重调即查询进度；`result_unknown` 一律 verify_status_only 绝不引导重录。
+  选型矩阵补 3 条发货录入用例；README / 工具契约 / 数量断言同步到十二个。
+
 ## [v1.0.29] - 2026-08-16
 
 - **基座重构：去掉「平台基座」，销售平台固定 Etsy**（对标 coreyhaines31/marketingskills 的 product-marketing

@@ -23,7 +23,8 @@
     "get_etsy_ads",
     "etsy_order_sop_get",
     "etsy_order_sop_update",
-    "etsy_order_sop_propose_flow_change"
+    "etsy_order_sop_propose_flow_change",
+    "etsy_order_shipment_submit"
   ],
   "skills": [
     "shop-foundation",

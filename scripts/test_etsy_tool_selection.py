@@ -64,6 +64,9 @@ CASES = [
     ("查一下订单 1234567890 的 SOP 做到哪一步", "etsy_order_sop_get"),
     ("把这单的打包步骤标记成已完成", "etsy_order_sop_update"),
     ("提议把 SOP 的质检步骤移到打包前", "etsy_order_sop_propose_flow_change"),
+    ("这单发货了，帮我把快递单号录到 Etsy 后台", "etsy_order_shipment_submit"),
+    ("替我在 Etsy 上完成这张订单的 Complete order", "etsy_order_shipment_submit"),
+    ("发货日期今天、物流 4PX、单号收齐了，提交发货录入", "etsy_order_shipment_submit"),
 ]
 
 
