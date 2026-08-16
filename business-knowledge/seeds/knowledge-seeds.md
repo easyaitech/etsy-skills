@@ -14,7 +14,7 @@
   ├ 不可覆盖闸门：安全 / 合规 / QA / 写入前确认 / 平台硬规则
   └ 可拷贝/可选默认：平台 preset（引用 live）、知识种子 seeds/（拷贝即拥有）
 租户 workspace（<workspace>/，每客户隔离）
-  └ BRAND/SHOP/COMMERCE_PLATFORM + knowledge/（含拷入的种子）+ Base（店主偏好在服务端，不落工作区）
+  └ 基座四文件（BRAND/SHOP/BRAND_MARKETING/MARKETING_PLATFORM）+ knowledge/（含拷入的种子）+ Base（店主偏好在服务端，不落工作区）
 ```
 
 `skill-prefs.md`（服务端偏好）与「基座文件 / 知识」都在**租户个性化层内部**，不是独立架构层。

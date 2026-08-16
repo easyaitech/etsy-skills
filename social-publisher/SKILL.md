@@ -52,7 +52,7 @@ Instagram / TikTok: 未来适配器或人工后台
 
 步骤：
 
-1. 解析工作区根，读取 `COMMERCE_PLATFORM.md` 和 `MARKETING_PLATFORM.md`（如存在），并按 `shared/store-base-architecture.md` 定位店铺总 Base。
+1. 解析工作区根，读取 `MARKETING_PLATFORM.md`（如存在），并按 `shared/store-base-architecture.md` 定位店铺总 Base。销售平台固定 Etsy，商品型发布规则以内置 Etsy preset 为准（`shared/platform-config.md`）。
 2. 读 [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md)，确认店铺总 Base 内的 `社媒发布队列` 表是否存在。
 3. 如果发布任务表缺少自动发布运行字段，列出字段清单给用户确认后再补：`自动发布`、`发布适配器`、`外部队列 ID`（或 `ECS job ID`，二选一）、`发布尝试次数`、`最后尝试时间`、`下次重试时间`、`执行锁`（或 `执行锁 (lock_token)`，二选一）、`失败原因分类`、`事件日志`。不要默认补 `素材顺序` / `封面素材` / `标签` / `备注` / 平台扩展类字段；补完后按 `publish-composer` 的默认视图字段隐藏锁、重试、外部队列 ID、事件日志等技术列。
 4. 读 [`references/adapter-registry.md`](references/adapter-registry.md)，展示当前适配器状态：

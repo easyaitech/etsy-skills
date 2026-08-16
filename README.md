@@ -2,9 +2,9 @@
 
 通用电商运营 skill bundle，跑在 [Hermes Agent](https://hermes-agent.nousresearch.com/) 上（Mac mini 本地），用 [larksuite/cli](https://github.com/larksuite/cli) 操作飞书 Base / 文档 / 云空间。
 
-每个 skill 各管一摊：品牌底座、销售平台配置、商品目录、订单客服、供应商管理、业务知识库、素材库、社交媒体发布、Pinterest 自动 pin、AI 图片合成、趋势热词采集（完整列表见下面 §Skills）。默认数据架构是 **一个店铺 = 一个飞书多维表格 Base；一个业务对象 = Base 内一张表**，下游都引用 `BRAND.md` / `SHOP.md` / `COMMERCE_PLATFORM.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`，从 `shop-foundation` 开始建是推荐顺序。
+每个 skill 各管一摊：品牌底座、商品目录、订单客服、供应商管理、业务知识库、素材库、社交媒体发布、Pinterest 自动 pin、AI 图片合成、趋势热词采集（完整列表见下面 §Skills）。默认数据架构是 **一个店铺 = 一个飞书多维表格 Base；一个业务对象 = Base 内一张表**，下游都引用四份基座文件 `BRAND.md` / `SHOP.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`，从 `shop-foundation` 开始建是推荐顺序。
 
-仓库历史上叫 `etsy-skills`，Etsy 和小红书继续作为内置平台 preset。新的通用入口是 `ecommerce-stack`，旧命令 `etsy-stack` 保留兼容。
+销售平台**固定为 Etsy**：平台规则（标题 / tag / 图片 / 订单客服边界）走仓库内置 Etsy preset（见 `shared/platform-config.md`），工作区不维护平台配置文件；小红书电商封存。仓库历史上叫 `etsy-skills`，新的通用入口是 `ecommerce-stack`，旧命令 `etsy-stack` 保留兼容。
 
 ## 安装
 
@@ -42,9 +42,9 @@ bash install.sh
 
 | Skill | 干啥 |
 |---|---|
-| [`shop-foundation`](shop-foundation/SKILL.md) | 维护 BRAND.md（品牌原则）+ SHOP.md（店铺事实）+ COMMERCE_PLATFORM.md（销售平台配置）+ BRAND_MARKETING.md（品牌营销策略）+ MARKETING_PLATFORM.md（内容平台策略）五份元基础 |
-| [`listing-catalog`](listing-catalog/SKILL.md) | 店铺总 Base 内 `Products 商品` 表 + 按目标电商平台配置撰写商品页 / listing 文案 + 读取 / 分析 / 优化现有 Etsy Listing（线上事实走独立 public/admin 只读工具，不以 Base 代替） |
-| [`orders-customers`](orders-customers/SKILL.md) | 店铺总 Base 内 `Orders 订单` / `Customers 客户` 表 + 按平台配置支撑客服/履约 SOP + 客户标签 |
+| [`shop-foundation`](shop-foundation/SKILL.md) | 维护品牌基座 BRAND.md（品牌原则）+ BRAND_MARKETING.md（品牌营销策略）+ MARKETING_PLATFORM.md（内容平台策略）与店铺基座 SHOP.md（店铺事实）四份元基础；支持从店铺真实数据自动起草（模式 A0） |
+| [`listing-catalog`](listing-catalog/SKILL.md) | 店铺总 Base 内 `Products 商品` 表 + 按内置 Etsy preset 撰写商品页 / listing 文案 + 读取 / 分析 / 优化现有 Etsy Listing（线上事实走独立 public/admin 只读工具，不以 Base 代替） |
+| [`orders-customers`](orders-customers/SKILL.md) | 店铺总 Base 内 `Orders 订单` / `Customers 客户` 表 + 按内置 Etsy preset 支撑客服/履约 SOP + 客户标签 |
 | [`logistics-tracking`](logistics-tracking/SKILL.md) | 跨境物流状态跟踪（薄 skill）：让 agent 调 `track` 命令查/录物流，接后端常驻的 17TRACK 跟踪服务（每天自动轮询到签收）；正确性在后端服务，不写飞书 Base |
 | [`supplier-foundation`](supplier-foundation/SKILL.md) | 店铺总 Base 内 `Suppliers 供应商` 表 + 采购来源筛选、主用/备用/淘汰记录 |
 | [`inventory`](inventory/SKILL.md) | 实物库存（成品 + 包材附件）：店铺总 Base 内 `Inventory 库存品` + `Inventory Ledger 库存流水` 两张表，流水记账、订单成交自动扣减、跌破安全库存早报点名；商品表的「库存」列是平台在售数量、不归它管 |
@@ -61,7 +61,7 @@ bash install.sh
 
 ## 工作区初始化（首次使用必读）
 
-stack 中所有 skill 都会把 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md / 社媒发布队列辅助文件等数据落到统一的「工作区」。Hermes profile 隔离环境下 `$HOME` 不是系统用户 HOME，靠 `~/` 推路径会让数据落到 profile sandbox。**必须**显式声明工作区位置：
+stack 中所有 skill 都会把 BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md / 社媒发布队列辅助文件等数据落到统一的「工作区」。Hermes profile 隔离环境下 `$HOME` 不是系统用户 HOME，靠 `~/` 推路径会让数据落到 profile sandbox。**必须**显式声明工作区位置：
 
 ```bash
 # 进到希望放数据的目录
@@ -88,7 +88,7 @@ ecommerce-stack workspace
 
 skill 是**共享只读、会持续升级**的产品引擎，不为单个客户改动。客户要个性化时，**不改 skill 本体、不 fork**：
 
-- **品牌语气 / 店铺事实 / 销售平台规则 / 营销策略 / 内容平台规则** → `BRAND.md` / `SHOP.md` / `COMMERCE_PLATFORM.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`（用 `shop-foundation` 维护，被多个 skill 读取）。
+- **品牌语气 / 店铺事实 / 营销策略 / 内容平台规则** → `BRAND.md` / `SHOP.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`（用 `shop-foundation` 维护，被多个 skill 读取）。销售平台规则不在工作区：固定 Etsy，走内置 preset（`shared/platform-config.md`）。
 - **店主的长期口味偏好**（汇报语气 / 排期习惯 / 提醒详略……）→ **服务端「我的偏好」设置层**：agent 只能提议，店主在飞书确认卡上点「确认记住」才生效，当前偏好由后端每轮注入 agent 上下文。契约见 [`shared/skill-prefs.md`](shared/skill-prefs.md)。
 - **安全 / 合规 / QA 闸 / 写入确认** → 不可被覆盖。
 
@@ -172,7 +172,7 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 │   ├── tools-architecture.md  # 工具架构硬约束（Hermes 大脑 / ECS 控制面 / 浏览器插件）
 │   ├── backend-api-access.md  # 调 ECS 后端的访问约定（三个环境变量 / 令牌按引用用 / 判据）
 │   ├── social-adapter-paradigm.md # 社媒发布 adapter 共享范式（三层架构 / job 生命周期 / 模式分类 / 新平台清单）
-│   ├── platform-config.md     # 销售平台配置契约
+│   ├── platform-config.md     # 销售平台契约（Etsy 固定 + 内置 preset 索引）
 │   ├── skill-prefs.md         # 店主偏好（服务端「我的偏好」设置层）契约
 │   └── ai-image-sanitization.md # 最终 listing / 社媒发布图的 AI metadata / watermark 清理协议
 ├── shop-foundation/           # ┐

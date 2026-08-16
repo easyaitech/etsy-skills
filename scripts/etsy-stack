@@ -583,7 +583,7 @@ if copied:
         print(f"     • {sid} → {rel}")
     print("  下次跑 business-knowledge 会提议把方法论种子登记成 Knowledge Card（diff 预览 + 确认）；登记后 listing 才能引用。")
 SEEDPY
-    echo "下一步：用 shop-foundation 建 BRAND.md / SHOP.md / COMMERCE_PLATFORM.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md"
+    echo "下一步：用 shop-foundation 建 BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md（可从店铺数据自动起草）"
     ;;
 
   help|-h|--help|"")

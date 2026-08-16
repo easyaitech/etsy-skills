@@ -1,6 +1,6 @@
 # Etsy 平台 preset
 
-> **⛔ 平台门槛**：本文件只在目标平台是 Etsy（`COMMERCE_PLATFORM.md` 明确选 Etsy，或用户目标明显是 Etsy）时读取。礼物 / 节日维度绑定 Etsy 的 listing 结构，**非 Etsy 平台不读本文件、不跑礼物 / 节日调研**。注册见 [`../../../shared/platform-config.md`](../../../shared/platform-config.md) § 内置平台 preset · Etsy。
+> **平台定位**：Etsy 是本 stack 唯一销售平台，直接执行本文件，无需先确认目标平台。礼物 / 节日维度绑定 Etsy 的 listing 结构。索引见 [`../../../shared/platform-config.md`](../../../shared/platform-config.md) § Etsy 内置 preset 索引。
 >
 > 本文件只写**长期有效的原则**。会随时间变的东西——具体热词、搜索量 / 竞争阈值、当年节日日期、第三方工具的界面——一律不写进来，由 agent 在写 listing 当时按实时数据判断。
 
@@ -43,10 +43,9 @@
 
 本 preset 在 listing-catalog 模式 B 的 step 5.5 声明一个附加调研环节，内容如下：
 
-**(Etsy 专属，Etsy 下才跑；非 Etsy 平台整段跳过)** — **仅当目标平台是 Etsy 时执行**。礼物 / 节日维度是 Etsy 搜索流量大头、是 Etsy SEO 的输入，不套用到小红书或其他无礼物槽位的平台。注册见 [`../../../shared/platform-config.md`](../../../shared/platform-config.md) § 内置平台 preset · Etsy。按上文 § 礼物维度 的原则收集：先判断自购 / 送礼，送礼则明确受众 / 关系、场合、是否贴近节日；投入与商品价值匹配（低价轻量、高价值 / 主推品深挖）。
+礼物 / 节日维度是 Etsy 搜索流量大头、是 Etsy SEO 的输入，绑定 Etsy 的 listing 结构。注册见 [`../../../shared/platform-config.md`](../../../shared/platform-config.md) § Etsy 内置 preset 索引。按上文 § 礼物维度 的原则收集：先判断自购 / 送礼，送礼则明确受众 / 关系、场合、是否贴近节日；投入与商品价值匹配（低价轻量、高价值 / 主推品深挖）。
 
 - 产出一个礼物词库（驱动 step 7 的 title 礼物位 / tags 礼物词 / description 礼物语境）+ 经 BRAND.md 语调过滤后的「过滤掉的候选词」清单
-- **非 Etsy 平台**：跳过本环节——不收集礼物倾向、不产礼物词库，直接进 step 5.6
 
 ---
 

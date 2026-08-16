@@ -1,9 +1,11 @@
 {
   "name": "ecommerce-stack",
   "legacyName": "etsy-stack",
-  "description": "通用电商运营 skill bundle（Hermes runtime）。平台由工作区 COMMERCE_PLATFORM.md 驱动，Etsy 和小红书作为可选内置平台 preset，无特权默认平台。发布口径是 main，版本号来源是 CHANGELOG.md。",
+  "description": "通用电商运营 skill bundle（Hermes runtime）。销售平台固定为 Etsy，规则走内置 preset（shared/platform-config.md）；小红书电商封存（产品决策 2026-07-24）。发布口径是 main，版本号来源是 CHANGELOG.md。",
   "platformPresets": [
-    "etsy",
+    "etsy"
+  ],
+  "shelvedPlatformPresets": [
     "xiaohongshu"
   ],
   "platformConfig": "shared/platform-config.md",

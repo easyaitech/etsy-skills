@@ -2,6 +2,25 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.29] - 2026-08-16
+
+- **基座重构：去掉「平台基座」，销售平台固定 Etsy**（对标 coreyhaines31/marketingskills 的 product-marketing
+  基座范式后定案）。工作区基座从五份变四份：品牌基座 `BRAND.md` + `BRAND_MARKETING.md` +
+  `MARKETING_PLATFORM.md`，店铺基座 `SHOP.md`；`COMMERCE_PLATFORM.md` 从基座移除（模板删除），
+  销售平台规则一律走仓库内置 Etsy preset——`shared/platform-config.md` 重写为「Etsy 固定契约 + preset 索引」，
+  把 2026-07-24「专注 Etsy、小红书封存」的产品决策落到基座架构。存量工作区的 COMMERCE_PLATFORM.md
+  由 shop-foundation 提示一次性迁移（店铺自定义条目并入 SHOP.md 后归档，不静默迁）；`etsy-stack.json`
+  小红书 preset 移入 `shelvedPlatformPresets`；全栈约 30 处引用清扫为内置 preset 口径、删除多平台分支
+  prose（未来真开第二销售平台时再重新引入工作区平台配置机制，旧契约见 git 历史）。
+- **shop-foundation 新增模式 A0 自动起草（冷启动首选）**：不再让用户从零访谈——先用
+  `etsy_listings_get` / `etsy_customer_messages_get` / `get_etsy_stats` 拉店铺真实数据 + 用户粘贴
+  About / 评价原文，按正式模板自动起草基座文件，用户做校正题而不是问答题；事实与推断分开标注
+  （推断标 `⚠️ 推断`、须用户确认才转正），主观空白留 TODO 转访谈补齐。新增
+  `shop-foundation/references/auto-draft.md`。
+- **基座文件加版本号**：四份基座文件头部新增 `版本：vN` 元信息，修订日志升级为
+  `- vN (YYYY-MM-DD): 改了什么 + 为什么（来源）`；实质性改动升版、纯错别字不升版不记日志、
+  重定位级改动必须显式标注「重定位」并当面提醒用户下游产出将按新口径生成。
+
 ## [v1.0.28] - 2026-08-16
 
 - 正式 Etsy Agent 工具改由 `etsy-stack.json` 的 11 项 `agentTools` 清单统一驱动安装、CLI、合同和文档，补齐三个订单 SOP 工具；清单名称先做非空、唯一和安全正则校验，冲突的非托管命令文件保留但安装明确失败。

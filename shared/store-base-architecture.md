@@ -14,7 +14,7 @@
 4. **relation 优先**：同 Base 内表之间优先使用关联字段；跨 Base 只作为迁移期兼容，不作为新方案默认。
 5. **SKU 不因合并改名**：SKU 是 `Products 商品` 表的业务主键，合并只改变数据组织方式，不改变 SKU 编码。若确需规范化，新增 `旧 SKU` / `SKU Alias` 字段，不覆盖原值。
 6. **社媒发布队列单表多平台**：所有平台的发布任务（含 Pinterest pin）都进 `社媒发布队列` 一张表，用 `平台` 字段区分；不再为 Pinterest 单建执行队列表，Pinterest 行就是 `平台 = Pinterest` 的记录。
-7. **Markdown 基座不搬进 Base 替代**：BRAND.md、SHOP.md、COMMERCE_PLATFORM.md、BRAND_MARKETING.md、MARKETING_PLATFORM.md 仍是工作区根目录文件；Base 只记录结构化运营数据。
+7. **Markdown 基座不搬进 Base 替代**：BRAND.md、SHOP.md、BRAND_MARKETING.md、MARKETING_PLATFORM.md 仍是工作区根目录文件；Base 只记录结构化运营数据。
 8. **客户共享入口只给店铺总 Base**：不默认创建或共享飞书 Wiki / 知识库给客户；需要给客户看业务数据时，共享该店铺总 Base，并用高级权限限定可见表、视图、字段和记录。
 9. **机器人权限绑定到单店铺 Base**：飞书机器人和 Hermes Agent 默认只拿当前店铺总 Base 及必要云盘文件夹权限，不申请全空间、全知识库或跨店铺权限。
 10. **迁移只追加不破坏**：迁移期保留旧 Base token / 旧 table_id / 旧 record_id / 迁移日期 / 迁移状态字段；旧 Base 不删除、不清空，直到人工验收。

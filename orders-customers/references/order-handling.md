@@ -1,6 +1,6 @@
 # 订单处理 SOP（平台中性骨架）
 
-> 这是**平台中性**的客服场景骨架。买家可见语言、具体措辞、平台特例（消息入口 / 售后链路 / 媒体限制）一律以**目标平台 preset**（`platforms/<platform>.md`，契约见 `platforms/platform-presets.md`）+ `COMMERCE_PLATFORM.md` 为准。下面出现的**英文例句仅为示意，默认对应 Etsy preset**；处理小红书等其他平台时，按该平台 preset 的买家语言改写，不要照搬英文。
+> 这是**平台中性**的客服场景骨架。买家可见语言、具体措辞、平台特例（消息入口 / 售后链路 / 媒体限制）一律以**内置 Etsy preset**（`platforms/etsy.md`，契约见 `platforms/platform-presets.md`）为准；买家语言默认英文（Etsy）。下面出现的**英文例句对应 Etsy preset**。
 
 > 写客服回复时按场景找对应 SOP。所有回复**整篇展示给用户**确认后，由用户自己复制到目标平台后台 / 客服入口发送。
 
@@ -172,15 +172,14 @@
 
 1. **先查 Base 拿上下文**：订单详情 + 客户标签 + 历史互动。不要在不知道背景的情况下回。
 2. **政策事实 → 引 SHOP.md**：处理时间、运输、退换货——一字不差从 SHOP.md 抄；不要按记忆答。
-3. **平台边界 → 引 COMMERCE_PLATFORM.md**：消息入口、自动化边界、买家语言和售后流程按目标平台配置；没配置就标注未知，不编造。
+3. **平台边界 → 引内置 Etsy preset**：消息入口、自动化边界、买家语言和售后流程按 `platforms/etsy.md`；preset 没写的标注未知，不编造。
 4. **语气 → 引 BRAND.md**：不温和、不克制 = 不像我们品牌。每条回复写完自己核一下"这像不像 BRAND.md 文案语调段描述的那种说话方式"。
 5. **回复落地后回写 Base**：用户最终发出的版本要简要记到 `Orders 订单` 表的"客服记录"字段；如果这次互动反映客户特征，更新客户标签。
-6. **纠正即沉淀**：用户改你的回复时，如果改的是语气/姿态层面的，提议沉淀到 BRAND.md（用 shop-foundation 流程）；如果改的是政策口径，提议更新 SHOP.md；如果改的是平台规则，提议更新 COMMERCE_PLATFORM.md。
+6. **纠正即沉淀**：用户改你的回复时，如果改的是语气/姿态层面的，提议沉淀到 BRAND.md（用 shop-foundation 流程）；如果改的是政策口径，提议更新 SHOP.md；如果改的是平台规则——店铺自身口径沉淀进 SHOP.md，Etsy 官方规则变更改内置 Etsy preset（走仓库升级）。
 
 ## 平台特例
 
-上面的场景骨架对任何平台通用；平台特有的字段名、买家语言、消息 / 售后入口、媒体限制都在**目标平台 preset**里。处理订单 / 客服前先读对应 preset：
+上面的场景骨架平台中性；平台特有的字段名、买家语言、消息 / 售后入口、媒体限制都在**内置 Etsy preset**里。处理订单 / 客服前先读：
 
 - **Etsy** → [`platforms/etsy.md`](platforms/etsy.md)：英文站内信、`Ship by` 承诺发货、消息不直接发视频（截图最多 3 张）、Etsy case / 退款边界。
-- **小红书** → [`platforms/xiaohongshu.md`](platforms/xiaohongshu.md)：中文客服；不按 Etsy username / order number 解析；订单详情导出前可能被取消（遇订单不存在 / 已取消先记录取消状态，不推进履约）；售后走小红书平台链路（草稿只写建议，不越流程承诺退款 / 补发）；完整地址 / 电话不进 Base（只留地区级 + `openAddressId` + 打单证据）。
-- **其他平台**（亚马逊等）→ 先有 `platforms/<platform>.md` preset 才能处理；缺则 BLOCK，不拿别平台规则硬套（见 `platforms/platform-presets.md`）。
+- **小红书**（封存，产品决策 2026-07-24，仅未来解封后启用）→ [`platforms/xiaohongshu.md`](platforms/xiaohongshu.md)：中文客服；不按 Etsy username / order number 解析；订单详情导出前可能被取消（遇订单不存在 / 已取消先记录取消状态，不推进履约）；售后走小红书平台链路（草稿只写建议，不越流程承诺退款 / 补发）；完整地址 / 电话不进 Base（只留地区级 + `openAddressId` + 打单证据）。

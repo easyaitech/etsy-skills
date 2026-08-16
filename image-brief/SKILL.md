@@ -35,12 +35,12 @@ image-brief  产出平台感知 brief（§A 槽位 / §B Mood / §C 镜头清单
 | 2 | `<workspace>/BRAND.md` § 视觉原则 + § 视觉禁区 | 必需但**降级可跑**（DEGRADE）| 缺失：§B Mood 段输出 "⚠️ BRAND.md 未建立——本段先留空，回 shop-foundation 建库后回头补"，brief 仍可出 §A/§C/§D/§E |
 | 3 | `<workspace>/BRAND_MARKETING.md` 第 4 章视觉调性铁律 / 第 5 章红线（喂 §B Mood）+ 第 1/2/3 章 人群优先级 / 情感触点 / 场景表（喂 §C Lifestyle）| 推荐但**降级可跑**（DEGRADE）| 缺失：§B 视觉铁律层 + §C 跨平台场景层标 "⚠️ BRAND_MARKETING.md 未建立——§B 仅按 BRAND.md 视觉原则、§C 仅按礼物词库 / 用户口述出图"，brief 仍可出。回复末尾提示补建（只说一次）|
 | 4 | **目标平台 + 用途**（必需） | 必需（BLOCK）| 缺：问用户"这组图发哪个平台、什么用途（listing 主图 / 详情 / 小红书笔记 / Pinterest pin / 营销）" |
-| 5 | `<workspace>/COMMERCE_PLATFORM.md` / `MARKETING_PLATFORM.md` § 1.2 视觉规范（画幅 / 构图 / 背景 / 光线 / 元素密度 / 文字位置 / 字体）+ 平台红线 | 目标平台非 Etsy / 小红书时必需（非内置平台 BLOCK；Etsy / 小红书走 preset 故 SKIP）| Etsy 用内置 10 槽位 preset；小红书用内置商品图 / 详情图 / 笔记图规则；其他平台缺配置则阻塞，提示先用 shop-foundation 补。喂 §A 槽位（比例 / 文字位置）+ §B 平台执行层 |
+| 5 | 内置 Etsy preset（`shared/platform-config.md` 索引）/ `MARKETING_PLATFORM.md` § 1.2 视觉规范（画幅 / 构图 / 背景 / 光线 / 元素密度 / 文字位置 / 字体）+ 平台红线 | 销售平台固定 Etsy 走内置 preset 故 SKIP；内容平台缺 MARKETING_PLATFORM.md 时 BLOCK | Etsy 用内置 10 槽位 preset；小红书规则（商品图 / 详情图 / 笔记图）已封存（产品决策 2026-07-24：专注 Etsy），仅未来解封后启用；内容平台缺配置则阻塞，提示先用 shop-foundation 补。喂 §A 槽位（比例 / 文字位置）+ §B 平台执行层 |
 | 6 | listing-catalog 礼物词库（受众 / 场景 / 节日 / 包装）| 强烈推荐**不阻塞**（DEGRADE）| (a) 反向触发 → listing-catalog 现传 in-memory；(b) 主动触发 → 从该 SKU 的 Base description 礼物 / 使用语境 + tags 礼物词抽取已 fused 文本；喂 §C Lifestyle 段。**Etsy 专属**——非 Etsy 平台礼物词库不存在，§C 改由 BRAND_MARKETING（依赖 3）驱动 |
 | 7 | `<workspace>/SHOP.md` § 物料 / 礼盒服务 | 可选（SKIP）| 缺失：§A packaging 计划写"未配置物料 → 拍裸品 + 简包装" |
 | 8 | `Assets 素材池` 表该 SKU 已 promoted 素材 | 可选（SKIP）| 部分跑（补拍补槽位）时反查已覆盖槽位，只补缺位 |
 
-**平台感知（D-A3）**：§A 槽位映射按**目标平台**展开——Etsy 走 [`../assets-library/references/etsy-listing-photo-slots.md`](../assets-library/references/etsy-listing-photo-slots.md) 的 10 槽位 preset；小红书走商品图 / 使用指南图 / 图文详情图 / 笔记封面规则；其他平台按 COMMERCE/MARKETING_PLATFORM.md。不同平台的槽位、比例、文字叠层策略不同，brief 早平台化，不出"平台中立"的通用 brief。
+**平台感知（D-A3）**：§A 槽位映射按**目标平台**展开——销售平台固定 Etsy，走 [`../assets-library/references/etsy-listing-photo-slots.md`](../assets-library/references/etsy-listing-photo-slots.md) 的 10 槽位 preset；小红书规则（商品图 / 使用指南图 / 图文详情图 / 笔记封面）已封存（产品决策 2026-07-24：专注 Etsy），仅未来解封后启用；内容平台按 MARKETING_PLATFORM.md。不同平台的槽位、比例、文字叠层策略不同，brief 早平台化，不出"平台中立"的通用 brief。
 
 **视觉规则分层 + 冲突裁决阶梯（§A / §B 必读）**：填 §A 槽位、§B Mood 时，视觉规则有三个来源会重叠（BRAND.md 视觉宪法 / BRAND_MARKETING.md 营销宪法 / MARKETING_PLATFORM.md 平台执行手册）。**冲突时按下列优先级裁决，高层永远压低层**（"宪法不变，语言变"——下层只能在不违反上层的前提下适配平台表达）：
 
@@ -68,9 +68,9 @@ image-brief  产出平台感知 brief（§A 槽位 / §B Mood / §C 镜头清单
 **执行步骤**：
 1. **检查 SKU 在 `Products 商品` 表**——不在则阻塞，提示回 listing-catalog 模式 A 建最小记录
 2. **检查 brief 是否已存在**（`商品/{SKU}_shoot-brief.md`）——已存在则强制问："覆盖 / 重命名旧版保留 / 仅补拍缺位（部分跑）"。重命名时旧版改为 `{SKU}_shoot-brief_{原生成日期}.md`
-3. **若选"部分跑"**：用 `lark-base` 反查 `Assets 素材池` 表该 SKU 已 promoted 素材的"用途标签"。Etsy 按 [etsy-listing-photo-slots.md § 3](../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 推断已覆盖槽位；小红书按 `../listing-catalog/references/platforms/xiaohongshu.md` 商品图 / 详情图规则推断；其他平台按 COMMERCE_PLATFORM.md。列给用户确认缺哪几位 → 仅填 §A 缺位行 + §C 对应镜头段；§B 沿用旧 brief
+3. **若选"部分跑"**：用 `lark-base` 反查 `Assets 素材池` 表该 SKU 已 promoted 素材的"用途标签"。Etsy 按 [etsy-listing-photo-slots.md § 3](../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 推断已覆盖槽位（小红书按 `../listing-catalog/references/platforms/xiaohongshu.md` 推断的规则已封存——产品决策 2026-07-24：专注 Etsy，仅未来解封后启用）。列给用户确认缺哪几位 → 仅填 §A 缺位行 + §C 对应镜头段；§B 沿用旧 brief
 4. 读上述输入（依赖表 + 降级规则）
-5. 按**目标平台**读媒体规则：Etsy 读 [etsy-listing-photo-slots.md](../assets-library/references/etsy-listing-photo-slots.md) 内置 10 槽位 preset；小红书读 `../listing-catalog/references/platforms/xiaohongshu.md` 图片规则；其他平台**定向读** `MARKETING_PLATFORM.md § 1.2 视觉规范`（画幅 / 构图 / 背景 / 光线 / 元素密度 / 文字位置 / 字体）+ 平台红线（不整文件吞，只读目标平台那一节）。同时读 `BRAND_MARKETING.md`（存在才读）：第 4/5 章喂 §B 视觉铁律层、第 1/2/3 章喂 §C 跨平台场景层。三源冲突按上文「视觉规则分层 + 冲突裁决阶梯」裁决
+5. 按**目标平台**读媒体规则：Etsy 读 [etsy-listing-photo-slots.md](../assets-library/references/etsy-listing-photo-slots.md) 内置 10 槽位 preset；小红书读 `../listing-catalog/references/platforms/xiaohongshu.md` 图片规则（已封存——产品决策 2026-07-24：专注 Etsy，仅未来解封后启用）；其他平台**定向读** `MARKETING_PLATFORM.md § 1.2 视觉规范`（画幅 / 构图 / 背景 / 光线 / 元素密度 / 文字位置 / 字体）+ 平台红线（不整文件吞，只读目标平台那一节）。同时读 `BRAND_MARKETING.md`（存在才读）：第 4/5 章喂 §B 视觉铁律层、第 1/2/3 章喂 §C 跨平台场景层。三源冲突按上文「视觉规则分层 + 冲突裁决阶梯」裁决
 6. 读 [references/brief-template.md](references/brief-template.md)：拿模板骨架
 7. 填 brief（§A 槽位映射 / §B Mood / §C 镜头清单 / §D 参考图占位 / §E 附注 / References）
 8. **展示给用户**等确认（不主动写盘）；用户调整后再写

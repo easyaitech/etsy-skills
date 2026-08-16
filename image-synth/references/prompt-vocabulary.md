@@ -48,7 +48,7 @@
 
 ## shot-spec 词库映射规则
 
-### 模式 A：按目标销售平台查 shoot-brief.md §C
+### 模式 A：按销售平台（固定 Etsy）查 shoot-brief.md §C
 
 目标平台是 Etsy 时，槽位 ID 取值见 [`assets-library/references/etsy-listing-photo-slots.md § 3`](../../assets-library/references/etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐)（contract source）。每个槽位 ID 对应 shoot-brief.md §C 同名段；映射规则：
 
@@ -63,7 +63,7 @@
 - **使用指南图**：抽步骤、使用场景、注意事项的可视化镜头；允许少量中文标注，但必须走文字可读 QA
 - **图文详情图**：抽卖点解释、参数、材质或对比信息；如需要文字，先让用户确认文案
 
-其他销售平台只按 `COMMERCE_PLATFORM.md` 对应平台章节映射，不把 Etsy 槽位或小红书字段套过去。
+销售平台固定 Etsy，映射一律以内置 Etsy preset 为准（`shared/platform-config.md` 索引）；上节小红书映射规则已封存（产品决策 2026-07-24：专注 Etsy），仅未来解封后启用，且不把 Etsy 槽位与小红书字段互相套用。
 
 ### 模式 B：读 social-platform-specs.md 对应平台
 
@@ -148,7 +148,7 @@ negative 段只剩通用兜底；同时在 prompt 展示给用户时加一句 �
 
 ## format 词库映射规则
 
-### 模式 A：按目标销售平台定
+### 模式 A：按销售平台（固定 Etsy）定
 
 目标平台是 Etsy 时：
 
@@ -171,7 +171,7 @@ negative 段只剩通用兜底；同时在 prompt 展示给用户时加一句 �
 | 使用指南图 | 3:4 | 750 × 1000 | 可承载步骤说明；文字需可读 |
 | 图文详情图 | 3:4 或后台允许比例 | 750 × 1000 起 | 卖点、参数、材质说明需用户确认 |
 
-其他销售平台按 `COMMERCE_PLATFORM.md` 的媒体规则定；缺配置时阻塞，不猜尺寸。
+销售平台固定 Etsy，规格一律按上表内置槽位执行（`shared/platform-config.md` 索引），不猜尺寸；小红书表已封存（产品决策 2026-07-24：专注 Etsy），仅未来解封后启用。
 
 ### 模式 B：按平台定（详见 social-platform-specs.md）
 

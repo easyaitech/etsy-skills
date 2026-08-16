@@ -25,7 +25,7 @@ layer: foundation
 | 来源 | 提供什么 | 怎么用 |
 |---|---|---|
 | `<workspace>/BRAND.md` § 视觉原则 / 视觉禁区 | 整体气质 / 色彩 / 排版构图 / 视觉禁区 | **B2 promote 时**用作"是否合规"自检，写进 `Assets 素材池` "BRAND 合规"字段；**模式 E 派生带字封面 / 套模板时**作合规自检。raw 不做合规检查 |
-| `<workspace>/COMMERCE_PLATFORM.md` / `MARKETING_PLATFORM.md` | 目标平台媒体 / 内容规则（主图 / 详情图 / 比例 / 水印 / 文字限制） | **模式 E 派生变体时**决定目标平台规格（比例 / 尺寸 / 封面）；Etsy / 小红书可用内置 preset |
+| 内置平台 preset（`shared/platform-config.md` 索引）/ `MARKETING_PLATFORM.md` | 目标平台媒体 / 内容规则（主图 / 详情图 / 比例 / 水印 / 文字限制） | **模式 E 派生变体时**决定目标平台规格（比例 / 尺寸 / 封面）：Etsy listing 槽位 / 社媒平台规格均以内置 preset 为准 |
 | 店铺总 Base 的 `Products 商品` 表 | SKU 列表 + 字段（title / 品类 / 变体 / SEO 关键词） | `Assets 素材池` 的"关联 SKU"字段直接关联（B2 用）；模式 E 派生时定位源 canonical；SKU 行反查能看到该 SKU 全部素材 |
 | `Orders 订单` 表 | 订单号 | 客户拍摄 / 客户定制类素材通过"关联订单"字段挂上 |
 | `Customers 客户` 表 | 客户列表 | UGC 类素材通过"关联客户"字段溯源授权 |
@@ -162,7 +162,7 @@ layer: foundation
 |---|---|---|---|
 | 1 | 源 canonical 成品（`Assets 素材池` 一行 / 文件链接）| 必需 | 没有成品：**阻塞**，提示先走模式 B2 promote 一张 canonical 成品 |
 | 2 | 目标平台 + 用途 | 必需 | 缺：问用户"派给哪个平台、什么用途（封面 / 商品图 / 详情图 / pin）" |
-| 3 | `COMMERCE_PLATFORM.md` / `MARKETING_PLATFORM.md` 平台规格 | 目标平台非 Etsy / 小红书时必需 | Etsy / 小红书走内置 preset；其他平台缺配置则阻塞 |
+| 3 | 内置 preset 平台规格（Etsy listing 槽位 / 社媒平台规格，`shared/platform-config.md` 索引）/ `MARKETING_PLATFORM.md` | 内置，无需工作区配置 | 销售平台固定 Etsy 走内置 preset；小红书变体已封存（产品决策 2026-07-24：专注 Etsy），仅未来解封后启用 |
 | 4 | `BRAND.md` § 视觉禁区 | 推荐不阻塞 | 带字封面 / 模板套用时作合规自检 |
 
 **派生类型与归属**（D-A8 synth-vs-派生边界）：
@@ -176,7 +176,7 @@ layer: foundation
 | 需要**全新创意构图**的封面 / 海报 | 不是机械派生 | **委托 `image-synth`**（模式 B），产出物再回本 skill 录为变体 |
 
 **执行步骤**：
-1. 确认源 canonical 成品存在；读目标平台规格（preset 或 COMMERCE/MARKETING_PLATFORM.md）
+1. 确认源 canonical 成品存在；读目标平台规格（内置 preset：Etsy listing 槽位 / 社媒平台规格，或 MARKETING_PLATFORM.md）
 2. 判定派生类型 → 机械/模板化在本 skill 做；需新创意构图则委托 image-synth（边界见上表）
 3. **不覆盖原图**：派生输出为**新文件**，上传到对应文件夹（社媒发布图→`营销/`，listing 图→`商品/`）
 4. 列动作清单 + Base 字段值给用户确认（写入前硬约束）
