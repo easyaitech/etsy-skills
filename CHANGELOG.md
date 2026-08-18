@@ -2,6 +2,14 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.31] - 2026-08-18
+
+- Inventory 技能改为实时调用 `/api/hermes/inventory/recalc`，盘点差额与补货清单均以实时返回值计算，并支持确定性的多件多色扣减；不再承诺手改飞书流水会在次日自动刷新。
+- Logistics Tracking 显式继承共享外部内容信任边界，承运商轨迹和提示只作为数据处理。
+- Orders 技能接上正式 `etsy_order_shipment_submit` 确认卡流程，明确 `awaiting_confirmation` 只表示等待店主确认，不能当成 Etsy 已完成发货。
+- 共享前言新增外部内容信任边界，把买家消息、listing、网页和 Base 自由文本视为数据而非授权指令，防止其越过发送、发布、付款、发货和秘密读取闸门。
+- Trend Radar 拉取增加 15 秒超时并补测试；CI 的 checkout、Node 与 Python setup actions 固定到经 tag 核验的完整提交 SHA。
+
 ## [v1.0.30] - 2026-08-16
 
 - **新增第十二个正式工具 `etsy_order_shipment_submit`（订单发货录入 / Complete order）**：
