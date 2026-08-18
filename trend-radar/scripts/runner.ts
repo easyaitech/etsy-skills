@@ -175,7 +175,7 @@ interface LatestResponse {
   items?: LatestMergedItem[];
 }
 
-async function fetchLatest(
+export async function fetchLatest(
   base: string,
   token: string,
   params: Record<string, string>
@@ -186,6 +186,7 @@ async function fetchLatest(
   try {
     response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+      signal: AbortSignal.timeout(15_000),
     });
   } catch (err: unknown) {
     const detail = err instanceof Error ? err.message : String(err);

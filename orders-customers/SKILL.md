@@ -124,7 +124,7 @@ layer: foundation
    - 是否需要用户或买家确认
    - 拟写回 `Orders 订单` 表的字段预览
 5. 如果需要给买家发消息，再读 `references/order-handling.md`、BRAND.md、SHOP.md、内置 Etsy preset 起草英文消息
-6. 等用户确认后才写 Base；不要替用户在平台后台发货、退款或售后审核。需要发送 Etsy 文字消息时，按 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 的唯一例外处理；其余渠道消息仍由用户自行发送
+6. 等用户确认后才写 Base；不要替用户在平台后台退款或做售后审核。Etsy 有两项正式工具例外：文字消息按 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 处理；店主明确要求录入发货时，逐项核实订单号、承运商、跟踪号和发货日期后调用 `etsy_order_shipment_submit`。submit 只建任务并发店主确认卡，拿到 `awaiting_confirmation` 就停止并提示店主点卡，不能说成 Etsy 已完成发货。其余平台发货与消息仍由用户自行操作
 
 > **关于"主动消息"的触达机制（别误解）**：本 skill 是**请求触发**的，不在后台驻留定时器。四类主动消息（下单确认 / 临期发货提醒 / 签收评价 / 30 天复购）落地方式是——把待办状态字段写进 `Orders 订单` 表，让对应记录进入 `base-schema.md` 的待办视图（`临期/超期待发` / `待发货` / `待签收跟进` / `待复购触达`）。真正的"到点触达"靠两条之一：① 运营每天看这些视图按待办处理；② 配了 Hermes cron 时，由 cron 定时扫视图把到期项推给运营核查（cron 例外见 `../shared/preamble.md`）。skill 本身只负责把订单放进正确的待办视图 + 出草稿，**不承诺自己会在未来某刻自动发出**。
 
@@ -134,7 +134,7 @@ layer: foundation
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执）。本 skill 特有禁区：
 
-- **不替用户发平台消息 / 发货 / 退款 / 售后审核**：只产文案 + 维护 Base；真实操作由用户在平台后台、ERP 或专门平台 skill 执行。唯一例外是 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 的 Etsy 正式发布工具：只发送用户明确指定或确认的完整文字，且发出前必须由店主在飞书**确认卡**上点「确认发送」（`awaiting_confirmation` 不是已发送）；同一发送意图始终复用同一个幂等键查询状态，`queued` / `dispatched` 不得声称已发送，`result_unknown` 绝不自动重发。
+- **不替用户做未受控的平台消息 / 发货 / 退款 / 售后审核**：只产文案 + 维护 Base；真实操作由用户在平台后台、ERP 或专门平台 skill 执行。Etsy 有且只有两项确认卡受控例外：① [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 的正式消息工具；② `etsy_order_shipment_submit` 发货录入工具。两者拿到 `awaiting_confirmation` 都只代表确认卡已创建，不代表消息已发送或订单已完成发货；必须等待店主点卡。消息工具同一发送意图始终复用同一个幂等键查询状态，`queued` / `dispatched` 不得声称已发送，`result_unknown` 绝不自动重发。退款与售后审核没有例外。
 - **客户隐私**：邮箱、地址、订单号属敏感数据——Agent 输出里用脱敏写法（如 `订单 #****1234`），不要大段重复。**唯一例外**：店主本人为发货 / 打单 / 核对地址而问自己订单的收件信息时，完整展示现查到的 `fullAddress` / `phone` 原文，不脱敏、不打码（脱敏到店主自己都用不了，就是把工具作废）；写进 Base、发给买家、放进对外文案或分享给第三方时，仍按脱敏写法。现查到的完整地址 / 电话**一律不回写 Base**（Base 只存 `收件地区`，见 [`references/base-schema.md`](references/base-schema.md)）。详见 [`references/etsy-order-read.md`](references/etsy-order-read.md) §隐私边界
 - **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘 → 回执；不要只在对话里报改动而不写 Base
 - **客服回复**：除 Etsy 正式发布工具外，用户自己复制到目标平台后台 / 客服入口发送；Etsy 按新工具真实发送。发出后把用户最终版本回写到 `Orders 订单` 表的"客服记录"字段

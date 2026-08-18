@@ -1,5 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { parseArgs } from "../runner.js";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { fetchLatest, parseArgs } from "../runner.js";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("parseArgs", () => {
   it("parses pull with default geo", () => {
@@ -74,5 +78,23 @@ describe("parseArgs", () => {
 
   it("returns null when first arg is a flag", () => {
     expect(parseArgs(["node", "runner.ts", "--geo", "US"])).toBeNull();
+  });
+});
+
+describe("fetchLatest", () => {
+  it("bounds the service request with an abort signal", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, items: [] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchLatest("https://trend.example", "secret", { geo: "US" })).resolves.toMatchObject({ ok: true });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://trend.example/latest?geo=US",
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
   });
 });
