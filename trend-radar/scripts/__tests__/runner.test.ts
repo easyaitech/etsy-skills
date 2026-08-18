@@ -3,6 +3,7 @@ import { fetchLatest, parseArgs } from "../runner.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("parseArgs", () => {
@@ -83,6 +84,7 @@ describe("parseArgs", () => {
 
 describe("fetchLatest", () => {
   it("bounds the service request with an abort signal", async () => {
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ ok: true, items: [] }), {
         status: 200,
@@ -96,5 +98,21 @@ describe("fetchLatest", () => {
       "https://trend.example/latest?geo=US",
       expect.objectContaining({ signal: expect.any(AbortSignal) })
     );
+    expect(timeoutSpy).toHaveBeenCalledWith(15_000);
+  });
+
+  it("maps request timeouts to the network exit code", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(
+        Object.assign(new Error("The operation was aborted due to timeout"), {
+          name: "TimeoutError",
+        })
+      )
+    );
+
+    await expect(
+      fetchLatest("https://trend.example", "secret", { geo: "US" })
+    ).rejects.toMatchObject({ exitCode: 3 });
   });
 });
