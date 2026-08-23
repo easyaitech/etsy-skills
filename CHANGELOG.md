@@ -2,6 +2,12 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.33] - 2026-08-23
+
+- **Pinterest 改日期不用再「撤回 + 重新入队」**（配合后端 v0.6.133.0）：新增 `POST /api/tools/pinterest/publish-intents/reschedule` 的用法与错误处置（`pinterest-autopin/SKILL.md` 幂等硬规则第 4 条、模式 D 第 5 步，`references/publishing-flow.md` 新增「只改日期：reschedule」节）。原地改期：任务 ID 不变、内容一个字不动、不产生「跳过」垃圾行。
+- **撤回之后同一组素材可以直接重排**：撤回成功会释放服务端去重预留，状态为「跳过」的旧行不再造成 `PINTEREST_PUBLISH_INTENT_CONFLICT`。文档明确写上「不用请店主去飞书表里删行」——2026-08-23 那次就是这么把老板绕进去的：删了 3 条还是 409，因为挡路的根本不在表里。
+- 契约测试补锚点：`reschedule` 端点、`PINTEREST_PUBLISH_RESCHEDULE_TOO_LATE` / `_CONTENT_DRIFT`。
+
 ## [v1.0.32] - 2026-08-21
 
 - **Pinterest 文案 SEO 规则大修（pin-composition.md）**，依据 2026-08-21 对 FuBlessings 已发 25 条 pin 的全量复盘 + Pinterest 官方/行业最佳实践：

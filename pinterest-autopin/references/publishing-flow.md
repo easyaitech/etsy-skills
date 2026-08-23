@@ -366,6 +366,37 @@ Content-Type: application/json
 
 服务端按 `browser-tool-jobs:<tenant>` → queue table 的固定锁序 fresh-read。仅状态仍为 `已批准/待发`、两套 job/lock 别名都空、无活动 browser job、无 URL/发布时间/可能已提交证据，且失败处置为空或精确为 `retry + 可能已提交=false` 时，才写 `状态=跳过`、`自动发布=false` 并 fresh-verify 完整取消 marker。`manual_fix`、`reconcile`、未知失败处置或缺少 pre-commit 证明都按 too-late 处理。`PINTEREST_PUBLISH_CANCEL_TOO_LATE` / `PINTEREST_PUBLISH_CANCEL_VERIFY_FAILED` 必须如实报告，禁止直接改 Base 抢取消。
 
+撤回成功后，这一行占用的服务端去重预留会一并释放：**同一组素材可以直接按新日期重新入队，不需要请店主去飞书表里删行**（状态是「跳过」的旧行不再造成 `PINTEREST_PUBLISH_INTENT_CONFLICT`）。
+
+### 只改日期：reschedule（v0.6.133.0 起）
+
+排期挪日期、排连续档期，**不要**用「撤回 + 重新入队」——那会留下一行「跳过」垃圾并换掉任务 ID。走：
+
+```http
+POST https://yanggedianzhang.com/api/tools/pinterest/publish-intents/reschedule
+Authorization: Bearer <Hermes 工具令牌>
+Content-Type: application/json
+```
+
+```json
+{
+  "tenantId": "tenant_xxx",
+  "recordId": "rec_xxx",
+  "expectedTaskId": "PIN-20260811-001",
+  "scheduledAt": "2026-09-01T20:00:00+08:00",
+  "idempotencyKey": "stable-reschedule-operation-key",
+  "reason": "排成连续档期"
+}
+```
+
+原地改期：任务 ID 不变、内容一个字不动、不产生「跳过」行。锁序与撤回相同。返回 `action: "rescheduled"`（改了）或 `"unchanged"`（已经是这个日期，幂等）。
+
+错误一律如实报告，禁止改用通用 writer 抢改：
+- `PINTEREST_PUBLISH_RESCHEDULE_TOO_LATE`：已被 dispatch 领走 / 已发 / 已撤回，日期一个字没动。
+- `PINTEREST_PUBLISH_RESCHEDULE_CONTENT_DRIFT`：这一行的内容跟登记时对不上了（被人手改过或字段残缺）。这个入口只改日期，要改文案得撤回重排。
+- `PINTEREST_PUBLISH_RESCHEDULE_NOT_MANAGED`：这一行不是专用入队登记的（没有 publish-intent marker），它的「计划发布时间」用通用写入工具直接改就行。
+- `PINTEREST_PUBLISH_RESCHEDULE_VERIFY_FAILED` / `_FAILED`：结果没确认，先读 Base 看这条任务的计划发布时间到底是哪个，再决定要不要重试。
+
 ---
 
 ## 错误恢复
