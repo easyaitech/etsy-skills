@@ -20,7 +20,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 1. 任一工具返回 `{ "dispatched": true, "taskId": "..." }`，表示服务器已经接管当前轮。Hermes **立即停手并回报“已在后台处理”**；不重试、不换工具、不再显式派同一事项，也不轮询。即使标题、指令或任务 ID 改写，也不得绕过这条规则。
 2. 普通 Pinterest 自动发布只能走 `POST /api/tools/pinterest/publish-intents/enqueue`。`idempotencyKey` 必须由同一业务动作稳定生成并在重试中复用；`scheduledAt` 必须是带明确时区的时间。人读 `任务 ID` 只是展示字段，禁止改任务 ID 或 key 来“避开重复”。明确的再次发布只能走既有 republish 合同。
 3. 禁止用通用 Base `record-create` / `record-upsert` 创建 Pinterest 自动发布入口行，也禁止用通用 `record-update` / `record-upsert` 把草稿改成 `自动发布=true` + `已批准/待发`。服务器专用入口会严格分页扫描到 `has_more=false`，并按发布意图和解析后的素材内容做确定性去重；Hermes 不以首页、主题文字搜索或任务 ID 搜索代替全表去重。
-4. 撤回只走 `POST /api/tools/pinterest/publish-intents/cancel`，同时提交精确 `recordId`、`expectedTaskId` 和稳定 `idempotencyKey`。仅服务器新鲜读取证明尚未被 dispatch 领取、没有失败处置或仅有明确 `retry + 可能已提交=false` 时才算成功；返回 too-late 或验证失败时，不得声称已取消，也不得直接改 Base。
+4. **只改计划发布时间（挪日期、排连续档期）走 `POST /api/tools/pinterest/publish-intents/reschedule`**，提交精确 `recordId`、`expectedTaskId`、带时区 `scheduledAt`、稳定 `idempotencyKey` 和 `reason`。它原地改期：任务 ID 不变、内容一个字不动、不产生「跳过」行。禁止为了改日期而「撤回 + 重新入队」，也禁止用通用 writer 改这一列。
+5. 撤回只走 `POST /api/tools/pinterest/publish-intents/cancel`，同时提交精确 `recordId`、`expectedTaskId` 和稳定 `idempotencyKey`。仅服务器新鲜读取证明尚未被 dispatch 领取、没有失败处置或仅有明确 `retry + 可能已提交=false` 时才算成功；返回 too-late 或验证失败时，不得声称已取消，也不得直接改 Base。
 
 **模式 B 是内容合同，不是后端发布功能**（语义见 [`../shared/social-adapter-paradigm.md`](../shared/social-adapter-paradigm.md) §模式分类）：后端把 `标题` / `描述` / `Alt Text (EN)` / `链接` / `Board (Pinterest)` 当作已确认输入，缺字段时 fail-closed。
 
@@ -36,7 +37,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - 飞书 Base：用 `lark-base` 操作店铺总 Base 内的 `社媒发布队列` 表，并反查 `Products 商品` / `Asset Variants 派生素材` 表；架构见 `../shared/store-base-architecture.md`。养个店长 Hermes 飞书直聊 runtime 无 lark-cli 时，Base 只读查询走后端 `POST /api/hermes/bitable/record-search` 端点，访问约定见 [`../shared/backend-api-access.md`](../shared/backend-api-access.md)。
 - 工作区根目录的 BRAND.md / SHOP.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md（用 `shop-foundation` 维护）。
 - 服务器工具：`POST /api/tools/pinterest/jobs` 创建 test job；`POST /api/tools/pinterest/jobs/confirm-publish` 在 test 通过且用户确认后转 final。详见 `references/publishing-flow.md`。
-- 自动发布工具：`POST /api/tools/pinterest/publish-intents/enqueue` 创建/复用唯一发布意图；`POST /api/tools/pinterest/publish-intents/cancel` 在领取前安全撤回。请求合同与错误处置见 `references/publishing-flow.md`。
+- 自动发布工具：`POST /api/tools/pinterest/publish-intents/enqueue` 创建/复用唯一发布意图；`POST /api/tools/pinterest/publish-intents/cancel` 在领取前安全撤回；`POST /api/tools/pinterest/publish-intents/reschedule` 只改日期（撤回后该组素材可直接按新日期重新入队，不用请店主删行）。请求合同与错误处置见 `references/publishing-flow.md`。
 - 浏览器执行器：沿用现有 Etsy DM 浏览器插件，插件版本必须带 `pinterest` capability。安装 / 升级提示由服务器返回，Hermes 只把 `userMessage` 原样转述给用户。
 - **图片裁切 / 清理不在本 skill**：Pinterest 2:3 规格变体 + AI metadata 清理由 `assets-library` 模式 E 派生（D-A8），本 skill 只引用 `Asset Variants 派生素材` 的变体文件链接；变体仍需进服务器 asset 流程才能给插件下载。
 
@@ -168,7 +169,8 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
    - `created` = 新建唯一行；`recovered` = ACK 丢失后对账成功，或原地接管既有安全草稿；`reused` = 同一发布意图已存在。三者都必须使用响应里的 `recordId`，不得另建一行。
    - `409 ...CONFLICT/SCAN_INCOMPLETE`、`503 ...PERSIST_FAILED` 或任何验证错误都不是成功；保留原状并把错误原样报告，不换 key 重试。
 4. 成功后告诉用户：该 `recordId` 已排入自动发布，dispatch 会在到点后自动发；进度看该行 `状态`（已批准→发布中→已发）和 `事件日志`。**Hermes 到此为止，不再轮询、不再确认**。
-5. 若用户想撤回，调用专用 `POST /api/tools/pinterest/publish-intents/cancel`。只有响应 `cancelled/reused` 且服务端已验证 `状态=跳过`、`自动发布=false` 才说取消成功；`PINTEREST_PUBLISH_CANCEL_TOO_LATE` 表示已存在锁、job 或发布证据，必须让位。
+5. **用户只是要改日期**（挪档期、排成连续几天），调用 `POST /api/tools/pinterest/publish-intents/reschedule`：原地改期，任务 ID 不变、内容不动、不留「跳过」行。响应 `rescheduled`（改了）/ `unchanged`（已经是这个日期）才算成功；`..._TOO_LATE`（已领取/已发/已撤回）、`..._CONTENT_DRIFT`（行内容被人手改过）如实报告，不要改用通用 writer 抢改。
+6. 若用户想撤回，调用专用 `POST /api/tools/pinterest/publish-intents/cancel`。只有响应 `cancelled/reused` 且服务端已验证 `状态=跳过`、`自动发布=false` 才说取消成功；`PINTEREST_PUBLISH_CANCEL_TOO_LATE` 表示已存在锁、job 或发布证据，必须让位。撤回成功后该组素材可直接按新日期重新入队，**不用请店主去飞书表里删行**。
 
 **模式 D 的前提（缺一不发，要如实告诉用户）**：
 - **ECS dispatch 已由运维开启**（服务端配了 `PUBLISH_DISPATCH_POLL_MS`）。yanggedianzhang 生产当前**已开启**；若换部署没开，标了也不会自动发，得让运维开。

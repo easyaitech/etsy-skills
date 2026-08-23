@@ -16,6 +16,7 @@ class PinterestIdempotencyContractTest(unittest.TestCase):
             '"dispatched": true',
             "/api/tools/pinterest/publish-intents/enqueue",
             "/api/tools/pinterest/publish-intents/cancel",
+            "/api/tools/pinterest/publish-intents/reschedule",
             "禁止用通用 Base",
             "has_more=false",
         ):
@@ -29,6 +30,8 @@ class PinterestIdempotencyContractTest(unittest.TestCase):
             "PINTEREST_PUBLISH_CANCEL_VERIFY_FAILED",
             "PINTEREST_PUBLISH_INTENT_SCHEDULE_INVALID",
             "PINTEREST_PUBLISH_INTENT_LEGACY_UNSAFE",
+            "PINTEREST_PUBLISH_RESCHEDULE_TOO_LATE",
+            "PINTEREST_PUBLISH_RESCHEDULE_CONTENT_DRIFT",
             "有序解析后的 Drive file token",
         ):
             self.assertIn(anchor, flow)
