@@ -2,6 +2,10 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.34] - 2026-08-25
+
+- **`Products 商品` 默认视图不再隐藏 `描述`**（`listing-catalog/SKILL.md` §默认视图字段）：店主 2026-08-25 明确说描述是常用字段，被默认视图隐藏了。旧口径把「长文案」整类默认隐藏、只在 Listing 文案视图里看，实际上描述是店主日常翻商品行就要看的一列；现在它进默认人读视图，`图片说明 / Alt`、`视频说明 / Alt` 这些真·长文案仍走 Listing 文案视图。生产侧（fublessings `Products 商品` Grid View）当天已同步取消隐藏，本条是把契约改成同一口径，免得下次 agent「整理视图」又把它藏回去。
+
 ## [v1.0.33] - 2026-08-23
 
 - **Pinterest 改日期不用再「撤回 + 重新入队」**（配合后端 v0.6.133.0）：新增 `POST /api/tools/pinterest/publish-intents/reschedule` 的用法与错误处置（`pinterest-autopin/SKILL.md` 幂等硬规则第 4 条、模式 D 第 5 步，`references/publishing-flow.md` 新增「只改日期：reschedule」节）。原地改期：任务 ID 不变、内容一个字不动、不产生「跳过」垃圾行。
