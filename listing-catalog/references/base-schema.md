@@ -16,7 +16,6 @@
 | `标题` | 多行文本 | 按内置 Etsy preset 的语言与长度生成：默认英文且 140 字符以内 |
 | `描述` | 多行文本 | 商品描述原文，分段保留换行；输出语言按内置 Etsy preset（默认英文） |
 | `关键词 / Tags` | 多行文本 / 单行文本 | 平台关键词、tags 或搜索词；数量、长度、分隔符按内置 Etsy preset：13 个 tag，用半角逗号分隔 |
-| `材质 / 属性` | 多行文本 / 单行文本 | 平台要求的 materials、属性或卖点字段；Etsy preset 为 13 个 material，用半角逗号分隔 |
 | `平台字段 JSON` | 多行文本 | 平台专属字段，如 Sustainability / Occasion / Holiday / Amazon bullet points / 淘宝属性等；只写有证据或已确认的字段 |
 | `视频链接` | 文本 / 链接 | 商品页视频的飞书云盘链接或外链；是否必需、时长、比例按内置 Etsy preset。原始视频走 `assets-library` |
 | `售价` | 数字（货币） | 主售价；币种按 SHOP.md。变体定价用 `变体` 字段、单独变体行或平台字段 |
