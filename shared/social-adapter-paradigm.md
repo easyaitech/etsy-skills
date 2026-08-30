@@ -35,7 +35,7 @@
 - **模式 D（无人值守自动发布）**：Hermes **不亲自调发布端点**，只把已审核的行标成 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给 ECS 常驻 dispatch 自动建 publish job、插件真发、结果回写。dispatch 到点直发、无逐条人工确认闸——人工把关点前移到「标记」那一下，标记 = 授权无人值守发到真实平台。dispatch 的合格条件 / 建表校验 / 撤回规则归有模式 D 的 adapter（当前只有 Pinterest）与 `social-publisher`。
 - adapter 未必开放全部模式（状态见注册表 [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md)）：
   - `staged` 的 adapter：只组草稿 + 人工发布清单，**不创建真实 server publish job**；产品侧放行改 `enabled` 后才解锁真发。
-  - `封存 shelved` 的 adapter（当前小红书，产品决策专注 Etsy）：**fail-closed，比 staged 更严**——连草稿 / 人工发布清单都不组，用户提该平台请求只说明封存边界 + 引导回 Etsy + STOP。解封走注册表的解封验收清单改 `enabled`（不是一处开关）。
+  - `封存 shelved` 的 adapter（当前小红书）：**fail-closed，比 staged 更严**——连草稿 / 人工发布清单都不组，用户提该平台请求按封存协议拒绝并 STOP（协议唯一真源 = [`../shared/platform-config.md`](platform-config.md) §封存协议）。解封走注册表的解封验收清单改 `enabled`（不是一处开关）。
 
 ---
 

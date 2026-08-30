@@ -1,7 +1,7 @@
 # Publishing Flow（模式 C 的执行手册）
 
-> ⛔ **小红书 adapter 当前 = `封存 shelved`（产品决策 2026-07-24：专注 Etsy，不对用户开放）。整本手册都是「未来解封资料，封存期禁止执行」**——
-> 封存期收到小红书请求，只按封存边界回复「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」+ 引导回 Etsy + STOP，**不组草稿、不出人工发布清单、不创建任何 server job**。解封（adapter-registry 小红书行改 `enabled`，走 §小红书解封验收清单）后本手册才生效。
+> ⛔ **小红书 adapter 当前 = `封存 shelved`。整本手册都是「未来解封资料，封存期禁止执行」**——
+> 封存期收到小红书请求，只按封存边界回复「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」+ 引导回 Etsy + STOP，**不组草稿、不出人工发布清单、不创建任何 server job**（协议唯一真源 = [`../../shared/platform-config.md`](../../shared/platform-config.md) §封存协议）。解封（adapter-registry 小红书行改 `enabled`，走 §小红书解封验收清单）后本手册才生效。
 >
 > 与 `pinterest-autopin/references/publishing-flow.md` 同款三层契约（公共骨架见 [`../../shared/social-adapter-paradigm.md`](../../shared/social-adapter-paradigm.md)），把 `pinterest` 换成 `xiaohongshu`、pin 字段换成笔记字段。
 

@@ -2,6 +2,11 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.38] - 2026-08-30
+
+- **封存协议收敛到单一真源（#117）**：协议正文（fail-closed 判据 / 统一话术 / 禁止清单 / 后端 `XHS_PLATFORM_ENABLED` 开关 / 保留物 / 解封指引）整节落进 `shared/platform-config.md` §封存协议——这正是 ADR-0001 预留的位置，本次让「§封存协议」从引用名变成真实章节。social-publisher / publish-composer / xiaohongshu-autopost / shared/preamble / social-adapter-paradigm 等处的**正文级协议复述**改为引用真源；各 ⛔ 闸门与判据落点保留一句话执行守卫（fail-closed 的就地执行细则，如 xiaohongshu ⛔ 总闸的禁止清单），frontmatter `description` 不动（留给 #118 瘦身）。「小红书解封验收清单」双副本去重，唯一副本保留在 `adapter-registry.md`（xiaohongshu-autopost SKILL.md 的平行清单改为指向），清单新增「机检⑤随之退役」步骤防止解封后 CI 悬挂 FAIL。
+- **机检⑤启用**：`scripts/validate-frontmatter.py` 新增封存话术指纹白名单——统一话术从 §封存协议 的「统一回复话术」行提取（不硬编码，同版本号从 CHANGELOG 推导的思路），全仓 `.md` 引用必须逐字一致，截断 / 改写即 CI FAIL（CHANGELOG.md 历史记录豁免）。启用当场抓到两处真实漂移：`publishing-queue-contract.md` 与 `publish-composer/references/base-schema.md` 的回复话术缺了「，请等后续版本」半句，已修复对齐。单测扩到 19 例（新增指纹提取 / 逐字一致 / 截断 / 改写 / 豁免等 8 例）。
+
 ## [v1.0.37] - 2026-08-30
 
 - **layer 契约化 + frontmatter 机检器（#116）**：`layer` 从「部分 skill 自报」变成机器可校验契约——枚举 `foundation | application | utility-input`（词汇见 `CONTEXT.md`）正式写进 `shared/dependency-protocol.md` 与 README 布局图；social-publisher、logistics-tracking 补 `layer: application`，trend-radar 的 `utility-input` 正名进架构图。

@@ -5,7 +5,7 @@
 | 平台 | 状态 | 支持发布类型 | 执行层 | 关键前置 | 说明 |
 |---|---|---|---|---|---|
 | Pinterest | enabled | 单图；多图轮播需服务器 / 插件显式支持后再 final | `pinterest-autopin` → yanggedianzhang server browser tool | 服务器工具可用、租户浏览器插件可用、`社媒发布队列` 表可用 | 当前唯一真实发布适配器。发布过程必须走 server test job → 用户确认 → server publish job，并回写 社媒发布队列。 |
-| 小红书 | **封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）** | 图文笔记 / 视频笔记 | `xiaohongshu-autopost` → yanggedianzhang server browser tool（同 pinterest 三层范式，契约已就绪） | 后端三件已就绪（服务器工具 `/api/tools/xiaohongshu/jobs`、插件 `xiaohongshu` capability、笔记 recipe）；**但整体封存、不对外开放**——解封需产品侧明确放行 | **封存 fail-closed**：用户提任何小红书请求，只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**不组草稿、不建 `社媒发布队列` 行、不创建 server publish job、不出人工发布清单、不做人工回填对账**。后端 + 契约（流程见 [`xiaohongshu-autopost/references/publishing-flow.md`](../../xiaohongshu-autopost/references/publishing-flow.md)）原样保留供未来解封。解封不是一处开关，需走本文件末尾 §小红书解封验收清单。 |
+| 小红书 | **封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）** | 图文笔记 / 视频笔记 | `xiaohongshu-autopost` → yanggedianzhang server browser tool（同 pinterest 三层范式，契约已就绪） | 后端三件已就绪（服务器工具 `/api/tools/xiaohongshu/jobs`、插件 `xiaohongshu` capability、笔记 recipe）；**但整体封存、不对外开放**——解封需产品侧明确放行 | **封存 fail-closed**：用户提任何小红书请求，按 [`../../shared/platform-config.md`](../../shared/platform-config.md) §封存协议（唯一真源）拒绝——「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」+ 引导回 Etsy + STOP，不组草稿、不建行、不出人工清单。后端 + 契约（流程见 [`xiaohongshu-autopost/references/publishing-flow.md`](../../xiaohongshu-autopost/references/publishing-flow.md)）原样保留供未来解封。解封不是一处开关，需走本文件末尾 §小红书解封验收清单。 |
 | Instagram | planned/manual-only | 单图 / 多图轮播 / Reels 草稿 / 人工对账 | 暂无 | 未来需要平台工具或 API 适配器 | 不自动发布。 |
 | TikTok | planned/manual-only | 视频草稿 / 人工对账 | 暂无 | 未来需要平台工具或 API 适配器 | 不自动发布。 |
 
@@ -32,7 +32,7 @@
 
 ## 小红书 adapter 规则（封存 shelved — 后端就绪，整体封存不对外开放）
 
-- **封存 fail-closed（当前唯一操作规则，产品决策 2026-07-24）**：现阶段专注 Etsy，小红书 adapter 不对用户开放——用户提任何小红书请求（触发词见 `xiaohongshu-autopost` frontmatter）时只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**连草稿都不组、不建发布队列行、不创建 server publish job、不出人工发布清单、不做人工回填对账**。后端已用 `XHS_PLATFORM_ENABLED` 开关封存（默认关，XHS 端点返回 `410`）。后端三件（服务器工具 `/api/tools/xiaohongshu/jobs` + 插件 `xiaohongshu` capability + 笔记 recipe）与发布契约 [`xiaohongshu-autopost/references/publishing-flow.md`](../../xiaohongshu-autopost/references/publishing-flow.md) 原样保留供未来解封。解封不是一处开关，走本文件末尾 §小红书解封验收清单，Mode C 才走真实 test → confirm-publish → final。
+- **封存 fail-closed（当前唯一操作规则）**：协议正文（统一话术 / 禁止清单 / 后端 `XHS_PLATFORM_ENABLED` 开关 / 保留物）唯一真源 = [`../../shared/platform-config.md`](../../shared/platform-config.md) §封存协议；判据字段 = 本表小红书行状态（`封存 shelved`，!= `enabled` 即封存，fail-closed 不落入「非 enabled → 人工清单」分支）。用户提任何小红书请求（触发词见 `xiaohongshu-autopost` frontmatter）时按协议拒绝（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP。解封走本文件末尾 §小红书解封验收清单，Mode C 才走真实 test → confirm-publish → final。
 
 **以下为解封后资料（封存期不适用）：**
 
@@ -101,5 +101,6 @@ PublishIntent（社媒发布队列 一行）
    - `social-publisher/references/adapter-registry.md`（本文件）：小红书行状态 `封存 shelved → enabled`、路由树去掉 `shelved` 分支、eval #3 期望改回真实路由、删本节。
    - `xiaohongshu-autopost/SKILL.md`：恢复 frontmatter `description` 的动作语义、删顶部 ⛔ 封存总闸与各章节封存守卫。
    - `social-publisher/SKILL.md`、`publish-composer/SKILL.md`：各处小红书从 `封存 shelved` 改回可组草稿 / 可路由。
-   - `shared/platform-config.md`、`shared/dependency-protocol.md`、`shared/social-adapter-paradigm.md`、`xiaohongshu-autopost/references/publishing-flow.md`、`publish-composer/references/platform-publishing-model.md`、`publish-composer/references/base-schema.md`：各处 `封存 shelved` → `enabled`。
+   - `shared/platform-config.md`（§封存协议 整节退役）、`shared/preamble.md`、`shared/dependency-protocol.md`、`shared/social-adapter-paradigm.md`、`xiaohongshu-autopost/references/publishing-flow.md`、`publish-composer/references/platform-publishing-model.md`、`publish-composer/references/base-schema.md`：各处 `封存 shelved` → `enabled`。
+   - `scripts/validate-frontmatter.py`：机检⑤（封存话术指纹）随 §封存协议 一起退役——删 `extract_shelved_reply` / `check_shelving_fingerprints` 及对应测试，否则话术真源行已删、机检⑤提取不到会让 CI 一直 FAIL。
 4. **验收**：仓库内 `grep -rn "封存\|shelved" --include="*.md"` 不再残留小红书封存冲突表述；跑一条 SKU 端到端 test → confirm-publish → final 走通。

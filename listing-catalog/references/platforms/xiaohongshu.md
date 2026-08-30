@@ -1,6 +1,6 @@
 # 小红书平台 preset
 
-> **⛔ 封存 shelved**：小红书电商整体封存（产品决策 2026-07-24：专注 Etsy），本文件仅在未来解封后启用；字段不能反向套给 Etsy。封存边界见 [`../../../shared/platform-config.md`](../../../shared/platform-config.md) § 小红书（封存 shelved）。
+> **⛔ 封存 shelved**：小红书电商整体封存（产品决策 2026-07-24：专注 Etsy），本文件仅在未来解封后启用；字段不能反向套给 Etsy。封存协议见 [`../../../shared/platform-config.md`](../../../shared/platform-config.md) §封存协议（唯一真源）。
 
 依据：
 - 商品结构 SPU / SPL / SPV / ITEM 分层：https://school.xiaohongshu.com/en/open/product/product-structure.html

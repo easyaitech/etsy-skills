@@ -2,7 +2,7 @@
 
 social-publisher 消费店铺总 Base 内的 `社媒发布队列` 表。发布状态只以这张表为跨平台 source of truth；所有平台（含 Pinterest pin）都是这张表里的行，用 `平台` 字段区分，不再有独立的平台子队列表。
 
-> ⛔ **小红书封存说明（shelved，产品决策 2026-07-24：专注 Etsy，不对用户开放）**：下方 schema/字段/枚举/adapter 示例里出现的**小红书**（`XHS-*` 任务 ID、`平台 = 小红书`、`manual-xiaohongshu` 等）仅为**数据模型完整性 + 未来解封资料**保留，**当前一律不建任何 `平台 = 小红书` 的行、不路由到小红书 adapter**。收到小红书请求按封存边界拒绝（「当前版本专注 Etsy，小红书功能暂未开放」）+ 引导回 Etsy + STOP。判据见 [`adapter-registry.md`](adapter-registry.md)（小红书 = `封存 shelved`，!= `enabled` 即封存）。Pinterest（enabled）/ Etsy 不受影响。
+> ⛔ **小红书封存说明（shelved）**：下方 schema/字段/枚举/adapter 示例里出现的**小红书**（`XHS-*` 任务 ID、`平台 = 小红书`、`manual-xiaohongshu` 等）仅为**数据模型完整性 + 未来解封资料**保留，**当前一律不建任何 `平台 = 小红书` 的行、不路由到小红书 adapter**。收到小红书请求按封存边界拒绝（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP。协议（判据 / 禁止清单 / 话术）唯一真源 = [`../../shared/platform-config.md`](../../shared/platform-config.md) §封存协议；判据字段在 [`adapter-registry.md`](adapter-registry.md)（小红书 = `封存 shelved`）。Pinterest（enabled）/ Etsy 不受影响。
 
 ## 最小必填字段
 
@@ -89,7 +89,7 @@ Pinterest pin 不再单独建表，就是 `社媒发布队列` 里 `平台 = Pin
 
 ## 封存平台（shelved — 当前不路由）
 
-**小红书：封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）。** 收到小红书请求只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）并引导回 Etsy，然后 STOP——**不组草稿、不建 `社媒发布队列` 行、不出人工发布清单、不做 URL 对账**。判据同 [`adapter-registry.md`](adapter-registry.md)：小红书状态 = `封存 shelved`（!= `enabled` 即封存）。解封路径见 adapter-registry §小红书解封验收清单。
+**小红书：封存 shelved。** 收到小红书请求按 [`../../shared/platform-config.md`](../../shared/platform-config.md) §封存协议 fail-closed 拒绝并 STOP；判据字段 = [`adapter-registry.md`](adapter-registry.md) 小红书状态（!= `enabled` 即封存）。解封路径见 adapter-registry §小红书解封验收清单。
 
 ## Manual-only 平台
 
