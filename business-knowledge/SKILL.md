@@ -40,6 +40,21 @@ weekly sources
 
 ---
 
+## 依赖关系
+
+降级等级按模式区分(BLOCK / DEGRADE / SKIP,协议见 [`../shared/dependency-protocol.md`](../shared/dependency-protocol.md))。`Knowledge Cards 知识卡片` 表由本 skill 拥有。
+
+| 依赖 | 提供什么 | 降级等级(按模式) |
+|---|---|---|
+| `SHOP.md`(shop-foundation) | 店铺名 → 建 `Knowledge Cards 知识卡片` 表 | 建卡片表 = **BLOCK**(走 First-run Base setup);Marketing Brief = **DEGRADE**(标注「店铺基座缺失」) |
+| `BRAND.md`(shop-foundation) | Brief 的语调参考 | Brief = **DEGRADE**(缺失继续,标注仅临时参考);其余 = SKIP |
+| `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`(shop-foundation) | Brief 的策略优先级 | Brief = **DEGRADE**(标注「建议先人工判断」);其余 = SKIP |
+| `Knowledge Cards 知识卡片` 表(本 skill owner) | 卡片读写 | 写卡片 = **BLOCK**(缺失走 First-run 建表);读卡片 / Brief 检索 = SKIP |
+| `Products 商品` 表(listing-catalog) | SKU / 品类上下文 | Brief = SKIP |
+| trend-radar 产出(`outputs/trend-radar/latest.json`) | 本周热词材料 | 纳入热词 = SKIP(缺失 / 过期跳过,不阻塞) |
+
+---
+
 ## 启动检查
 
 每次激活时：

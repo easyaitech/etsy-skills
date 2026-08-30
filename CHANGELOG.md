@@ -2,6 +2,12 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.37] - 2026-08-30
+
+- **layer 契约化 + frontmatter 机检器（#116）**：`layer` 从「部分 skill 自报」变成机器可校验契约——枚举 `foundation | application | utility-input`（词汇见 `CONTEXT.md`）正式写进 `shared/dependency-protocol.md` 与 README 布局图；social-publisher、logistics-tracking 补 `layer: application`，trend-radar 的 `utility-input` 正名进架构图。
+- **删除手写降级大矩阵**：`dependency-protocol.md` 里那张 11×10 的「基座文件降级速查」已 stale（缺 5 列）且与各 skill 自有依赖表双真源，整节删除。降级信息唯一真源 = 各 skill 的「依赖关系」表；缺表的 5 个 skill（business-knowledge、logistics-tracking、publish-composer、social-publisher、trend-radar）已补齐（含按模式的 BLOCK/DEGRADE/SKIP 等级）。维护者总览改跑 `python3 scripts/deps-overview.py`（读 frontmatter 按需打印，不落盘）。
+- **新增 `scripts/validate-frontmatter.py` 并挂进 CI**：基线检查①name=目录名 ②layer 必填且 ∈ 枚举 ③depends-on 目标存在，当刻全绿（16 skills）；④描述长度（`--desc-limit`，#118 瘦身后启用）已实现待开。单测 `test_validate_frontmatter.py`（9 例）随 unittest discover 自动跑。
+
 ## [v1.0.36] - 2026-08-30
 
 - **agent 工程设施先行落地**：新增 `AGENTS.md`（agent 入口，挂工程配置索引）、`docs/agents/`（issue 跟踪走本仓 GitHub Issues + `gh` CLI、五个规范 triage 标签直映、领域文档单上下文布局）、`CONTEXT.md`（全仓统一词表首批术语：封存 shelved / 判据 / 真源 / layer 三值枚举）与 `docs/adr/0001-shelve-xiaohongshu-adapter.md`（补记 2026-07-24 小红书封存决策：后端三件就绪为何仍封存、manual-only 软开放为何否决、解封走验收清单不是一处开关）。这批文件是后续「单一真源收敛」三张票（layer 契约化 + 机检器、封存协议去重、description 瘦身）的地基：ADR 让「产品决策 2026-07-24」字样有处可引，词表让封存 / 判据 / layer 这些词全仓一个写法。纯新增，不改任何 skill 行为。

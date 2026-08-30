@@ -176,22 +176,24 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 │   ├── skill-prefs.md         # 店主偏好（服务端「我的偏好」设置层）契约
 │   └── ai-image-sanitization.md # 最终 listing / 社媒发布图的 AI metadata / watermark 清理协议
 ├── shop-foundation/           # ┐
-├── listing-catalog/           # │ 基座层（Foundation）
-├── orders-customers/          # │ 基座层平级，按需建立
-├── logistics-tracking/        # │ 物流跟踪薄 skill（调后端 ECS track 服务）
+├── listing-catalog/           # │ 基座层 Foundation
+├── orders-customers/          # │ 拥有基座文件或店铺总 Base 的表
 ├── supplier-foundation/       # │
 ├── inventory/                 # │ 实物库存（成品 + 包材），两张表由后端 provision 维护
 ├── business-knowledge/        # │ 可选业务记忆层
 ├── assets-library/            # ┘
 ├── publish-composer/        # ┐
 ├── social-publisher/          # │
-├── pinterest-autopin/         # │ 应用层（Application）
-├── xiaohongshu-autopost/      # │ 围绕基座层运行
+├── pinterest-autopin/         # │ 应用层 Application
+├── xiaohongshu-autopost/      # │ 围绕基座运行
 ├── publish-metrics/           # │ 发布结果回收闭环（反馈层）
 ├── image-brief/               # │ 图片方案设计（创意 brief owner）
-├── image-synth/               # ┘
-└── trend-radar/               #   Utility / Input 层（为基座层提供自动化数据输入）
+├── image-synth/               # │
+├── logistics-tracking/        # │ 物流跟踪薄 skill（调后端 ECS track 服务）
+└── trend-radar/               #   工具输入层 Utility-input（只为基座提供自动化外部输入）
 ```
+
+layer 归属是 frontmatter 契约（枚举 `foundation | application | utility-input`，词汇见 `CONTEXT.md`），由 `scripts/validate-frontmatter.py` 在 CI 校验；跨 skill 依赖总览用 `python3 scripts/deps-overview.py` 按需生成，不手工维护汇总矩阵。
 
 每个 skill 目录里通常有 `SKILL.md`（Hermes 入口）+ `references/` / `templates/` / `assets/` / `scripts/` 四类子目录。
 
