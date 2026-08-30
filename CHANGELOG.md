@@ -2,6 +2,10 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.36] - 2026-08-30
+
+- **agent 工程设施先行落地**：新增 `AGENTS.md`（agent 入口，挂工程配置索引）、`docs/agents/`（issue 跟踪走本仓 GitHub Issues + `gh` CLI、五个规范 triage 标签直映、领域文档单上下文布局）、`CONTEXT.md`（全仓统一词表首批术语：封存 shelved / 判据 / 真源 / layer 三值枚举）与 `docs/adr/0001-shelve-xiaohongshu-adapter.md`（补记 2026-07-24 小红书封存决策：后端三件就绪为何仍封存、manual-only 软开放为何否决、解封走验收清单不是一处开关）。这批文件是后续「单一真源收敛」三张票（layer 契约化 + 机检器、封存协议去重、description 瘦身）的地基：ADR 让「产品决策 2026-07-24」字样有处可引，词表让封存 / 判据 / layer 这些词全仓一个写法。纯新增，不改任何 skill 行为。
+
 ## [v1.0.35] - 2026-08-27
 
 - **商品表材质列整体退场**（老板 2026-08-27 拍板，配合后端 v0.7.23.0）：`材质 / 属性` / `Materials`
