@@ -39,6 +39,17 @@ layer: utility-input
 - 本 skill 缺失时，下游也 SKIP — 遵循 dependency-protocol
 - **采集与登录态的归属**：采集所需的各平台登录态、浏览器自动化、失败重试都在**管理员采集插件**侧（不再是本机 `SERPAPI_KEY` / Playwright profile / CDP）。本 skill 只需要能访问 trend-radar 服务的 `TREND_RADAR_TOKEN`。若 `pull` 报「服务暂无数据」，是采集插件本周还没跑成，不是本 skill 的问题——见下方「排查」。
 
+## 依赖关系
+
+降级等级按模式区分(BLOCK / DEGRADE / SKIP,协议见 [`../shared/dependency-protocol.md`](../shared/dependency-protocol.md))。
+
+| 依赖 | 提供什么 | 降级等级(按模式) |
+|---|---|---|
+| `TREND_RADAR_TOKEN`(环境) | 访问 trend-radar 服务 | pull / fit-report = **BLOCK**(环境前提,缺失如实报错) |
+| `.cache/trend-radar/business-context/product-catalog.json` | 商品上下文 | fit-report = **DEGRADE**(缺失继续,标 SKU-level matching skipped);pull = SKIP |
+| business-knowledge(下游) | 热词沉淀进卡片 / 周报 | 沉淀 = SKIP(下游缺失不阻塞,fit-report 照常产出) |
+| 基座文件 BRAND.md / SHOP.md | — | fit-report = **DEGRADE**(标 missing);其余 = SKIP |
+
 ## 使用方式
 
 ```bash

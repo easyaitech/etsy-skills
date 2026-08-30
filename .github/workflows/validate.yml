@@ -34,6 +34,7 @@ jobs:
           python3 scripts/validate-listing-read-contract.py
           python3 scripts/validate-customer-message-contract.py
           python3 scripts/validate-markdown-links.py
+          python3 scripts/validate-frontmatter.py
 
       # 只用 stdlib unittest，不引 pytest：生产 Hermes 的 venv 里没有 pytest 且不能出网装，
       # 保持「本地 / CI / 生产都能用同一条命令跑」。

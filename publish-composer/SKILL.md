@@ -53,6 +53,21 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 
 ---
 
+## 依赖关系
+
+降级等级按模式区分(BLOCK / DEGRADE / SKIP,协议见 [`../shared/dependency-protocol.md`](../shared/dependency-protocol.md))。`社媒发布队列` 表由本 skill 拥有,不列为依赖。
+
+| 依赖 | 提供什么 | 降级等级(按模式) |
+|---|---|---|
+| `BRAND.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`(shop-foundation) | 兜底文案的语调、人群触点、平台规范 | 兜底写文案(目标平台无 live adapter)= **DEGRADE**(相应文案段标 ⚠️);有 live adapter 的平台 = SKIP |
+| `SHOP.md`(shop-foundation) | 店铺名 → 定位店铺总 Base | 建 `社媒发布队列` 表 = **BLOCK**;日常组任务 = SKIP |
+| `Products 商品` 表(listing-catalog) | `分享链接` / 平台商品 ID / 上线状态 | 商品型任务 = **BLOCK**;非商品型 = SKIP |
+| `Assets 素材池` 表·发布副本字段(assets-library) | 变体授权与发布校验 | 建池 / 入队 = **BLOCK** |
+| `Assets 素材池` 表·基础素材字段(assets-library) | canonical 反查 | 入队 = **DEGRADE**;其余 = SKIP |
+| `Asset Variants 派生素材` 表(assets-library) | 平台规格发布副本变体 | 缺规格变体 = **DEGRADE**(反向请求 assets-library 模式 E 派生,不阻塞组稿) |
+
+---
+
 ## Data Model
 
 本 skill **只 own 一张表**：`社媒发布队列 / PublishIntent`（店铺总 Base 内）。schema + 字段分组 +

@@ -1,6 +1,7 @@
 ---
 name: logistics-tracking
 description: 跨境物流状态跟踪——用 `track` 命令查/录包裹物流（接后端 17TRACK 跟踪服务）。当用户问“这单到哪了 / 物流到哪了 / 查快递 / 到货没 / 签收了吗”，或你在处理发货、拿到运单号需要纳入跟踪时使用。覆盖 4px/燕文/云途/中国邮政等跨境专线 + 目的国末端派送，自动跟到签收。只查/录，不直接改飞书 Base。
+layer: application
 ---
 
 # 物流跟踪（track）
@@ -21,6 +22,16 @@ description: 跨境物流状态跟踪——用 `track` 命令查/录包裹物流
 - **拿到运单号 / 发货**：`~/.local/bin/track add <运单号> <租户ID> <order_ref> [carrier]` —— 纳入后台跟踪。**租户ID 和 order_ref 要填**（巡检报告靠 order_ref 关联订单号，漏填就只能显示「—」）。
 - **用户问“这单到哪了 / 到货没 / 查快递 / 签收了吗”**（问单个包裹）：`~/.local/bin/track query <运单号> [carrier]` —— 据返回 JSON 的 `awaiting_data` + `status` + `latest_event` + `note` 用中文口语化回答（别把原始 JSON 甩给用户）。
 - **盘点“现在有哪些在途包裹”（巡检/汇总）**：`~/.local/bin/track list` —— 返回全部在途 job（服务端每日已自动轮询的快照，含近 3 条轨迹），不打 17TRACK、不耗配额。**不要**为盘点逐单 `track query` 刷新（那会逐单强制实时查询、白耗配额）。
+
+## 依赖关系
+
+降级等级按模式区分(BLOCK / DEGRADE / SKIP,协议见 [`../shared/dependency-protocol.md`](../shared/dependency-protocol.md))。
+
+| 依赖 | 提供什么 | 降级等级(按模式) |
+|---|---|---|
+| 后端 track 服务(`~/.local/bin/track`) | 查询 / 录入 / 巡检快照 / 推送 ack | 查 / 录 / 推送 = **BLOCK**(CLI 缺失提示运维部署,不替代) |
+| `Orders 订单` 表(orders-customers) | 签收状态回写的 canonical 字段(schema 见 [`orders-customers/references/base-schema.md`](../orders-customers/references/base-schema.md)) | 运营者确认后回写 = **BLOCK**;查询 / 主动推送 = SKIP(不碰 Base) |
+| BRAND.md / SHOP.md 等基座文件 | — | SKIP(本 skill 不读) |
 
 ## 关键规则
 

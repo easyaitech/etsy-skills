@@ -1,6 +1,7 @@
 ---
 name: social-publisher
 description: 社交媒体发布总控层（薄触发）：管 adapter registry + 人工/按需发布（模式 B）+ 开启无人值守自动发布（标 `自动发布=true` 交给 ECS dispatch 直发，标记即人工把关点）+ confirm-publish（手动路径）+ 对账。**自动发布的巡检 / 锁 / 重试 / 死信归 ECS 常驻 dispatch（yanggedianzhang publish dispatch，T5），本 skill 不再手搓巡检 / 定时器**。当前真实发布适配器只有 Pinterest（pinterest-autopin，经 yanggedianzhang 服务器 + 浏览器插件执行）；小红书 adapter（xiaohongshu-autopost）**已整体封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**——用户提小红书发布 / 对账请求时只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**不组草稿、不建行、不出人工发布清单、不做对账**；Instagram、TikTok 等 planned/manual-only。未 enabled 的平台不能声称已自动发布。用于用户说“发这条 / 发 Pinterest / publish / 对账发布结果 / 接发布器 / 发小红书（→ 封存拒绝）”等场景。
+layer: application
 ---
 
 # Social Publisher
@@ -39,6 +40,20 @@ Instagram / TikTok: 未来适配器或人工后台
 | 小红书发布 | **封存 shelved（不对外开放）**：不读执行细节，直接按封存话术拒绝并引导回 Etsy + STOP。契约文档 `xiaohongshu-autopost/SKILL.md` + `xiaohongshu-autopost/references/publishing-flow.md` 仅供未来解封复用 |
 
 > 养个店长 Hermes 飞书直聊 runtime 无 lark-cli 时，`社媒发布队列` 等 Base 表的只读查询走后端 `POST /api/hermes/bitable/record-search` 端点，访问约定见 [`../shared/backend-api-access.md`](../shared/backend-api-access.md)。
+
+---
+
+## 依赖关系
+
+降级等级按模式区分(BLOCK / DEGRADE / SKIP,协议见 [`../shared/dependency-protocol.md`](../shared/dependency-protocol.md))。文案主权在 adapter / composer 兜底,本 skill 不读品牌基座。
+
+| 依赖 | 提供什么 | 降级等级(按模式) |
+|---|---|---|
+| `SHOP.md`(shop-foundation) | 店铺名 → 定位店铺总 Base 与队列表 | 发布表定位 = **BLOCK**;其余 = SKIP |
+| `社媒发布队列` 表(publish-composer owner) | 任务行与状态机 | 发布 / 对账 = **BLOCK** |
+| `Assets 素材池` 表·发布副本字段(assets-library) | 发布前授权 / 清理校验 | 发布校验 = **BLOCK**;对账 = SKIP |
+| `pinterest-autopin`(adapter) | enabled 平台真实发布 | Pinterest 发布 = **BLOCK**;小红书按封存协议拒绝(判据 = adapter-registry 小红书状态;决策见 `docs/adr/0001`) |
+| `BRAND.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md` | —(文案不归本 skill) | SKIP |
 
 ---
 
