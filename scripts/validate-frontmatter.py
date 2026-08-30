@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-"""校验所有 SKILL.md frontmatter 的层契约。
+"""校验所有 SKILL.md frontmatter 的层契约 + 封存话术指纹白名单。
 
 始终启用(#116 基线):
   ① name 与目录名一致
   ② layer 必填且 ∈ {foundation, application, utility-input}
   ③ depends-on 每项都指向一个真实存在的 skill 目录
 
+始终启用(#117):
+  ⑤ 封存话术指纹白名单:统一话术真源在 shared/platform-config.md §封存协议 的
+    「统一回复话术」行,全仓 .md 引用必须逐字一致(截断 / 改写 = FAIL);
+    CHANGELOG.md 历史记录豁免。
+
 随内容票启用:
   ④ --desc-limit N    description ≤ N 字(#118 description 瘦身后在 CI 打开)
-  ⑤ 封存话术指纹白名单归 #117(协议节落地后实现)
 """
 
 from __future__ import annotations
@@ -23,6 +27,14 @@ LAYERS = ("foundation", "application", "utility-input")
 
 FM_RE = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 ITEM_RE = re.compile(r"^\s*-\s*(.+?)\s*$")
+
+# 机检⑤:话术真源文件 + 提取锚点行 + 指纹锚词(命中其一即必须落在真源话术的字节范围内)。
+# 锚词取一前一后:「当前版本专注 Etsy」抓改尾/截断,「小红书功能」抓改头(两词均不出现在其他语境)。
+SHELVING_SOURCE = Path("shared/platform-config.md")
+REPLY_MARKER_RE = re.compile(r"^\s*-\s*\*\*统一回复话术\*\*.*?「(.+?)」", re.M)
+FINGERPRINT_ANCHORS = ("当前版本专注 Etsy", "小红书功能")
+FINGERPRINT_SKIP_PARTS = {".git", ".codex", ".claude", ".gstack", "node_modules", ".cache", "__pycache__", ".quarantine"}
+FINGERPRINT_SKIP_FILES = {"CHANGELOG.md"}
 
 
 def parse_flow_list(value: str) -> list[str]:
@@ -114,6 +126,48 @@ def collect_violations(root: Path, desc_limit: int | None = None) -> list[str]:
     return violations
 
 
+def extract_shelved_reply(root: Path) -> str | None:
+    """从 shared/platform-config.md §封存协议 提取统一回复话术(机检⑤的真源,不硬编码)。"""
+    source = root / SHELVING_SOURCE
+    if not source.is_file():
+        return None
+    matches = REPLY_MARKER_RE.findall(source.read_text(encoding="utf-8"))
+    return matches[0] if len(matches) == 1 else None
+
+
+def fingerprint_scan_files(root: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in root.rglob("*.md")
+        if not any(part in FINGERPRINT_SKIP_PARTS for part in path.relative_to(root).parts)
+        and path.name not in FINGERPRINT_SKIP_FILES
+    )
+
+
+def check_shelving_fingerprints(root: Path, canonical: str) -> list[str]:
+    """机检⑤:全仓 .md 里每个封存话术指纹锚词的命中,都必须落在真源话术的字节范围内。"""
+    violations: list[str] = []
+    reported: set[tuple[Path, int]] = set()
+    for path in fingerprint_scan_files(root):
+        text = path.read_text(encoding="utf-8")
+        covered = [m.start() for m in re.finditer(re.escape(canonical), text)]
+        for anchor in FINGERPRINT_ANCHORS:
+            for hit in re.finditer(re.escape(anchor), text):
+                pos = hit.start()
+                if any(start <= pos < start + len(canonical) for start in covered):
+                    continue
+                line = text.count("\n", 0, pos) + 1
+                if (path, line) in reported:
+                    continue
+                reported.add((path, line))
+                snippet = text[max(0, pos - 12) : pos + 36].replace("\n", " ")
+                violations.append(
+                    f"{path.relative_to(root).as_posix()}: 第 {line} 行 封存话术指纹变体"
+                    f"「…{snippet}…」≠ 真源话术({SHELVING_SOURCE.as_posix()} §封存协议,机检⑤)"
+                )
+    return violations
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="校验 SKILL.md frontmatter 层契约")
     parser.add_argument(
@@ -125,6 +179,15 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     violations = collect_violations(ROOT, desc_limit=args.desc_limit)
+
+    canonical = extract_shelved_reply(ROOT)
+    if canonical is None:
+        violations.append(
+            f"{SHELVING_SOURCE.as_posix()}: §封存协议 提取不到(且仅一条)「统一回复话术」行(机检⑤真源)"
+        )
+    else:
+        violations.extend(check_shelving_fingerprints(ROOT, canonical))
+
     if violations:
         print("frontmatter violations:", file=sys.stderr)
         for item in violations:

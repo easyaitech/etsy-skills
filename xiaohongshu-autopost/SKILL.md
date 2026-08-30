@@ -7,15 +7,15 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 # Xiaohongshu AutoPost（小红书笔记发布适配器）
 
-> # ⛔ 封存总闸（shelved — 产品决策 2026-07-24：现阶段专注 Etsy，小红书不对用户开放）
+> # ⛔ 封存总闸（shelved）
 >
 > **收到任何小红书相关请求（接小红书 / 建小红书笔记流水线 / 给 SKU 出小红书笔记 / 写小红书文案 / 排一条小红书笔记 / 发小红书 / 测试笔记 / publish 小红书），一律只回复：「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」，并把话题引导回 Etsy 经营，然后 STOP。**
 >
 > **禁止继续读取或执行本文件下方任何内容**——不进入任何模式（A / B / C）、不跑就绪检查表、不组草稿、不建 `社媒发布队列` 行、不创建 server publish job、不出人工发布清单、不反向请求派生变体。
 >
-> 本闸的判据（fail-closed）：[`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`——**只要 != `enabled` 就一律封存**。后端配套已用 `XHS_PLATFORM_ENABLED` 开关封存（默认关，四个 XHS 端点返回 `410`）。
+> 本闸判据（fail-closed）与协议正文（禁止清单 / 后端开关）唯一真源 = [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议；判据字段在 [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md)（小红书 = `封存 shelved`——**只要 != `enabled` 就一律封存**）。
 >
-> **下方全部章节（Mode A / B / C、就绪检查表、依赖关系、写入约束、协作、工作语言）均为「未来解封资料，封存期禁止执行」**，原样保留供未来版本解封复用；解封需走 §执行就绪状态 的完整验收清单（不是一处开关）。
+> **下方全部章节（Mode A / B / C、就绪检查表、依赖关系、写入约束、协作、工作语言）均为「未来解封资料，封存期禁止执行」**，原样保留供未来版本解封复用；解封走 adapter-registry §小红书解封验收清单（不是一处开关，见 §执行就绪状态）。
 
 这个 skill 把电商店铺的「商品 + 素材 + 品牌」组装成**小红书笔记**（图文笔记 / 视频笔记），并作为 `social-publisher` 的**小红书输出适配器**。它和 `pinterest-autopin` 是同一套三层范式的兄弟 adapter——三层架构（Hermes 大脑 / yanggedianzhang 服务器控制面 / 租户浏览器插件）、job 生命周期与队列表模型见 [`../shared/social-adapter-paradigm.md`](../shared/social-adapter-paradigm.md)。小红书侧的差异（**均为解封后行为，封存期不执行**）：Hermes 产出**中文** title / 正文 / 话题 / 封面文案，组 `平台 = 小红书` 的草稿和人工发布清单；服务器能力解封后才建 job 并**热下发小红书笔记 recipe**；插件解封后才按 recipe 在租户自己的小红书登录态里填表上传、回传结果。
 
@@ -27,23 +27,11 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 ---
 
-## ⛔ 执行就绪状态（封存 shelved — 产品决策 2026-07-24：现阶段专注 Etsy，小红书不对用户开放）
+## ⛔ 执行就绪状态（封存 shelved）
 
-**小红书业务已整体封存，本 adapter 现阶段不对用户提供任何小红书能力。** 产品侧（2026-07-24）决定当前版本只做 Etsy，小红书连组草稿都不做——用户要小红书相关帮助时，说明「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」并引导回 Etsy 经营，不进入本 skill 的任何模式。
+**小红书业务已整体封存，本 adapter 现阶段不对用户提供任何小红书能力。** 用户要小红书相关帮助时，按封存协议真源 [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议 处理：说明「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」并引导回 Etsy 经营，不进入本 skill 的任何模式。判据（fail-closed）= [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`。本 adapter 文档与流程契约**原样保留**，供未来版本重新启用时直接复用，不删。
 
-后端配套已用 `XHS_PLATFORM_ENABLED` 开关封存（默认关，四个 XHS 端点返回 `410 XHS_PLATFORM_SUSPENDED`）；本 adapter 文档与流程契约**原样保留**，供未来版本重新启用时直接复用，不删。
-
-**未来解封验收清单（不是一处开关，需逐项完成）**：
-
-1. **产品负责人批准**：明确决定小红书对用户开放，撤销「专注 Etsy」的封存决策。
-2. **后端负责人设 `XHS_PLATFORM_ENABLED=1`**：四个 XHS 端点当前封存返回 `410 XHS_PLATFORM_SUSPENDED`，解封后恢复 `200` 正常契约。
-3. **技能仓改动（逐文件）**：
-   - 恢复本 SKILL.md frontmatter `description` 的动作语义（去掉「只说明封存边界」，改回「组草稿 / 建队列行 / test → confirm-publish」）；
-   - 删掉本文件顶部的 ⛔ 封存总闸、本节封存说明、以及下方各章节入口的封存守卫；
-   - [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md)：小红书行状态改 `enabled`、路由树去掉 `shelved` 分支、eval #3 期望改为真实路由；
-   - `social-publisher/SKILL.md`、`publish-composer/SKILL.md` 各处把小红书从 `封存 shelved` 改回 `enabled` 可组草稿 / 可路由；
-   - `shared/platform-config.md`、`shared/dependency-protocol.md`、`shared/social-adapter-paradigm.md`、`references/publishing-flow.md`、`publish-composer/references/platform-publishing-model.md`、`publish-composer/references/base-schema.md` 各处 `封存 shelved` → `enabled`。
-4. **验收**：仓库内 `grep -rn "封存\|shelved\|staged" --include="*.md"` 不再残留小红书封存 / staged 冲突表述；跑一条 SKU 端到端 test → confirm-publish → final 走通。
+**未来解封走 [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) §小红书解封验收清单（唯一副本，不是一处开关）**：产品批准 + 后端 `XHS_PLATFORM_ENABLED=1`（四个 XHS 端点封存期返回 `410 XHS_PLATFORM_SUSPENDED`）+ 技能仓逐文件恢复 + 端到端验收。
 
 解封前，下面这段是**未来态说明、当前不适用**：
 

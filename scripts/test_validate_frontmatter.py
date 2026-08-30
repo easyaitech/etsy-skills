@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""frontmatter 机检器的合同:layer 枚举、name 对齐、depends-on 可达、可选的描述长度上限。"""
+"""frontmatter 机检器的合同:layer 枚举、name 对齐、depends-on 可达、可选的描述长度上限、封存话术指纹白名单。"""
 
 from __future__ import annotations
 
@@ -114,6 +114,64 @@ class RepoSelfTest(unittest.TestCase):
     def test_repo_frontmatter_passes_baseline_checks(self) -> None:
         violations = validator.collect_violations(ROOT)
         self.assertEqual(violations, [])
+
+    def test_repo_shelving_fingerprints_pass(self) -> None:
+        canonical = validator.extract_shelved_reply(ROOT)
+        self.assertTrue(canonical, "shared/platform-config.md §封存协议 应能提出统一话术")
+        self.assertEqual(validator.check_shelving_fingerprints(ROOT, canonical), [])
+
+
+REPLY_LINE = "- **统一回复话术**：「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」——真源。\n"
+CANONICAL = "当前版本专注 Etsy，小红书功能暂未开放，请等后续版本"
+
+
+class ShelvingFingerprintTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.tmp.name)
+        (self.root / "shared").mkdir()
+        (self.root / "shared" / "platform-config.md").write_text(
+            "# cfg\n\n## 封存协议\n\n" + REPLY_LINE, encoding="utf-8"
+        )
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def write_md(self, rel: str, text: str) -> None:
+        path = self.root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+    def test_extracts_canonical_reply_from_source(self) -> None:
+        self.assertEqual(validator.extract_shelved_reply(self.root), CANONICAL)
+
+    def test_extract_fails_without_marker_line(self) -> None:
+        (self.root / "shared" / "platform-config.md").write_text("# cfg\n", encoding="utf-8")
+        self.assertIsNone(validator.extract_shelved_reply(self.root))
+
+    def test_byte_exact_quotes_pass(self) -> None:
+        self.write_md("some-skill/SKILL.md", f"gate:「{CANONICAL}」+ STOP\n")
+        self.assertEqual(validator.check_shelving_fingerprints(self.root, CANONICAL), [])
+
+    def test_truncated_reply_is_a_violation(self) -> None:
+        self.write_md("refs/contract.md", "按「当前版本专注 Etsy，小红书功能暂未开放」拒绝\n")
+        violations = validator.check_shelving_fingerprints(self.root, CANONICAL)
+        self.assertEqual(len(violations), 1)
+        self.assertIn("refs/contract.md", violations[0])
+
+    def test_reworded_reply_is_a_violation(self) -> None:
+        self.write_md("refs/contract.md", "回复「现阶段专注 Etsy，小红书功能暂不可用」\n")
+        violations = validator.check_shelving_fingerprints(self.root, CANONICAL)
+        self.assertEqual(len(violations), 1)
+
+    def test_changelog_history_is_exempt(self) -> None:
+        self.write_md("CHANGELOG.md", "旧版说明「当前版本专注 Etsy，小红书功能暂未开放」\n")
+        self.assertEqual(validator.check_shelving_fingerprints(self.root, CANONICAL), [])
+
+    def test_skips_vendored_and_cache_dirs(self) -> None:
+        self.write_md("node_modules/pkg/README.md", f"「{CANONICAL}」\n")
+        self.write_md(".cache/evidence.md", "截断「当前版本专注 Etsy，小红书功能暂未开放」\n")
+        self.assertEqual(validator.check_shelving_fingerprints(self.root, CANONICAL), [])
 
 
 if __name__ == "__main__":

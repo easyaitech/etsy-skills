@@ -114,7 +114,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 - 用户问“这几张能不能做一条小红书 / Instagram carousel / Pinterest carousel”
 - 用户要把素材与某个 SKU 关联并形成待发布任务
 
-> **⛔ 平台 = 小红书 → fail-closed 封存**：本 workflow 一进入先看目标平台。若平台 = 小红书（判据 = [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`），**不组草稿、不建 `社媒发布队列` 行、不取变体、不写文案**，只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP。下面步骤只对 Etsy / Pinterest 等非封存平台执行。
+> **⛔ 平台 = 小红书 → fail-closed 封存**：本 workflow 一进入先看目标平台。若平台 = 小红书（判据 = [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`），**不组草稿、不建 `社媒发布队列` 行、不取变体、不写文案**，只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP（协议唯一真源 = [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议）。下面步骤只对 Etsy / Pinterest 等非封存平台执行。
 
 步骤：
 
@@ -191,7 +191,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 
 ### 小红书图文（⛔ 封存 shelved — 以下为未来解封资料，封存期不组装）
 
-> 小红书当前封存（专注 Etsy，不对用户开放）：**不为小红书组装任何发布任务**，用户提小红书请求按封存边界回复并 STOP。下面的结构示意仅供未来解封复用。
+> 小红书当前封存：**不为小红书组装任何发布任务**，用户提小红书请求按封存协议（唯一真源 = [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议）回复并 STOP。下面的结构示意仅供未来解封复用。
 
 ```text
 发布类型 = 图文笔记

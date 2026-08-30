@@ -86,7 +86,7 @@ ecommerce-stack workspace
 本 stack 销售平台**固定为 Etsy**，规则一律以仓库内置 Etsy preset 为准（索引见 [`shared/platform-config.md`](platform-config.md)），不需要先确认目标平台，工作区不维护平台配置文件。
 
 - 输出商品页文案、媒体规则、客服话术、订单字段前，直接按 platform-config.md 的 Etsy preset 索引读取对应规则文件。
-- 小红书电商整体封存（产品决策 2026-07-24：专注 Etsy）；用户提小红书上新 / 发布时只说明封存边界 + 引导回 Etsy + STOP。
+- 小红书电商整体封存：任何小红书相关请求按 [`shared/platform-config.md`](platform-config.md) §封存协议 fail-closed 处理（统一话术 + 引导回 Etsy + STOP）。
 - Etsy 的 tag、图片槽位、SEO、客服规则不能套到内容营销平台（Pinterest / 小红书笔记等按 `MARKETING_PLATFORM.md`）。
 
 ---

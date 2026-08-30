@@ -193,7 +193,7 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 └── trend-radar/               #   工具输入层 Utility-input（只为基座提供自动化外部输入）
 ```
 
-layer 归属是 frontmatter 契约（枚举 `foundation | application | utility-input`，词汇见 `CONTEXT.md`），由 `scripts/validate-frontmatter.py` 在 CI 校验；跨 skill 依赖总览用 `python3 scripts/deps-overview.py` 按需生成，不手工维护汇总矩阵。
+layer 归属是 frontmatter 契约（枚举 `foundation | application | utility-input`，词汇见 `CONTEXT.md`），由 `scripts/validate-frontmatter.py` 在 CI 校验；同一机检器还校验封存话术指纹：封存协议唯一真源在 `shared/platform-config.md` §封存协议，全仓引用其统一话术必须逐字一致（截断 / 改写 = CI FAIL）。跨 skill 依赖总览用 `python3 scripts/deps-overview.py` 按需生成，不手工维护汇总矩阵。
 
 每个 skill 目录里通常有 `SKILL.md`（Hermes 入口）+ `references/` / `templates/` / `assets/` / `scripts/` 四类子目录。
 
