@@ -175,6 +175,7 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 │   ├── platform-config.md     # 销售平台契约（Etsy 固定 + 内置 preset 索引）
 │   ├── skill-prefs.md         # 店主偏好（服务端「我的偏好」设置层）契约
 │   ├── interview-primitives.md # 访谈与输入收集原语（深挖式 / 清点式，#119）
+│   ├── retired-infra.md       # 退役基础设施唯一真源（旧发布 job / 本地 Playwright / 旧 etsy-dm 端点，#120）
 │   └── ai-image-sanitization.md # 最终 listing / 社媒发布图的 AI metadata / watermark 清理协议
 ├── shop-foundation/           # ┐
 ├── listing-catalog/           # │ 基座层 Foundation

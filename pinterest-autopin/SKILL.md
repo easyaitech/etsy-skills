@@ -187,7 +187,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 **三条铁律（回答前先内化，违反即会误导用户）**：
 1. **自动发布状态的唯一真相源 = 店铺总 Base `社媒发布队列` 表的行本身**（`状态` / `自动发布` / `计划发布时间` / `发布 URL` / `事件日志` / `失败原因分类` / `失败原因`）。dispatch 的每一次动作（建 job / 发布中 / 成功 / 失败 / 跳过 / 租约回收）都写在该行 `事件日志` 列——**要判断发没发、为什么，只读这里**。
 2. **绝不用 Mac mini 上的 cron / launchd job / Hermes 本地定时器来推断自动发布是否成功。** 无人值守自动发布跑在 **ECS dispatch**（yanggedianzhang 生产常驻），Hermes / Mac mini **看不到**它的运行状态。Mac mini 上那些旧的发布 cron 在切换到 ECS 时**已被有意暂停**，与自动发布是否工作**完全无关**——看到它们 `paused` 不代表发布停了，**别拿它当证据、别据此说"某天被暂停了 / 在等恢复"**。
-   - 其中旧 job `d99651079542`（`ETSY Social Publisher / Publishing Queue 到期自动发布`）已永久退役：**永不 resume、run、重建或修复路径**。若发现它启用或报错，只停用并回报；自动发布仍按模式 D 交给 ECS dispatch。
+   - 其中旧 job `d99651079542`（`ETSY Social Publisher / Publishing Queue 到期自动发布`）已永久退役（边界见 [`../shared/retired-infra.md`](../shared/retired-infra.md) §1）：**永不 resume、run、重建或修复路径**；发现它启用或报错只停用并回报，自动发布仍按模式 D 交给 ECS dispatch。
 3. **拿不准就读 Base，不编因果。** 没有 Base 证据支持的结论一律不说。计划发布时间在未来 = 还没到点，"没发"是正常的，不是故障。
 
 **执行步骤**：
@@ -215,7 +215,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执含飞书链接）。本 skill 特有禁区：
 
-- **不在 Hermes/Mac mini 上跑 Playwright 发布 Pinterest**：旧本地工具只作为历史迁移材料，不是推荐路径。
+- **不在 Hermes/Mac mini 上跑 Playwright 发布 Pinterest**：旧本地工具只作为历史迁移材料，不是推荐路径（退役边界见 [`../shared/retired-infra.md`](../shared/retired-infra.md) §2）。
 - **不保存浏览器登录态**：登录态只在租户自己的 Chrome / 浏览器插件里。
 - **不在对话或 Base 里暴露 browserToolToken**：token 由管理员发放给插件选项页，不让 Hermes 编造、回显或持久化。
 - **不替用户建 board**：board 在 Pinterest 后台由用户手建；本 skill 只引用名称。
@@ -225,7 +225,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **final 发布前必须经过 test**：除非用户明确豁免。
 - **发布失败不盲目重试**：默认重试一次，第二次失败把状态停在 `失败`，等用户人工介入。
 - **不在本 skill / Hermes 跑自动发布 cron / 定时器**：自动发布的巡检 / backlog 恢复 / 重试 / 单写者锁归 ECS 常驻 dispatch（T5，需运维显式开启 `PUBLISH_DISPATCH_POLL_MS`；yanggedianzhang 生产已开启）。Hermes 在模式 D 只调用专用幂等 enqueue/cancel 入口，成功即交出去——绝不在 Hermes 侧模拟巡检、重试、锁或轮询发布结果。
-- **旧 Social Publisher Cron 永久退役**：job `d99651079542` 不得 resume、run、重建或修复本地路径；发现已启用或报错只停用，不执行旧发布脚本。
+- **旧 Social Publisher Cron 永久退役**（边界见 [`../shared/retired-infra.md`](../shared/retired-infra.md) §1）：job `d99651079542` 不得 resume、run、重建或修复本地路径；发现已启用或报错只停用，不执行旧发布脚本。
 - **标自动发布前内容必须审核完**：模式 D 的 `自动发布=true` 是"授权无人值守发到真 Pinterest"，dispatch 到点直发、无逐条确认闸。字段不全 / 素材未授权 / 文案没定稿的行**绝不标自动发布**。
 - **Pinterest 库存提醒必须分库存独立触发**：品牌/内容型 pin 库存、商品/礼物型 pin 库存是两个不同库存。
 - **多图轮播不拆成多个单图 pin 发**：服务器 / 插件按多素材 job 发布轮播；如果某个租户素材无法解析或插件不满足版本要求，就停在草稿/失败排查，不得拆分冒充轮播。

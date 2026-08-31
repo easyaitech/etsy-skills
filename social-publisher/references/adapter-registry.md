@@ -28,7 +28,7 @@
 - Pinterest 行的 `任务 ID`（`PIN-...`）就是本表主键；`外部队列 ID`（或表里已有的 `ECS job ID`）仅在创建服务器 job 后写入返回的 `jobId`。
 - `发布 URL` 保存 Pinterest 返回的公开 Pin URL。
 - 如果发布器只创建了广告草稿或拿不到公开 Pin URL，不能标记 `已发`。
-- Hermes 不跑本地 Playwright / Chrome profile；浏览器登录态只在租户已安装的浏览器插件中使用。
+- Hermes 不跑本地 Playwright / Chrome profile；浏览器登录态只在租户已安装的浏览器插件中使用（旧本地 Playwright 工具退役边界见 [`../../shared/retired-infra.md`](../../shared/retired-infra.md) §2）。
 
 ## 小红书 adapter 规则（封存 shelved — 后端就绪，整体封存不对外开放）
 
