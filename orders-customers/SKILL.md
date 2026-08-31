@@ -1,6 +1,6 @@
 ---
 name: orders-customers
-description: 维护电商订单 + 客户两张表（默认位于店铺总 Base 内），并按内置 Etsy preset 支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。四种触发：(1) "建订单库 / 客户库"——在店铺总 Base 建表；(2) "录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"——读写 Base；(3) "回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发 / 给某订单的买家发消息 / 按订单号或快递单号发站内信 / 催评价"——按客服 SOP + BRAND.md 语调 + 内置 Etsy preset 平台边界输出回复；Etsy 客户消息统一通过正式获取与真实发布工具处理，可按客户 ID、订单号、快递单号或 Etsy 数字买家 ID 定位，也可不指名道姓列最近来往会话（见 references/etsy-message-tools.md）；(4) "这单下一步 / 能不能发货 / 有没有漏 / 履约检查 / 签收跟进 / 复购触达"——按履约 SOP 输出阶段与缺口；"这单寄到哪 / 完整收货地址 / 门牌 / 邮编 / 收件电话 / 买家叫什么"这类平台事实，Etsy 用 `get_etsy_orders` 现查（见 references/etsy-order-read.md），Base 按隐私规则本就不存完整地址。销售平台固定 Etsy，规则以内置 Etsy preset 为准（见 references/platforms/platform-presets.md）；小红书 preset 封存（产品决策 2026-07-24），仅未来解封后启用。
+description: 维护店铺总 Base 内 `Orders 订单` + `Customers 客户` 两张表，按内置 Etsy preset 支撑订单处理 / 履约检查 / 客服回复 / 客户标签运营。触发：(1) 建库："建订单库 / 客户库"；(2) 读写："录订单 / 新订单 / 小红书订单 / 回头客 / 加备注"；(3) 客服："回客户消息 / 处理差评 / 退货 / 售后 / VIP 群发 / 给某订单的买家发消息 / 按订单号或快递单号发站内信 / 催评价"——Etsy 客户消息统一走正式获取与发布工具；(4) 履约 / 平台事实："这单下一步 / 能不能发货 / 有没有漏 / 履约检查 / 签收跟进 / 复购触达 / 这单寄到哪 / 完整收货地址 / 门牌 / 邮编 / 收件电话 / 买家叫什么"。平台事实用 `get_etsy_orders` 现查，Base 按隐私规则不存完整地址；平台规则以内置 Etsy preset 为准（references/platforms/）。
 layer: foundation
 ---
 

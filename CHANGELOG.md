@@ -2,6 +2,12 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.39] - 2026-08-31
+
+- **description 瘦身至路由信号 + 机检④启用（#118）**：6 个超限 skill 的 frontmatter `description` 瘦身——pinterest-autopin（988→481）、assets-library（821→498）、image-synth（747→473）、orders-customers（703→443）、publish-composer（626→487）、social-publisher（621→467）。口径：身份一句 + 触发词 + 路由边界；删掉机制 / 字段清单 / 后端细节 / 模式内部步骤（那些活在 SKILL.md 正文）。小红书封存口径在 publish-composer / social-publisher 改为指向 §封存协议，orders-customers / image-synth 的小红书 preset 标注随机制细节删除（边界由正文承载）。复审补回三处确属路由信号的用户原话触发词：orders-customers 的地址类问句（「这单寄到哪 / 买家叫什么」等）、pinterest-autopin 的「自动发这几条」、publish-composer 的内容类型 × 平台清单——Hermes 靠这些字面短语路由，不能省。
+- **机检④转正**：`validate-frontmatter.py` 的 `--desc-limit` 默认值 = `DESC_LIMIT_DEFAULT = 500`（上限单一真源在脚本常量），CI 裸调用即生效；仓库自测 `test_repo_descriptions_within_ci_limit` 用同一常量（20 例）。验收即票面口径：16 skills 全部 ≤ 500。
+- 至此 v1.0.36 规划的「单一真源收敛」三张票（#116 layer 契约化、#117 封存协议去重、#118 description 瘦身）全部落地。
+
 ## [v1.0.38] - 2026-08-30
 
 - **封存协议收敛到单一真源（#117）**：协议正文（fail-closed 判据 / 统一话术 / 禁止清单 / 后端 `XHS_PLATFORM_ENABLED` 开关 / 保留物 / 解封指引）整节落进 `shared/platform-config.md` §封存协议——这正是 ADR-0001 预留的位置，本次让「§封存协议」从引用名变成真实章节。social-publisher / publish-composer / xiaohongshu-autopost / shared/preamble / social-adapter-paradigm 等处的**正文级协议复述**改为引用真源；各 ⛔ 闸门与判据落点保留一句话执行守卫（fail-closed 的就地执行细则，如 xiaohongshu ⛔ 总闸的禁止清单），frontmatter `description` 不动（留给 #118 瘦身）。「小红书解封验收清单」双副本去重，唯一副本保留在 `adapter-registry.md`（xiaohongshu-autopost SKILL.md 的平行清单改为指向），清单新增「机检⑤随之退役」步骤防止解封后 CI 悬挂 FAIL。

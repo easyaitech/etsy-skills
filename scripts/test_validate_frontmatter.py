@@ -115,6 +115,11 @@ class RepoSelfTest(unittest.TestCase):
         violations = validator.collect_violations(ROOT)
         self.assertEqual(violations, [])
 
+    def test_repo_descriptions_within_ci_limit(self) -> None:
+        # 与 CI 裸调用同口径:机检④默认上限(#118 启用)
+        violations = validator.collect_violations(ROOT, desc_limit=validator.DESC_LIMIT_DEFAULT)
+        self.assertEqual(violations, [])
+
     def test_repo_shelving_fingerprints_pass(self) -> None:
         canonical = validator.extract_shelved_reply(ROOT)
         self.assertTrue(canonical, "shared/platform-config.md §封存协议 应能提出统一话术")

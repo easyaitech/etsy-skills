@@ -11,8 +11,8 @@
     「统一回复话术」行,全仓 .md 引用必须逐字一致(截断 / 改写 = FAIL);
     CHANGELOG.md 历史记录豁免。
 
-随内容票启用:
-  ④ --desc-limit N    description ≤ N 字(#118 description 瘦身后在 CI 打开)
+始终启用(#118):
+  ④ description ≤ DESC_LIMIT_DEFAULT(500)字,瘦身至路由信号;可用 --desc-limit 覆盖。
 """
 
 from __future__ import annotations
@@ -24,6 +24,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 LAYERS = ("foundation", "application", "utility-input")
+
+# 机检④的 description 上限(#118 启用)。单一真源在此,CI 裸调用 / 仓库自测都用这个数。
+DESC_LIMIT_DEFAULT = 500
 
 FM_RE = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 ITEM_RE = re.compile(r"^\s*-\s*(.+?)\s*$")
@@ -173,8 +176,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--desc-limit",
         type=int,
-        default=None,
-        help="启用检查④:description ≤ N 字(#118 瘦身后在 CI 打开)",
+        default=DESC_LIMIT_DEFAULT,
+        help=f"检查④:description ≤ N 字(默认 {DESC_LIMIT_DEFAULT},#118 启用)",
     )
     args = parser.parse_args(argv)
 
