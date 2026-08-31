@@ -7,7 +7,7 @@
 | 获取 | `etsy_customer_messages_get` | 按 selector 获取唯一 customer 的正式双向文字消息，或按 `scope="recent"` 列出最近有来往的会话 |
 | 发布 | `etsy_customer_messages_publish` | 把最终稿送去**店主确认卡**；店主点确认后才真实发送 |
 
-旧 `etsy-dm` 会话查询、回复草稿和订单消息端点已退役，**不得调用、不得降级回旧工具**。发布支持文字正文 + 可选图片附件（`imageAssetUrls`，见 §4）；纯图片、无文字的消息不支持。
+旧 `etsy-dm` 会话查询、回复草稿和订单消息端点已退役，**不得调用、不得降级回旧工具**（退役边界见 [`../../shared/retired-infra.md`](../../shared/retired-infra.md) §3）。发布支持文字正文 + 可选图片附件（`imageAssetUrls`，见 §4）；纯图片、无文字的消息不支持。
 
 运行时按 [`../../shared/etsy-agent-tools.md`](../../shared/etsy-agent-tools.md) 自动注入地址、租户和鉴权。Agent 输入不得带 `tenantId` 或 token，也不要读取、打印或让用户提供这些值。
 

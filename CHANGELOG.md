@@ -2,6 +2,11 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.41] - 2026-08-31
+
+- **retired-infra 收拢（#120）**：新增 `shared/retired-infra.md`——退役基础设施唯一真源，每条 = 是什么 / 为什么退役 / 永久边界 / 判据：①旧 Hermes 自动发布 job `d99651079542`（P0 永久退役闸，含「Mac mini 旧 cron paused ≠ 发布停了」反误读）；②旧本地 Pinterest Playwright 工具（`PINTEREST_AUTOPIN_HOME/REPO` 仅迁移排查）；③已退役 `etsy-dm` 端点（旧会话查询 / 回复草稿 / 订单消息发送）。文件头明确「不在范围」清单（兼容期旧变量归 README、存量 COMMERCE_PLATFORM 归 platform-config、封存 ≠ 退役、image-synth `retired/` 是数据目录）。执行点挂指向：social-publisher §P0 闸 + 禁区、pinterest-autopin 铁律 2 / 禁区 ×2、etsy-message-tools、tools-architecture 客户消息行、adapter-registry Playwright 边界——安全关键闸（P0 / 铁律）保留完整守卫原文，仅补指向。
+- **失败模式命名文档（#120）**：新增 `docs/failure-modes.md`——六条按名引用的失败模式，全部锚定真实版本：硬编码断言盲区（v1.0.11 引发、v1.0.15 记录并建 CI）、手写汇总矩阵腐化（v1.0.37）、复述失真（v1.0.38）、触发词蒸发（v1.0.39）、文案腔调漂移（v1.0.32）、不可靠观测回写死循环（v1.0.35）；每条带根因 / 对策。收编门槛：至少真实发生一次 + 已有对策，不收推测性模式。PR / review / CHANGELOG 今后可按名引用。
+
 ## [v1.0.40] - 2026-08-31
 
 - **抽 interview 原语（#119）**：新增 `shared/interview-primitives.md`——向店主提问收集信息的交互原语唯一真源：两种风格的选用判据（产出是原则 / 策略 → **深挖式**：单问单答、office-hours 节奏、具象优先、提问节制；产出是事实 / 必填字段 → **清点式**：缺必填一次性问全、可一轮多字段、块级回放）+ 共享不变量（避免诱导、不替用户原创、宁缺毋滥 TODO 占位、回放暴露取舍、开场预告）+ 统一 TODO 写法。
