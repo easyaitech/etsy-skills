@@ -6,6 +6,8 @@
 
 ## 输入清单（缺必填项一次性问全）
 
+> 清点式原语（一次性问全 / 不边做边追问 / TODO 占位）唯一真源 = [`../../shared/interview-primitives.md`](../../shared/interview-primitives.md)。
+
 | 输入 | 必填 | 来源 / 默认 |
 |---|---|---|
 | 目标 SKU | ✅ | 用户给 |

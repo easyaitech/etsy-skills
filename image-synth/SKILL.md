@@ -67,7 +67,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 模式 A / B 走同一套 12 步骤；差异见后面两节（输入表 + 模式差异表）。
 
 1. **解析工作区根**（`ecommerce-stack workspace`，旧命令 `etsy-stack workspace` 兼容），得到 `<workspace>`
-2. **盘点输入**——必填项一次性问全（不要边走边追问）。**反向触发时已 in-memory 现传的字段不重复盘点**（见 § 反向触发条件）
+2. **盘点输入**——必填项一次性问全（不要边走边追问；清点式原语见 [`../shared/interview-primitives.md`](../shared/interview-primitives.md)）。**反向触发时已 in-memory 现传的字段不重复盘点**（见 § 反向触发条件）
 3. **解析图片需求** → 5 类词库（按 [prompt-vocabulary.md](references/prompt-vocabulary.md)）：
    - 输入是 shoot-brief.md 路径：读文件按模板段映射
    - 反向触发现传 in-memory：直接用结构化数据，不再读文件

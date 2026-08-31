@@ -2,6 +2,11 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.40] - 2026-08-31
+
+- **抽 interview 原语（#119）**：新增 `shared/interview-primitives.md`——向店主提问收集信息的交互原语唯一真源：两种风格的选用判据（产出是原则 / 策略 → **深挖式**：单问单答、office-hours 节奏、具象优先、提问节制；产出是事实 / 必填字段 → **清点式**：缺必填一次性问全、可一轮多字段、块级回放）+ 共享不变量（避免诱导、不替用户原创、宁缺毋滥 TODO 占位、回放暴露取舍、开场预告）+ 统一 TODO 写法。
+- **消费方收敛**：shop-foundation SKILL.md 模式 A 的「四者共同要求」五条交互机制、四份访谈脚本各自的「总原则」重复段改为引用真源（各脚本只留维度结构与领域原则，如「从品牌推导不从平台推导」「线上原文保留英文」）；清点式消费方 listing-catalog `input-checklist.md`、pinterest-autopin `pin-composition.md` §输入清单、image-synth 盘点输入挂引用。复审补回三条迁移时漏掉的原语（office-hours 不照搬产品诊断、先问最容易回答的、事实只核对字段与来源），TODO 占位变体 `待填充` 对齐为 `待沉淀`。不覆盖客服场景（买家是服务对象不是信息源）。
+
 ## [v1.0.39] - 2026-08-31
 
 - **description 瘦身至路由信号 + 机检④启用（#118）**：6 个超限 skill 的 frontmatter `description` 瘦身——pinterest-autopin（988→481）、assets-library（821→498）、image-synth（747→473）、orders-customers（703→443）、publish-composer（626→487）、social-publisher（621→467）。口径：身份一句 + 触发词 + 路由边界；删掉机制 / 字段清单 / 后端细节 / 模式内部步骤（那些活在 SKILL.md 正文）。小红书封存口径在 publish-composer / social-publisher 改为指向 §封存协议，orders-customers / image-synth 的小红书 preset 标注随机制细节删除（边界由正文承载）。复审补回三处确属路由信号的用户原话触发词：orders-customers 的地址类问句（「这单寄到哪 / 买家叫什么」等）、pinterest-autopin 的「自动发这几条」、publish-composer 的内容类型 × 平台清单——Hermes 靠这些字面短语路由，不能省。
