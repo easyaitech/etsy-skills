@@ -1,6 +1,6 @@
 ---
 name: image-synth
-description: 调中心后端生图服务(GPT Image 2 via OpenRouter)把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。三种触发：(1) 模式 A 电商图：用户提到"出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图 / 小红书商品图"等请求时——销售平台固定 Etsy，按内置 Etsy preset 媒体规则出图（shared/platform-config.md 索引，如 references/etsy-listing-image-specs.md），走内置槽位语义（小红书商品图 / 详情图规则已封存——产品决策 2026-07-24：专注 Etsy，仅未来解封后启用），QA 检查商品形态保持 + 文字可读性 + 平台主图规范；(2) 模式 B 社媒图：用户提到"出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / 群发图 / banner"等请求时——按目标内容平台尺寸出图，QA 仅检查文字可读性；(3) 反向触发：image-brief 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，落 `<workspace>/.cache/image-synth/ai_raw/`，QA 不通过自动调 prompt 重试 ≤ 2 次；用户三选一（入库走 assets-library promote / 留 ai_raw / 丢弃）。严格遵守 BRAND.md 视觉禁区（如存在）。
+description: AI 图片合成（调中心后端生图服务）：把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。触发：(1) 电商图："出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图 / 小红书商品图"——销售平台固定 Etsy，按内置 Etsy preset 出图，QA 查商品形态保持 + 文字可读 + 平台主图规范；(2) 社媒图："出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / banner"——按目标平台尺寸，QA 查文字可读；(3) 反向触发：image-brief 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，QA 不过自动调 prompt 重试 ≤ 2 次；入库走 assets-library。遵守 BRAND.md 视觉禁区（如存在）。
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 ---

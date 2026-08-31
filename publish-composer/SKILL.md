@@ -1,6 +1,6 @@
 ---
 name: publish-composer
-description: 发布编排（旧名 content-asset-pool）：把已归档的素材变体 + 商品事实 + 品牌底座组装成跨平台发布意图 PublishIntent，并拥有店铺总 Base 内 `社媒发布队列` 表。把单图、多图轮播、视频、图文笔记组合成 Pinterest、Instagram、TikTok、Etsy Listing 等平台发布任务；平台专属字段只有在对应 adapter 已启用且真实读取时才补 typed extension 或显式列。**小红书分支已整体封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**——用户提"出小红书笔记草稿 / 这几张做条小红书"等小红书组装请求时（触发词保留以正确拒绝），只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**不组小红书草稿、不建小红书队列行**；Etsy / Pinterest 组装完全不受影响。触发：用户说"组发布任务 / 排一条 pin / 出小红书笔记草稿（→ 封存拒绝）/ 这组图发哪些平台 / 这张图发过哪些平台 / 跨平台复用素材 / 对账发布结果"。**只引用 assets-library 已产出的发布副本变体，自己不收集素材、不清理、不裁切**（那些归 assets-library）；真实发布交 social-publisher 路由到平台适配器。所有真实写入经用户确认。
+description: 发布编排（旧名 content-asset-pool）：把 assets-library 已产出的发布副本变体 + 商品事实 + 品牌底座组装成跨平台发布意图 PublishIntent（单图 / 多图轮播 / 视频 / 图文笔记 → Pinterest / Instagram / TikTok / Etsy Listing 等），拥有店铺总 Base `社媒发布队列` 表。只引用变体，自己不收集 / 清理 / 裁切素材；平台专属字段只在对应 adapter 已启用且真实读取时才补；真实发布交 social-publisher 路由到适配器，所有真实写入经用户确认。触发："组发布任务 / 排一条 pin / 这组图发哪些平台 / 这张图发过哪些平台 / 跨平台复用素材 / 对账发布结果"；小红书组装请求（"出小红书笔记草稿 / 这几张做条小红书"，触发词保留以正确拒绝）→ 封存拒绝：按 shared/platform-config.md §封存协议 fail-closed 处理，不组小红书草稿、不建小红书队列行；Etsy / Pinterest 组装不受影响。
 layer: application
 depends-on: [shop-foundation, assets-library, listing-catalog, social-publisher]
 ---

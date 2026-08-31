@@ -1,6 +1,6 @@
 ---
 name: social-publisher
-description: 社交媒体发布总控层（薄触发）：管 adapter registry + 人工/按需发布（模式 B）+ 开启无人值守自动发布（标 `自动发布=true` 交给 ECS dispatch 直发，标记即人工把关点）+ confirm-publish（手动路径）+ 对账。**自动发布的巡检 / 锁 / 重试 / 死信归 ECS 常驻 dispatch（yanggedianzhang publish dispatch，T5），本 skill 不再手搓巡检 / 定时器**。当前真实发布适配器只有 Pinterest（pinterest-autopin，经 yanggedianzhang 服务器 + 浏览器插件执行）；小红书 adapter（xiaohongshu-autopost）**已整体封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**——用户提小红书发布 / 对账请求时只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP，**不组草稿、不建行、不出人工发布清单、不做对账**；Instagram、TikTok 等 planned/manual-only。未 enabled 的平台不能声称已自动发布。用于用户说“发这条 / 发 Pinterest / publish / 对账发布结果 / 接发布器 / 发小红书（→ 封存拒绝）”等场景。
+description: 社交媒体发布总控层（薄触发）：管 adapter registry + 人工 / 按需发布 + confirm-publish（手动路径）+ 发布对账；自动发布的巡检 / 锁 / 重试 / 死信归 ECS 常驻 dispatch（标 `自动发布=true` 即交给 dispatch 直发），本 skill 不手搓巡检定时器。当前真实发布适配器只有 Pinterest（pinterest-autopin，经 yanggedianzhang 服务器 + 浏览器插件执行）；Instagram / TikTok 等 planned/manual-only，未 enabled 的平台不能声称已自动发布。触发：用户说"发这条 / 发 Pinterest / publish / 对账发布结果 / 接发布器 / 发小红书（→ 封存拒绝）"等场景；小红书发布 / 对账请求 → 封存拒绝：按 shared/platform-config.md §封存协议 fail-closed 处理（判据 = adapter-registry 平台状态）。
 layer: application
 ---
 
