@@ -19,7 +19,7 @@ depends-on: [shop-foundation, assets-library]
 
 ## 执行
 
-1. 调 `capabilities`。需要插件至少 `0.5.178` 并在目标账号的浏览器中登录。`publishEnabled=false` 时可准备预览，实际发布由管理员开通；不靠反复重试或换接口绕过。
+1. 调 `capabilities`。需要插件至少 `0.5.179` 并在目标账号的浏览器中登录。`publishEnabled=false` 时可准备预览，实际发布由管理员开通；不靠反复重试或换接口绕过。
 2. 为本次业务意图固定 `idempotencyKey`，保存到已有任务记录或当前交接说明。创建请求超时后用同一键重送，或 `list` 查找；先找到原任务再继续。
 3. 用户只要求试一下或预览：`create` 使用 `mode=preview`。轮询 `status` 到 `previewed`，告诉用户预览页已准备；这不是已发布。用户确认这份预览后，给同一个 `jobId` 调 `approve`，`confirmPublishApproval=true`。
 4. 用户已明确授权这份素材、文案和目标账号发布（包括明确排期）时，可 `create mode=publish` 并传 `confirmPublishApproval=true`。已有授权不必重复确认；调试、提供素材、询问能力本身不当成公开发布授权。
