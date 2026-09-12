@@ -29,7 +29,7 @@
 }
 ```
 
-只有 `published` 可报告分享成功；`previewed` 只是预览。`evidence=shared_confirmation` 来自插件对平台成功提示的确认，`owner_verified_published` 来自店主人工对账，两者如实区分。结果 URL 必须是实际核对的 `https://www.instagram.com/reel/<code>/` 或 `/p/<code>/`，无查询参数。
+只有 `published` 可报告分享成功；`previewed` 只是预览。`evidence=shared_confirmation` 来自插件对平台成功提示的确认，`owner_verified_published` 来自店主人工对账，两者如实区分。结果 URL 必须是实际核对的 `https://www.instagram.com/reel/<code>/` 或 `/p/<code>/`，也接受路径前带目标用户名的链接；不接受其他账号的路径、查询参数或片段。
 
 幂等键绑定原始输入；同键换账号、视频 token、文案或显式排期会冲突。同视频字节、账号和文案的未失败任务还会跨键去重，不能靠换键绕过待核对任务。首次预览后要发同一份内容，走 approve，不新建 publish 意图。
 
