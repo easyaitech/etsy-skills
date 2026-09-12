@@ -71,6 +71,7 @@ RESERVED_NAMES = {
     "logistics-tracking",
     "orders-customers",
     "pinterest-autopin",
+    "instagram-publish",
     "publish-composer",
     "publish-metrics",
     "shop-foundation",
