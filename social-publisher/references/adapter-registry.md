@@ -4,12 +4,14 @@
 
 | 平台 | 状态 | 支持发布类型 | 执行层 | 关键前置 | 说明 |
 |---|---|---|---|---|---|
-| Pinterest | enabled | 单图；多图轮播需服务器 / 插件显式支持后再 final | `pinterest-autopin` → yanggedianzhang server browser tool | 服务器工具可用、租户浏览器插件可用、`社媒发布队列` 表可用 | 当前唯一真实发布适配器。发布过程必须走 server test job → 用户确认 → server publish job，并回写 社媒发布队列。 |
+| Pinterest | enabled | 单图；多图轮播需服务器 / 插件显式支持后再 final | `pinterest-autopin` → yanggedianzhang server browser tool | 服务器工具可用、租户浏览器插件可用、`社媒发布队列` 表可用 | Pinterest 发布适配器。发布过程必须走 server test job → 用户确认 → server publish job，并回写 社媒发布队列。 |
 | 小红书 | **封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）** | 图文笔记 / 视频笔记 | `xiaohongshu-autopost` → yanggedianzhang server browser tool（同 pinterest 三层范式，契约已就绪） | 后端三件已就绪（服务器工具 `/api/tools/xiaohongshu/jobs`、插件 `xiaohongshu` capability、笔记 recipe）；**但整体封存、不对外开放**——解封需产品侧明确放行 | **封存 fail-closed**：用户提任何小红书请求，按 [`../../shared/platform-config.md`](../../shared/platform-config.md) §封存协议（唯一真源）拒绝——「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」+ 引导回 Etsy + STOP，不组草稿、不建行、不出人工清单。后端 + 契约（流程见 [`xiaohongshu-autopost/references/publishing-flow.md`](../../xiaohongshu-autopost/references/publishing-flow.md)）原样保留供未来解封。解封不是一处开关，需走本文件末尾 §小红书解封验收清单。 |
-| Instagram | planned/manual-only | 单图 / 多图轮播 / Reels 草稿 / 人工对账 | 暂无 | 未来需要平台工具或 API 适配器 | 不自动发布。 |
+| Instagram | enabled（单视频 Reels，按租户开通） | 单个 MP4 Reels | `instagram-publish` → 服务器 Instagram 任务 → 租户插件 | 后端 capabilities 实测、插件 ≥ 0.5.178、租户发布名单、已登录目标账号 | 先路由 [instagram-publish](../../instagram-publish/SKILL.md)。使用独立服务器任务排期；未接 Base 自动扫描。图片 / 轮播 / Stories 仍 manual-only。 |
 | TikTok | planned/manual-only | 视频草稿 / 人工对账 | 暂无 | 未来需要平台工具或 API 适配器 | 不自动发布。 |
 
 ## Adapter 接入契约
+
+Instagram 请求先走 `instagram-publish` 的任务契约；下面的 Base dispatch 决策树仍只适用于已接入 Base 扫描的平台（当前 Pinterest）。
 
 新增平台适配器时必须补齐：
 
@@ -79,7 +81,7 @@ PublishIntent（社媒发布队列 一行）
 | 1 | 平台=Pinterest, enabled, 自动发布=true, 已批准, 到点, 未锁 | ECS dispatch **直接建 publish job**（`ready_for_publish`）→ 回写发布中 → 插件真发，**无逐条人工确认闸**（人工把关点在标 `自动发布=true` 那一下） |
 | 2 | 平台=Pinterest, enabled, 用户手动"发这条" | pinterest-autopin 模式 C：test → 目视确认 → confirm-publish → final |
 | 3 | 平台=小红书, **shelved（封存）**, 用户"发" | **fail-closed**：只回封存话术「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」+ 引导回 Etsy + STOP；**不创建真实 job、不组草稿、不出人工发布清单**（不落入「非 enabled → 人工清单」通用分支） |
-| 4 | 平台=Instagram, planned | 草稿 + 人工对账；不真发 |
+| 4 | 平台=Instagram, 单视频 Reels | 路由 instagram-publish；capabilities 校验，通过明确授权后建 Instagram 服务器任务。图片/轮播仍人工发布。 |
 | 5 | 平台=Pinterest, 自动发布=true, 但行已被 dispatch 锁（发布中） | 人工发布让位（避让），不双写抢同一行 |
 | 6 | 平台=Pinterest, dispatch dormant（POLL_MS 未配） | 自动发布不发生；用户要发走手动模式 C，**不回退 Hermes 手搓巡检** |
 | 7 | 任意平台, `链接` 缺（商品型缺分享链接） | 阻塞建任务，回 listing-catalog 补 `分享链接`，不拼 URL |

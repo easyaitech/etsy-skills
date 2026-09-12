@@ -2,6 +2,11 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.42] - 2026-09-13
+
+- 新增 `instagram-publish`：单视频 Reels 的服务器任务、预览/授权、排期、幂等查询及不确定结果人工核对说明；依赖配套后端及插件 0.5.178，按租户开通。
+- 接入技能安装清单和社媒总控；明确 Instagram 尚未接 Base 自动扫描，不把分享确认但未取到 URL 当成 Base 已发。
+
 ## [v1.0.41] - 2026-08-31
 
 - **retired-infra 收拢（#120）**：新增 `shared/retired-infra.md`——退役基础设施唯一真源，每条 = 是什么 / 为什么退役 / 永久边界 / 判据：①旧 Hermes 自动发布 job `d99651079542`（P0 永久退役闸，含「Mac mini 旧 cron paused ≠ 发布停了」反误读）；②旧本地 Pinterest Playwright 工具（`PINTEREST_AUTOPIN_HOME/REPO` 仅迁移排查）；③已退役 `etsy-dm` 端点（旧会话查询 / 回复草稿 / 订单消息发送）。文件头明确「不在范围」清单（兼容期旧变量归 README、存量 COMMERCE_PLATFORM 归 platform-config、封存 ≠ 退役、image-synth `retired/` 是数据目录）。执行点挂指向：social-publisher §P0 闸 + 禁区、pinterest-autopin 铁律 2 / 禁区 ×2、etsy-message-tools、tools-architecture 客户消息行、adapter-registry Playwright 边界——安全关键闸（P0 / 铁律）保留完整守卫原文，仅补指向。

@@ -93,10 +93,12 @@ Pinterest pin 不再单独建表，就是 `社媒发布队列` 里 `平台 = Pin
 
 ## Manual-only 平台
 
-Instagram、TikTok 在 adapter 启用前只能：
+Instagram 图片/轮播、Stories 与 TikTok 只能：
 
 - 生成 `社媒发布队列` 草稿
 - 输出人工发布清单
 - 用户给出公开 URL 后回写 `已发`
 
 不得自动登录、上传、点击发布，也不得把“草稿已准备”写成“已发”。
+
+Instagram 单视频 Reels 使用 [instagram-publish](../../instagram-publish/SKILL.md) 的独立服务器任务，不由此 Base 自动扫描。分享确认但 URL 缺失时记录事件说明，保留待补链接状态；补齐真实 URL 后再按本表规则对账。
