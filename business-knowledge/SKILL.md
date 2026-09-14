@@ -1,6 +1,6 @@
 ---
 name: business-knowledge
-description: 维护电商店铺的轻量业务知识库：整理每周外部材料、生成 raw / weekly / wiki markdown、抽取 Knowledge Cards 写入店铺总 Base 内 `Knowledge Cards 知识卡片` 表，并按 SKU / 品类 / 渠道生成短期 Marketing Brief。触发条件：(1) 用户说"整理这周热点 / 沉淀知识库 / 这些材料帮我整理"，或 trend-radar 本周采集就绪、需把热词沉淀成卡片供 listing 等参考；(2) 用户要给 SKU、品类或渠道生成本周营销参考 / marketing brief；(3) 下游 skill 需要引用 Knowledge Cards 或 Marketing Brief lookup contract。
+description: "整理店铺外部材料、周报和 Knowledge Cards，或生成 SKU/品类/渠道的 Marketing Brief。"
 layer: foundation
 ---
 

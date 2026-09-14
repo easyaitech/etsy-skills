@@ -1,6 +1,6 @@
 ---
 name: image-synth
-description: AI 图片合成（调中心后端生图服务）：把"图片需求 + 商品实拍图"合成成 1 张成品图，专攻电商图与社媒图。触发：(1) 电商图："出 listing 主图 / 生成 hero 图 / AI 合成 lifestyle / 出详情图 / 替换背景做场景图 / 不去拍直接合成 / 给 SKU 出图 / 小红书商品图"——销售平台固定 Etsy，按内置 Etsy preset 出图，QA 查商品形态保持 + 文字可读 + 平台主图规范；(2) 社媒图："出 Pinterest pin / 做 Instagram 图 / 出 Story / 节日营销图 / 社媒分享图 / banner"——按目标平台尺寸，QA 查文字可读；(3) 反向触发：image-brief 出 brief 后选"不拍直接合成" / pinterest-autopin 候选池空 / listing-catalog 缺图。严格出 1 张，QA 不过自动调 prompt 重试 ≤ 2 次；入库走 assets-library。遵守 BRAND.md 视觉禁区（如存在）。
+description: "根据图片需求与商品实拍图调用后端合成电商或社媒成品图；图片方案使用 image-brief。"
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 ---

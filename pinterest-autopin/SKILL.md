@@ -1,6 +1,6 @@
 ---
 name: pinterest-autopin
-description: Pinterest 发布适配器：把商品 + 素材变体 + 品牌组装成 pin，经 yanggedianzhang 服务器 + 浏览器插件执行（Hermes 不跑 Playwright、不持队列；自动发布的巡检 / 锁 / 重试归 ECS dispatch）。触发：(1) "接 Pinterest / 配置 pin 流水线"；(2) "给 SKU 出 pin / 写 pin 文案 / 排一条 pin"——组 `社媒发布队列`（平台 = Pinterest）行，缺 Pinterest 2:3 变体时反向请求 assets-library 派生；(3) "发 pin / 测试 pin / publish"——test → 用户目视确认 → confirm-publish；(4) "开启自动发布 / 自动发这几条 / 到点自动发"——把已审核行标 `自动发布=true` 交给 ECS dispatch 无人值守直发；(5) "发成功没 / 这条发了吗 / 为什么没发 / 队列什么情况"——只读 `社媒发布队列` 行判读，不用本地定时器推断。每次只处理一条。
+description: "配置 Pinterest 发布流程，准备或发布 Pin，开启已审核队列自动发布，或查询发布结果。"
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---

@@ -1,6 +1,6 @@
 ---
 name: trend-radar
-description: 读取「管理员趋势采集插件」已采集并上收到 ECS trend-radar 服务的各平台热词（Pinterest Trends / eRank Trend Buzz / Google Trends 等），并生成趋势 × 店铺/品牌/商品的 fit report 供人工判断。触发条件：(1) 用户说"看看这周什么热门 / 抓一下趋势"；(2) 用户说"找趋势和现有商品/店铺的结合点"；(3) 定期自动运行（每周一次）；(4) business-knowledge 整理周报时检查 latest.json。
+description: "读取已采集的平台趋势，分析其与店铺或商品的契合点，供周报及营销判断。"
 layer: utility-input
 ---
 

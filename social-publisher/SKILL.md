@@ -1,6 +1,6 @@
 ---
 name: social-publisher
-description: 社交媒体发布总控层（薄触发）：管 adapter registry + 人工 / 按需发布 + confirm-publish（手动路径）+ 发布对账；自动发布的巡检 / 锁 / 重试 / 死信归 ECS 常驻 dispatch（标 `自动发布=true` 即交给 dispatch 直发），本 skill 不手搓巡检定时器。Pinterest 走 pinterest-autopin；Instagram 单视频 Reels 走 instagram-publish（按租户开通），图片/轮播和 TikTok 仍人工处理。触发：用户说"发这条 / 发 Pinterest / publish / 对账发布结果 / 接发布器 / 发小红书（→ 封存拒绝）"等场景；小红书发布 / 对账请求 → 封存拒绝：按 shared/platform-config.md §封存协议 fail-closed 处理（判据 = adapter-registry 平台状态）。
+description: "路由 Pinterest 与已开通的 Instagram Reels 发布、配置发布器或对账结果；执行范围以 adapter registry 为准，小红书仍封存。"
 layer: application
 ---
 

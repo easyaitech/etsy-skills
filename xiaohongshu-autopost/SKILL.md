@@ -1,6 +1,6 @@
 ---
 name: xiaohongshu-autopost
-description: 小红书笔记发布 adapter，当前**封存（shelved，产品决策 2026-07-24：现阶段专注 Etsy，小红书不对用户开放）**。用户提出任何小红书相关请求（"接小红书 / 配置小红书自动发 / 建小红书笔记流水线"、"给 SKU 出小红书笔记 / 写小红书文案 / 排一条小红书笔记"、"发小红书 / 测试笔记 / publish 小红书"）时，触发本 skill 只为**统一说明封存边界并引导回 Etsy**：告知"当前版本专注 Etsy，小红书功能暂未开放，请等后续版本"，不组草稿、不建发布队列行、不创建 server publish job、不出人工发布清单。后端配套已用 XHS_PLATFORM_ENABLED 开关封存（默认关，XHS 端点返回 410）。本 adapter 的组笔记 / 三层范式 / 发布契约文档原样保留供未来版本解封复用（解封需产品侧批准 + 后端开关 + adapter-registry 改 enabled）。
+description: "处理小红书发布相关请求时说明当前封存边界；不创建草稿、队列或发布任务。"
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---

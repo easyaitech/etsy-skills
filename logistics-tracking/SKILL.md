@@ -1,6 +1,6 @@
 ---
 name: logistics-tracking
-description: 跨境物流状态跟踪——用 `track` 命令查/录包裹物流（接后端 17TRACK 跟踪服务）。当用户问“这单到哪了 / 物流到哪了 / 查快递 / 到货没 / 签收了吗”，或你在处理发货、拿到运单号需要纳入跟踪时使用。覆盖 4px/燕文/云途/中国邮政等跨境专线 + 目的国末端派送，自动跟到签收。只查/录，不直接改飞书 Base。
+description: "用 track 查询或登记跨境包裹物流；不直接修改飞书 Base。"
 layer: application
 ---
 

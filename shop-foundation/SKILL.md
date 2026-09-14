@@ -1,6 +1,6 @@
 ---
 name: shop-foundation
-description: 建立和维护电商店铺的四份基座文件：品牌基座 BRAND.md（品牌原则）+ BRAND_MARKETING.md（品牌营销策略）+ MARKETING_PLATFORM.md（内容平台策略），店铺基座 SHOP.md（店铺事实）。触发条件：(1) "建立品牌底座 / 品牌定位 / 店铺信息 / 营销策略 / 平台策略 / 内容策略 / 初始化工作区 / 从店铺数据起草"等打底请求；(2) 用户纠正 Agent 输出反映品牌偏好（→ BRAND.md 沉淀）、店铺事实变更（→ SHOP.md 更新）、营销方向调整（→ BRAND_MARKETING.md 沉淀）或内容平台规范变更（→ MARKETING_PLATFORM.md 更新），主动提示。销售平台规则不归本 skill：平台固定 Etsy，规则见 shared/platform-config.md 内置 preset。
+description: "建立或更新店铺品牌、事实、营销及平台策略文件（BRAND、SHOP、BRAND_MARKETING、MARKETING_PLATFORM）。"
 layer: foundation
 ---
 

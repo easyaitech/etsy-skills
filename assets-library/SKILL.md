@@ -1,6 +1,6 @@
 ---
 name: assets-library
-description: 素材生命周期 owner：六个一级文件夹 + 店铺总 Base `Assets 素材池`（canonical 成品）+ `Asset Variants 派生素材`（平台发布副本）双层架构；存储 / 变体 / 清理 / 检索归它，创意策略（拍摄 brief / 图片方案）归 image-brief。触发：(1) 建库："建素材库 / 建资产库"；(2) 归档："上传新摄影 / 归档某 SKU 的图 / 整理素材 / 收到客户 UGC / 整理营销素材 / 收集这些图"——素材收集进池是本 skill 唯一职责，下游发布编排不自己收集；(3) 查找："找某 SKU 的图 / 查能发 Pinterest 的素材 / 查某次营销活动素材"；(4) 派生平台变体（用户或 publish-composer 提出"出小红书笔记封面 / Pinterest 竖裁 / 按平台规格出发布副本 / 出某平台尺寸图"）：从 canonical 成品派生平台规格发布变体，录入 `Asset Variants 派生素材`（模式 E）——多平台下的变体工厂。归档与变体遵守 BRAND.md 视觉原则（如存在）。
+description: "归档、检索和管理店铺素材，或从成品派生平台发布变体；创意方案使用 image-brief。"
 layer: foundation
 ---
 
