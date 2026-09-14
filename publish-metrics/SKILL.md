@@ -1,6 +1,6 @@
 ---
 name: publish-metrics
-description: 发布结果回收闭环（反馈层）：把每条已发 PublishIntent 的发布后表现（公开 URL / post id / 曝光 / 点击 / 保存 / 转化 / 失败原因分类）回写进 `社媒发布队列`，并按素材变体 / 文案 / SKU / 平台聚合出「哪些有效」复盘，喂回 publish-composer——让发布从单向变闭环，composer 不再盲选素材和文案。三种触发：(1) "建发布指标列 / 配发布复盘"——在 `社媒发布队列` 补 metrics 列；(2) "回收发布数据 / 录这条 pin 的表现 / 更新发布指标"——按平台数据来源回写已发行的指标；(3) "复盘发布效果 / 哪些素材文案有效 / 这个 SKU 发得怎样"——聚合出表现 rollup。只读发布结果 + 写 metrics 列，不改内容/执行状态列、不重新发布；数据来源（手录 / 平台 API / 插件抓取）必须如实标注。
+description: "回收已发布内容的表现指标并复盘素材、文案或 SKU 效果；不改发布执行状态。"
 layer: application
 depends-on: [publish-composer, listing-catalog]
 ---

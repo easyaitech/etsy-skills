@@ -1,6 +1,6 @@
 ---
 name: listing-catalog
-description: 维护电商商品目录（店铺总 Base 内商品 / SKU 表）+ 按内置 Etsy preset 撰写商品页 / listing 文案 + 读取 / 分析 / 优化现有 Etsy Listing。四种触发：(1) "建商品库 / 商品目录 / listing 表 / SKU 表"——在店铺总 Base 内建表；(2) "写 listing / 上新文案 / 商品标题 / 产品描述 / 平台 SEO"——按 BRAND.md 语调 + 内置 Etsy preset 平台规则写文案；(3) "改 SKU / 调价 / 改商品字段"——读写 Base（**实物库存不在这里**：仓库里还剩多少走 `inventory` skill，本表的「库存」列只是平台在售数量）；(4) "读取现有 Listing / 看 Etsy 后台 Listing / 分析竞品 Listing / 优化现有 Etsy Listing"——先用独立只读工具取得线上真实数据。销售平台固定 Etsy，规则以内置 Etsy preset 为准。
+description: "维护商品/SKU 目录、读取现有 Listing 或撰写和优化 Etsy Listing；实物库存使用 inventory。"
 layer: foundation
 ---
 

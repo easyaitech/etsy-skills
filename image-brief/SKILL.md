@@ -1,6 +1,6 @@
 ---
 name: image-brief
-description: 图片方案设计（创意 brief 的 owner）：给某 SKU + 目标平台 + 用途，产出一份**平台感知**的图片创意 brief（槽位映射 / Mood 风格 / 镜头清单 / 参考图 / 附注），再分叉到生产——人工拍摄（交 brief）或 image-synth（现传 brief AI 合成）或已有素材够（走 assets-library 检索）。触发：用户说"给 SKU 出拍摄 brief / 出图片方案 / 设计一组图 / 要拍什么 / 上新先出方案 / 不拍直接合成的方案"。本 skill 只产出 brief 这个**计划文档**，不拍、不生图、不归档、不写 Base；brief 落 `商品/{SKU}_shoot-brief.md`。严格遵守 BRAND.md 视觉原则 / 视觉禁区（如存在）。
+description: "为 SKU 和目标平台制定图片创意或拍摄 brief；只交付方案，生产与归档交对应技能。"
 layer: application
 depends-on: [shop-foundation, listing-catalog, assets-library]
 ---
