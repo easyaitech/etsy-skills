@@ -118,6 +118,8 @@ curl -sS -X POST "$YANGGEDIANZHANG_API_BASE/api/hermes/<endpoint>" \
 
 **所以：需要看图或处理图片时，直接下载 / 打开这条链接，不要让用户重新上传。** 后端给你这条链接就是为了让你用它。
 
+要把这张图**交给后端存起来**（入素材池、传云盘）时，直接把这条链接作为 `assetUrl` 传给对应端点（`bitable/asset-image-token`、`drive/upload-file`），服务端自己从缓存取图——**不要下载后转 base64 再传回去**（请求体会超限，2026-09-28 真实事故）。
+
 `record-search` 等 Base 读端点返回的 `attachments[].assetUrl` 同理——那是可直接使用的真实图片输入。
 
 ---
