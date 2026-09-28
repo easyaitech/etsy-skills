@@ -33,7 +33,7 @@
 
 ## 收尾 / 推广
 - [ ] **铺到其余活跃租户** — 薄 skill 已 pilot 在 etsy-fublessings profile；合并本 PR 后对 tenant_mqj68naq/mqmbtu/mqoyzyp 重装 bundle（或手动放 skill）+ 确认各 profile 能调 `~/.local/bin/track`。
-- [ ] **track-service 源码归一个 repo** — 现本地 ~/code/track-service + 部署在 ECS /opt/yanggedianzhang-ops/track，未版本控制。建议独立小 repo 或并进 yanggedianzhang monorepo（与 image-gen-service 同处理）。
+- [ ] **track-service 源码归一个 repo** — 现本地 ~/code/track-service + 部署在 ECS /opt/yanggedianzhang-ops/track，未版本控制。建议独立小 repo 或并进 yanggedianzhang monorepo。（image-gen-service 已于 2026-09-28 下线，不再需要同处理。）
 
 ## v2: 主动推送（C，用户原始诉求"主动发给我"）
 - [ ] **Hermes 消费 `track changes` → 推消息 → 核查 → 确认才写 Base** — 后端已每天轮询并攒 changes；给租户 Hermes 配定时读 changes，签收/异常推飞书给运营者，**人工核查确认后**才由 Hermes 写 Base（不自动改）。核查需要的"始发地 + 近几条轨迹"届时在服务侧补返回（query/changes 现只回最新状态+最新事件）。

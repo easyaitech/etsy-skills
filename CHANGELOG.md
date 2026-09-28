@@ -2,6 +2,10 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.46] - 2026-09-28
+
+- `image-synth` 生图改为调 Hermes 自带的 `image_generate` 工具（GPT Image 2，出图后端 / 凭据 / 每日额度由平台在 profile 配置里统一下发），不再经 `terminal` 调中心后端 `POST /image/generate`。那个独立的中心生图服务（image-gen-service）从上线起一次都没被调用过——店长实际一直走的是 Hermes 自带出图——已于同日下线，契约文档 `references/backend-image-gen-contract.md` 一并删除。失败处理改为转述工具返回的错误原文；`daily_limit_reached` 直接告诉用户明天零点后恢复，不重试。
+
 ## [v1.0.45] - 2026-09-28
 
 - `assets-library` 聊天图片规则改为「只有要发布的才入池」：只是交流用的聊天图不存；入池走 `asset-image-token`，平台自动把原图备份进云盘 `社交媒体/`，不要再另传备份。取代 v1.0.44 的「所有聊天图都必须备份」。依赖后端 yanggedianzhang 0.7.32.183。
