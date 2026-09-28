@@ -54,6 +54,8 @@ layer: foundation
 
 **聊天图片硬规则**：所有通过聊天窗口发给电商 Agent 的图片，都必须先备份到飞书云盘素材库。暂时无法判断归属时默认走 B1 上传到 `待处理/`；已明确用于商品页 / listing / Pinterest / 营销时，可直接走 B2 promote。不要只写商品表的 `照片附件` 而跳过 Drive 备份。
 
+**聊天图怎么落云盘（平台工具，不用 lark-drive）**：店主在聊天里发的图，系统会给你一条签名图片链接。备份进云盘调 `POST /api/hermes/drive/upload-file`，body 带 `tenantId`、`folder`（如 `待处理`）、`assetUrl`=那条签名链接（`fileName` 可选）——服务端自己从缓存取图上传，**不要自己下载、转 base64**。要进素材池（发 Pinterest 等）直接 `POST /api/hermes/bitable/asset-image-token` 吃同一条签名链接，一步入池，不需要先落 `待处理/` 再 asset-from-drive。店主已经把图发给你了，**绝不能**再让店主自己保存、上传云盘或提供 fileToken / 文件名；工具失败就如实报哪一步没成、错误码原样转述。
+
 分两个子模式——B1 入待处理不录 Base，B2 分类移入对应文件夹录 Base：
 
 #### 模式 B1：dump（新素材入 待处理/，**不**录 Base）
