@@ -2,6 +2,12 @@
 
 本项目使用 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.0.47] - 2026-10-12
+
+- `image-synth` 将 `remove-ai-watermarks` 清理与复检设为生图交付前最后一步，聊天预览及入库统一使用 processed 副本；原图保留。清理记录绑定文件 SHA-256，入库复用已验证副本。普通清理不冒充隐形水印或所有 AI 痕迹已去除，失败与无法验证均阻止最终交付。
+
+- 为通过发布 CI，两个脚本目录的测试依赖 Vitest 升至 4.1.11，并更新 source-map-js 修复既有安全审计失败；28 + 20 项 Node 测试及类型检查通过。
+
 ## [v1.0.46] - 2026-09-28
 
 - `image-synth` 生图改为调 Hermes 自带的 `image_generate` 工具（GPT Image 2，出图后端 / 凭据 / 每日额度由平台在 profile 配置里统一下发），不再经 `terminal` 调中心后端 `POST /image/generate`。那个独立的中心生图服务（image-gen-service）从上线起一次都没被调用过——店长实际一直走的是 Hermes 自带出图——已于同日下线，契约文档 `references/backend-image-gen-contract.md` 一并删除。失败处理改为转述工具返回的错误原文；`daily_limit_reached` 直接告诉用户明天零点后恢复，不重试。

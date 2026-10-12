@@ -1,6 +1,6 @@
 # 输出落盘约定
 
-> SKILL.md step 9 / 11 引用本文档。生成的图先落本地 `.cache/`，**不**直接进飞书云空间——飞书云空间是 assets-library 的辖区。
+> SKILL.md step 9 / 10 / 12 引用本文档。生成的图先落本地 `.cache/`，**不**直接进飞书云空间——飞书云空间是 assets-library 的辖区。
 >
 > 与 pinterest-autopin runtime 落 `<workspace>/.cache/pinterest-autopin/runtime/` 同构：按工作区隔离 + 跟着工作区一起迁移。
 
@@ -16,6 +16,8 @@
 │       ├── {标签ID}_{SKU}_{seq}.json      ← sidecar 元数据（同名 .json）
 │       ├── {标签ID}_{SKU}_{seq}_attempt-1.png  ← QA 重试候选（仅 QA 失败 3 轮停下时存在）
 │       └── ...
+├── processed/                             ← 最终清理与复检后的交付副本，同日期 / 同文件名
+│   └── {YYYY-MM-DD}/...
 ├── promoted/                              ← 用户选"入库"且 assets-library promote 成功后从 ai_raw/ 移入；7 天回滚窗口
 │   └── {YYYY-MM-DD}/...
 └── retired/                               ← 用户选"丢弃"时从 ai_raw/ 移入（非真删，7 天回滚窗口）
@@ -24,7 +26,7 @@
 
 > `promoted/` 和 `retired/` 都不自动清——给用户 7 天回滚窗口；后续清理由用户决策。工作区是 git 仓库时记得 `.cache/` 进 `.gitignore`（README.md 已说）。
 >
-> AI metadata / AI watermark 清理不在 `ai_raw/` 阶段发生。只有用户选择"入库"且用途是最终 listing 图或社媒发布图时，`assets-library` 会按 [`shared/ai-image-sanitization.md`](../../shared/ai-image-sanitization.md) 生成发布副本。
+> `ai_raw/` 保留原始输出；生图最后一步按 [`shared/ai-image-sanitization.md`](../../shared/ai-image-sanitization.md) 生成 `processed/` 交付副本并复检，预览与入库都使用该副本。清理记录 `aiSanitization` 写入原图 sidecar，包含源文件 / 输出文件 SHA-256、工具版本、各步骤状态及复检结果。原图迁移时同步更新 `sourcePath`；丢弃时将对应 processed 副本一同移入 retired 下的独立子目录，避免同名覆盖。
 
 ---
 
@@ -124,7 +126,7 @@ QA 一次性通过时不存 attempt 文件，直接落正式名。用户从 atte
 | `sku` | **关联 SKU** 字段 |
 | `final_prompt`（截前 200 字符）| `Assets 素材池` 表 **备注**字段以 `[AI 合成] {prompt 摘要}` 前缀写入 |
 | `mode` + `label_id` | 模式 A 电商 / listing 图上传到 `商品/`；模式 B 社媒 / 营销图上传到 `营销/`。按 assets-library 命名公式命名 |
-| `mode` + `label_id` + `[AI 合成]` 标记 | 若目标是最终 listing 图或社媒发布图，assets-library 在上传前对发布副本执行 AI metadata / AI watermark 清理，并把清理结果追加到 Base 备注 |
+| `mode` + `label_id` + `[AI 合成]` 标记 | 现传 `aiSanitization` 与 processed 路径；assets-library 核对输出 SHA-256 和复检结果后复用该文件，把清理结果追加到 Base 备注。哈希不符或缺记录时重新按共享协议处理 |
 
 ---
 

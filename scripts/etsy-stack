@@ -156,7 +156,7 @@ ai_cleaner_status() {
 
   echo "AI 发布图清理工具：$(command -v remove-ai-watermarks)"
   remove-ai-watermarks --version 2>/dev/null || true
-  echo "默认用途：只在最终 listing 图片和社媒待发布图片的发布副本上清 AI metadata / AI visible watermark"
+  echo "默认用途：生图交付副本、最终 listing 图片和社媒待发布副本；流程见 shared/ai-image-sanitization.md"
 }
 
 ai_cleaner_update() {

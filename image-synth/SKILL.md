@@ -11,7 +11,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 
 **架构**：本 skill 维护**提示词层**（输入 → 5 类词库 → 最终 prompt）+ **质量闸门层**（差异化 QA）。生图动作调 Hermes 自带的 **`image_generate`** 工具——出图后端、模型、凭据和每日额度都由平台在 profile 配置里定好，**skill 不持 key、不选模型**。看图能力（取 anchor / QA）仍用 Hermes `vision_analyze`。生成的图先落本地 `.cache/image-synth/ai_raw/`，由用户三选一决定是否进资产库。
 
-**AI 发布图清理边界**：本 skill 生成后先保留原始输出，不在 `.cache/image-synth/ai_raw/` 阶段清理 AI metadata / AI watermark。只有用户选择"入库"、且该图会成为最终 listing 图片或社媒待发布图时，才由 `assets-library` 模式 B2 按 [`shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md) 处理发布副本。
+**生图最后一步**：生成与 QA 完成后，保留 `ai_raw` 原图，按 [`shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md) 用 `remove-ai-watermarks` 生成并检查 `processed` 交付副本，再发图、让用户选择是否入库。直接保存到聊天的图也必须经过这一步；失败保留原图并报告，不能把未处理图当成最终成品。
 
 **对外的实操接口**：
 - Hermes 出图工具 `image_generate`（`prompt` + `aspect_ratio`，当前后端支持时可带实拍图作 `image_url` / `reference_image_urls`）——凭据、模型、每日额度都在平台侧，skill 不持
@@ -62,9 +62,9 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 
 ---
 
-## 共享执行流（12 步，模式 A / B 共用）
+## 共享执行流（13 步，模式 A / B 共用）
 
-模式 A / B 走同一套 12 步骤；差异见后面两节（输入表 + 模式差异表）。
+模式 A / B 走同一套 13 步骤；差异见后面两节（输入表 + 模式差异表）。
 
 1. **解析工作区根**（`ecommerce-stack workspace`，旧命令 `etsy-stack workspace` 兼容），得到 `<workspace>`
 2. **盘点输入**——必填项一次性问全（不要边走边追问；清点式原语见 [`../shared/interview-primitives.md`](../shared/interview-primitives.md)）。**反向触发时已 in-memory 现传的字段不重复盘点**（见 § 反向触发条件）
@@ -80,14 +80,15 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
    - **失败显式报错，绝不静默**：工具返回 `success: false` 时，把 `error` 原文转述给用户，不要概括成「我画不了」。`daily_limit_reached` → 原样告诉用户「今天的出图次数用完了、明天零点后恢复」，停，不重试；其他错误最多重试**一次**，仍失败就停。任何失败都**不对缺失图跑 QA**，原因落 sidecar。
 8. **QA**——按 [qa-gates.md](references/qa-gates.md) 对应段（模式 A / 模式 B）走全部 checks。含自动重试 ≤ 2 次 + 第 3 轮失败用户三选一
 9. **落盘**——按 [output-layout.md](references/output-layout.md) 写到 `<workspace>/.cache/image-synth/ai_raw/{date}/` + 同名 sidecar `.json`。本地写入用 `mkdir -p` 一步建目录（`.cache/` 是本地 fs，不需要 image-brief 写 brief 时那种 `lark-drive` 逐层检查）
-10. **发图预览（必须，先于三选一）**——**禁止将本地路径作为回执**（用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，绝不使用）。用一条命令发图（`+messages-send --image` 自动上传本地文件再发消息，无需先单独调 `images create`）：
-    - `lark-cli im +messages-send --chat-id <当前对话 chat_id> --image <本地图绝对路径>` （附一行说明：SKU / 槽位 / 尺寸 / 生成成本）
+10. **最终清理与复检**——按共享清理协议执行 `remove-ai-watermarks`，从 step 9 原图生成 `<workspace>/.cache/image-synth/processed/{date}/` 下的同名副本。记录 `aiSanitization`（含输出 SHA-256）；检查输出能解码、尺寸与方向正确，并用 `vision_analyze` 对照原图检查文字、Logo、商品轮廓和纹理。任一清理步骤失败、残留或无法验证，以及画面被改坏，均停在本步；保留原图和失败记录，不发最终成品、不 promote。隐形水印是否执行及其检测状态必须分别记录，不能声称“全部 AI 痕迹已去除”。
+11. **发图预览（必须，先于三选一）**——**禁止将本地路径作为回执**（用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，绝不使用）。用一条命令发图（`+messages-send --image` 自动上传本地文件再发消息，无需先单独调 `images create`）：
+    - `lark-cli im +messages-send --chat-id <当前对话 chat_id> --image <processed交付副本绝对路径>` （附一行说明：SKU / 槽位 / 尺寸 / 生成成本）
     - 发送失败 → 报错，不继续；不允许静默退化到打印路径
-11. **用户三选一**：
-    - **入库** → 调用 `assets-library` 模式 B2 promote；按 [output-layout.md § promote 字段透传](references/output-layout.md#promote-入库时的字段透传) 现传 sidecar 元数据；如果用途是最终 listing 图或社媒发布图，由 assets-library 在 promote 时处理 AI metadata / AI watermark 发布副本
-    - **留 ai_raw** → 保留 `.cache/`，不入索引（图已在飞书消息里，用户可以直接保存）
+12. **用户三选一**：
+    - **入库** → 调用 `assets-library` 模式 B2 promote；按 [output-layout.md § promote 字段透传](references/output-layout.md#promote-入库时的字段透传) 现传 sidecar 元数据；现传 step 10 的交付副本及清理记录，由 assets-library 核对文件哈希后复用，避免重复改图
+    - **留 ai_raw** → 保留 `.cache/`，不入索引（原图与 processed 副本均保留，飞书消息中为处理后的副本，用户可以直接保存）
     - **丢弃** → 移到 `retired/`（详见 output-layout.md，给 7 天回滚窗口）
-12. 给用户回执：图已在上方飞书消息 / 入库后的飞书云空间链接 / "已丢弃"。**绝不发本地路径。**
+13. 给用户回执：图已在上方飞书消息 / 入库后的飞书云空间链接 / "已丢弃"。**绝不发本地路径。**
 
 ### 模式 A：电商图（销售平台商品图 / listing 槽位 / 商品级营销图）
 
@@ -112,7 +113,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 |---|---|
 | 3 镜头清单源 | shoot-brief.md §C 当前槽位段 |
 | 8 QA 段 | [qa-gates.md § 模式 A](references/qa-gates.md#模式-a-电商图) |
-| 10 入库标签字段 | 目标平台商品图用途；Etsy 为槽位 ID（hero / detail / lifestyle / ...）|
+| 12 入库标签字段 | 目标平台商品图用途；Etsy 为槽位 ID（hero / detail / lifestyle / ...）|
 
 ### 模式 B：社媒图（Pinterest / Instagram / Story / 节日营销 / 群发 banner / 自定义氛围图）
 
@@ -137,7 +138,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 |---|---|
 | 3 镜头清单源 | [social-platform-specs.md](references/social-platform-specs.md) 的目标平台段（尺寸 / 安全区 / 文字密度 / 视觉权重）|
 | 8 QA 段 | [qa-gates.md § 模式 B](references/qa-gates.md#模式-b-社媒图)（仅文字可读 + 视觉禁区，不做商品形态比对）|
-| 10 入库标签字段 | 渠道值（取值见 [`assets-library/references/asset-index-base-schema.md` § 用途标签 § 渠道](../assets-library/references/asset-index-base-schema.md)：Pinterest / Instagram Posts / Instagram Reels / Instagram Stories / 小红书 / 评价素材 / 内部参考）|
+| 12 入库标签字段 | 渠道值（取值见 [`assets-library/references/asset-index-base-schema.md` § 用途标签 § 渠道](../assets-library/references/asset-index-base-schema.md)：Pinterest / Instagram Posts / Instagram Reels / Instagram Stories / 小红书 / 评价素材 / 内部参考）|
 
 ### 反向触发条件（被其他 skill 调用时的入口）
 
@@ -149,7 +150,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 | `pinterest-autopin` 模式 B step 3 | Pinterest 候选池空 + 用户选"AI 合成" | SKU + 目标 board + 已草拟 pin 文案 + 目标平台 = Pinterest 1000×1500 | **B** |
 | `listing-catalog` 模式 B step 10 | 用户选"不拍直接 AI 合成" | 礼物词库（受众 / 场景 / 节日 / 包装） + description 礼物 / 使用语境 + `Products 商品` 表中该 SKU 行 | **A** |
 
-**信任规则**：反向触发时**不重复盘点已现传输入**——调用方现传 = 信任。step 2 跳过对应字段；其余步骤照走（看图 anchor / 拼 prompt / 预览 / 生图 / QA / 落盘 / 三选一）。
+**信任规则**：反向触发时**不重复盘点已现传输入**——调用方现传 = 信任。step 2 跳过对应字段；其余步骤照走（看图 anchor / 拼 prompt / 预览 / 生图 / QA / 落盘 / 最终清理与复检 / 发图 / 三选一）。
 
 ---
 
@@ -157,7 +158,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 
 通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束。本 skill 特有：
 
-- **生成结果绝不以本地路径发给用户**：用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，也禁止使用。生图后必须经 step 10「发图预览」走 `lark-cli im +messages-send --image <路径>` 把图发到飞书对话（`--image` 自动上传本地文件），才算完成一次有效回执。
+- **生成结果绝不以本地路径发给用户**：用户无法访问 Mac mini 文件系统；`MEDIA:` 前缀机制不可靠，也禁止使用。生图后必须经 step 11「发图预览」走 `lark-cli im +messages-send --image <路径>` 把图发到飞书对话（`--image` 自动上传本地文件），才算完成一次有效回执。
 - **prompt 展示给用户预览** → 等确认 → 才调生图（生图调用有成本）
 - **入库走 assets-library**：本 skill 不直接写 `Assets 素材池` 表 / 不直接上传飞书云空间——这是 assets-library 的职责边界
 - **生图只走 Hermes `image_generate`，skill 不持 key / 不自己调外部生图 API**：凭据、模型、每日额度都在平台侧（额度是工具边界上的硬闸，不是提示词劝告）；不要用 `terminal` 绕开它直接调 OpenRouter / OpenAI 等接口
@@ -171,7 +172,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library, image-brief]
 - **shop-foundation**：BRAND.md § 视觉禁区是 negative prompt **唯一**来源；用户对生成图的纠正（"这种风格不像我们品牌"）按 shop-foundation 沉淀流程流回 BRAND.md
 - **image-brief**：image-brief 出的 brief 是本 skill 的**主输入源**（brief 路径 `商品/{SKU}_shoot-brief.md` / 反向触发现传 in-memory）；image-brief 模式 B 分叉选"不拍直接合成"时反向触发本 skill。
 - **assets-library**：
-  - 用户选"入库" → 调 assets-library 模式 B2 promote；现传 sidecar 元数据（含 `[AI 合成]` 标记）。AI metadata / AI watermark 清理只在 promote 的发布副本上发生，不改 ai_raw 原图
+  - 用户选"入库" → 调 assets-library 模式 B2 promote；现传 sidecar 元数据（含 `[AI 合成]` 标记）。现传 step 10 的交付副本与清理记录；assets-library 按共享协议复用，ai_raw 原图保持不变
   - 入库标签字段值取自 assets-library schema 的 § 用途标签 词汇表——本 skill **不**自定义；v0 不动 schema，AI 合成识别靠 Base "备注"字段前缀
 - **listing-catalog**：`Products 商品` 表中该 SKU 行的 title / 品类 / SEO 词作 anchor 选填输入；本 skill 不写 `Products 商品` 表
 - **pinterest-autopin**：候选池空时被反向触发；本 skill 出图 → 落 .cache → 入库 → 回到 pinterest-autopin step 4
