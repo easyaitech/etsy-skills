@@ -41,7 +41,7 @@ pipx install --force 'remove-ai-watermarks[visible]==0.45.1'
    remove-ai-watermarks visible <source_path> -o <visible_tmp_path> --keep-metadata
    ```
 
-   查看命令结果，不只看退出码：`Partial`、`Post-removal validation unavailable`、报错均为未通过，不能继续交付，也不自动反复擦除。若明确报告未检测到可见标记且未创建输出，复制原图到临时副本后继续；输出缺失但没有明确的未检出结论则报错。检测器未识别、但看图发现残留时也不能当通过；保留供人工核对，不强行擦角标或 Logo。
+   查看命令结果，不只看退出码：`Partial`、`Post-removal validation unavailable`、报错均为未通过，不能继续交付，也不自动反复擦除。0.45.1 在“未发现可见标记且无可读 AI 来源信号”时会返回退出码 2；仅当报告明确为 `No known visible mark detected` 且无处理异常、没有输出时，按未检出处理，复制原图到临时副本后继续（来源仍未知、隐形水印未验证）。其他明确未检出且无输出的结果同样复制原图继续；输出缺失但没有明确的未检出结论则报错。检测器未识别、但看图发现残留时也不能当通过；保留供人工核对，不强行擦角标或 Logo。
 3. 从临时副本移除 AI 元数据并保留标准字段：
 
    ```bash
