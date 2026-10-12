@@ -1,121 +1,93 @@
-# AI 发布图清理协议
+# AI 图片交付清理协议
 
-本协议只处理**准备对外发布的图片副本**，目标是去掉 AI 相关 provenance 信号：
-
-- AI metadata：C2PA / EXIF / XMP / PNG text chunks / 平台会识别成 "Made with AI" 的字段。
-- AI visible watermark：目前按 `remove-ai-watermarks visible` 支持的 Gemini / Nano Banana sparkle logo。
-
-参考工具：[wiltodelta/remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)。
-
----
+使用 [wiltodelta/remove-ai-watermarks](https://github.com/wiltodelta/remove-ai-watermarks)，处理 AI metadata 和工具支持的可见 AI 水印。**这些操作不等于消除全部 AI 痕迹**；隐形水印、来源指纹和画面中的 AI 感必须分别说明，不能用一次“未检出”推断图片是真实摄影。
 
 ## 触发范围
 
-只在以下出口运行：
+- `image-synth`：生图、QA 和原图落盘后，作为发图交付前最后一步运行；用户只保存聊天图、不入库时同样执行。
+- `assets-library` B2：最终 listing 图或社媒发布图在 promote 上传前运行。
+- `pinterest-autopin`：发布副本写入队列 / 发布前运行。
 
-1. **最终电商平台商品图 / listing 图片**：`assets-library` 模式 B2 promote，且用途标签是目标平台商品图用途；Etsy 为 listing 槽位（`hero` / `detail` / `lifestyle` / 等）。
-2. **计划发布到社交媒体的图片**：`assets-library` 模式 B2 promote，且用途标签包含社媒渠道（如 `Pinterest` / `Instagram Posts` / `Instagram Stories` / `Facebook` / `Twitter/X`）；以及 `pinterest-autopin` 写入 `社媒发布队列` 表 / 发布前的 processed 副本。
-
-明确不处理：
-
-- `assets-library` 模式 B1 dump 的 `待处理/` 原始素材。
-- `image-synth` 刚生成落在 `.cache/image-synth/ai_raw/`、用户还没选择"入库"的图片。
-- 只用于内部参考、拍摄 planning、视觉分析、素材检索、代表帧标注的图片。
-- 用户或品牌主动加上的商标、版权水印、署名水印；本协议只处理 AI watermark。
-
----
-
-## 处理原则
-
-1. **只改发布副本，不改原始素材**。输出固定落到 `<workspace>/.cache/ai-image-sanitizer/` 或调用方自己的 processed 目录。
-2. **只移除 AI 相关 metadata**。使用 `metadata --remove --keep-standard`，保留 Author / Copyright / Title 等标准字段。
-3. **可见水印只处理工具明确支持并检测到的 AI logo**。检测不到时不强行擦除。
-4. **不默认跑 `invisible` / `all`**。这两种模式会用 diffusion 重新生成像素，可能改变产品纹理、文字和边缘；只有用户明确要求"处理隐形 AI watermark"并接受画面可能变化时才用。
-5. **失败即阻塞发布，不静默降级**。如果图片要对外发布但清理失败，停下告诉用户缺什么；不要拿未处理图继续排队或上传。
-6. **metadata 工具缺失时允许安全 fallback**：如果 `remove-ai-watermarks` / `exiftool` 不可用，但仅需要清理 metadata，可用 Pillow 重新打开图片、`ImageOps.exif_transpose`、转换 RGB，并以 JPEG 重新保存且不传 EXIF/XMP/ICC/C2PA。处理后必须用字节/字符串扫描验证无 C2PA/OpenAI/EXIF/XMP/prompt 等标记。该 fallback 只用于 metadata 清理，不等同于 visible / invisible watermark 移除。
-
----
+始终保留原件：`image-synth/ai_raw/`、B1 dump 的 `待处理/`、内部参考图不原地处理。仅处理 AI 标记，保留商标、作者署名和版权水印。
 
 ## 前置检查
 
-发布出口在处理图片前先在 **Hermes Agent 实际运行的机器** 上检查：
+在 **Hermes 实际运行机器、同一执行用户**下检查命令与依赖，开发机安装不算：
 
 ```bash
 command -v remove-ai-watermarks
+remove-ai-watermarks --version
+remove-ai-watermarks visible --help
 ```
 
-IDE / 当前开发机有没有 clone `wiltodelta/remove-ai-watermarks` 不重要。真正执行图片处理的是 Hermes Agent 那台机器；只要那台机器 PATH 里有 `remove-ai-watermarks` 命令即可。
-
-缺失时提示安装：
+默认流程需要 `visible` extra（包含元数据及 CPU 可见水印处理）；基础包本身不够。管理员安装到隔离工具环境，不改 Hermes Python 环境。已验证版本为 `0.45.1`：
 
 ```bash
-uv tool install git+https://github.com/wiltodelta/remove-ai-watermarks.git
+uv tool install --force 'remove-ai-watermarks[visible]==0.45.1'
+# 没有 uv 时使用 pipx 的隔离安装
+pipx install --force 'remove-ai-watermarks[visible]==0.45.1'
 ```
 
-如果没有 `uv`，用：
-
-```bash
-pipx install git+https://github.com/wiltodelta/remove-ai-watermarks.git
-```
-
-基础安装只要求 metadata 和 visible watermark 清理；不要为了默认流程安装 GPU extra。
-
-如果 Hermes Agent 机器不能访问 GitHub，或没有 `uv` / `pipx`：
-
-1. 停止发布，不上传未清理图片。
-2. 告诉用户在 Hermes Agent 机器上先安装 `uv` 或 `pipx`，再执行 `ecommerce-stack ai-cleaner update`（旧命令 `etsy-stack ai-cleaner update` 兼容）。
-3. 如用户只能离线安装，让用户把已打包的 Python wheel / 本地 git checkout 放到 Hermes Agent 机器，再用 `uv tool install <本地路径>` 或 `pipx install <本地路径>` 安装。安装完成后重新跑发布流程。
-
----
+确保可执行文件目录在 Hermes terminal 的 PATH 中。缺依赖、命令失败时保留原图、记录原始错误，停止最终交付 / 入库 / 发布，交管理员修复；不让店主重传图。仅清掉 metadata 的替代实现不能算此完整步骤成功。
 
 ## 单图流程
 
-设输入为 `<source_path>`，输出为 `<clean_path>`：
+输入 `<source_path>` 为原图。每次用独立输出路径，避免拿上次文件冒充本次结果。`image-synth` 输出到 `<workspace>/.cache/image-synth/processed/{date}/`；其他调用方输出到 `.cache/ai-image-sanitizer/` 或自己的 processed 目录。
 
-1. 复制到清理输出目录，保留原始文件不动。
-2. 检查 AI metadata：
+1. 记录原图 SHA-256、工具版本，检查原图可解码并记录尺寸、显示方向。
+2. 在**保留元数据的原图**上识别可见 AI 标记（元数据可辅助判断），写独立临时副本：
 
    ```bash
+   remove-ai-watermarks visible <source_path> -o <visible_tmp_path> --keep-metadata
+   ```
+
+   查看命令结果，不只看退出码：`Partial`、`Post-removal validation unavailable`、报错均为未通过，不能继续交付，也不自动反复擦除。若明确报告未检测到可见标记且未创建输出，复制原图到临时副本后继续；输出缺失但没有明确的未检出结论则报错。检测器未识别、但看图发现残留时也不能当通过；保留供人工核对，不强行擦角标或 Logo。
+3. 从临时副本移除 AI 元数据并保留标准字段：
+
+   ```bash
+   remove-ai-watermarks metadata <visible_tmp_path> --remove --keep-standard -o <clean_path>
    remove-ai-watermarks metadata <clean_path> --check
    ```
 
-3. 移除 AI metadata，保留标准 metadata：
+   检查报告中 AI 字段确已清除；退出码为零本身不是“无残留”的证据。
+4. 复检最终文件：可解码，尺寸 / 方向 / 色彩正常；`vision_analyze` 对照原图检查文字、书法笔画、Logo、商品轮廓和纹理。任何新增损伤或未完成检查均记 `failed`，不交付；成功后记录最终 SHA-256 与 `visualQa: passed`。原图保持不动。
+5. 后续预览、上传、promote 使用这个最终副本。裁切、调色或再次生成后哈希已变，必须重新执行本协议；不能沿用旧记录。
 
-   ```bash
-   remove-ai-watermarks metadata <clean_path> --remove --keep-standard
-   ```
+## 隐形水印
 
-4. 如果图片来源是 AI 合成，或 sidecar / 备注含 `[AI 合成]`，再跑可见 AI watermark 清理：
+普通流程不执行 `invisible` / `all`：它们会重新生成像素，可能改变商品与文字。记录 `invisibleStatus: not-run`，告知“已完成元数据与可见 AI 水印检查，隐形水印未处理 / 未验证”，不能宣称全部去痕。
 
-   ```bash
-   remove-ai-watermarks visible <clean_path> -o <clean_path> --strip-metadata
-   ```
+用户要求处理隐形水印并接受像素重绘时，使用该工具的独立 `qwen-zimage` 依赖及 CUDA GPU 路径；在真正执行前说明此代价。运行环境不支持时，明确阻塞该请求，不能用 metadata 结果代替。对原图的独立副本运行：
 
-5. 如用户明确要求隐形 AI watermark 清理，先说明会重写像素，再使用：
+```bash
+remove-ai-watermarks invisible <source_path> -o <invisible_tmp_path> --force
+```
 
-   ```bash
-   remove-ai-watermarks invisible <clean_path> -o <clean_path>
-   ```
+此处 `--force` 仅限本次生图工具已确认来源的 AI 图片（不是拿检测结果未知的实拍图试验）。随后以此输出执行上面的可见水印、元数据与画质复检流程。即便命令成功，也只记录 `invisibleStatus: processed-unverified`；若有对应供应商验证器的真实结果，另存验证器、时间和结论，结果只针对这一个文件，不能推广为所有检测器均无法识别。
 
-   不要在 listing 主图或含细小文字 / 尺寸表的图上默认使用。
+## 输出记录与复用
 
----
-
-## 输出记录
-
-调用方需要在自己的 sidecar / Base 备注 / 队列记录里保留最小可审计信息：
+调用方在 sidecar / Base 备注 / 队列记录保留最小结果，生成提示词和原始来源记录留在内部，不写回交付图片。示例：
 
 ```json
 {
   "aiSanitization": {
     "status": "applied",
     "tool": "remove-ai-watermarks",
-    "steps": ["metadata", "visible"],
+    "toolVersion": "0.45.1",
+    "steps": ["visible", "metadata"],
     "sourcePath": "<source_path>",
+    "sourceSha256": "<original_sha256>",
     "outputPath": "<clean_path>",
-    "invisibleOptIn": false
+    "outputSha256": "<final_sha256>",
+    "metadataStatus": "verified-absent",
+    "visibleStatus": "removed-validated",
+    "invisibleStatus": "not-run",
+    "visualQa": "passed"
   }
 }
 ```
 
-如果无 AI metadata 且未检测到可见 AI watermark，`status` 写 `checked-noop`。
+- 明确未检测到可见标记时 `visibleStatus: not-detected`；元数据和可见标记均无需改动时 `status: checked-noop`，仍须复检和记录。
+- 失败记 `status: failed` 与错误原因；未做的步骤按未做记录，不伪造通过。
+- 下游仅在 `status` 为 `applied` / `checked-noop`、元数据验证通过、可见标记为已验证移除或未检出、`visualQa: passed` 且**实际文件 SHA-256 等于 outputSha256**时复用交付副本。缺记录或哈希不符则重新执行；新增隐形水印要求按上节单独处理，旧的普通清理记录不能满足它。

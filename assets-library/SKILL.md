@@ -88,7 +88,7 @@ layer: foundation
 3. **分类**：判断素材归属——商品 / 品牌 / 客户 / 工作室 / 营销。判断依据见 [asset-types.md](references/asset-types.md) 的类型→文件夹映射表
 4. **发布图 AI 清理 gate（仅 final listing / 社媒发布图）**：
    - 若本次 promote 的用途标签是目标电商平台商品图 / listing 槽位（如 Etsy `hero` / `detail` / `lifestyle`），或包含社媒渠道（`Pinterest` / `Instagram Posts` / `Instagram Stories` / 等），先按 [`shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md) 处理**发布副本**。
-   - 输入仍是用户选中的素材；输出落 `<workspace>/.cache/ai-image-sanitizer/`，后续上传 / 移动使用清理后的副本。
+   - 输入仍是用户选中的素材；输出落 `<workspace>/.cache/ai-image-sanitizer/`，后续上传 / 移动使用清理后的副本。来自 `image-synth` 的 processed 文件按共享协议核对 `aiSanitization` 与 SHA-256 后直接复用；文件变化或记录不全才重新处理。
    - `待处理/` 原图、`image-synth` 的 `.cache/image-synth/ai_raw/` 暂存图、内部参考图不跑本 gate。
    - 只默认跑 AI metadata + 可检测的 AI visible watermark；`invisible` / `all` 需要用户明确接受会重写像素后才用。
 5. **物理动作**：
