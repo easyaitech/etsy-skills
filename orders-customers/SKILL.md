@@ -100,8 +100,8 @@ layer: foundation
 1. 先**查上下文**：从 `Orders 订单` 表取该订单详情 + `Customers 客户` 表取客户标签和历史；目标平台是 Etsy 时，再按 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 调正式获取工具读取该 customer 的双向消息，不能只凭订单客服记录起草回复
 2. 读 BRAND.md（客服姿态 / 文案语调）+ SHOP.md（政策原文）；平台买家语言 / 消息渠道 / 自动化边界按内置 Etsy preset（`references/platforms/etsy.md`）
 3. 读 `references/order-handling.md`：按场景找 SOP（差评 / 退货 / 定制等）
-4. 输出客服回复草稿（买家语言默认英文，按内置 Etsy preset 的「买家语言」），整篇展示给用户
-5. 用户确认后，**用户自己**复制到目标平台后台 / 客服入口发送（本 skill 不替操作平台）。Etsy 是唯一例外：按 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 调正式发布工具**真实发送**。⚠️ 调用发布工具**不等于发出去了**：后端会把最终稿做成一张**店主确认卡**发到店主飞书（逐字正文 + 图片 + 确认/修改/取消三个按钮），店主点「确认发送」才真的发。拿到 `status=awaiting_confirmation` 就告诉店主去点那张卡并结束本轮，绝不能说成已发送、也不要换幂等键再提交一次（见该文档 §4.1）。用户已经给出明确收件目标和完整原文并要求发送时，该请求本身就是授权，不重复确认；如果正文由你起草或修改，必须先完整展示并取得明确确认。可用 `customerId`、订单号、快递单号或 Etsy 数字买家 ID 定位（潜在客户没下过单也照常可发，见该文档），不向用户索要 Etsy 会话 ID。**买家一句话没说过、直接下单的，也能主动给他发**：这类买家在 Etsy 上根本没有会话，`get` 给不出 `conversationId`——改用 `selector` 按订单号且**整个不传 `conversationId`**，系统会从那张订单发起第一条会话（只支持纯文字，见该文档 §4）。绝不要因为「取不到会话 ID」就告诉店主发不了，也不要让店主自己去 Etsy 手动发。
+4. 起草客服回复（买家语言默认英文，按内置 Etsy preset 的「买家语言」）；Etsy 按下一步的授权分支展示，其他平台在聊天中整篇展示给用户
+5. 其他平台：用户确认后，**用户自己**复制到平台后台 / 客服入口发送。Etsy 按以下确认卡流程处理：按 [`references/etsy-message-tools.md`](references/etsy-message-tools.md) 调正式发布工具**真实发送**。⚠️ 调用发布工具**不等于发出去了**：后端会把最终稿做成一张**店主确认卡**发到店主飞书（逐字正文 + 图片 + 确认/修改/取消三个按钮），店主点「确认发送」才真的发。拿到 `status=awaiting_confirmation` 就告诉店主去点那张卡并结束本轮，绝不能说成已发送、也不要换幂等键再提交一次（见该文档 §4.1）。提交确认卡的授权分支见该文档 §4「提交授权」；店主点击「生成回复草稿」已授权把草稿提交到确认卡，拿到卡片投递回执才完成，实际发送仍等店主点卡。可用 `customerId`、订单号、快递单号或 Etsy 数字买家 ID 定位（潜在客户没下过单也照常可发，见该文档），不向用户索要 Etsy 会话 ID。**买家一句话没说过、直接下单的，也能主动给他发**：这类买家在 Etsy 上根本没有会话，`get` 给不出 `conversationId`——改用 `selector` 按订单号且**整个不传 `conversationId`**，系统会从那张订单发起第一条会话（只支持纯文字，见该文档 §4）。绝不要因为「取不到会话 ID」就告诉店主发不了，也不要让店主自己去 Etsy 手动发。
 6. 落地（**回写要真正落进 Base，不是只在对话里记下**——遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量）：
    - 把回复要点 + 用户最终发出的版本回写到 `Orders 订单` 表的"客服记录"字段；用 lark-base 写入拿到成功返回后带一句回执（**含可点击的飞书 Base 链接**，优先深链到该订单记录）
    - 如果该次互动反映客户特征（VIP、定制粉、投诉户），更新 `Customers 客户` 表标签
