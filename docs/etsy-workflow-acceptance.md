@@ -29,5 +29,15 @@
 - frontmatter：18 个技能通过；Markdown 相对链接：387 条通过；Listing 读取与客服契约检查通过；Shell 语法、diff 空白检查通过。
 - 源文件指纹与本地引入来源逐文件比对通过。
 - code-review 两轴独立评审：Standards 0 项发现；Spec 0 项发现。审查基点为迁移前提交 cfd494cd4d68dfa5ca4a1fff84b6c64c421f0005。
-- **依赖审计未通过**：保留的 trend-radar 依赖存在 1 moderate、1 high、2 critical（npm 报告），涉及 Vitest/@vitest/mocker、tinypool、source-map-js。其 package/lock 与迁移前相同，属于既有依赖问题；未在本次技能替换中自动执行跨主版本升级。现有 CI 的 high 阈值会受此阻断，不能称 CI 全绿。
+- **首次依赖审计未通过（已由下述后续修复解决）**：保留的 trend-radar 依赖存在 1 moderate、1 high、2 critical（npm 报告），涉及 Vitest/@vitest/mocker、tinypool、source-map-js。其 package/lock 与迁移前相同，属于既有依赖问题；未在本次技能替换中自动执行跨主版本升级。现有 CI 的 high 阈值会受此阻断，不能称 CI 全绿。
 - 没有推送、部署或完成真实 Hermes/飞书验收；上述运行场景仍保持未勾选。
+
+
+## 2026-10-14 依赖修复复验
+
+- Vitest 3.2.7 → 4.1.11，旧 tinypool 依赖链移除；source-map-js 1.2.1 → 1.2.2。只更新依赖声明和锁文件，未改业务逻辑、测试断言或降低审计阈值。
+- 已核对 [Vitest 4 官方迁移说明](https://v4.vitest.dev/guide/migration.html) 与包的 Node/Vite 兼容范围，保留现有 Vite 7。
+- `npm ci` 从锁文件重装成功；`npm audit --audit-level=low` 返回 0 vulnerabilities。
+- 在 Node 22.23.3（与 CI 同一主版本）运行 28 项 Node 测试及 TypeScript 类型检查，全部通过。
+- 111 项 Python 测试、frontmatter、Markdown 链接、Listing 读取与客服契约检查通过。
+- 依赖审计阻断已解除；未推送或运行远端 CI，真实 Hermes/飞书验收仍由有环境权限的执行者完成。
