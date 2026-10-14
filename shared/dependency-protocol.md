@@ -7,7 +7,8 @@
 ```text
 ┌──────────────────────────────────────────────────┐
 │              应用层(Application)                  │
-│ image-brief        image-synth                   │
+│ etsy-product-definition / etsy-listing-images     │
+│ etsy-listing-builder                              │
 │ publish-composer   social-publisher              │
 │ pinterest-autopin  xiaohongshu-autopost(封存)     │
 │ publish-metrics    logistics-tracking            │
@@ -37,7 +38,7 @@
 | Skill | 管什么 |
 |---|---|
 | shop-foundation | 品牌原则 + 店铺事实 + 营销策略 + 内容平台策略（四份 .md 基座文件；销售平台固定 Etsy，规则走内置 preset，见 `shared/platform-config.md`） |
-| listing-catalog | 店铺总 Base 内商品表 + listing 文案 |
+| listing-catalog | 店铺总 Base 内商品表 + 线上读取/分析 + 授权字段同步 |
 | assets-library | 视觉与素材资产（飞书云空间 + `Assets 素材池` / `Asset Variants 派生素材` 表） |
 | orders-customers | 店铺总 Base 内订单 / 客户表 + 客服 SOP |
 | supplier-foundation | 店铺总 Base 内供应商表 |
@@ -51,8 +52,11 @@
 ### 应用层
 
 围绕基座层运行，从基座取数据、用基座的规则约束输出。当前：
-- `image-brief`：取商品 + 品牌 + 礼物词库 + 平台规则 → 出平台感知图片创意 brief，分叉到拍摄 / image-synth / 已有素材
-- `image-synth`：取 image-brief 的 brief + 品牌视觉 + 商品实拍图 → AI 合成图
+- `etsy-product-definition`：商品事实与调研证据 → 已确认的产品定义
+- `etsy-listing-images`：定义与原始素材 → 图片计划、制作、验收与最终图库
+- `etsy-listing-builder`：定义与实际最终图库 → 上架填写稿；授权字段交 catalog 同步
+
+三个专业技能缺少店铺基座仍可开始，仅必要事实缺失时补问，见 [接入协议](etsy-professional-workflow.md)。
 - `publish-composer`：取 assets-library 变体 + 商品 + 平台策略 → 组跨平台发布意图 PublishIntent，拥有 `社媒发布队列`（只引用变体，不收集/清理/裁切）
 - `social-publisher`（薄触发）：管 adapter registry + 人工/按需发布 + confirm-publish 人工闸 + 对账。自动发布的巡检/锁/重试/死信归 ECS dispatch（yanggedianzhang publish dispatch，T5），不在本 skill
 - `pinterest-autopin`：Pinterest adapter；取 社媒发布队列（`平台 = Pinterest` 行）+ 商品 + 素材 + 品牌 → 组 pin 发布

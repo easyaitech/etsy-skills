@@ -115,7 +115,7 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 3. 用 `lark-base` 查 `Asset Variants 派生素材` 表，取该 SKU `目标平台 ⊇ Pinterest` 的 2:3 已清理变体：
    - 指定变体：逐条校验在 Base、源 canonical `公开授权 = 已授权`。
    - **缺 Pinterest 规格变体 → 反向请求 `assets-library` 模式 E** 派生（2:3 裁切 + AI metadata 清理），拿回变体文件链接。**本 skill 不自己裁切/清理图片**（D-A8：派生归 assets-library）。
-   - 连 canonical 成品都没有：给用户三选一：① 回 assets-library promote；② 反向触发 image-synth 生成 Pinterest 素材；③ 跳过本次 pin。
+   - 连 canonical 成品都没有：让用户提供可用成品后交 assets-library promote，或跳过本次 pin；不再提供社媒生图，不路由到 Etsy 图片技能。
 4. 读 BRAND.md + SHOP.md + BRAND_MARKETING.md + MARKETING_PLATFORM.md，按 `references/pin-composition.md` 输出草稿（当前只写真实读取字段）：
    - 通用列：title（description）、link、关联变体及其编号顺序
    - Pinterest 专属最小列：`Board (Pinterest)`、`Alt Text (EN)`；不默认新建 `平台扩展 (typed)` 或自由 JSON
@@ -242,7 +242,6 @@ depends-on: [shop-foundation, listing-catalog, assets-library]
 - **social-publisher / ECS dispatch**：自动发布的循环（到点 / 巡检 / 重试 / 锁）归 ECS dispatch（T5，需运维开 `PUBLISH_DISPATCH_POLL_MS`；yanggedianzhang 生产已开），social-publisher 是薄触发。本 skill 不被 cron 唤醒；手动发某条走模式 C，开启无人值守自动发布走模式 D 的专用幂等入口。Pinterest pin 即 `平台 = Pinterest` 行，成功/失败由 dispatch / adapter 一次回写本行。
 - **assets-library**：本 skill 只引用 `Asset Variants 派生素材` 的 Pinterest 规格变体；缺变体反向请求模式 E 派生（裁切+清理）。**本 skill 不裁切/不清理图片**。未授权 UGC 提示先回 assets-library / orders-customers 拿授权。
 - **orders-customers**：UGC 类素材的「公开授权」由 orders-customers 走客户沟通完成；本 skill 只消费已授权的结果。
-- **image-synth**：模式 B 候选池空时反向触发 image-synth 模式 B；目标平台 Pinterest 1000x1500；image-synth 出图 + QA + 入库后回到本 skill 继续。
 
 ---
 

@@ -82,7 +82,7 @@ assets-library 当前 4 个模式（A 建库 / B1 dump / B2 promote / C 查找�
 
 - **不在`Assets 素材池` 表 录入** brief（brief 是文档不是素材）
 - **不预创建** `shoot-archive/{date}_{label}/` 目录（拍不拍是另一回事，目录由 B1 dump 真正回片时建）
-- **不做图像生成 / 编辑**（那是 `image-synth` skill；本 skill 模式 D step 11 反向触发它）
+- **不做图像生成 / 编辑**（Etsy 商品图使用 `etsy-listing-images`；不提供社媒生图或人工拍摄方案）
 - **不主动调** Etsy / Pinterest 抓参考图（用户在 brief §D 手填）
 - **不自动聚合多 SKU 成 shoot 单**（批量调用 = 循环跑 N 遍出 N 份独立 brief，集中 shoot 时由用户拼合并单——SKU 级单元保持纯净）
 

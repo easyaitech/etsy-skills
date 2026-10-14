@@ -18,7 +18,7 @@ source "$_SCRIPT_DIR/lib/env.sh"   # INSTALL_DIR / CACHE_DIR / HERMES_SKILLS_DIR
 PINTEREST_AUTOPIN_REPO="${PINTEREST_AUTOPIN_REPO:-}"
 PINTEREST_AUTOPIN_DIR="${PINTEREST_AUTOPIN_HOME:-$HOME/code/etsy-skills/tools/Pinterest-autopin}"
 PINTEREST_AUTOPIN_MIN_VERSION="1.4.0"
-AI_CLEANER_REPO="${AI_CLEANER_REPO:-https://github.com/wiltodelta/remove-ai-watermarks.git}"
+AI_CLEANER_PACKAGE="remove-ai-watermarks[visible]==0.45.1"
 
 usage() {
   cat <<EOF
@@ -156,22 +156,14 @@ ai_cleaner_status() {
 
   echo "AI 发布图清理工具：$(command -v remove-ai-watermarks)"
   remove-ai-watermarks --version 2>/dev/null || true
-  echo "默认用途：生图交付副本、最终 listing 图片和社媒待发布副本；流程见 shared/ai-image-sanitization.md"
+  echo "默认用途：在 Etsy 最终交付副本及社媒待发布图片副本上清 AI metadata / AI visible watermark"
 }
 
 ai_cleaner_update() {
   if command -v uv >/dev/null 2>&1; then
-    if command -v remove-ai-watermarks >/dev/null 2>&1; then
-      uv tool upgrade remove-ai-watermarks || return 1
-    else
-      uv tool install "git+$AI_CLEANER_REPO" || return 1
-    fi
+    uv tool install --force "$AI_CLEANER_PACKAGE" || return 1
   elif command -v pipx >/dev/null 2>&1; then
-    if command -v remove-ai-watermarks >/dev/null 2>&1; then
-      pipx upgrade remove-ai-watermarks || return 1
-    else
-      pipx install "git+$AI_CLEANER_REPO" || return 1
-    fi
+    pipx install --force "$AI_CLEANER_PACKAGE" || return 1
   else
     echo "❌ 未找到 uv 或 pipx，无法安装 remove-ai-watermarks" >&2
     echo "   建议先安装 uv：https://docs.astral.sh/uv/" >&2

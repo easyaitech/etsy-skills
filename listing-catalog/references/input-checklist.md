@@ -1,33 +1,3 @@
-# 写 listing 前的输入清单
+# 商品输入收集
 
-进入模式 B（写 listing 文案）前按本清单盘点用户已提供 / 还缺的输入。
-
-## 必填
-
-| 项目 | 说明 | 用途 |
-|---|---|---|
-| 产品图（≥1 张）| 用 vision 工具看图 | 判断材质质感、颜色 / 纹理、形态、工艺细节——直接进 description |
-| 产品视频（如平台 / 店铺要求，通常 5–15 秒）| 平台 listing 视频；是否每条必配由内置 Etsy preset / SHOP.md 决定 | 若要求视频而缺失 → listing 状态停"草稿"，不进上线流程；同时为后续写 `视频 Alt (EN)` 提供素材 |
-| 中文产品名 / 类目 | 例："真皮钱包 / 短夹" | 起英文 title 的语义起点 |
-| 关键参数 | 材质、尺寸/容量、重量、颜色、工艺（手作/定制/手绘 等）| 进 description 的 specs 段 + tags 词源 |
-| **预期售价（USD）**| 定价语境，任何平台都建议提供 | 通用定价参考；Etsy 下用于判断礼物角度的投入程度（低价轻量 / 高价值深挖）|
-| **礼物倾向**（**必填**）| 自购为主 / 送礼为主 / 兼顾——见 [`platforms/etsy.md`](platforms/etsy.md) § 礼物维度 | step 5.5 入口判断；自购为主品不强加礼物词 |
-
-缺任一必填项 → 停下来一次性问全，不要边写边追问（清点式原语，唯一真源 = [`../../shared/interview-primitives.md`](../../shared/interview-primitives.md)）。
-
-## 强烈建议但可选
-
-- 创作灵感 / 故事（独立工艺品的 description 头段很吃这个）
-- 使用场景（自购为主 SKU 用）—— 进 description 使用语境
-- **受众与场景**（送礼为主 / 兼顾 SKU 用）—— step 5.5 礼物维度调研自动结构化收集，无需先问
-- 同类竞品 listing 链接（参考 SEO 词，不是抄文案）
-- **需求 / 竞品 / 定价调研数据**（如用 eRank 等工具）— 触发条件见 [`platforms/etsy.md`](platforms/etsy.md) § 上架前调研
-- **计划上架日**（默认 today）—— 用于按 [`platforms/etsy.md`](platforms/etsy.md) § 节日 / 季节 判断节日提前期；如果想为远期节日提前 ship 一条 listing，覆盖这个值
-
-可选项缺失**不必停下来**——直接基于产品图推测着写，但在草稿里标注「这部分基于产品图推测，你看要不要补真实背景」。
-
-## 不要向用户索要
-
-- 英文 title / description / tags / materials（这是 skill 的产出）
-- 政策段（从 SHOP.md 自动取）
-- 礼物词库（step 5.5 自动产出，不要让用户先想词）
+目录更新只核对目标商品与本次授权字段。上架填写稿的信息收集由 [etsy-listing-builder](../../etsy-listing-builder/SKILL.md) 负责；少量分轮补问必要缺口，不强制礼物倾向或先建店铺基座。

@@ -1,6 +1,6 @@
 ---
 name: assets-library
-description: "归档、检索和管理店铺素材，或从成品派生平台发布变体；创意方案使用 image-brief。"
+description: "归档、检索和管理店铺素材，或从成品派生平台发布变体；Etsy 商品图使用 etsy-listing-images。"
 layer: foundation
 ---
 
@@ -29,7 +29,6 @@ layer: foundation
 | 店铺总 Base 的 `Products 商品` 表 | SKU 列表 + 字段（title / 品类 / 变体 / SEO 关键词） | `Assets 素材池` 的"关联 SKU"字段直接关联（B2 用）；模式 E 派生时定位源 canonical；SKU 行反查能看到该 SKU 全部素材 |
 | `Orders 订单` 表 | 订单号 | 客户拍摄 / 客户定制类素材通过"关联订单"字段挂上 |
 | `Customers 客户` 表 | 客户列表 | UGC 类素材通过"关联客户"字段溯源授权 |
-| `image-brief`（创意 brief owner） | 拍摄 / 合成方案 | image-brief 把 brief 写到本 skill `商品/` 文件夹；brief 指导的成品回片走模式 B 归档（图片方案不属本 skill，见上"模式 D 已移交"）|
 
 ---
 
@@ -88,8 +87,8 @@ layer: foundation
 3. **分类**：判断素材归属——商品 / 品牌 / 客户 / 工作室 / 营销。判断依据见 [asset-types.md](references/asset-types.md) 的类型→文件夹映射表
 4. **发布图 AI 清理 gate（仅 final listing / 社媒发布图）**：
    - 若本次 promote 的用途标签是目标电商平台商品图 / listing 槽位（如 Etsy `hero` / `detail` / `lifestyle`），或包含社媒渠道（`Pinterest` / `Instagram Posts` / `Instagram Stories` / 等），先按 [`shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md) 处理**发布副本**。
-   - 输入仍是用户选中的素材；输出落 `<workspace>/.cache/ai-image-sanitizer/`，后续上传 / 移动使用清理后的副本。来自 `image-synth` 的 processed 文件按共享协议核对 `aiSanitization` 与 SHA-256 后直接复用；文件变化或记录不全才重新处理。
-   - `待处理/` 原图、`image-synth` 的 `.cache/image-synth/ai_raw/` 暂存图、内部参考图不跑本 gate。
+   - 输入仍是用户选中的素材；输出落 `<workspace>/.cache/ai-image-sanitizer/`，后续上传 / 移动使用清理后的副本。
+   - `待处理/` 原图与内部参考图不跑本 gate。Etsy 图片技能交付前已清理的副本，核对输出哈希和处理记录一致则复用；文件变化重新检查，不重复破坏性处理。
    - 只默认跑 AI metadata + 可检测的 AI visible watermark；`invisible` / `all` 需要用户明确接受会重写像素后才用。
 5. **物理动作**：
    - 如素材需编辑（**用户在外部工具完成**——本 skill 不做图像编辑）：裁切 / 调色 / 加水印 → 按规范命名
@@ -140,15 +139,9 @@ layer: foundation
 - **Base 不存在**：回退到 `lark-drive` 直接搜文件名 + 浏览各一级文件夹
 - **找的是成品但 Base 里没有**：可能还在 待处理/ 中——提示用户"这张还没分类，要不要现在走模式 B2 promote 一下？"
 
-### ~~模式 D：plan（拍前出 shoot brief）~~ → 已移交 `image-brief`
+### 图片职责边界
 
-图片方案 / 拍摄 brief 的生成**不再属于本 skill**（D-A2：assets-library 收窄为资产生命周期 owner，不碰创意策略）。"给某 SKU 出拍摄 brief / 出图片方案"请求走 **[`image-brief`](../image-brief/SKILL.md)** 模式 A。
-
-本 skill 与 brief 的关系只剩两点：
-- **存放**：image-brief 把 brief 写到本 skill 的 `商品/{SKU}_shoot-brief.md`（lark-drive，计划文档不进 Base）。
-- **回片**：brief 指导的拍摄 / 合成成品，走本 skill 模式 B（B1 dump → B2 promote）归档；部分跑时 image-brief 反查本 skill `Assets 素材池` 的已覆盖槽位。
-
----
+Etsy 商品图库策划、制作和验收交 [etsy-listing-images](../etsy-listing-images/SKILL.md)。本 skill 不提供人工拍摄 brief 或社媒创意生图。新图库可以先上传云空间交付、继续生成填写稿；只有正式入库范围已获授权才进入 B2，视觉确认不自动授权 Base 写入。
 
 ### 模式 E：派生平台变体（多平台发布副本工厂）
 
@@ -173,11 +166,11 @@ layer: foundation
 | 压缩副本 / 缩略图 / 视频首帧 | 机械工具 | **本 skill** |
 | AI metadata / 水印清理 | `remove-ai-watermarks` + `jpegoptim` / `optipng`（见 [`../shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md)）| **本 skill** |
 | 模板化带字封面（品牌框 + 文字叠层，模板已定） | 套模板 | **本 skill** |
-| 需要**全新创意构图**的封面 / 海报 | 不是机械派生 | **委托 `image-synth`**（模式 B），产出物再回本 skill 录为变体 |
+| 需要**全新创意构图**的封面 / 海报 | 不是机械派生 | 当前不提供此创作能力；请用户提供成品，不能调用 Etsy 图片技能代做社媒图 |
 
 **执行步骤**：
 1. 确认源 canonical 成品存在；读目标平台规格（内置 preset：Etsy listing 槽位 / 社媒平台规格，或 MARKETING_PLATFORM.md）
-2. 判定派生类型 → 机械/模板化在本 skill 做；需新创意构图则委托 image-synth（边界见上表）
+2. 判定派生类型 → 机械/模板化在本 skill 做；需新创意构图则说明当前能力边界，等待用户提供成品（边界见上表）
 3. **不覆盖原图**：派生输出为**新文件**，上传到对应文件夹（社媒发布图→`营销/`，listing 图→`商品/`）
 4. 列动作清单 + Base 字段值给用户确认（写入前硬约束）
 5. 在 `Asset Variants 派生素材` 表录一行：`派生自`（关联 canonical）/ `派生类型` / `目标平台` / `比例尺寸` / `AI 清理状态` / `派生来源工具`（schema 见 [asset-index-base-schema.md § 派生素材 / AssetVariant](references/asset-index-base-schema.md)）
@@ -197,7 +190,7 @@ layer: foundation
 - **文件操作前列出动作清单** → 等用户确认 → 执行（lark-drive）
 - **Base 录入前列出字段值清单** → 等用户确认 → 写入（lark-base）→ 回执；不要只在对话里报录入而不写 Base，写完带可点击飞书链接
 - **不删除原始素材**：摄影原图（RAW / 高清 JPG）一旦归档，本 skill 不主动删除（容量管理由用户人工决策）
-- **不替用户做创意图片编辑**：调色 / 创意构图 / 新海报由用户人工或 `image-synth`。但**模式 E 的机械/模板化派生平台变体（裁切 / 缩放 / 压缩 / 缩略图 / AI metadata 清理 / 套定好的模板封面）是本 skill 的职责**——这是多平台发布的「变体工厂」能力（D-A7/D-A8）。所有派生**只作用在发布副本**，永不替换 / 覆盖原始 canonical 素材；需要全新创意构图的封面/海报委托 `image-synth`
+- **不替用户做创意图片编辑**：调色 / 创意构图 / 新海报由用户提供成品。但**模式 E 的机械/模板化派生平台变体（裁切 / 缩放 / 压缩 / 缩略图 / AI metadata 清理 / 套定好的模板封面）是本 skill 的职责**——这是多平台发布的「变体工厂」能力（D-A7/D-A8）。所有派生**只作用在发布副本**，永不替换 / 覆盖原始 canonical 素材；需要全新创意构图的社媒封面/海报不在本 stack 图片能力内
 - **single source of truth**：每个文件在云空间只放一份——多归属靠 Base 多选字段表达，不要靠拷贝。详见 [asset-index-base-schema.md § 设计原则](references/asset-index-base-schema.md#设计原则)
 
 ---
@@ -205,13 +198,9 @@ layer: foundation
 ## 与其他 skill 的协作
 
 - **shop-foundation**：每次归档后如果发现 BRAND.md 视觉原则需要补充（比如新增"自然光必拍"这种偏好），按 shop-foundation 的沉淀流程（`../shop-foundation/references/distillation-brand.md`）提议进 BRAND.md
-- **listing-catalog**：`Products 商品` 表通过"关联 SKU"反向看到全部素材；详见 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)。（礼物词库喂 brief 是 `image-brief` 的事，不在本 skill）
-- **image-brief（图片方案 owner）**：图片创意 brief 不属本 skill。image-brief 把 brief 写到本 skill `商品/` 文件夹（lark-drive）；部分跑时反查本 skill `Assets 素材池` 已覆盖槽位；brief 指导的拍摄 / 合成成品回片走本 skill 模式 B 归档。
+- **listing-catalog**：`Products 商品` 表通过"关联 SKU"反向看到全部素材；详见 [asset-types.md § 与 listing-catalog 的协作](references/asset-types.md#与-listing-catalog-的协作)。
 - **orders-customers**：客户定制参考图与 UGC 通过"关联订单 + 关联客户"挂上；UGC 授权流程（找客户沟通）由 orders-customers 完成，结果回写到 Base 的"公开授权"字段。目标平台是小红书时，客户素材仍必须先拿公开授权，才能勾 `小红书` 用途标签进入小红书候选视图
-- **image-synth**：
-  - image-synth 的 brief 输入源是 `image-brief`（不是本 skill）；本 skill 不出 brief。
-  - image-synth 出的 AI 合成图最终通过本 skill 模式 B2 promote 入 `Assets 素材池` 表：其"备注"字段以 `[AI 合成] {prompt 摘要}` 前缀写入；电商 / listing 图上传到 `商品/` 文件夹，社媒 / 营销图上传到 `营销/` 文件夹，按命名规则命名
-  - **v0 不动 schema**：`Assets 素材池` 表不新增"AI 合成"词汇，仅在"备注"字段标前缀。v1 观察后再决定是否升级
+- **etsy-listing-images**：负责 Etsy 商品图库；交付文件不自动成为正式素材。获准后 B2 记录来源角色、版本、SKU、清理哈希与验收状态；清理已通过且输出哈希一致则复用该文件，不重新生成。不得把合成/增强素材改称原始实拍。不新增表或强制新 schema。
 - **publish-composer（社媒发布编排）**：
   - composer 组某平台 PublishIntent 时**只引用** `Asset Variants 派生素材` 的发布副本文件链接，不自己收集 / 清理 / 裁切
   - composer 发现缺某平台规格变体 → 反向请求本 skill 模式 E 派生；本 skill 录入变体后把链接交回 composer

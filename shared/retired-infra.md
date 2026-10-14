@@ -2,7 +2,7 @@
 
 已退役基础设施的**唯一真源**（#120）：每条退役物的永久边界只在此处定义。各 skill 的执行点收敛为一句级守卫 + 指向本文件；**安全关键闸（如 P0 退役闸）保留完整守卫原文 + 指向**，只把历史背景收敛到此处。**退役 ≠ 删除**——文档与历史保留，但永不恢复使用。
 
-**不在本文件范围**（各有其主，勿混入）：仍在兼容期的旧环境变量 / 旧命令（`ETSY_*` / `etsy-stack`，README §自定义安装路径）；存量工作区的 `COMMERCE_PLATFORM.md`（`shared/platform-config.md` §存量工作区的 COMMERCE_PLATFORM.md）；封存（shelved）能力（`shared/platform-config.md` §封存协议——封存是「建成不开放」，退役是「不再使用」）；`image-synth` 的 `retired/` 目录（数据回滚文件夹，非基础设施）。
+**不在本文件范围**（各有其主，勿混入）：仍在兼容期的旧环境变量 / 旧命令（`ETSY_*` / `etsy-stack`，README §自定义安装路径）；存量工作区的 `COMMERCE_PLATFORM.md`（`shared/platform-config.md` §存量工作区的 COMMERCE_PLATFORM.md）；封存（shelved）能力（`shared/platform-config.md` §封存协议——封存是「建成不开放」，退役是「不再使用」）。
 
 ## 1. 旧 Hermes 自动发布 job `d99651079542`（P0 永久退役闸）
 

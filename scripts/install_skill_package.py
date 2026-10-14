@@ -64,8 +64,9 @@ SKILL_NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])$")
 RESERVED_NAMES = {
     "assets-library",
     "business-knowledge",
-    "image-brief",
-    "image-synth",
+    "etsy-product-definition",
+    "etsy-listing-images",
+    "etsy-listing-builder",
     "inventory",
     "listing-catalog",
     "logistics-tracking",

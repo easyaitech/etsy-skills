@@ -41,8 +41,9 @@
     "instagram-publish",
     "xiaohongshu-autopost",
     "publish-metrics",
-    "image-brief",
-    "image-synth",
-    "trend-radar"
+    "trend-radar",
+    "etsy-product-definition",
+    "etsy-listing-images",
+    "etsy-listing-builder"
   ]
 }

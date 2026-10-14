@@ -45,19 +45,11 @@ max_cards: 3
 
 只填已知字段。不要为了提高命中率编造材质、受众、节日或 SKU 事实。
 
-> `gift_words` / `target_audience` / `season_or_event` 来自 step 5.5；个别缺省时按「只填已知字段」处理即可（其余 SKU / 品类 / 材质 / 价格档 / SEO 关键词照常）。
+> `gift_words` / `target_audience` / `season_or_event` 来自已确认定义或用户资料；个别缺省时按「只填已知字段」处理即可（其余 SKU / 品类 / 材质 / 价格档 / SEO 关键词照常）。
 
 ## Conflict priority
 
-```text
-BRAND.md / SHOP.md
-  -> 平台政策与平台 SEO 规则（如 platforms/etsy.md）
-  -> current user instruction
-  -> platforms/etsy.md § 礼物维度
-  -> Knowledge Cards
-```
-
-Knowledge Cards 只能提供角度和措辞参考，不能覆盖品牌红线、店铺政策、平台 SEO 硬规则或用户当前明确要求。用户当前要求如果和品牌 / 店铺 / 平台硬约束冲突，按硬约束处理。
+知识卡片只提供有来源的证据和表达参考，不覆盖事实、当前用户授权、平台要求或新技能专业流程。品牌默认表达可以按用户本次明确选择调整，不自动写回基座。实际冲突按 [专业流程接入协议](../../shared/etsy-professional-workflow.md) 核对。
 
 ## Display in draft
 
@@ -80,18 +72,9 @@ Knowledge Cards 只能提供角度和措辞参考，不能覆盖品牌红线、�
 
 listing 正文只能使用 `yes` / `partial` 卡片。`no` 卡片只展示为 rejected context。
 
-## 方法论卡：读 wiki 并应用（执行型，不止提醒）
+## 方法论卡
 
-`卡片类型 = 方法论` 的卡片不是“看一眼标题就过”的提醒卡——它背后的 `知识页链接` wiki 才是交付物。命中方法论卡时：
-
-1. **必读 wiki**：读 `知识页链接` 指向的 `<workspace>/knowledge/wiki/*.md` 正文，取其判断清单、改写模板、正反例和开头规则。
-2. **落到草稿（step 7）**：
-   - **Title**：用 wiki 的标题自检清单当**审查闸**——草稿标题生成后逐条过；不通过就改写后再展示。
-   - **Description**：用 wiki 的开头规则当**结构约束**（如先写场景 / 问题、参数后置），而不是把材质尺寸堆在开头。
-3. **冲突处理**：wiki 是运营启发，**不覆盖**本文件 § Conflict priority 里更高优先级的项（BRAND.md / SHOP.md / 平台 SEO 硬规则 / 用户当前明确要求）。当 wiki 写法与平台硬规则冲突（例如 wiki 倾向“收礼人 / 场景更靠前”，而 platforms/etsy.md title 公式是品类词在前），以平台规则为准，把 wiki 写法作为 **A/B 候选**展示给用户判断，不擅自替换既有标题。
-4. **展示**：「可参考知识卡片」小节里，方法论卡要写出 `playbook_applied`——实际套用了哪些清单 / 模板 / 开头规则，让用户看到知识落进了产出。
-
-> 这是把 wiki 从“挂在卡片后面没人读”变成“真正驱动写作”的关键。趋势 / 选品 / 定位卡不走这套，一句话摘要够用。
+采用某张方法论卡前读取其知识页，将相关证据和适用范围交给 builder。展示实际采用了什么以及原因，不强制套用另一套标题公式或文案模板。用户已确认的定位和专业流程优先；方法论不是平台硬性规定。
 
 ## Usage counters
 
