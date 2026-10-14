@@ -11,6 +11,7 @@ import base64
 import importlib.util
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -37,6 +38,14 @@ class FakeCompleted:
 
 
 class DriveUploadToolTest(unittest.TestCase):
+    def test_symlink_entrypoint_runs_without_installer_chmod(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            entry = Path(directory) / "upload_to_drive"
+            entry.symlink_to(MODULE_PATH.resolve())
+            result = subprocess.run([str(entry), "--help"], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("--file", result.stdout)
+
     def setUp(self) -> None:
         self.workdir = Path(tempfile.mkdtemp())
         self.pdf = self.workdir / "年年有余-附信.pdf"
