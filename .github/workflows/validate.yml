@@ -26,7 +26,6 @@ jobs:
           cache: npm
           cache-dependency-path: |
             trend-radar/scripts/package-lock.json
-            image-synth/scripts/package-lock.json
 
       # 契约校验：LLM 面向的工具/路由契约有没有被改漏
       - name: 契约校验
@@ -44,16 +43,12 @@ jobs:
       - name: Node 依赖
         run: |
           npm --prefix trend-radar/scripts ci
-          npm --prefix image-synth/scripts ci
 
       - name: Node 测试与类型检查
         run: |
           npm --prefix trend-radar/scripts test
           npm --prefix trend-radar/scripts run typecheck
-          npm --prefix image-synth/scripts test
-          npm --prefix image-synth/scripts run typecheck
 
       - name: 高风险依赖审计
         run: |
           npm --prefix trend-radar/scripts audit --audit-level=high
-          npm --prefix image-synth/scripts audit --audit-level=high

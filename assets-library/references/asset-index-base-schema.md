@@ -26,7 +26,7 @@
 | 关联 SKU | 关联（`Products 商品` 表） | △ | `TEACUP-001`, `TEACUP-007` | — |
 | 关联订单 | 关联（`Orders 订单` 表） | △ | `ORDER-2026-001` | — |
 | 关联客户 | 关联（`Customers 客户` 表） | △ | (客户 open_id) | — |
-| 用途标签 | 多选 | △ | **Etsy 槽位**：`hero / variation / scale / size-chart / detail / lifestyle / packaging / brand-story / context / comparison`（与 [etsy-listing-photo-slots.md](etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 对齐）<br>**渠道**：`Pinterest / Instagram Posts / Instagram Reels / Instagram Stories / 小红书 / 评价素材 / 内部参考`<br>**Etsy 店铺**：`Etsy 店铺 banner`<br>**legacy（仅旧数据兼容）**：`Etsy listing 主图（→ 等同 hero）/ Etsy listing 详情（→ 等同 detail）` | 一份素材投多槽位 + 多渠道全勾上；先空着也行，发布到某渠道时再补。image-brief 部分跑反查 SKU 已覆盖槽位时按这套词汇表推断；遇到 legacy 标签按对应映射 |
+| 用途标签 | 多选 | △ | **Etsy 槽位**：`hero / variation / scale / size-chart / detail / lifestyle / packaging / brand-story / context / comparison`（与 [etsy-listing-photo-slots.md](etsy-listing-photo-slots.md#3-槽位-id-与-assets-素材池-表-用途标签-字段对齐) 对齐）<br>**渠道**：`Pinterest / Instagram Posts / Instagram Reels / Instagram Stories / 小红书 / 评价素材 / 内部参考`<br>**Etsy 店铺**：`Etsy 店铺 banner`<br>**legacy（仅旧数据兼容）**：`Etsy listing 主图（→ 等同 hero）/ Etsy listing 详情（→ 等同 detail）` | 一份素材投多槽位 + 多渠道全勾上；先空着也行，发布到某渠道时再补。检索已有素材时使用这些标签；遇到 legacy 标签按对应映射，不以标签代替实际看图 |
 | 比例 / 尺寸 | 多选 | △ | `1x1 / 4x5 / 9x16 / 16x9 / 自由` | 视频和成图建议填，便于按渠道筛 |
 | 公开授权 | 单选 | ✓ | `已授权 / 仅内部 / 待沟通 / 不可公开` | 客户拍摄类的关键合规位；非客户类默认"已授权" |
 | BRAND 合规 | checkbox | ✓ | `true` / `false` | 对照 BRAND.md `§ 视觉原则` 的自检结果；不通过时把理由写进"备注" |
@@ -57,7 +57,7 @@
 
 > **谁产生派生素材**：assets-library 模式 B2 promote 一张会成为 listing / 社媒待发图的成品时，按 [`../../shared/ai-image-sanitization.md`](../../shared/ai-image-sanitization.md) 产出清理后的发布副本，记一行 `派生素材`。**清理 / 派生只在这一层做一次**，下游 publish-composer / 平台 adapter 只**引用**派生素材的文件链接，不自己重新清理或裁切。这是"资产基质单 owner"的落点。
 
-**边界**：assets-library owner 的是**资产生命周期**（canonical 成品 + 派生文件 + provenance + 清理 + 检索），**不 owner 创意策略**——"要拍 / 生成什么图"的 brief 属 `image-brief`（建后），不属本 skill。
+**边界**：assets-library owner 的是**资产生命周期**（canonical 成品 + 派生文件 + provenance + 清理 + 检索），**不 owner 创意策略**——Etsy 商品图计划属 `etsy-listing-images`，不属本 skill。
 
 ## 关联方向
 

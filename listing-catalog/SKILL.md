@@ -1,12 +1,12 @@
 ---
 name: listing-catalog
-description: "维护商品/SKU 目录、读取现有 Listing 或撰写和优化 Etsy Listing；实物库存使用 inventory。"
+description: "维护商品/SKU 目录、读取与分析现有 Etsy Listing；上架文案使用 etsy-listing-builder，实物库存使用 inventory。"
 layer: foundation
 ---
 
 # 商品目录 (Listing Catalog)
 
-这个 skill 维护电商商品目录（结构化数据 → 店铺总 Base 内商品 / SKU 表）+ 按内置 Etsy preset 撰写商品页 / listing 文案，也负责读取、分析和优化现有 Etsy Listing。
+这个 skill 维护店铺总 Base 内商品 / SKU 目录，负责读取与分析现有 Etsy Listing。文案生成和修改统一委托 etsy-listing-builder；本 skill 负责授权字段的目录写入，不另写一套文案。
 
 **对外的实操接口**：店铺总 Base 内的 `Products 商品` 表（通常用 `lark-base` skill 操作；在养个店长 Hermes 飞书直聊里，优先用后端只读工具 `POST /api/hermes/bitable/record-search` 查询；架构见 `../shared/store-base-architecture.md`）+ 工作区根目录的 BRAND.md / SHOP.md（用 `shop-foundation` skill 维护）。
 
@@ -18,25 +18,11 @@ layer: foundation
 
 ---
 
-## 依赖关系（写 listing 前必读）
+## 资料与职责
 
-任何商品页 / listing 文案写作都必须参考以下文件（按存在性读取）：
+品牌与店铺资料存在时读取；缺失不阻塞产品定义、图片和填写稿工作，不强制先建基座。商品目录读取需真实工具返回，线上事实按 Listing 只读契约获取；不能拿 Base 或用户口述冒充当前线上数据。店铺政策、商品事实与策略建议分别标明来源。
 
-| 来源 | 提供什么 | 怎么用 |
-|---|---|---|
-| `<workspace>/BRAND.md` | 文案语调 / 视觉原则 / 品牌定位 | 标题、描述、标签的语气与措辞——"应该说"、"避免说"、"原则"段都要遵守 |
-| `<workspace>/SHOP.md` | 处理时间 / 运输方式 / 退换货 / 定制政策 | 描述或客服相关政策段引用 SHOP.md 原文，不要自行编造 |
-| 内置 Etsy preset（索引见 [`shared/platform-config.md`](../shared/platform-config.md)） | 买家语言、标题/描述/tag/媒体/订单规则 | 销售平台固定 Etsy；决定输出语言、字段、长度、平台枚举和自动化边界 |
-| 店铺总 Base 的 SKU 行 | 成本、变体、关键词、平台商品 ID、商品级故事 / 分享链接 | 写商品页时先查 `Products 商品` 表（商品级与 SKU 级字段同表）；写完后回写平台商品 ID、状态、上线日 |
-| `Inventory 库存品` 表（`inventory` skill） | 仓库里真实还剩多少（成品 + 包材） | 任何"还有货吗 / 还剩几个 / 该补货了"的问题转 `inventory`；本表「库存」列只是平台在售数量，不能代替它 |
-
-**写 listing 之前**永远先：
-1. 读 BRAND.md（如不存在，提示用户先用 shop-foundation 建立——这是品牌一致性的根）
-2. 读 SHOP.md（同上）
-3. 平台固定 Etsy，规则以内置 Etsy preset 为准（索引见 [`shared/platform-config.md`](../shared/platform-config.md)），无需读取平台配置文件
-4. 从 Base 取该 SKU 的字段（用 lark-base 查询）
-
-如果 BRAND.md / SHOP.md 缺失，在写商品页前主动提示用户："在写文案之前，建议先建立 BRAND.md 和 SHOP.md。否则文案的语调和政策口径会缺乏锚点。要先建吗？"
+新品完整上架由 [etsy-product-definition](../etsy-product-definition/SKILL.md) → [etsy-listing-images](../etsy-listing-images/SKILL.md) → [etsy-listing-builder](../etsy-listing-builder/SKILL.md) 按范围推进；仅写稿或局部修改直接进入 builder。项目接入与缺资料规则见 [专业流程接入协议](../shared/etsy-professional-workflow.md)。
 
 ---
 
@@ -71,50 +57,19 @@ layer: foundation
 - **商品表不再有材质列**（老板 2026-08-27 拍板整体退场）：`材质 / 属性` / `Materials` 列已删除，不要重建、不要往任何列里写材质清单；材质只存在于 Etsy 后台本身。每日核对/平台回写也都不再碰材质。
 - 默认隐藏但保留：`平台字段 JSON`、`成本`、`利润率`、`制作周期(天)`、`变体`、`SEO 关键词`、小红书 SPU / SPL / SPV / ITEM ID、审核状态、同步 JSON、海关 / 税务 / 原始响应字段，以及任何外部同步 ID。财务、平台同步、排障时再进专用视图。
 
-### 模式 B：写商品页 / listing 文案
+### 模式 B：上架文案交接与授权目录同步
 
-**进入条件**：
-- 用户要写新商品页 / listing 文案 / 上新 / 重写某条商品标题或描述 / 调整 tags 或平台关键词
+用户要写新商品页、重写标题/描述或调整 tags 时，交 [etsy-listing-builder](../etsy-listing-builder/SKILL.md)。已有线上 Listing 的修改先按模式 D 取事实基线；live read 失败不能声称已核对线上，可以按用户提供资料继续明确标识的草稿。
 
-**执行步骤**：
-1. 按 `references/input-checklist.md` 盘点用户已给的输入；**缺必填项一次性问全**，不要边写边追问。**预期售价**建议永远提供（定价语境）。**礼物倾向**是 **Etsy 专属必填**（本 stack 平台固定 Etsy，一律收集），决定 step 5.5 收集礼物维度的程度。Etsy 下预期售价还用于判断礼物角度的投入程度（低价轻量 / 高价值深挖）
-2. 确认目标 SKU（如果是新品，先在 Base 里建一行记录基础信息；如果是改既有 listing，用 lark-base 查现有行）
-   - **改 / 优化现有 Etsy Listing**：先按模式 D 调对应只读工具，拿当前 public 或 admin
-     结果作为线上事实基线，再把 Base 行作为内部目录上下文。两者不一致时分别标注，不
-     自动覆盖。
-   - live read 失败时，不得继续声称建议基于“当前 Etsy 页面”。可说明失败，并询问用户
-     是否改为基于 Base / 其提供文本另起草稿；若继续，必须标注未核对当前线上内容。
-3. 读 BRAND.md（语调 / 定位 / 视觉关键词作为关键词源头）+ SHOP.md（政策段 + 礼盒服务字段）；销售平台固定 Etsy，无需确认目标平台
-4. 规则来源：读 `references/platforms/etsy.md`，理解 Etsy 标题 / 标签 / 描述 / materials / category 的 SEO 规则（§listing 字段 SEO 规则）
-5. **(可选) 上架前调研** — 任一命中即主动提示用户去做需求 / 竞品 / 定价调研（用 eRank 等第三方工具）：① 用户提到有调研工具账号；② 新品类首品；③ 主推 SKU；④ 高客单品；⑤ 用户主动要求"调研 / 看竞品 / 做 SEO"。读 `references/platforms/etsy.md` § 上架前调研，按其原则（验证需求与竞争、对标市场定价）引导用户。低价值 SKU 或用户跳过 → 直接进 step 5.5（沿用 step 1 的"可选项缺失不必停下"规则）
-5.5. **平台 preset 附加调研环节** — 平台 preset 若声明附加调研环节，在此步执行（Etsy：礼物维度调研，见 [`references/platforms/etsy.md`](references/platforms/etsy.md) § 附加调研环节：礼物维度调研——仅 Etsy 执行，产出礼物词库 + 「过滤掉的候选词」清单）。当前平台的 preset 未声明附加环节时整段跳过，直接进 step 5.6
-5.6. **(可选) Knowledge Cards 检索** — 读 [`references/business-knowledge-lookup.md`](references/business-knowledge-lookup.md) 和 [`../business-knowledge/references/knowledge-card-lookup.md`](../business-knowledge/references/knowledge-card-lookup.md)，按 `scenario: listing` 检索店铺总 Base 内 `Knowledge Cards 知识卡片` 表：
-   - 输入只使用已知事实：SKU、品类、材质、价格档、SEO 关键词、目标受众，以及 step 5.5 生成的礼物词库 / 节日 / 场景；不要为了检索补编 SKU 信息
-   - `max_cards: 3`
-   - Base 不存在、为空、不可读或无命中 → **静默 SKIP**，继续原 listing 流程；只有用户问“有没有查知识库”时才说明跳过原因
-   - 有命中 → 在草稿前展示「可参考知识卡片」小节，逐条标明来源、记录日期、可用处、本次采用 yes/no/partial、原因和边界；不得静默采用
-   - **`方法论` 卡（`卡片类型 = 方法论`）必须读 `知识页链接`，并在 step 7 把其清单 / 模板 / 正反例应用到草稿**——卡面一句话只是指针，不是交付物；其余类型（`趋势` / `选品` / `定位` / `观察`）只在选中卡需要细节时才读，不要为了检索把所有 wiki 都读一遍
-   - 命中 `方法论` 卡时，「可参考知识卡片」小节要额外列出实际套用了 wiki 的哪些清单 / 模板 / 开头规则（`playbook_applied`），不能只报标题
-6. 读 `assets/listing-template.md`：标准 listing 文案结构
-7. 输出草稿：平台商品标题 + 商品描述（含分段）+ 平台关键词 / tags + 平台属性 / materials + 类目建议
-   - Etsy：13 tag / 13 material 守恒填满；展示与写入 Base 时都用一行英文文本，tag / material 之间用半角逗号 `,` 分隔，方便复制到 Etsy 后台
-   - Etsy：Sustainability / Occasion / Holiday 等后台枚举项必须从选项中选择，不自造新值；不确定或只泛泛适合作礼物时留空
-   - Etsy：标题 / 描述 / 礼物词 / 节日提前期按 `references/platforms/etsy.md` 的原则写；非自购品把礼物维度靠前；若跑了调研，参考竞品的词序与定价
-   - 如果 step 5.6 命中卡片，先展示「可参考知识卡片」小节，再展示 listing 草稿；listing 正文只采用标为 yes / partial 的卡片，不采用 no 的卡片
-   - **若 step 5.6 命中 `方法论` 卡**：按其 `知识页链接` wiki 正文把 SOP 真正落到草稿，而不只是展示卡片——把 wiki 的标题自检清单当作 title 的**审查闸**（草稿生成后逐条过，不过就改），把 wiki 的描述开头规则（如「先场景 / 问题切入、参数后置」）当作 description 的**开头结构**。与平台 SEO 硬规则冲突时按 [`references/business-knowledge-lookup.md`](references/business-knowledge-lookup.md) § Conflict priority：平台规则（本 title 公式、`platforms/etsy.md` 等）为准，方法论卡的差异写法（如「收礼人 / 场景更靠前」的词序）降为 **A/B 候选**展示给用户，不强行覆盖既有公式
-8. **整篇展示**给用户，等用户确认或调整。同时展示「过滤掉的候选词」清单，方便用户判断是否要纠正 BRAND.md
-9. 用户确认后（**本 turn 内先落库、再报完成**——遵守 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md) §Base 写穿不变量；只把文案显示在对话里、Base 没更新 = 没做完）：
-   - 把文案写入店铺总 Base 的 `Products 商品` 对应行（商品级与 SKU 级字段同表；通过 lark-base 更新），拿到成功返回后才对用户说"已写入"；写完带一句回执，**回执必须含一条可点击的飞书 Base 链接**（优先深链到该 SKU 所在的表 / 记录，方便用户点进去核对改了什么；不暴露原始 ID）。写失败如实说明、不要按成功口吻收尾
-   - 如果 step 5.6 有采用 yes / partial 的 Knowledge Cards，best-effort 回写 `引用次数 += 1` / `最后引用日期 = today`；失败不阻塞 listing 写入，但要简短告诉用户统计字段未能更新
-   - 提醒用户去 Etsy 后台贴上线
-   - 顺带提醒用户上架前再对标一次市场定价（按 `references/platforms/etsy.md` § 上架前调研的原则）
-   - 不要替用户在平台后台真实上架（平台后台操作不在本 skill 默认范围）
-10. **(可选) 反向触发图像产出** — listing 文案写入 Base 后，如果该 SKU 还没有 `商品/{SKU}_shoot-brief.md`，且也没成品图：
-    - 提示用户："文案定了，刚生成的礼物词库 + Mood 新鲜可用。下一步图怎么办？① 出图片方案去拍（image-brief 模式 A）② 不拍直接 AI 合成（image-synth 模式 A）③ 都跳过（之后再说）"
-    - **选 ①** → invoke `image-brief` 进入模式 A，**调用方现传** 礼物词库（受众 / 场景 / 节日 / 包装）+ description 礼物 / 使用语境 in-memory，让 image-brief 直接用，不走 Base 反推。image-brief 模式 B 分叉还会再问"真拍 / 直接 AI 合成"，用户可在那里继续接 image-synth
-    - **选 ②** → invoke `image-synth` 进入模式 A，**调用方现传** 礼物词库 + description 礼物 / 使用语境 + `Products 商品` 表中该 SKU 行 in-memory；目标槽位由 image-synth 在盘点输入时跟用户对齐；不预先建 brief 文件
-    - **选 ③** → 静默跳过（不阻塞）；用户后续主动 invoke 任一下游 skill 都能正常工作
-    - 节奏：本步是 step 9 完成后**同一 turn 内** agent 主动追问的可选环节，不是 step 9 的子步骤；用户回应后才 invoke 下一个 skill
+1. 传递已读取的商品资料、店铺政策、用户需求及确认范围，沿用上游定义和最终图库版本。不预先强制建 Base 行，不执行旧礼物倾向必填、固定标题公式或先写文案再出图的流程。
+2. builder 按其专业流程交付填写稿；实际查看最终图片后才能生成最终 ALT。图片未完成时按其预稿规则处理。
+3. 对用户已确认且明确授权写入的字段，列明目标商品与字段值后用实际可用 Base 写工具更新。已有明确授权不重复审批；文案确认不自动授权价格、库存等其他经营字段。
+4. 未确认草稿、试售价建议、未知值不写成正式事实。配置或工具不可用时说明未同步，仍交付已完成文件，不反复要求用户上传已有资料。
+5. 只有实际写成功才说“已写入”，附可点击的飞书 Base 链接，不暴露内部 ID。内部目录同步不代表 Etsy 发布；不自动上架。
+
+### 可选业务知识
+
+保留 [知识检索](references/business-knowledge-lookup.md) 的来源与使用边界；可把与当前问题相关的证据交给 builder。知识卡片是参考，不覆盖已确认定位或新技能的流程，缺失不阻塞交付。
 
 ### 模式 C：查询 / 更新现有商品
 
@@ -131,7 +86,7 @@ layer: foundation
    - 在完整 Codex / Lark 环境中：直接调用 `lark-base` skill 操作。本 skill 不重复实现 Base CRUD。
    - 在养个店长 Hermes 飞书直聊中：如果已注入后端只读 Base 工具，查询单个 SKU 时先调用 `POST /api/hermes/bitable/record-search`；店铺上下文 / `tenantId` 由当前 Hermes profile 或后端工具注入，不向用户索要、不自行编造。模型侧查询条件至少包含 `logicalTable=products`、`fieldName=SKU`、`value=<SKU>`；只有工具 schema 明确要求时才传 `tenantId`。`attachments[].assetUrl` 是可用的短期签名图片链接，可直接作为图片输入，不要让用户重复上传。
 2. 如果 Base 工具返回未配置、无权限、表不存在、字段不存在或当前运行环境没有任何可调用 Base 工具：如实说明这一条真实卡点和下一步（让管理员接入/补配置，或请用户点机器人菜单打开资料表/发截图），**不要连续多轮换句式重复“我无法确认是否读到表”**。
-3. 只有读到真实 Base 记录后，才基于字段值回答或继续写 listing / 做发布；不要用用户口述的 SKU 名称假装已查表。
+3. 只有读到真实 Base 记录后，才可把字段标为目录事实。未配置时 builder 可以按用户资料继续并注明来源；不要用用户口述的 SKU 名称假装已查表。
 
 本模式回答的是 **Base 内部目录**。用户问当前 Etsy 页面、公开 URL 或后台编辑器字段时，
 转模式 D；不要把 Base 值包装成线上事实。
@@ -169,9 +124,9 @@ layer: foundation
 
 ## 写入前的硬性约束
 
-通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（改动没真正写进 Base 不算完成，落库与确认同 turn 收口，写完带回执）。本 skill 特有禁区：
+通用约束见 [`shared/preamble.md`](../shared/preamble.md) §写入前的通用约束，**Base 写穿不变量**见 [`../shared/store-base-architecture.md`](../shared/store-base-architecture.md)（获准的 Base 更新只有实际写成功才算已同步；填写稿交付独立报告，写完带回执）。本 skill 特有禁区：
 
-- **不替用户上架或发买家消息**：只产文案 + 维护 Base；真实发布遵守内置 Etsy preset 的自动化边界（见 [`shared/platform-config.md`](../shared/platform-config.md)），默认由用户在平台后台手动复制
+- **不替用户上架或发买家消息**：交接文案 + 维护 Base；真实发布遵守内置 Etsy preset 的自动化边界（见 [`shared/platform-config.md`](../shared/platform-config.md)），默认由用户在平台后台手动复制
 - **新增 SKU 不要自动估价**：成本 / 售价让用户确认；可基于 Base 历史给"参考区间"，但不替用户拍板
 - **改 Base 用 lark-base 的 diff 风格预览** → 等确认 → 落盘 → 回执；不要只在对话里报改动而不写 Base
 

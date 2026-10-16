@@ -4,11 +4,13 @@
 
 ## 触发范围
 
-- `image-synth`：生图、QA 和原图落盘后，作为发图交付前最后一步运行；用户只保存聊天图、不入库时同样执行。
+- `etsy-listing-images`：生图、QA 和原图落盘后，作为发图交付前最后一步运行；用户只保存聊天图、不入库时同样执行。
 - `assets-library` B2：最终 listing 图或社媒发布图在 promote 上传前运行。
 - `pinterest-autopin`：发布副本写入队列 / 发布前运行。
 
-始终保留原件：`image-synth/ai_raw/`、B1 dump 的 `待处理/`、内部参考图不原地处理。仅处理 AI 标记，保留商标、作者署名和版权水印。
+始终保留原件：AI 原始输出目录、B1 dump 的 `待处理/`、内部参考图不原地处理。仅处理 AI 标记，保留商标、作者署名和版权水印。
+
+Etsy 图片的逐图清理和规格验收同时遵守 [Etsy 图片清理](../etsy-listing-images/references/ai-image-cleanup.md)，不使用 JPEG 降级替代完整检查。
 
 ## 前置检查
 
@@ -32,7 +34,7 @@ pipx install --force 'remove-ai-watermarks[visible]==0.45.1'
 
 ## 单图流程
 
-输入 `<source_path>` 为原图。每次用独立输出路径，避免拿上次文件冒充本次结果。`image-synth` 输出到 `<workspace>/.cache/image-synth/processed/{date}/`；其他调用方输出到 `.cache/ai-image-sanitizer/` 或自己的 processed 目录。
+输入 `<source_path>` 为原图。每次用独立输出路径，避免拿上次文件冒充本次结果。调用方输出到 `.cache/ai-image-sanitizer/` 或自己的 processed 目录。
 
 1. 记录原图 SHA-256、工具版本，检查原图可解码并记录尺寸、显示方向。
 2. 在**保留元数据的原图**上识别可见 AI 标记（元数据可辅助判断），写独立临时副本：

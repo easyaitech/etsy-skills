@@ -1,0 +1,31 @@
+{
+  "importedOn": "2026-10-14",
+  "maintenance": "Independent project copies; no automatic upstream synchronization.",
+  "sources": {
+    "etsy-product-definition": {
+      "files": {
+        "SKILL.md": "a12b42c2bfbdf2d9e05b47092463cee8921c0f4c35cdc76e993e390102556858",
+        "references/handoff.md": "11cc3796d632708238af66f40658b855267b213b421219b5decea40ef6a0dd58",
+        "references/html-report.md": "9f4b9672af0effc9fe070ebdfcf312527c628986614964b840191938d3cf1ef5",
+        "references/pricing.md": "5dfbf32a189438ead242c00aeebec5064451707999649279d75dd461e492ff45",
+        "references/research-brief.md": "ee4efef3548847d9508fe75760bd26ec36d2bb0b944fa81fbbb72e4fcc4ef250",
+        "references/research.md": "3b0d0729b6a952b5100106570ac20597651bc6b67d2522a5a89ff12baba29082"
+      }
+    },
+    "etsy-listing-images": {
+      "files": {
+        "SKILL.md": "03f4c9c73dcc3fc082f5966d675b79b353848cc0c01714db4e4903c7ce3e046c",
+        "references/ai-image-cleanup.md": "75a8f2f4d3adf611ccd2bbbf90f90da8907c0154aa1b1207d8511be76430ed58",
+        "references/etsy-requirements.md": "8d86df8d221f1534d53790016eeada1c4c31a140f2926f1e7204acdc8704c127",
+        "references/visual-playbook.md": "c786c0aec095d87cd7e04774962c3603d83c68df7e185b8b1bc0d24a92bd7fca"
+      }
+    },
+    "etsy-listing-builder": {
+      "files": {
+        "SKILL.md": "a45ba0dbfcaa0a109d75a6fa5ed237a3b6406b4f20ef95a9415787f9ca84f61a",
+        "references/html-delivery.md": "238e47df20ab2b6fc83d787a76221b04f79d4675cb0905945b3ddef5dc71695a",
+        "references/listing-rules.md": "a11cb28f5785eb7d5b41fc8f1a7c2b98a6c76780e8d0a7bcb7f07c58d13c7c80"
+      }
+    }
+  }
+}

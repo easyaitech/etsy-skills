@@ -2,7 +2,7 @@
 
 通用电商运营 skill bundle，跑在 [Hermes Agent](https://hermes-agent.nousresearch.com/) 上（Mac mini 本地），用 [larksuite/cli](https://github.com/larksuite/cli) 操作飞书 Base / 文档 / 云空间。
 
-每个 skill 各管一摊：品牌底座、商品目录、订单客服、供应商管理、业务知识库、素材库、社交媒体发布、Pinterest 自动 pin、AI 图片合成、趋势热词采集（完整列表见下面 §Skills）。默认数据架构是 **一个店铺 = 一个飞书多维表格 Base；一个业务对象 = Base 内一张表**，下游都引用四份基座文件 `BRAND.md` / `SHOP.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`，从 `shop-foundation` 开始建是推荐顺序。
+每个 skill 各管一摊：品牌底座、商品目录、订单客服、供应商管理、业务知识库、素材库、社交媒体发布、Pinterest 自动 pin、Etsy 产品定义、商品图库、上架填写稿、趋势热词采集（完整列表见下面 §Skills）。默认数据架构是 **一个店铺 = 一个飞书多维表格 Base；一个业务对象 = Base 内一张表**，下游都引用四份基座文件 `BRAND.md` / `SHOP.md` / `BRAND_MARKETING.md` / `MARKETING_PLATFORM.md`，从 `shop-foundation` 开始建是推荐顺序。
 
 销售平台**固定为 Etsy**：平台规则（标题 / tag / 图片 / 订单客服边界）走仓库内置 Etsy preset（见 `shared/platform-config.md`），工作区不维护平台配置文件；小红书电商封存。仓库历史上叫 `etsy-skills`，新的通用入口是 `ecommerce-stack`，旧命令 `etsy-stack` 保留兼容。
 
@@ -43,22 +43,29 @@ bash install.sh
 | Skill | 干啥 |
 |---|---|
 | [`shop-foundation`](shop-foundation/SKILL.md) | 维护品牌基座 BRAND.md（品牌原则）+ BRAND_MARKETING.md（品牌营销策略）+ MARKETING_PLATFORM.md（内容平台策略）与店铺基座 SHOP.md（店铺事实）四份元基础；支持从店铺真实数据自动起草（模式 A0） |
-| [`listing-catalog`](listing-catalog/SKILL.md) | 店铺总 Base 内 `Products 商品` 表 + 按内置 Etsy preset 撰写商品页 / listing 文案 + 读取 / 分析 / 优化现有 Etsy Listing（线上事实走独立 public/admin 只读工具，不以 Base 代替） |
+| [`listing-catalog`](listing-catalog/SKILL.md) | 店铺总 Base 内 `Products 商品` 表 + 授权字段同步 + 读取 / 分析现有 Etsy Listing（文案生成与修改交 etsy-listing-builder）（线上事实走独立 public/admin 只读工具，不以 Base 代替） |
 | [`orders-customers`](orders-customers/SKILL.md) | 店铺总 Base 内 `Orders 订单` / `Customers 客户` 表 + 按内置 Etsy preset 支撑客服/履约 SOP + 客户标签 |
 | [`logistics-tracking`](logistics-tracking/SKILL.md) | 跨境物流状态跟踪（薄 skill）：让 agent 调 `track` 命令查/录物流，接后端常驻的 17TRACK 跟踪服务（每天自动轮询到签收）；正确性在后端服务，不写飞书 Base |
 | [`supplier-foundation`](supplier-foundation/SKILL.md) | 店铺总 Base 内 `Suppliers 供应商` 表 + 采购来源筛选、主用/备用/淘汰记录 |
 | [`inventory`](inventory/SKILL.md) | 实物库存（成品 + 包材附件）：店铺总 Base 内 `Inventory 库存品` + `Inventory Ledger 库存流水` 两张表，流水记账、订单成交自动扣减、跌破安全库存早报点名；商品表的「库存」列是平台在售数量、不归它管 |
 | [`business-knowledge`](business-knowledge/SKILL.md) | 轻量业务知识库：每周材料 → raw / weekly / wiki markdown + `Knowledge Cards 知识卡片` 表 + Marketing Brief |
 | [`assets-library`](assets-library/SKILL.md) | 素材生命周期 owner（双层：六文件夹物理层 + 店铺总 Base `Assets 素材池` canonical + `Asset Variants 派生素材` 变体工厂）；不碰创意策略 |
-| [`image-brief`](image-brief/SKILL.md) | 图片方案设计（创意 brief owner）：给 SKU + 目标平台出平台感知 brief（槽位/Mood/镜头清单），再分叉到人工拍摄 / image-synth / 已有素材；只产 brief 计划文档，不拍不生图不归档 |
 | [`publish-composer`](publish-composer/SKILL.md) | 发布编排（旧名 content-asset-pool）：把 assets-library 的发布副本变体 + 商品 + 品牌组装成跨平台发布意图 PublishIntent，拥有 `社媒发布队列` 表；平台专属走 typed extension。只引用变体，不收集/清理/裁切 |
 | [`social-publisher`](social-publisher/SKILL.md) | 社交媒体自动发布总控层：从店铺总 Base 内 `社媒发布队列` 表读取待发任务，按 adapter 路由（Pinterest enabled；小红书 **封存 shelved 不对用户开放**——只说明封存边界+引导回 Etsy+STOP，不组草稿/不出人工清单；Instagram Reels 按租户开通；IG 图片/轮播与 TikTok 草稿/人工对账） |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | `社媒发布队列` 表 `平台 = Pinterest` 行 + 调 yanggedianzhang 服务器工具创建 Pinterest job，由现有浏览器插件使用租户登录态执行 |
 | [`instagram-publish`](instagram-publish/SKILL.md) | 单视频 Reels 预览、确认、服务器排期和结果查询；通过租户浏览器插件执行，按租户开通 |
 | [`xiaohongshu-autopost`](xiaohongshu-autopost/SKILL.md) | `社媒发布队列` 表 `平台 = 小红书` 行 adapter，当前 **封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**：收到小红书请求只说明封存边界+引导回 Etsy+STOP，不组草稿/不建行/不出人工清单；后端 + 发布契约文档原样保留供未来解封（改 enabled + 后端开关） |
 | [`publish-metrics`](publish-metrics/SKILL.md) | 发布结果回收闭环（反馈层）：把已发 PublishIntent 的表现（URL / post id / 曝光 / 点击 / 保存 / 转化）回写 `社媒发布队列`，按变体 / 文案 / SKU / 平台聚合复盘喂回 publish-composer；只读结果 + 写 metrics 列，数据来源如实标注、拿不到留空不编 |
-| [`image-synth`](image-synth/SKILL.md) | AI 图片合成（电商图 / 社媒图）：用 Hermes 自带生图能力把"图片需求 + 商品实拍图"合成成 1 张成品图，差异化 QA 闸门 + 入库走 assets-library |
+| [`etsy-product-definition`](etsy-product-definition/SKILL.md) | 商品与调研证据 → 定位、价格建议、表达要求及 HTML 报告；默认交任务书等待回传 |
+| [`etsy-listing-images`](etsy-listing-images/SKILL.md) | Etsy 商品图策划、制作、保真检查及最终图库；保留方案和主图确认 |
+| [`etsy-listing-builder`](etsy-listing-builder/SKILL.md) | 基于定义和实际最终图库生成含逐图 ALT 的可复制 HTML 上架填写稿 |
 | [`trend-radar`](trend-radar/SKILL.md) | 每周自动采集 Google Trends / Pinterest Trends / eRank Trend Buzz 热词，并生成趋势 × 店铺/品牌/商品的 fit report 供人工判断 |
+
+## Etsy 专业上架流程
+
+完整任务按「产品定义确认 → 图片方案/主图确认与图库验收 → 上架填写稿」连续推进，局部任务按范围结束。缺店铺基座仍可开始；只有必要事实缺失才补问。交付物默认上传本店铺飞书云空间，HTML 保持离线可用，图片提供预览与下载。交付不等于正式素材入库、Base 同步或 Etsy 发布。
+
+三个技能完整引入后独立维护，来源指纹见 [引入记录](shared/etsy-skills-origin.json)，适配见 [专业流程接入协议](shared/etsy-professional-workflow.md)。旧图片技能及其社媒生图、人工拍摄能力已移除；升级仅回收 bundle 管理的旧链接，不删除用户自有内容。
 
 ## 工作区初始化（首次使用必读）
 
@@ -190,9 +197,10 @@ ecommerce-stack init [DIR]  # 在 DIR（默认 cwd）写 .ecommerce-workspace �
 ├── pinterest-autopin/         # │ 应用层 Application
 ├── xiaohongshu-autopost/      # │ 围绕基座运行
 ├── publish-metrics/           # │ 发布结果回收闭环（反馈层）
-├── image-brief/               # │ 图片方案设计（创意 brief owner）
-├── image-synth/               # │
 ├── logistics-tracking/        # │ 物流跟踪薄 skill（调后端 ECS track 服务）
+├── etsy-product-definition/   # │ 产品定义
+├── etsy-listing-images/       # │ Etsy 图库
+├── etsy-listing-builder/      # │ 上架填写稿
 └── trend-radar/               #   工具输入层 Utility-input（只为基座提供自动化外部输入）
 ```
 

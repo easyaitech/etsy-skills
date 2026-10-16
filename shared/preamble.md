@@ -140,7 +140,9 @@ ecommerce-stack workspace
 
 **Hermes cron 例外（仅限输出型报告）**：如果用户明确配置了 Hermes 定时任务，并在配置时确认了固定输出目录与文件命名规则，则 cron 运行时可以在该目录下写入新的时间戳报告 / JSON / raw evidence 文件，不需要每次再等人工确认。这个例外只适用于"追加新输出文件"，不能修改 BRAND.md / SHOP.md / Base 导出 / 既有业务文件，也不能覆盖旧报告。
 
-各 skill 可在自身 SKILL.md 里追加特有禁区，但不能豁免上述通用约束。
+**Etsy 专业流程交付例外**：`etsy-product-definition`、`etsy-listing-images`、`etsy-listing-builder` 在已授权任务内可创建、更新本次生成的交付文件并保留版本，默认上传本店铺云空间供审阅，无需逐文件写盘或上传确认。产品定义、图片方案、主图等原有确认节点照旧。此例外不授权修改 BRAND.md / SHOP.md、业务 Base、用户另行编辑内容或共享技能目录。具体交付与目录同步见 [专业流程接入协议](etsy-professional-workflow.md)。文件交付与授权 Base 同步分别报告，不以未同步 Base 阻塞已完成文件的交付。
+
+各 skill 可追加特有禁区；除上述明确例外外，不得豁免通用约束。
 
 ---
 

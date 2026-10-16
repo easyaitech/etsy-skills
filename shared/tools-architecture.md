@@ -16,7 +16,7 @@
 | **Hermes（Mac mini）** | **本仓库的这些 skill**，每租户一个 Hermes profile | 用每个租户的口吻去想和生成（写 listing / 起草客服回复 / 拼生图 prompt / 做判断），含每 profile 的人设 + 知识 skill | 工具实现、密钥、队列、浏览器会话（**唯一例外**：lark-cli / 飞书访问，见 §例外） |
 | **浏览器插件** | 进入租户登录态的「手」 | 仅当目标平台没有可用 API、且必须用租户已登录的浏览器时才用；跑在租户自己的浏览器里，带 per-tenant token，只和 ECS 控制面通信 | 任何内嵌密钥 |
 
-**关键边界：工具的「本体」永远住在 ECS。** 这些 skill 维护的是**语义层 / 提示词层 / 质量闸门层**（输入 → 词库 / 规则 → 输出 + QA），把「做事」下沉给 ECS 控制面背后的工具。这正是本 stack 既有 skill 的写法——`image-synth` 维护提示词层 + QA 闸门、生图动作下沉；`pinterest-autopin` 维护 `社媒发布队列` 语义层、物理发布下沉。本文把这个隐式范式升级成**全 stack 硬约束**。
+**关键边界：工具的「本体」永远住在 ECS。** 这些 skill 维护的是**语义层 / 提示词层 / 质量闸门层**（输入 → 词库 / 规则 → 输出 + QA），把「做事」下沉给 ECS 控制面背后的工具。这正是本 stack 既有 skill 的写法——`etsy-listing-images` 维护提示词层 + QA 闸门、生图动作下沉；`pinterest-autopin` 维护 `社媒发布队列` 语义层、物理发布下沉。本文把这个隐式范式升级成**全 stack 硬约束**。
 
 ---
 
@@ -110,7 +110,7 @@ skill 侧只写「调哪个入口、传什么、怎么解释返回」；不写�
 
 | 能力 | 当前执行位置 | 目标拓扑 | 差距 / 迁移方向 |
 |---|---|---|---|
-| `image-synth` 生图 | **平台侧**：Hermes 自带 `image_generate`（GPT Image 2），出图后端 / 凭据 / 每日额度由 yanggedianzhang 在 profile 配置里统一下发 | 同左（已是目标态） | ✅ skill 只调工具、不持 key、不选模型；额度落在工具边界（`codex-capped`）。早期独立的中心生图服务 `image-gen-service` 从未接通，已于 2026-09-28 下线 |
+| `etsy-listing-images` 生图 | **平台侧**：Hermes 自带 `image_generate`（GPT Image 2），出图后端 / 凭据 / 每日额度由 yanggedianzhang 在 profile 配置里统一下发 | 同左（已是目标态） | ✅ skill 只调工具、不持 key、不选模型；额度落在工具边界（`codex-capped`）。早期独立的中心生图服务 `image-gen-service` 从未接通，已于 2026-09-28 下线 |
 | `pinterest-autopin` 发布 | **已上收 ECS**：yanggedianzhang 服务器控制面 + 现有浏览器插件（租户 Chrome 登录态执行） | 同左（已是 tier 2 目标态） | ✅ Hermes 只生成 + 调服务器工具，不持 Chrome / Playwright / 队列 / token；服务器做 job 状态机 / 鉴权 / 素材授权 / 结果回写 |
 | 发布**编排**（巡检 / 锁 / 重试 / 死信） | **已上收 ECS**：yanggedianzhang publish dispatch（T5，常驻 tick，dormant-by-default） | 同左（已是目标态） | ✅ 队列调度 / 单写者锁 / 重试退避 / 幂等去重 / 崩溃恢复在服务端；手动发布仍走 test → confirm-publish → final 人工闸；明确授权并标记自动发布的行由 dispatch 到点直发、无逐条人工确认，`social-publisher` 不再 Hermes 手搓巡检。 |
 | Etsy Listing 公开读取 | **已上收 ECS**：正式工具经 `/api/hermes/etsy/tools/listings/get` 选择公开来源，内部由独立 Apify Actor 执行 | 同左（已是无账号目标态） | ✅ single/batch/shop；不依赖 Base，不使用店主浏览器。公开批量禁止改走账号插件，契约见 [`etsy-listing-read.md`](etsy-listing-read.md) |

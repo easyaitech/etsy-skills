@@ -6,15 +6,15 @@ Skill 只负责通用流程：盘点输入、生成草稿、写入 Base、准备
 
 ## Etsy 内置 preset 索引
 
-- 文案 SEO + 礼物 / 节日维度 + 上架前调研：`listing-catalog/references/platforms/etsy.md`（单文件 preset，原则级；礼物维度调研是模式 B 的 step 5.5，见该文件 § 附加调研环节）
+- 文案与字段：`etsy-listing-builder/references/listing-rules.md`；产品定位与研究：`etsy-product-definition/SKILL.md`
 - 订单 / 客服 / 履约表：`orders-customers/references/platforms/etsy.md`
-- 商品图硬规则：`image-synth/references/etsy-listing-image-specs.md`
+- 商品图硬规则：`etsy-listing-images/references/etsy-requirements.md`
 - Listing 槽位语义：`assets-library/references/etsy-listing-photo-slots.md`
 
 通用口径：
 
 - 买家语言默认**英文**；市场、货币、处理时间等店铺事实以 `SHOP.md` 为准。
-- 礼物维度是 Etsy 搜索流量大头、是 Etsy SEO 的输入：礼物词库 → title 礼物位 / tags 礼物词 / description 礼物语境，绑定 Etsy 的 listing 结构。
+- 礼赠是可选购买情境，是否采用由商品和证据决定；不强制礼赠定位。
 - 自动化边界（哪些动作禁止 agent 代操作，如付款、真实上架、直接发买家消息）由 `orders-customers` 的 Etsy preset 与各 skill 自身约束定义。
 - 店铺级例外（如「我们店描述必须双语」）沉淀进 `SHOP.md` 对应段落，不单独维护平台文件；Etsy 官方规则变更（标题上限、tag 数量等）属于 stack 升级，改内置 preset 走仓库发版，不落工作区。
 
@@ -44,7 +44,7 @@ Skill 只负责通用流程：盘点输入、生成草稿、写入 Base、准备
 - 订单 / 客服 / 售后表：`orders-customers/references/platforms/xiaohongshu.md`
 - 发布任务池：`publish-composer/references/platform-publishing-model.md` 的「小红书图文 / 小红书视频」
 - 自动发布状态：`social-publisher/references/adapter-registry.md` 小红书行状态（解封改 `enabled`）
-- 社媒图默认规格：`image-synth/references/social-platform-specs.md` 的「小红书图文 / 商品种草图」
+- 旧社媒创意图片规格随旧图片能力移除；解封不自动恢复图片生产能力。
 
 ## 未来多平台
 

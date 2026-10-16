@@ -7,7 +7,7 @@
 | 风格 | 用当产出是… | 当前消费方 |
 |---|---|---|
 | **深挖式**（启发式） | 原则 / 策略 / 价值观——没有标准答案，靠追问显影 | BRAND.md / BRAND_MARKETING.md / MARKETING_PLATFORM.md 基座访谈 |
-| **清点式**（盘点式） | 事实 / 必填字段——有标准答案，缺的补齐即可 | SHOP.md 事实档案访谈；listing-catalog 输入清单、pinterest-autopin 输入清单、image-synth 盘点输入 |
+| **清点式**（盘点式） | 事实 / 必填字段——有标准答案，缺的补齐即可 | SHOP.md 事实档案访谈；listing-catalog 输入清单、pinterest-autopin 输入清单、etsy-listing-images 盘点输入 |
 
 选错风格的信号：对事实字段做「你期待的是什么感觉」式追问（应清点），或对价值观只做填表不追问反例（应深挖）。
 

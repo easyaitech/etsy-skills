@@ -79,7 +79,7 @@ def main() -> int:
     )
     failures += require(
         "listing-catalog/SKILL.md",
-        "读取现有 Listing",
+        "读取与分析现有 Etsy Listing",
         "优化现有 Etsy Listing",
         "shared/etsy-listing-read.md",
         "线上事实",
@@ -95,7 +95,7 @@ def main() -> int:
     version = changelog_version()
     failures += require(
         "README.md",
-        "读取 / 分析 / 优化现有 Etsy Listing",
+        "读取 / 分析现有 Etsy Listing",
         # 发布口径 = main（见 README §发布与分发）。安装命令必须跟着 main 走。
         "etsy-skills/main/install.sh",
     )
