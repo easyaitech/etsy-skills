@@ -96,3 +96,11 @@ Hermes vision_analyze 对原件/第二次修订的并排图复检：冰箱吸附
 修订草稿上传回执 `ok=true`，目录「素材库/输出」，文件名 `DRAFT-not-for-listing-fridge-magnet-v3.png`，2261323 字节；[飞书草稿下载](https://my.feishu.cn/file/DVeVb7nKMogyZdxBsXacFQ11nHd)。没有写 Base、没有登记正式素材、没有发布 Etsy。当前聊天可提供独立预览；未向未指定的飞书会话发送消息。
 
 本轮代码评审：Standards 0 项，Spec 0 项可修代码发现。未将上游限制与草稿质量记为已解决。
+
+## 2026-10-16 发布整合验证
+
+三个本地提交在发布分支 rebase 到远端 `de61a35`，保留 #133 客服卡授权修复，并将 #132 的完整清理、复检、哈希复用与失败阻断协议接到 `etsy-listing-images`；不恢复旧图片技能或 JPEG 降级。
+
+- 112 项 Python 测试、28 项 Node 测试、TypeScript 类型检查通过；387 条相对链接、18 个技能 frontmatter 与 Listing/客服契约通过；依赖审计 0 漏洞。
+- 生产机独立目录 `/var/lib/hermes-acceptance-release-20261016` 使用实际 Hermes v2026.9.24 的 `scan_skill_commands` 和 `skill_view(preprocess=False)`：三个新技能均可索引、读取，两个旧图片技能不可读取。此验证未向客户发送消息，未写经营数据。
+- 本次发布验收目标为三个技能的可发现、可加载、安装升级与正式分发。10 月 14 日的图片质量限制和未验证的完整业务流程保持原记录，不据此声称生成图片均可上架。
