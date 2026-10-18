@@ -56,7 +56,7 @@ bash install.sh
 | [`instagram-publish`](instagram-publish/SKILL.md) | 单视频 Reels 预览、确认、服务器排期和结果查询；通过租户浏览器插件执行，按租户开通 |
 | [`xiaohongshu-autopost`](xiaohongshu-autopost/SKILL.md) | `社媒发布队列` 表 `平台 = 小红书` 行 adapter，当前 **封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**：收到小红书请求只说明封存边界+引导回 Etsy+STOP，不组草稿/不建行/不出人工清单；后端 + 发布契约文档原样保留供未来解封（改 enabled + 后端开关） |
 | [`publish-metrics`](publish-metrics/SKILL.md) | 发布结果回收闭环（反馈层）：把已发 PublishIntent 的表现（URL / post id / 曝光 / 点击 / 保存 / 转化）回写 `社媒发布队列`，按变体 / 文案 / SKU / 平台聚合复盘喂回 publish-composer；只读结果 + 写 metrics 列，数据来源如实标注、拿不到留空不编 |
-| [`etsy-product-definition`](etsy-product-definition/SKILL.md) | 商品与调研证据 → 定位、价格建议、表达要求及 HTML 报告；默认交任务书等待回传 |
+| [`etsy-product-definition`](etsy-product-definition/SKILL.md) | 商品事实与用户选择 → 定位、价格与表达要求及 HTML 报告；先询问调研，可跳过或仅查关键词 |
 | [`etsy-listing-images`](etsy-listing-images/SKILL.md) | Etsy 商品图策划、制作、保真检查及最终图库；保留方案和主图确认 |
 | [`etsy-listing-builder`](etsy-listing-builder/SKILL.md) | 基于定义和实际最终图库生成含逐图 ALT 的可复制 HTML 上架填写稿 |
 | [`trend-radar`](trend-radar/SKILL.md) | 每周自动采集 Google Trends / Pinterest Trends / eRank Trend Buzz 热词，并生成趋势 × 店铺/品牌/商品的 fit report 供人工判断 |
