@@ -63,11 +63,19 @@ MANIFEST="$INSTALL_DIR/etsy-stack.json"
 SKILLS=()
 while IFS= read -r line; do
   [[ -n "$line" ]] && SKILLS+=("$line")
-done < <(MANIFEST="$MANIFEST" python3 -c '
+done < <(HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" MANIFEST="$MANIFEST" python3 -c '
 import json, os, re
 with open(os.environ["MANIFEST"], encoding="utf-8") as f:
     m = json.load(f)
 skills = m.get("skills")
+optional = set(m.get("optionalSkills", []))
+selection = os.path.join(os.environ["HERMES_SKILLS_DIR"], ".ecommerce-optional-skills")
+if os.path.isfile(selection):
+    with open(selection, encoding="utf-8") as f:
+        selected = set(f.read().split())
+    if selected - optional:
+        raise SystemExit("未知的可选技能：" + ", ".join(sorted(selected - optional)))
+    skills = skills + sorted(selected)
 if not isinstance(skills, list) or not skills:
     raise SystemExit("manifest.skills 必须是非空数组")
 if len(skills) != len(set(skills)):
@@ -82,7 +90,7 @@ for s in skills:
 AGENT_TOOLS=()
 while IFS= read -r line; do
   [[ -n "$line" ]] && AGENT_TOOLS+=("$line")
-done < <(MANIFEST="$MANIFEST" python3 -c '
+done < <(HERMES_SKILLS_DIR="$HERMES_SKILLS_DIR" MANIFEST="$MANIFEST" python3 -c '
 import json, os, re
 with open(os.environ["MANIFEST"], encoding="utf-8") as f:
     m = json.load(f)
@@ -106,8 +114,14 @@ import os
 install_dir = os.path.realpath(os.environ["INSTALL_DIR"])
 hermes_dir = os.environ["HERMES_SKILLS_DIR"]
 with open(os.environ["MANIFEST"], encoding="utf-8") as f:
-    active = set(json.load(f)["skills"])
-retired = {"photo-style", "content-asset-pool", "image-brief", "image-synth"}  # content-asset-pool → 改名 publish-composer（清理旧软链）
+    manifest = json.load(f)
+    optional = set(manifest.get("optionalSkills", []))
+    active = set(manifest["skills"])
+selection = os.path.join(hermes_dir, ".ecommerce-optional-skills")
+if os.path.isfile(selection):
+    with open(selection, encoding="utf-8") as f:
+        active.update(set(f.read().split()) & optional)
+retired = {"photo-style", "content-asset-pool", "image-brief", "image-synth", "xiaohongshu-autopost"} | optional  # content-asset-pool → 改名 publish-composer（清理旧软链）
 
 if os.path.isdir(hermes_dir):
     for name in os.listdir(hermes_dir):

@@ -31,20 +31,12 @@ Skill 只负责通用流程：盘点输入、生成草稿、写入 Base、准备
 本节是封存协议的**唯一真源**（决策与理由见 [`docs/adr/0001-shelve-xiaohongshu-adapter.md`](../docs/adr/0001-shelve-xiaohongshu-adapter.md)，ADR 不承载协议正文）。适用范围：adapter-registry 中状态为 `封存 shelved` 的平台——当前 = 小红书（产品决策 2026-07-24：专注 Etsy，不对用户开放）。其他文件只引用本节，不复述协议正文。
 
 - **判据（fail-closed）**：[`social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 平台状态列 = `封存 shelved`。`shelved` 优先于路由树所有其它分支——绝不落入「非 enabled → 人工发布清单」通用分支（那条只覆盖 `staged` / `planned/manual-only`）。
-- **触发**：用户提出任何小红书相关请求（接入 / 上新 / 组笔记 / 写文案 / 发布 / 对账……触发词见 `xiaohongshu-autopost` frontmatter）。
-- **统一回复话术**：「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」——话术真源就在本行，其他文件引用必须逐字一致，不得改写 / 截断（`scripts/validate-frontmatter.py` 机检⑤在 CI 校验）。
+- **触发**：用户提出任何小红书相关请求（接入 / 上新 / 组笔记 / 写文案 / 发布 / 对账……包括接小红书、发小红书、写小红书笔记）。
+- **统一回复话术**：「当前版本专注 Etsy，小红书功能已退役，不再提供相关操作」——话术真源就在本行，其他文件引用必须逐字一致，不得改写 / 截断（`scripts/validate-frontmatter.py` 机检⑤在 CI 校验）。
 - **动作**：说明封存边界 + 把话题引导回 Etsy 经营 + STOP。
 - **禁止**：不组草稿、不建 `社媒发布队列` 行、不创建 server publish job、不出人工发布清单、不做人工回填对账、不反向请求派生变体；小红书 preset 字段 / 图片规则 / 订单规则不启用、不反向套给 Etsy。
-- **后端配套**：小红书后端已用 `XHS_PLATFORM_ENABLED` 开关封存（默认关，四个 XHS 端点返回 `410 XHS_PLATFORM_SUSPENDED`）。
-- **解封**：不是一处开关，走 [`social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) §小红书解封验收清单（唯一副本）。
-
-封存期原样保留的解封资料（不删）：
-
-- 商品上架 / `Products 商品` 表：`listing-catalog/references/platforms/xiaohongshu.md`
-- 订单 / 客服 / 售后表：`orders-customers/references/platforms/xiaohongshu.md`
-- 发布任务池：`publish-composer/references/platform-publishing-model.md` 的「小红书图文 / 小红书视频」
-- 自动发布状态：`social-publisher/references/adapter-registry.md` 小红书行状态（解封改 `enabled`）
-- 旧社媒创意图片规格随旧图片能力移除；解封不自动恢复图片生产能力。
+- **后端配套**：小红书业务执行与连接器已移除，环境变量不能恢复。旧内部工具返回 `410 XHS_PLATFORM_SUSPENDED`；webhook 仅应答探测和接收，不处理业务。
+- **退役资料**：历史平台字段说明仅供解释旧数据，不用于新任务。重新接入属于新需求，不能通过切换 registry 或环境变量启用。
 
 ## 未来多平台
 

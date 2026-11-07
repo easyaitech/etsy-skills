@@ -52,6 +52,8 @@ class BundleInstallTest(unittest.TestCase):
             skills.mkdir()
             (skills / "image-brief").symlink_to(installed / "image-brief")
             (skills / "image-synth").symlink_to(installed / "image-synth")
+            for name in ("supplier-foundation", "publish-metrics", "xiaohongshu-autopost"):
+                (skills / name).symlink_to(installed / name)
             custom = skills / "my-skill"
             custom.mkdir()
             (custom / "notes").write_text("keep")
@@ -72,9 +74,15 @@ class BundleInstallTest(unittest.TestCase):
             install()
             for name in ("etsy-product-definition", "etsy-listing-images", "etsy-listing-builder"):
                 self.assertTrue((skills / name / "SKILL.md").is_file(), name)
-            for name in ("image-brief", "image-synth"):
+            for name in ("image-brief", "image-synth", "supplier-foundation", "publish-metrics", "xiaohongshu-autopost"):
                 self.assertFalse(os.path.lexists(skills / name), name)
             self.assertEqual((custom / "notes").read_text(), "keep")
+            (skills / ".ecommerce-optional-skills").write_text("supplier-foundation\n")
+            install()
+            self.assertTrue((skills / "supplier-foundation" / "SKILL.md").is_file())
+            self.assertFalse(os.path.lexists(skills / "publish-metrics"))
+            install()
+            self.assertTrue((skills / "supplier-foundation" / "SKILL.md").is_file())
             # A retired name owned by the user must survive subsequent upgrades.
             (skills / "image-brief").mkdir()
             (skills / "image-brief" / "notes").write_text("user directory")

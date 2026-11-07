@@ -84,7 +84,7 @@
 
 ## 小红书图文（⛔ 封存 shelved — 未来解封资料，封存期不组装）
 
-> **小红书当前封存**。判据 = [`../../social-publisher/references/adapter-registry.md`](../../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`。封存期收到小红书请求，**不组任何草稿 / 队列行 / 人工清单**，只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP（协议唯一真源 = [`../../shared/platform-config.md`](../../shared/platform-config.md) §封存协议）。以下结构示意仅供未来解封复用。
+> **小红书当前封存**。判据 = [`../../social-publisher/references/adapter-registry.md`](../../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`。封存期收到小红书请求，**不组任何草稿 / 队列行 / 人工清单**，只说明封存边界（「当前版本专注 Etsy，小红书功能已退役，不再提供相关操作」）+ 引导回 Etsy + STOP（协议唯一真源 = [`../../shared/platform-config.md`](../../shared/platform-config.md) §封存协议）。以下结构示意仅供未来解封复用。
 
 ```text
 发布类型 = 图文笔记

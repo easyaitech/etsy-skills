@@ -38,7 +38,7 @@ Instagram 图片/轮播 / TikTok: 人工后台
 | 执行 / 自动发布 社媒发布队列 | [`references/publishing-queue-contract.md`](references/publishing-queue-contract.md) |
 | 判断某个平台能不能自动发 | [`references/adapter-registry.md`](references/adapter-registry.md) |
 | Pinterest 发布 | `pinterest-autopin/SKILL.md` + `pinterest-autopin/references/publishing-flow.md` |
-| 小红书发布 | **封存 shelved**：不读执行细节，按 [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议 fail-closed 拒绝并引导回 Etsy + STOP。契约文档 `xiaohongshu-autopost/SKILL.md` + `xiaohongshu-autopost/references/publishing-flow.md` 仅供未来解封复用 |
+| 小红书发布 | **封存 shelved**：不读执行细节，按 [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议 fail-closed 拒绝并引导回 Etsy + STOP。业务执行已退役，不加载独立技能 |
 
 > 养个店长 Hermes 飞书直聊 runtime 无 lark-cli 时，`社媒发布队列` 等 Base 表的只读查询走后端 `POST /api/hermes/bitable/record-search` 端点，访问约定见 [`../shared/backend-api-access.md`](../shared/backend-api-access.md)。
 
@@ -107,7 +107,7 @@ Instagram 图片/轮播 / TikTok: 人工后台
    - 调 `pinterest-autopin` 模式 C：server test job → 用户目视确认 → server confirm-publish → final
    - 成功后回写本行：`状态 = 已发`、`发布时间`、`发布 URL`，清空 `执行锁`
    - 失败后回写：`状态 = 失败`、`失败原因分类` + `失败原因`、`最后尝试时间`，清空 `执行锁`；不重复递增占用阶段已加的 `发布尝试次数`
-6. **封存 shelved 平台（小红书）= fail-closed**：用户提小红书「发这条」，只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP。禁止清单（不登录、不组草稿、不出人工发布清单、不创建 server publish job、不做对账……）与判据唯一真源 = [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议；判据字段 = [`references/adapter-registry.md`](references/adapter-registry.md) 小红书状态（!= `enabled` 即封存）。解封后才并入第 5 步走真发。
+6. **封存 shelved 平台（小红书）= fail-closed**：用户提小红书「发这条」，只说明封存边界（「当前版本专注 Etsy，小红书功能已退役，不再提供相关操作」）+ 引导回 Etsy + STOP。禁止清单（不登录、不组草稿、不出人工发布清单、不创建 server publish job、不做对账……）与判据唯一真源 = [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议；判据字段 = [`references/adapter-registry.md`](references/adapter-registry.md) 小红书状态（!= `enabled` 即封存）。解封后才并入第 5 步走真发。
 7. manual-only 类型（Instagram 图片/轮播、Stories / TikTok）：
    - 不登录、不上传、不点击发布；**不创建真实 server publish job**
    - 只输出人工发布清单，或在用户给出公开 URL 后走模式 D 对账
