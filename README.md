@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/easyaitech/etsy-skills/main/install
 
 脚本会：
 - clone 到 `~/.local/share/etsy-skills/`
-- 把所有 skill 软链进 `~/.hermes/skills/`
+- 把默认的 15 个 skill 软链进 `~/.hermes/skills/`
 - 把 `ecommerce-stack` CLI 装到 `~/.local/bin/`，并保留 `etsy-stack` 兼容命令
 - 安装十二个 Agent 工具（清单由 `etsy-stack.json` 驱动）：`etsy_listings_get`、`etsy_customer_messages_get`、
   `etsy_customer_messages_publish`、`get_etsy_orders`、`get_etsy_stats`、
@@ -54,12 +54,15 @@ bash install.sh
 | [`social-publisher`](social-publisher/SKILL.md) | 社交媒体自动发布总控层：从店铺总 Base 内 `社媒发布队列` 表读取待发任务，按 adapter 路由（Pinterest enabled；小红书 **封存 shelved 不对用户开放**——只说明封存边界+引导回 Etsy+STOP，不组草稿/不出人工清单；Instagram Reels 按租户开通；IG 图片/轮播与 TikTok 草稿/人工对账） |
 | [`pinterest-autopin`](pinterest-autopin/SKILL.md) | `社媒发布队列` 表 `平台 = Pinterest` 行 + 调 yanggedianzhang 服务器工具创建 Pinterest job，由现有浏览器插件使用租户登录态执行 |
 | [`instagram-publish`](instagram-publish/SKILL.md) | 单视频 Reels 预览、确认、服务器排期和结果查询；通过租户浏览器插件执行，按租户开通 |
-| [`xiaohongshu-autopost`](xiaohongshu-autopost/SKILL.md) | `社媒发布队列` 表 `平台 = 小红书` 行 adapter，当前 **封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）**：收到小红书请求只说明封存边界+引导回 Etsy+STOP，不组草稿/不建行/不出人工清单；后端 + 发布契约文档原样保留供未来解封（改 enabled + 后端开关） |
 | [`publish-metrics`](publish-metrics/SKILL.md) | 发布结果回收闭环（反馈层）：把已发 PublishIntent 的表现（URL / post id / 曝光 / 点击 / 保存 / 转化）回写 `社媒发布队列`，按变体 / 文案 / SKU / 平台聚合复盘喂回 publish-composer；只读结果 + 写 metrics 列，数据来源如实标注、拿不到留空不编 |
 | [`etsy-product-definition`](etsy-product-definition/SKILL.md) | 商品事实与用户选择 → 定位、价格与表达要求及 HTML 报告；先询问调研，可跳过或仅查关键词 |
 | [`etsy-listing-images`](etsy-listing-images/SKILL.md) | Etsy 商品图策划、制作、保真检查及最终图库；保留方案和主图确认 |
 | [`etsy-listing-builder`](etsy-listing-builder/SKILL.md) | 基于定义和实际最终图库生成含逐图 ALT 的可复制 HTML 上架填写稿 |
 | [`trend-radar`](trend-radar/SKILL.md) | 每周自动采集 Google Trends / Pinterest Trends / eRank Trend Buzz 热词，并生成趋势 × 店铺/品牌/商品的 fit report 供人工判断 |
+
+## 可选技能
+
+`supplier-foundation` 与 `publish-metrics` 保留源码和业务资料，但不再默认加载。管理员需要启用时，在目标 profile 的 `skills/.ecommerce-optional-skills` 写入所需技能名（每行一个），再运行 `ecommerce-stack update`。选择保存在该 profile，后续升级保留；删除名单中的名称后再次升级，只回收本 bundle 的链接，不删除业务表或用户自有文件。小红书发布已退役，不提供可选安装。
 
 ## Etsy 专业上架流程
 

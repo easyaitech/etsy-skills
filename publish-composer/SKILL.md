@@ -114,7 +114,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 - 用户问“这几张能不能做一条小红书 / Instagram carousel / Pinterest carousel”
 - 用户要把素材与某个 SKU 关联并形成待发布任务
 
-> **⛔ 平台 = 小红书 → fail-closed 封存**：本 workflow 一进入先看目标平台。若平台 = 小红书（判据 = [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`），**不组草稿、不建 `社媒发布队列` 行、不取变体、不写文案**，只说明封存边界（「当前版本专注 Etsy，小红书功能暂未开放，请等后续版本」）+ 引导回 Etsy + STOP（协议唯一真源 = [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议）。下面步骤只对 Etsy / Pinterest 等非封存平台执行。
+> **⛔ 平台 = 小红书 → fail-closed 封存**：本 workflow 一进入先看目标平台。若平台 = 小红书（判据 = [`../social-publisher/references/adapter-registry.md`](../social-publisher/references/adapter-registry.md) 小红书状态 = `封存 shelved`），**不组草稿、不建 `社媒发布队列` 行、不取变体、不写文案**，只说明封存边界（「当前版本专注 Etsy，小红书功能已退役，不再提供相关操作」）+ 引导回 Etsy + STOP（协议唯一真源 = [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议）。下面步骤只对 Etsy / Pinterest 等非封存平台执行。
 
 步骤：
 
@@ -189,23 +189,6 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
 封面 = ASSET-COVER-001（草稿展示；不默认建字段）
 ```
 
-### 小红书图文（⛔ 封存 shelved — 以下为未来解封资料，封存期不组装）
-
-> 小红书当前封存：**不为小红书组装任何发布任务**，用户提小红书请求按封存协议（唯一真源 = [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议）回复并 STOP。下面的结构示意仅供未来解封复用。
-
-```text
-发布类型 = 图文笔记
-关联素材 =
-1. ASSET-001
-2. ASSET-002
-3. ASSET-003
-封面 = ASSET-001（草稿展示；不默认建字段）
-```
-
-关键规则：多图 / 多素材发布必须在草稿里给出清晰编号顺序；默认用 `关联素材` 的列表顺序承载，只有真实发布器明确读取时才补 `素材顺序` 字段。
-
----
-
 ## AI Sanitization Rules
 
 AI metadata / 水印清理**不再由本 skill 做**，已移交 `assets-library` 模式 E（产出发布副本变体时单点清理，规则见 [`../shared/ai-image-sanitization.md`](../shared/ai-image-sanitization.md)）。本 skill 只引用已清理的变体；如发现引用的变体 `AI 清理状态` 非 `已清/无需处理`，退回请 assets-library 处理，不自己清。
@@ -223,7 +206,7 @@ AI metadata / 水印清理**不再由本 skill 做**，已移交 `assets-library
 ### social-publisher（dispatch 执行层）
 
 - `social-publisher` 是 社媒发布队列 的执行层。用户说“自动发布 / 到点发布 / 发这条任务”时交给它。
-- 当前有 Pinterest（`pinterest-autopin`）与按租户开通的 Instagram 单视频 Reels（[instagram-publish](../instagram-publish/SKILL.md)）；小红书 adapter `xiaohongshu-autopost` **已整体封存 shelved（专注 Etsy，不对用户开放）**——用户提小红书请求只说明封存边界 + 引导回 Etsy + STOP，**连草稿 / 人工对账都不做**（后端 + 契约就绪，原样保留供未来解封）；IG 图片/轮播与 TikTok 仍草稿。
+- 当前有 Pinterest（`pinterest-autopin`）与按租户开通的 Instagram 单视频 Reels（[instagram-publish](../instagram-publish/SKILL.md)）；小红书 adapter `xiaohongshu-autopost` **已整体封存 shelved（专注 Etsy，不对用户开放）**——用户提小红书请求只说明封存边界 + 引导回 Etsy + STOP，**连草稿 / 人工对账都不做**（业务执行已退役，不通过开关恢复）；IG 图片/轮播与 TikTok 仍草稿。
 - 执行状态列由 dispatch / adapter 按状态机转移权限回写，composer 不越权改。
 
 ### pinterest-autopin / xiaohongshu-autopost（平台适配器）

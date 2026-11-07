@@ -31,7 +31,6 @@
     "listing-catalog",
     "orders-customers",
     "logistics-tracking",
-    "supplier-foundation",
     "inventory",
     "business-knowledge",
     "assets-library",
@@ -39,11 +38,16 @@
     "social-publisher",
     "pinterest-autopin",
     "instagram-publish",
-    "xiaohongshu-autopost",
-    "publish-metrics",
     "trend-radar",
     "etsy-product-definition",
     "etsy-listing-images",
     "etsy-listing-builder"
+  ],
+  "optionalSkills": [
+    "supplier-foundation",
+    "publish-metrics"
+  ],
+  "retiredSkills": [
+    "xiaohongshu-autopost"
   ]
 }
