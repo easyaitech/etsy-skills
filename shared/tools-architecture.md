@@ -113,8 +113,8 @@ skill 侧只写「调哪个入口、传什么、怎么解释返回」；不写�
 | `etsy-listing-images` 生图 | **平台侧**：Hermes 自带 `image_generate`（GPT Image 2），出图后端 / 凭据 / 每日额度由 yanggedianzhang 在 profile 配置里统一下发 | 同左（已是目标态） | ✅ skill 只调工具、不持 key、不选模型；额度落在工具边界（`codex-capped`）。早期独立的中心生图服务 `image-gen-service` 从未接通，已于 2026-09-28 下线 |
 | `pinterest-autopin` 发布 | **已上收 ECS**：yanggedianzhang 服务器控制面 + 现有浏览器插件（租户 Chrome 登录态执行） | 同左（已是 tier 2 目标态） | ✅ Hermes 只生成 + 调服务器工具，不持 Chrome / Playwright / 队列 / token；服务器做 job 状态机 / 鉴权 / 素材授权 / 结果回写 |
 | 发布**编排**（巡检 / 锁 / 重试 / 死信） | **已上收 ECS**：yanggedianzhang publish dispatch（T5，常驻 tick，dormant-by-default） | 同左（已是目标态） | ✅ 队列调度 / 单写者锁 / 重试退避 / 幂等去重 / 崩溃恢复在服务端；手动发布仍走 test → confirm-publish → final 人工闸；明确授权并标记自动发布的行由 dispatch 到点直发、无逐条人工确认，`social-publisher` 不再 Hermes 手搓巡检。 |
-| Etsy Listing 公开读取 | **已上收 ECS**：正式工具经 `/api/hermes/etsy/tools/listings/get` 选择公开来源，内部由独立 Apify Actor 执行 | 同左（已是无账号目标态） | ✅ single/batch/shop；不依赖 Base，不使用店主浏览器。公开批量禁止改走账号插件，契约见 [`etsy-listing-read.md`](etsy-listing-read.md) |
-| Etsy Listing 后台读取 | **已上收 ECS 控制面**：同一个正式 Listing facade 选择后台来源并编排租户浏览器插件 | 同左（已是 tier 2 目标态） | ✅ 仅店主明确调用，顺序读取并在登录/Challenge/429/额度/插件错误时停止；自动巡检已暂停，现有 Base 核对代码和历史数据保留 |
+| Etsy Listing 公开读取 | 公开抓取已停用 | 按工具返回说明状态 | 不使用店铺登录态补抓 |
+| Etsy Listing 后台读取 | 本店通过官方 API 读取商品及库存明细 | 控制面按店铺授权选择执行端 | 每周商品核对和回写由产品服务执行，详见 [读取契约](etsy-listing-read.md) |
 | `trend-radar` 抓取 | Mac mini 上的 Node 脚本 + `SERPAPI_KEY` | 数据抓取走 ECS（tier 1，有 API），密钥存 ECS | 密钥目前在 Mac mini 是过渡；非租户特异的只读输入，优先迁 ECS |
 | Etsy 客户消息 | **已上收 ECS 控制面**：Hermes 调 `/api/hermes/etsy/tools/customer-messages/get` 获取正式双向文字消息，调 `/api/hermes/etsy/tools/customer-messages/publish` 创建幂等真实发送任务；租户浏览器插件在 Etsy 登录态执行 | 同左（已是 tier 2 目标态） | ✅ 按 customer / 订单号 / 快递单号 / Etsy 数字买家 ID 唯一定位（潜在客户走合成身份 `etsy-buyer:<数字ID>`，另有 `scope="recent"` 最近来往列表模式），服务端负责鉴权、客户绑定、持久化、幂等和结果状态；旧会话查询、草稿与订单发送路径已退役（[`retired-infra.md`](retired-infra.md) §3），不再回填草稿或降级执行 |
 | 物流跟踪 | 17TRACK 公共引擎（register-once + 轮询 + 飞书推送） | tier 1（有 API），按租户路由 | 引擎已建；部署到目标租户 profile 时控制面在 ECS |

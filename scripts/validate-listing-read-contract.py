@@ -49,12 +49,8 @@ def main() -> int:
         "single",
         "batch",
         "shop",
-        "100",
-        "10",
-        "300",
-        "30",
-        "320",
-        "3–8",
+        "官方 API",
+        "acceptCachedWithinMs: 0",
         "$YANGGEDIANZHANG_TENANT_ID",
         "etsy-listing-read/v1",
         "data",
@@ -67,14 +63,12 @@ def main() -> int:
         "completeness",
         "不依赖 Base",
         "不写 Etsy",
-        "不写 Base",
+        "缺失字段保留原值",
         "禁止",
         "浏览器插件",
-        "登录",
-        "Challenge",
         "429",
         "巡检",
-        "暂停",
+        "公开抓取",
         "backend-api-access.md",
     )
     failures += require(
@@ -90,7 +84,7 @@ def main() -> int:
         "shared/tools-architecture.md",
         "Etsy Listing 公开读取",
         "Etsy Listing 后台读取",
-        "自动巡检已暂停",
+        "每周商品核对",
     )
     version = changelog_version()
     failures += require(
