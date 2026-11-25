@@ -21,7 +21,7 @@ depends-on: [shop-foundation, assets-library]
 
 1. 调 `capabilities`。需要插件至少 `0.5.179` 并在目标账号的浏览器中登录。`publishEnabled=false` 时可准备预览，实际发布由管理员开通；不靠反复重试或换接口绕过。
 2. 为本次业务意图固定 `idempotencyKey`，保存到已有任务记录或当前交接说明。创建请求超时后用同一键重送，或 `list` 查找；先找到原任务再继续。
-3. 用户只要求试一下或预览：`create` 使用 `mode=preview`。轮询 `status` 到 `previewed`，告诉用户预览页已准备；这不是已发布。用户确认这份预览后，给同一个 `jobId` 调 `approve`，`confirmPublishApproval=true`。
+3. 用户只要求试一下或预览：`create` 使用 `mode=preview`。轮询 `status` 到 `previewed`，告诉用户预览页已准备；这不是已发布。用户确认这份预览后，如需转正式发布，创建预览时即关联真实队列行。给同一个 `jobId` 调 `approve`，`confirmPublishApproval=true`。
 4. 用户已明确授权这份素材、文案和目标账号发布（包括明确排期）时，可 `create mode=publish` 并传 `confirmPublishApproval=true`。已有授权不必重复确认；调试、提供素材、询问能力本身不当成公开发布授权。
 5. 定时发布使用带时区的 `scheduledAt`。时间到后仍需插件在线，离线任务保持排队，浏览器恢复后执行。首版由这个 Instagram 任务接口排期，**不靠 Base 的 `自动发布=true` 扫描，也不在 Hermes 建 cron**。
 6. 查询到终态后报告真实状态。`published` 表示平台分享成功提示已被插件确认；`resultUrl` 为空时直说“分享已确认，帖子链接尚未读取”，不猜最新帖子链接。需要公开链接时请店主提供或通过授权只读页面核对。用户已经手动分享的内容只查结果，不再提交一次。
@@ -33,4 +33,6 @@ depends-on: [shop-foundation, assets-library]
 - `queued` / `claimed` / `committing`：仍在排期、执行或验证，不报成功。需要取消时只取消服务器允许的空闲状态；执行中的任务不抢占。
 - 回执丢失时插件补送回执，不重放分享点击。查询工具也只读，不通过重建发布任务“查询”。
 
-若这条视频已有 `社媒发布队列` 行，记录返回的 `id` 到既有外部任务 ID 字段，并按查询结果更新事件说明。首版没有 Instagram 的 Base 自动扫描和自动回写：拿不到 URL 时保留“分享已确认、待补链接”的说明，不按通用 Base 合同伪填 `已发`；店主补齐真实 URL 后才完成该行对账。独立视频不为发布额外创建表或扩平台字段。
+正式发布使用已批准的 Instagram 队列行，传该行的 `queueTaskId`（任务 ID 列）。`standalone` 仅用于独立预览。排期授权、账号、文案、素材均已核实时，继续执行到取得回执。
+
+逐行核对返回的任务 ID、queueTaskId、账号、scheduledAt（同一时刻）、mode=publish、scheduleConfirmed=true 和 queueSync=written，全部相符才报告「已排期」。后端负责回写与读回队列表。queueSync=pending 时保留 jobId，调用 status 复核原任务，报告「任务已建，队列表待同步」。批量请求分别列出已确认、待同步及未排期的行和原因。已过时段的行须先核对实际发布结果和新时间。

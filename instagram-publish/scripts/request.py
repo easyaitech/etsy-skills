@@ -1,10 +1,29 @@
 #!/usr/bin/env python3
 """发送一条 Instagram 任务请求。运行时注入租户；不持久保存或输出凭据。"""
+from datetime import datetime
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
+
+def schedule_matches(body, response):
+    job = response.get("data") if isinstance(response, dict) else None
+    if not isinstance(job, dict) or response.get("ok") is not True:
+        return False
+    try:
+        when = datetime.fromisoformat(body["scheduledAt"].replace("Z", "+00:00"))
+        expected_ms = int(when.timestamp() * 1000)
+    except (KeyError, AttributeError, ValueError, OverflowError, OSError):
+        return False
+    return (
+        when.tzinfo is not None and bool(job.get("id"))
+        and bool(body.get("queueTaskId")) and job.get("queueTaskId") == body["queueTaskId"]
+        and job.get("username") == str(body.get("username", "")).strip().lower()
+        and job.get("scheduledAt") == expected_ms and job.get("mode") == "publish"
+        and job.get("scheduleConfirmed") is True and job.get("queueSync") == "written"
+    )
+
 
 def main():
     if len(sys.argv) == 2 and sys.argv[1] in ("--help", "-h"):
@@ -33,6 +52,14 @@ def main():
             input=f'header = "Authorization: Bearer {token}"\n', text=True, capture_output=True)
     print(result.stdout)
     if result.stderr: print(result.stderr, file=sys.stderr)
+    if result.returncode == 0 and body.get("action") == "create" and body.get("mode") == "publish" and "scheduledAt" in body:
+        try:
+            response = json.loads(result.stdout)
+        except ValueError:
+            response = None
+        if not schedule_matches(body, response):
+            print("排期尚未核实；请按原任务 ID 查 status 或按原幂等键查找。保留原回执，勿新建另一条任务。", file=sys.stderr)
+            return 3
     return result.returncode
 
 if __name__ == "__main__":

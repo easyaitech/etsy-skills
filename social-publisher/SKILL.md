@@ -23,7 +23,7 @@ Instagram 图片/轮播 / TikTok: 人工后台
 
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，平台配置见 [`shared/platform-config.md`](../shared/platform-config.md)。
 
-> **工具架构**（见 [`shared/tools-architecture.md`](../shared/tools-architecture.md)）：**自动发布的编排硬核（队列巡检 / 单写者锁 / 重试退避 / 死信 / 结果回写）已落到 ECS 常驻控制面（yanggedianzhang 的 publish dispatch，T5）**——本 skill **不再在 Hermes 上手搓巡检 / 锁 / 定时器**。ECS dispatch 默认 dormant（`PUBLISH_DISPATCH_POLL_MS` 未配 = 关；**yanggedianzhang 生产已开启，约 60s 一轮**），只处理 `自动发布 = true` 的行，合格行**直接建 publish job 无人值守直发、无逐条人工确认闸**（人工把关点前移到「标 `自动发布=true`」那一下）。本 skill 退成薄触发，只剩四件事：① 配置 adapter registry / 建队列表字段；② **人工 / 按需发布**（用户"发这条"，模式 B）；③ **开启自动发布**：内容审核完把行标 `自动发布=true` + `已批准` + `计划发布时间` 交给 dispatch 直发（对 Pinterest 走 `pinterest-autopin` 模式 D）；手动路径的 test → confirm-publish 仍在模式 B；④ 对账。Base 是 SoT；`执行锁` 字段现由 ECS dispatch 持有，skill 侧人工发布前要避让（见模式 B）。登录 / 凭据红线见 §禁区。
+> 自动排期按平台分流。Pinterest 使用 pinterest-autopin 模式 D 的 enqueue；Instagram 单视频走 instagram-publish，逐行核对任务与排期回执。Instagram 图片及轮播交付人工清单。执行锁、重试和结果回写由后端负责，见 [工具架构](../shared/tools-architecture.md)。
 
 > **P0 永久退役闸**：旧 Hermes job `d99651079542`（`ETSY Social Publisher / Publishing Queue 到期自动发布`）必须保持 paused 或 removed（退役边界唯一真源 = [`../shared/retired-infra.md`](../shared/retired-infra.md) §1）。**永不 resume、run、重建或修复它的本地路径**；用户说“开启自动发布 / 到点自动发”只走 ECS dispatch；若发现该 job 已启用或报错，只停用它并如实回报，不执行旧发布脚本。
 
@@ -82,7 +82,7 @@ Instagram 图片/轮播 / TikTok: 人工后台
 
 ## Instagram 分支
 
-用户要预览、发布、定时发布或查询 Instagram 单视频 Reels 时，直接执行 [instagram-publish](../instagram-publish/SKILL.md)，不进入下面的 Pinterest Base 占锁/dispatch 流程。已有 Base 行可记录返回的任务 ID 与对账说明；只有图片/轮播、Stories 等未接入类型走人工清单。
+用户要预览、发布、定时发布或查询 Instagram 单视频 Reels 时，直接执行 [instagram-publish](../instagram-publish/SKILL.md)，不进入下面的 Pinterest Base 占锁/dispatch 流程。队列行的任务 ID、排期状态由后端回写，逐行按适配器核验回执；只有图片/轮播、Stories 等未接入类型走人工清单。
 
 ## 模式 B：发布指定任务
 
@@ -116,7 +116,7 @@ Instagram 图片/轮播 / TikTok: 人工后台
 
 ---
 
-## 模式 C：自动发布 = ECS dispatch（本 skill 不再手搓巡检）
+## 模式 C：Pinterest 自动发布 = ECS dispatch（本 skill 不再手搓巡检）
 
 **自动发布的巡检 / 单写者锁 / 重试退避 / 死信 / 结果回写已归 ECS 常驻控制面**（yanggedianzhang 的 publish dispatch，T5 落地，commit 经 PR 合并）。**本 skill 不再跑巡检、不再被定时任务唤醒做发布、不再手搓 `执行锁` / 重试。**
 
@@ -127,7 +127,7 @@ ECS dispatch 的行为（本 skill 只需知道、不实现）：
 - 失败按分类退避重试 / 死信；插件掉线租约回收。
 - **默认 dormant**：`PUBLISH_DISPATCH_POLL_MS` 未配 = 关；**yanggedianzhang 生产已配（约 60s 一轮）= 开启**。换部署要真跑自动发布，由运维显式开启，不在本 skill 侧配定时器。
 
-**本 skill 在自动路径里的职责 = 帮用户把行标成 dispatch 合格候选（人工把关点）**：内容审核完后，用户说“开启自动发布 / 到点自动发” → 本 skill（对 Pinterest 走 `pinterest-autopin` 模式 D）把行标 `自动发布=true` + `状态=已批准` + `计划发布时间`，交给 dispatch 直发。**标记即授权直发，标前必须确认内容无误**——dispatch 不会再问。
+用户明确授权 Pinterest 排期后，走 pinterest-autopin 模式 D 的专用 enqueue，核对返回的 recordId。Instagram 按上面的 Reels 路由执行。
 
 > 不要在本 skill 里重新实现巡检 / 定时器 / 锁——那会和 ECS dispatch 抢同一批行、双写冲突。dispatch 未开启（dormant）时就是没有自动发布，**不回退手搓巡检**；用户要发就走模式 B 人工发布。
 

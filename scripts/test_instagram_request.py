@@ -13,6 +13,16 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 class InstagramRequestTests(unittest.TestCase):
+    def test_scheduled_receipt_requires_matching_row_time_account_and_writeback(self):
+        body = dict(queueTaskId="A", username="Shop", scheduledAt="2026-11-25T22:00:00+08:00")
+        job = dict(id="ig_a", queueTaskId="A", username="shop", scheduledAt=1795615200000,
+                   mode="publish", scheduleConfirmed=True, queueSync="written")
+        self.assertTrue(module.schedule_matches(body, dict(ok=True, data=job)))
+        for change in (dict(queueTaskId="B"), dict(username="other"), dict(scheduledAt=0),
+                       dict(mode="preview"), dict(scheduleConfirmed=False), dict(queueSync="pending")):
+            with self.subTest(change=change):
+                self.assertFalse(module.schedule_matches(body, dict(ok=True, data={**job, **change})))
+
     def test_runtime_binding_and_private_token(self):
         env = {'YANGGEDIANZHANG_API_BASE': 'https://example.test', 'YANGGEDIANZHANG_HERMES_TOOL_TOKEN': 'fixture-secret', 'YANGGEDIANZHANG_TENANT_ID': 'tenant-a'}
         with tempfile.TemporaryDirectory() as directory:
