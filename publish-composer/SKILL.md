@@ -129,7 +129,7 @@ social-publisher（排期/路由）→ Pinterest / 小红书 / IG / TikTok / Ets
    - `分享链接` 缺失时阻塞，不临时拼任何平台 URL。
 5. 写入 社媒发布队列 草稿（字段分组 + typed extension 见 [`references/base-schema.md` 表 2](references/base-schema.md)）：
    - 身份维度：默认只写 `平台`；多账号 / 多品牌线 / 多地区真的启用时再补对应字段
-   - `状态 = 草稿`；`自动发布 = false`（除非用户明确确认排期 + 无人值守）
+   - `状态 = 草稿`；`自动发布 = false`。收到明确排期授权后交给对应适配器：Instagram 单视频按 instagram-publish 建任务并核验回执，Pinterest 走专用 enqueue。Instagram 图片、轮播和 Stories 保留原素材及计划时间，交付人工清单；批量排期逐行说明结果。
    - `发布类型 = 单图 / 多图轮播 / 视频 / 图文笔记 / 图文混合`
    - `关联素材` 指向 `Asset Variants 派生素材`（变体，不是 canonical 原图），并在草稿里展示编号顺序
    - 平台专属字段只在真实发布器已读取时写；不要为了预留默认创建 `平台扩展 (typed)` 或自由 JSON
