@@ -6,7 +6,7 @@
 |---|---|---|---|---|---|
 | Pinterest | enabled | 单图；多图轮播需服务器 / 插件显式支持后再 final | `pinterest-autopin` → yanggedianzhang server browser tool | 服务器工具可用、租户浏览器插件可用、`社媒发布队列` 表可用 | Pinterest 发布适配器。发布过程必须走 server test job → 用户确认 → server publish job，并回写 社媒发布队列。 |
 | 小红书 | **封存 shelved（产品决策 2026-07-24：专注 Etsy，不对用户开放）** | 图文笔记 / 视频笔记 | `xiaohongshu-autopost` → yanggedianzhang server browser tool（同 pinterest 三层范式，契约已就绪） | 后端三件已就绪（服务器工具 `/api/tools/xiaohongshu/jobs`、插件 `xiaohongshu` capability、笔记 recipe）；**但整体封存、不对外开放**——解封需产品侧明确放行 | **封存 fail-closed**：用户提任何小红书请求，按 [`../../shared/platform-config.md`](../../shared/platform-config.md) §封存协议（唯一真源）拒绝——「当前版本专注 Etsy，小红书功能已退役，不再提供相关操作」+ 引导回 Etsy + STOP，不组草稿、不建行、不出人工清单。后端 + 契约（流程见 [`xiaohongshu-autopost/references/publishing-flow.md`](../../xiaohongshu-autopost/references/publishing-flow.md)）原样保留供未来解封。解封不是一处开关，需走本文件末尾 §小红书解封验收清单。 |
-| Instagram | enabled（单视频 Reels，按租户开通） | MP4 Reels、单图和图片轮播 | `instagram-publish` → 服务器 Instagram 任务 → 租户插件 | 后端 capabilities 实测、插件 ≥ 0.5.178、租户发布名单、已登录目标账号 | 先路由 [instagram-publish](../../instagram-publish/SKILL.md)。使用独立服务器任务排期；未接 Base 自动扫描。Stories 仍 manual-only。 |
+| Instagram | enabled（按租户开通） | MP4 Reels、单图和图片轮播 | `instagram-publish` → 服务器 Instagram 任务 → 租户插件 | 后端 capabilities 实测、视频插件 ≥ 0.5.179、图片插件 ≥ 0.5.276、租户发布名单、已登录目标账号 | 先路由 [instagram-publish](../../instagram-publish/SKILL.md)。使用独立服务器任务排期；未接 Base 自动扫描。Stories 仍 manual-only。 |
 | TikTok | planned/manual-only | 视频草稿 / 人工对账 | 暂无 | 未来需要平台工具或 API 适配器 | 不自动发布。 |
 
 ## Adapter 接入契约
