@@ -15,15 +15,15 @@ social-publisher 做任务校验 / 排期 / 适配器路由
         ↓
 Pinterest: pinterest-autopin adapter → yanggedianzhang server → browser plugin
 小红书: 封存 shelved（不对用户开放，只说明封存边界+引导回 Etsy+STOP，无人工后台出口）
-Instagram 单视频 Reels: instagram-publish → 服务器独立任务 → 租户插件
-Instagram 图片/轮播 / TikTok: 人工后台
+Instagram 单图、图片轮播和单视频 Reels: instagram-publish → 服务器独立任务 → 租户插件
+Instagram Stories / TikTok: 人工后台
 ```
 
 它不负责长期素材归档，不负责生成图片或制作视频，不负责写商品事实。素材归档归 `assets-library`，Etsy 商品图归 `etsy-listing-images`，当前不提供社媒图片创作，商品事实归 `listing-catalog`。
 
 > 共享引导（版本检查 / 工作区解析 / 客户偏好 / 写入约束 / 工作语言 / 经营原则）见 [`shared/preamble.md`](../shared/preamble.md)，平台配置见 [`shared/platform-config.md`](../shared/platform-config.md)。
 
-> 自动排期按平台分流。Pinterest 使用 pinterest-autopin 模式 D 的 enqueue；Instagram 单视频走 instagram-publish，逐行核对任务与排期回执。Instagram 图片及轮播交付人工清单。执行锁、重试和结果回写由后端负责，见 [工具架构](../shared/tools-architecture.md)。
+> 自动排期按平台分流。Pinterest 使用 pinterest-autopin 模式 D 的 enqueue；Instagram 图片和单视频走 instagram-publish，逐行核对任务与排期回执。图片任务须确认 capabilities 包含 photoPosts。执行锁、重试和结果回写由后端负责，见 [工具架构](../shared/tools-architecture.md)。
 
 > **P0 永久退役闸**：旧 Hermes job `d99651079542`（`ETSY Social Publisher / Publishing Queue 到期自动发布`）必须保持 paused 或 removed（退役边界唯一真源 = [`../shared/retired-infra.md`](../shared/retired-infra.md) §1）。**永不 resume、run、重建或修复它的本地路径**；用户说“开启自动发布 / 到点自动发”只走 ECS dispatch；若发现该 job 已启用或报错，只停用它并如实回报，不执行旧发布脚本。
 
@@ -74,7 +74,7 @@ Instagram 图片/轮播 / TikTok: 人工后台
 4. 读 [`references/adapter-registry.md`](references/adapter-registry.md)，展示当前适配器状态：
    - Pinterest = enabled，真实发布走 `pinterest-autopin` adapter → 服务器工具 → 浏览器插件
    - 小红书 = **封存 shelved**：按 [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议 fail-closed 处理（统一话术 + 引导回 Etsy + STOP，连草稿 / 人工发布清单 / 人工回填都不做）；解封走 [`references/adapter-registry.md`](references/adapter-registry.md) §小红书解封验收清单（不是一处开关）
-   - Instagram 单视频 Reels 路由 `instagram-publish`，实测 capabilities；Instagram 图片/轮播及 TikTok 仍 manual-only。
+   - Instagram 单图、图片轮播和单视频 Reels 路由 `instagram-publish`，实测 capabilities；Instagram Stories 及 TikTok 仍 manual-only。
 5. 如用户要启用 Pinterest，按 `pinterest-autopin` 模式 A 检查服务器工具、浏览器插件和 `社媒发布队列`（Pinterest pin 即本表 `平台 = Pinterest` 的行）。
 6. **不在 Hermes 侧建定时器 / cron 跑自动发布**——自动发布的常驻巡检是 ECS dispatch 的事（T5）。要真开自动发布，由运维在 ECS 侧开启 dispatch（配 `PUBLISH_DISPATCH_POLL_MS` + 确认队列有 `自动发布 = true` 行），本 skill 不承担、也不模拟这个后台循环。
 
@@ -82,7 +82,7 @@ Instagram 图片/轮播 / TikTok: 人工后台
 
 ## Instagram 分支
 
-用户要预览、发布、定时发布或查询 Instagram 单视频 Reels 时，直接执行 [instagram-publish](../instagram-publish/SKILL.md)，不进入下面的 Pinterest Base 占锁/dispatch 流程。队列行的任务 ID、排期状态由后端回写，逐行按适配器核验回执；只有图片/轮播、Stories 等未接入类型走人工清单。
+用户要预览、发布、定时发布或查询 Instagram 单图、图片轮播和单视频 Reels 时，直接执行 [instagram-publish](../instagram-publish/SKILL.md)，不进入下面的 Pinterest Base 占锁/dispatch 流程。队列行的任务 ID、排期状态由后端回写，逐行按适配器核验回执；只有 Stories 等未接入类型走人工清单。
 
 ## 模式 B：发布指定任务
 
@@ -108,7 +108,7 @@ Instagram 图片/轮播 / TikTok: 人工后台
    - 成功后回写本行：`状态 = 已发`、`发布时间`、`发布 URL`，清空 `执行锁`
    - 失败后回写：`状态 = 失败`、`失败原因分类` + `失败原因`、`最后尝试时间`，清空 `执行锁`；不重复递增占用阶段已加的 `发布尝试次数`
 6. **封存 shelved 平台（小红书）= fail-closed**：用户提小红书「发这条」，只说明封存边界（「当前版本专注 Etsy，小红书功能已退役，不再提供相关操作」）+ 引导回 Etsy + STOP。禁止清单（不登录、不组草稿、不出人工发布清单、不创建 server publish job、不做对账……）与判据唯一真源 = [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议；判据字段 = [`references/adapter-registry.md`](references/adapter-registry.md) 小红书状态（!= `enabled` 即封存）。解封后才并入第 5 步走真发。
-7. manual-only 类型（Instagram 图片/轮播、Stories / TikTok）：
+7. manual-only 类型（Instagram Stories / TikTok）：
    - 不登录、不上传、不点击发布；**不创建真实 server publish job**
    - 只输出人工发布清单，或在用户给出公开 URL 后走模式 D 对账
 
@@ -158,7 +158,7 @@ ECS dispatch 的行为（本 skill 只需知道、不实现）：
 
 - 不把 `publish-composer` 的“已入任务”当成“已发布”。
 - **小红书封存 shelved**：按 [`../shared/platform-config.md`](../shared/platform-config.md) §封存协议 fail-closed——统一话术 + 引导回 Etsy + STOP，不组草稿、不对账、不伪造任何能力。
-- Instagram 单视频 Reels 按其 adapter 的实际任务结果报告；未支持的 Instagram 类型及 TikTok 只做草稿 / 人工对账。
+- Instagram 单图、图片轮播和单视频 Reels 按其 adapter 的实际任务结果报告；未支持的 Instagram 类型及 TikTok 只做草稿 / 人工对账。
 - 不替用户登录平台，不保存账号密码、cookie、token。
 - 不恢复、运行、重建或修复旧 Hermes job `d99651079542`（边界见 [`../shared/retired-infra.md`](../shared/retired-infra.md) §1）；它与 ECS dispatch 并行会造成重复发布。
 - 不跳过 Pinterest 的 test → final 确认门，除非用户明确说明已经 test 过并要求 final。

@@ -7,7 +7,7 @@
 | action | 额外字段 | data |
 |---|---|---|
 | `capabilities` | 无 | 支持媒体、上限、最低插件版本、`publishEnabled` |
-| `create` | `idempotencyKey`, `username`, `caption`, `assetFileToken`, 可选 `mode` / `scheduledAt`；正式发布传已批准队列行的 `queueTaskId` 和 `confirmPublishApproval=true` | 任务（含 scheduleConfirmed、queueSync）；重复键或相同内容可能返回已有任务 |
+| `create` | `idempotencyKey`, `username`, `caption`, 视频用 `assetFileToken`，图片用有序数组 `imageFileTokens`, 可选 `mode` / `scheduledAt`；正式发布传已批准队列行的 `queueTaskId` 和 `confirmPublishApproval=true` | 任务（含 scheduleConfirmed、queueSync）；重复键或相同内容可能返回已有任务 |
 | `status` | `jobId` | 任务 |
 | `list` | 无 | 本租户最近最多 100 条任务 |
 | `approve` | `jobId`, `confirmPublishApproval=true` | 将已预览任务转为待发布，重复确认不复活终态 |
