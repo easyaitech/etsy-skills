@@ -1,6 +1,6 @@
 ---
 name: instagram-publish
-description: Instagram 单视频 Reels 发布适配器。用户要发 Instagram 视频、预览、定时发布、确认发布或查询结果时使用；通过养个店长服务器和租户浏览器插件执行。图片、轮播和 Stories 尚未接入。本 skill 不制作视频、不持浏览器登录态。
+description: Instagram 单图、图片轮播和单视频 Reels 发布适配器。用户要发 Instagram 图片或视频、预览、定时发布、确认发布或查询结果时使用；通过养个店长服务器和租户浏览器插件执行。Stories 尚未接入。本 skill 不制作视频、不持浏览器登录态。
 layer: application
 depends-on: [shop-foundation, assets-library]
 ---
@@ -11,11 +11,11 @@ depends-on: [shop-foundation, assets-library]
 
 ## 准备素材与文案
 
-确认目标 Instagram 用户名、一个完成的视频和 caption。已有文案按原文使用；需要起草时读店铺 `BRAND.md`、`BRAND_MARKETING.md` 和 `MARKETING_PLATFORM.md`，缺事实就保留缺口，不编购买地址、客户故事或授权。
+确认目标 Instagram 用户名、按顺序排列的图片或一个完成的视频和 caption。已有文案按原文使用；需要起草时读店铺 `BRAND.md`、`BRAND_MARKETING.md` 和 `MARKETING_PLATFORM.md`，缺事实就保留缺口，不编购买地址、客户故事或授权。
 
-首版只接一个 MP4，最多 20 MiB（系统传输限制），caption 最多 2200 UTF-16 单元。优先使用已验收的 9:16 成片，插件保留原比例和原音轨。音乐署名、授权链接、换行和标签都是 caption 的一部分。
+图片任务先确认 capabilities 返回 photoPosts，使用 0.5.276 或以上插件，将 1–10 张 JPEG 或 PNG 的 token 按发布顺序传入 imageFileTokens，合计最多 20 MiB。视频使用一个 MP4，最多 20 MiB（系统传输限制），caption 最多 2200 UTF-16 单元。优先使用已验收的 9:16 成片，插件保留原比例和原音轨。音乐署名、授权链接、换行和标签都是 caption 的一部分。
 
-素材必须能由本租户 bot 从飞书下载，输入的是 `assetFileToken`，不是文件夹 token、URL 或本地路径。用户只给本地视频时，经 `assets-library` 的已有上传链路放入其素材库，再读回 file token。给 Pinterest 的五图文件夹不等于 Instagram 视频已上传；科普视频与商品视频都按实际文件处理。
+素材必须能由本租户 bot 从飞书下载，视频输入 `assetFileToken`，图片输入 `imageFileTokens`，不是文件夹 token、URL 或本地路径。用户只给本地视频时，经 `assets-library` 的已有上传链路放入其素材库，再读回 file token。给 Pinterest 的五图文件夹不等于 Instagram 视频已上传；科普视频与商品视频都按实际文件处理。
 
 ## 执行
 
