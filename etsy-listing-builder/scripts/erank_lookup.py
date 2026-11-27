@@ -26,7 +26,8 @@ if not token:
 deadline = time.monotonic() + args.wait
 request = urllib.request.Request(base + "/personal-keywords/lookup",
     data=json.dumps({"term": args.term, "market": args.market}).encode(),
-    headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"})
+    headers={"Authorization": "Bearer " + token, "Content-Type": "application/json",
+             "User-Agent": "etsy-listing-builder/1.0"})
 while True:
     with urllib.request.urlopen(request, timeout=15) as response:
         result = json.load(response)
