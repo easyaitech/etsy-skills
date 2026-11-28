@@ -40,6 +40,8 @@ bash install.sh
 
 ## Skills
 
+原 [etsy-listing-skills](https://github.com/easyaitech/etsy-listing-skills) 的三个上架技能统一在本仓维护：[产品定义](etsy-product-definition/SKILL.md)、[商品图片](etsy-listing-images/SKILL.md)和[上架文案](etsy-listing-builder/SKILL.md)。
+
 | Skill | 干啥 |
 |---|---|
 | [`shop-foundation`](shop-foundation/SKILL.md) | 维护品牌基座 BRAND.md（品牌原则）+ BRAND_MARKETING.md（品牌营销策略）+ MARKETING_PLATFORM.md（内容平台策略）与店铺基座 SHOP.md（店铺事实）四份元基础；支持从店铺真实数据自动起草（模式 A0） |
